@@ -171,6 +171,7 @@ export abstract class TestUtilsWalletStorage {
     const services = new Services(args.chain)
     const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services)
     const monitor = new Monitor(monopts)
+    monitor.addDefaultTasks()
     const wallet = new Wallet(signer, keyDeriver, services, monitor)
     const r: TestWalletOnly = {
       rootKey,
@@ -450,25 +451,24 @@ export abstract class TestUtilsWalletStorage {
     return r
   }
 
-  static makeSampleCert(subject?: string): { cert: bsv.WalletCertificate, subject: string, certifier: bsv.PrivateKey }
-  {
-      subject ||= bsv.PrivateKey.fromRandom().toPublicKey().toString()
-      const certifier = bsv.PrivateKey.fromRandom()
-      const verifier = bsv.PrivateKey.fromRandom()
-      const cert: bsv.WalletCertificate = {
-          type: bsv.Utils.toBase64(new Array(32).fill(1)),
-          serialNumber: bsv.Utils.toBase64(new Array(32).fill(2)),
-          revocationOutpoint: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.1',
-          subject,
-          certifier: certifier.toPublicKey().toString(),
-          fields: {
-              name: 'Alice',
-              email: 'alice@example.com',
-              organization: 'Example Corp'
-          },
-          signature: "",
-      }
-      return { cert, subject, certifier }
+  static makeSampleCert(subject?: string): { cert: bsv.WalletCertificate, subject: string, certifier: bsv.PrivateKey } {
+    subject ||= bsv.PrivateKey.fromRandom().toPublicKey().toString()
+    const certifier = bsv.PrivateKey.fromRandom()
+    const verifier = bsv.PrivateKey.fromRandom()
+    const cert: bsv.WalletCertificate = {
+      type: bsv.Utils.toBase64(new Array(32).fill(1)),
+      serialNumber: bsv.Utils.toBase64(new Array(32).fill(2)),
+      revocationOutpoint: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef.1',
+      subject,
+      certifier: certifier.toPublicKey().toString(),
+      fields: {
+        name: 'Alice',
+        email: 'alice@example.com',
+        organization: 'Example Corp'
+      },
+      signature: "",
+    }
+    return { cert, subject, certifier }
   }
 
   static async insertTestProvenTx(storage: StorageProvider, txid?: string) {
@@ -840,7 +840,7 @@ export abstract class TestUtilsWalletStorage {
   }
 }
 
-export abstract class _tu extends TestUtilsWalletStorage {}
+export abstract class _tu extends TestUtilsWalletStorage { }
 
 export interface TestSetup1 {
   u1: table.User

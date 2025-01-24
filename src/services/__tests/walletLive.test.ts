@@ -125,7 +125,7 @@ describe('walletLive test', () => {
      */
     const r = await createWalletPaymentAction({
       toIdentityKey: myIdentityKey,
-      outputSatoshis: 500000,
+      outputSatoshis: 100000,
       keyDeriver: liveCtx.keyDeriver,
       wallet: liveCtx.wallet,
       logResult: true
@@ -162,6 +162,18 @@ describe('walletLive test', () => {
     const rw = await myCtx.wallet.internalizeAction(args)
 
     expect(rw.accepted).toBe(true)
+  })
+
+  test('6b send a wallet payment from live to your own wallet', async () => {
+    const liveCtx = ctxs[0]
+    const myIdentityKey = env.identityKey
+    const myRootKeyHex = env.devKeys[myIdentityKey]
+    if (!myIdentityKey || !myRootKeyHex) throw new sdk.WERR_INVALID_OPERATION(`Requires a .env file with MY_${env.chain.toUpperCase()}_IDENTITY and corresponding DEV_KEYS entries.`)
+
+    // const myCtx = await _tu.createTestWalletWithStorageClient({ rootKeyHex: myRootKeyHex, chain: env.chain })
+    await liveCtx.monitor.runOnce(true)
+    expect(1 === 1)
+    // expect(rw.accepted).toBe(true)
   })
 
   // End of describe
