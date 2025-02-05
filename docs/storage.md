@@ -1010,7 +1010,7 @@ See also: [StorageProvenOrReq](#interface-storageprovenorreq), [TrxToken](#inter
 #### Method getReqsAndBeefToShareWithWorld
 
 Given an array of transaction txids with current ProvenTxReq ready-to-share status,
-lookup their DojoProvenTxReqApi req records.
+lookup their ProvenTxReqApi req records.
 For the txids with reqs and status still ready to send construct a single merged beef.
 
 ```ts
@@ -1047,12 +1047,6 @@ For 'status' of 'failed', attempts to make outputs previously allocated as input
 async updateTransactionStatus(status: sdk.TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: sdk.TrxToken): Promise<void> 
 ```
 See also: [TransactionStatus](#type-transactionstatus), [TrxToken](#interface-trxtoken)
-
-Throws
-
-ERR_DOJO_COMPLETED_TX if current status is 'completed' and new status is not 'completed.
-
-ERR_DOJO_PROVEN_TX if transaction has proof or provenTxId and new status is not 'completed'.
 
 </details>
 

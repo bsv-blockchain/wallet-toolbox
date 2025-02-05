@@ -71,25 +71,28 @@ describe('createAction test', () => {
       wallet.randomVals = [0.1, 0.2, 0.3, 0.7, 0.8, 0.9]
       const root = '02135476'
       const kp = _tu.getKeyPair(root.repeat(8))
-        const createArgs: CreateActionArgs = {
-          description: `repeatable`,
-          outputs: [
-            {
-              satoshis: 45,
-              lockingScript: _tu.getLockP2PKH(kp.address).toHex(),
-              outputDescription: 'pay echo'
-            }
-          ],
-          options: {
-            randomizeOutputs: false,
-            signAndProcess: true,
-            noSend: true
+      const createArgs: CreateActionArgs = {
+        description: `repeatable`,
+        outputs: [
+          {
+            satoshis: 45,
+            lockingScript: _tu.getLockP2PKH(kp.address).toHex(),
+            outputDescription: 'pay echo'
           }
+        ],
+        options: {
+          randomizeOutputs: false,
+          signAndProcess: true,
+          noSend: true
         }
-
-        const cr = await wallet.createAction(createArgs)
-        expect(cr.txid === '4f428a93c43c2d120204ecdc06f7916be8a5f4542cc8839a0fd79bd1b44582f3')
       }
+
+      const cr = await wallet.createAction(createArgs)
+      expect(
+        cr.txid ===
+          '4f428a93c43c2d120204ecdc06f7916be8a5f4542cc8839a0fd79bd1b44582f3'
+      )
+    }
   })
 
   test('2_signableTransaction', async () => {

@@ -2403,6 +2403,7 @@ export interface ValidCreateActionArgs extends ValidProcessActionArgs {
     labels: string[];
     options: ValidCreateActionOptions;
     isSignAction: boolean;
+    randomVals?: number[];
 }
 ```
 
@@ -3959,7 +3960,7 @@ See also: [StorageProvenOrReq](#interface-storageprovenorreq), [TrxToken](#inter
 #### Method getReqsAndBeefToShareWithWorld
 
 Given an array of transaction txids with current ProvenTxReq ready-to-share status,
-lookup their DojoProvenTxReqApi req records.
+lookup their ProvenTxReqApi req records.
 For the txids with reqs and status still ready to send construct a single merged beef.
 
 ```ts
@@ -3996,12 +3997,6 @@ For 'status' of 'failed', attempts to make outputs previously allocated as input
 async updateTransactionStatus(status: sdk.TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: sdk.TrxToken): Promise<void> 
 ```
 See also: [TransactionStatus](#type-transactionstatus), [TrxToken](#interface-trxtoken)
-
-Throws
-
-ERR_DOJO_COMPLETED_TX if current status is 'completed' and new status is not 'completed.
-
-ERR_DOJO_PROVEN_TX if transaction has proof or provenTxId and new status is not 'completed'.
 
 </details>
 
@@ -4745,6 +4740,7 @@ export class Wallet implements WalletInterface, ProtoWallet {
     proto: ProtoWallet;
     privilegedKeyManager?: sdk.PrivilegedKeyManager;
     pendingSignActions: Record<string, PendingSignAction>;
+    randomVals?: number[] = undefined;
     constructor(argsOrSigner: WalletArgs | WalletSigner, services?: sdk.WalletServices, monitor?: Monitor, privilegedKeyManager?: sdk.PrivilegedKeyManager) 
     async destroy(): Promise<void> 
     getClientChangeKeyPair(): sdk.KeyPair 
@@ -4803,6 +4799,14 @@ Over time, this allows an active wallet to drastically reduce the amount of data
 
 ```ts
 beef: BeefParty
+```
+
+#### Property randomVals
+
+For repeatability testing, set to an array of random numbers from [0..1).
+
+```ts
+randomVals?: number[] = undefined
 ```
 
 #### Method getKnownTxids
@@ -4878,8 +4882,6 @@ standard HTTP error status object with status property set to 'error'.
 #### Method fromUnknown
 
 Recovers all public fields from WalletError derived error classes and relevant Error derived errors.
-
-Critical client data fields are preserved across HTTP DojoExpress / DojoExpressClient encoding.
 
 ```ts
 static fromUnknown(err: unknown): WalletError 

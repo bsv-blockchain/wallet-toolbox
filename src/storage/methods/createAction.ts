@@ -871,13 +871,12 @@ async function fundNewTransactionSdk(
     return Math.floor(nextRandomVal() * (max - min + 1) + min)
   }
 
-  const randomDerivation = (count: number) : string => {
+  const randomDerivation = (count: number): string => {
     let val: number[] = []
     if (!vargs.randomVals || vargs.randomVals.length === 0) {
       val = Random(count)
     } else {
-      for (let i = 0; i < count; i++)
-        val.push(rand(0, 255))
+      for (let i = 0; i < count; i++) val.push(rand(0, 255))
     }
     return Utils.toBase64(val)
   }
