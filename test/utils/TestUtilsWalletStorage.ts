@@ -1204,7 +1204,7 @@ export abstract class TestUtilsWalletStorage {
 
           // Need to convert
           const lockingScriptValue = input.sourceLockingScript
-            ? hexStringToNumberArray(input.sourceLockingScript)
+            ? Utils.toArray(input.sourceLockingScript)
             : undefined
 
           prevOutput = await _tu.insertTestOutput(
@@ -2158,13 +2158,4 @@ export async function logInput(
 
 export function logBasket(basket: table.OutputBasket): string {
   return `\n-- Basket --\nName: ${basket.name}\n`
-}
-
-export function hexStringToNumberArray(hexString: string): number[] {
-  const sanitizedHex = hexString.replace(/[^a-fA-F0-9]/g, '')
-  const result: number[] = []
-  for (let i = 0; i < sanitizedHex.length; i += 2) {
-    result.push(parseInt(sanitizedHex.substr(i, 2), 16))
-  }
-  return result
 }

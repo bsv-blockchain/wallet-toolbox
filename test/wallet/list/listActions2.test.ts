@@ -1,12 +1,9 @@
-//@ts-nocheck
-import * as bsv from '@bsv/sdk'
-import { sdk, StorageProvider } from '../../../src/index.client'
+import { ListActionsArgs, Utils } from '@bsv/sdk'
+import { sdk } from '../../../src/index.client'
 import {
   _tu,
   expectToThrowWERR,
-  hexStringToNumberArray,
   MockData,
-  TestSetup2,
   TestWalletNoSetup
 } from '../../utils/TestUtilsWalletStorage'
 
@@ -57,7 +54,6 @@ describe('listActions2 single action tests', () => {
   beforeEach(async () => {
     ctxs = []
     const args = {
-      chain: 'test',
       mockData,
       databaseName: testName(),
       rootKeyHex: '2'.repeat(64),
@@ -75,7 +71,7 @@ describe('listActions2 single action tests', () => {
 
   test('12_no labels default any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: []
       }
 
@@ -89,7 +85,7 @@ describe('listActions2 single action tests', () => {
 
   test('13_no labels any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [],
         labelQueryMode: 'any'
       }
@@ -104,7 +100,7 @@ describe('listActions2 single action tests', () => {
 
   test('14_no labels all', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [],
         labelQueryMode: 'all'
       }
@@ -118,7 +114,7 @@ describe('listActions2 single action tests', () => {
 
   test('15_empty label default any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['']
       }
 
@@ -131,7 +127,7 @@ describe('listActions2 single action tests', () => {
 
   test('16_label is space character default any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [' ']
       }
 
@@ -144,7 +140,7 @@ describe('listActions2 single action tests', () => {
 
   test('17_label does not exist default any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['nonexistantlabel'] // Testing with a non-existent label
       }
 
@@ -158,7 +154,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const minLengthLabel = 'a'
       await storage.updateTxLabel(1, { label: minLengthLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [minLengthLabel]
       }
 
@@ -173,7 +169,7 @@ describe('listActions2 single action tests', () => {
   test('19_label max 300 spaces default any', async () => {
     for (const { wallet } of ctxs) {
       const maxLengthSpacesLabel = ' '.repeat(300)
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [maxLengthSpacesLabel]
       }
 
@@ -188,7 +184,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const maxLengthNormalLabel = 'a'.repeat(300)
       await storage.updateTxLabel(1, { label: maxLengthNormalLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [maxLengthNormalLabel]
       }
 
@@ -204,7 +200,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const minimumEmojiLabel = generateRandomEmojiString(4)
       await storage.updateTxLabel(1, { label: minimumEmojiLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [minimumEmojiLabel]
       }
 
@@ -220,7 +216,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const maximumEmojisLabel = generateRandomEmojiString(300)
       await storage.updateTxLabel(1, { label: maximumEmojisLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [maximumEmojisLabel]
       }
 
@@ -235,7 +231,7 @@ describe('listActions2 single action tests', () => {
   test('23_label exceeding max length 76 emojis default any', async () => {
     for (const { wallet } of ctxs) {
       const exceedingMaximumEmojisLabel = generateRandomEmojiString(304)
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [exceedingMaximumEmojisLabel]
       }
 
@@ -250,7 +246,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const label = 'label'
       await storage.updateTxLabel(1, { label })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label]
       }
 
@@ -266,7 +262,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const label = 'label'
       await storage.updateTxLabel(1, { label })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label],
         labelQueryMode: 'any'
       }
@@ -283,7 +279,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const label = 'label'
       await storage.updateTxLabel(1, { label })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label],
         labelQueryMode: 'all'
       }
@@ -301,7 +297,7 @@ describe('listActions2 single action tests', () => {
   //   for (const { activeStorage: storage, wallet } of ctxs) {
   //     const mixedCaseLabel = 'LAbEL'
   //     await storage.updateTxLabel(1, { label: mixedCaseLabel })
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: [mixedCaseLabel]
   //     }
 
@@ -315,7 +311,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const specialCharsLabel = '@special#label!'
       await storage.updateTxLabel(1, { label: specialCharsLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [specialCharsLabel]
       }
 
@@ -332,7 +328,7 @@ describe('listActions2 single action tests', () => {
   //   for (const { activeStorage: storage, wallet } of ctxs) {
   //     const leadTrailSpacesLabel = '  label  '
   //     await storage.updateTxLabel(1, { label: leadTrailSpacesLabel })
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: [leadTrailSpacesLabel]
   //     }
 
@@ -346,7 +342,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const numericLabel = '12345'
       await storage.updateTxLabel(1, { label: numericLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [numericLabel]
       }
 
@@ -362,7 +358,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const alphaumericLabel = 'abcde12345'
       await storage.updateTxLabel(1, { label: alphaumericLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [alphaumericLabel]
       }
 
@@ -378,7 +374,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const containsLabel = 'label'
       await storage.updateTxLabel(1, { label: containsLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['labelone']
       }
 
@@ -391,7 +387,7 @@ describe('listActions2 single action tests', () => {
   // Can't test mixed case at storage level
   // test('33_label different case lower any', async () => {
   //   for (const { wallet } of ctxs) {
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label'],
   //       labelQueryMode: 'any'
   //     }
@@ -404,7 +400,7 @@ describe('listActions2 single action tests', () => {
 
   // test('34_label different case upper any', async () => {
   //   for (const { wallet } of ctxs) {
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['LABEL'],
   //       labelQueryMode: 'any'
   //     }
@@ -419,7 +415,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const spacedLabel = 'lab  el'
       await storage.updateTxLabel(1, { label: spacedLabel })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [spacedLabel]
       }
 
@@ -434,7 +430,7 @@ describe('listActions2 single action tests', () => {
   // Can't test mixed case at storage level
   // test('36_label different case lower all', async () => {
   //   for (const { wallet } of ctxs) {
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label'],
   //       labelQueryMode: 'all'
   //     }
@@ -447,7 +443,7 @@ describe('listActions2 single action tests', () => {
 
   // test('37_label different case upper all', async () => {
   //   for (const { wallet } of ctxs) {
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['LABEL'],
   //       labelQueryMode: 'all'
   //     }
@@ -463,7 +459,7 @@ describe('listActions2 single action tests', () => {
   //     const pairSameLabels = ['label', 'label']
   //     await storage.updateTxLabel(1, { label: pairSameLabels[0] })
   //     await storage.updateTxLabel(2, { label: pairSameLabels[1] })
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: pairSameLabels
   //     }
 
@@ -478,7 +474,7 @@ describe('listActions2 single action tests', () => {
       const label = 'label'
       await storage.updateTxLabel(1, { label })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label],
         includeLabels: true
       }
@@ -495,7 +491,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       const label = 'label'
       await storage.updateTxLabel(1, { label })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label],
         includeLabels: false
       }
@@ -512,7 +508,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'labels' })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label'],
         includeLabels: true
       }
@@ -527,7 +523,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'labels' })
       await storage.updateTxLabel(2, { label: 'label' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label']
       }
 
@@ -543,7 +539,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'label' })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeInputs: true
       }
@@ -560,7 +556,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'label' })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeInputs: false
       }
@@ -577,7 +573,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'label' })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeInputs: true,
         includeInputSourceLockingScripts: true
@@ -595,7 +591,7 @@ describe('listActions2 single action tests', () => {
     for (const { activeStorage: storage, wallet } of ctxs) {
       await storage.updateTxLabel(1, { label: 'label' })
       await storage.updateTxLabel(2, { label: 'label2' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeInputs: true,
         includeInputSourceLockingScripts: false
@@ -614,7 +610,7 @@ describe('listActions2 single action tests', () => {
       await storage.updateTxLabel(1, { label: 'label' })
       await storage.updateTxLabel(2, { label: 'label2' })
       await storage.updateOutput(1, { lockingScript: [] })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeInputs: true,
         includeInputSourceLockingScripts: true
@@ -634,11 +630,11 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateTxLabel(1, { label: 'label' })
   //     await storage.updateTxLabel(2, { label: 'label2' })
   //     await storage.updateOutput(1, {
-  //       lockingScript: hexStringToNumberArray(
+  //       lockingScript: Utils.toArray(
   //         '76a91489abcdefabbaabbaabbaabbaabbaabbaabbaabba88ac'
   //       )
   //     })
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeInputs: true,
   //       includeInputSourceLockingScripts: true,
@@ -668,7 +664,7 @@ describe('listActions2 single action tests', () => {
       await storage.updateOutputTag(2, { tag: 'new tag' })
       await storage.updateOutputTagMap(1, 2, {})
 
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeOutputs: true
       }
@@ -696,7 +692,7 @@ describe('listActions2 single action tests', () => {
       await storage.updateOutputTag(2, { tag: 'new tag' })
       await storage.updateOutputTagMap(1, 2, {})
 
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeOutputs: false
       }
@@ -719,7 +715,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true
   //     }
@@ -743,12 +739,12 @@ describe('listActions2 single action tests', () => {
         vout: 2,
         outputDescription: 'new description',
         basketId: 1,
-        lockingScript: hexStringToNumberArray('0123456789abcdef')
+        lockingScript: Utils.toArray('0123456789abcdef')
       })
       await storage.updateOutputTag(2, { tag: 'new tag' })
       await storage.updateOutputTagMap(1, 2, {})
 
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeOutputs: true,
         includeOutputLockingScripts: true
@@ -773,12 +769,12 @@ describe('listActions2 single action tests', () => {
         vout: 2,
         outputDescription: 'new description',
         basketId: 1,
-        lockingScript: hexStringToNumberArray('0123456789abcdef')
+        lockingScript: Utils.toArray('0123456789abcdef')
       })
       await storage.updateOutputTag(2, { tag: 'new tag' })
       await storage.updateOutputTagMap(1, 2, {})
 
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeOutputs: true,
         includeOutputLockingScripts: false
@@ -808,7 +804,7 @@ describe('listActions2 single action tests', () => {
       await storage.updateOutputTag(2, { tag: 'new tag' })
       await storage.updateOutputTagMap(1, 2, {})
 
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label2'],
         includeOutputs: true,
         includeOutputLockingScripts: false
@@ -839,7 +835,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -869,7 +865,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -885,7 +881,7 @@ describe('listActions2 single action tests', () => {
 
   test('57_limit 0', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label'],
         limit: 0
       }
@@ -899,7 +895,7 @@ describe('listActions2 single action tests', () => {
 
   test('58_limit 10001', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label'],
         limit: 10001
       }
@@ -928,7 +924,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -958,7 +954,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -988,7 +984,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1004,7 +1000,7 @@ describe('listActions2 single action tests', () => {
 
   test('62_offset is invalid', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label'],
         offset: -1
       }
@@ -1033,7 +1029,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1063,7 +1059,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1093,7 +1089,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1123,7 +1119,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1153,7 +1149,7 @@ describe('listActions2 single action tests', () => {
   //     await storage.updateOutputTag(2, { tag: 'new tag' })
   //     await storage.updateOutputTagMap(1, 2, {})
 
-  //     const args: bsv.ListActionsArgs = {
+  //     const args: ListActionsArgs = {
   //       labels: ['label2'],
   //       includeOutputs: true,
   //       includeOutputLockingScripts: false
@@ -1243,7 +1239,6 @@ describe('listActions2 two action tests', () => {
   beforeEach(async () => {
     ctxs = []
     const args = {
-      chain: 'test',
       mockData,
       databaseName: testName(),
       rootKeyHex: '2'.repeat(64),
@@ -1261,7 +1256,7 @@ describe('listActions2 two action tests', () => {
 
   test('100_no labels (default) matched default any', async () => {
     for (const { wallet } of ctxs) {
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: []
       }
 
@@ -1280,7 +1275,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label: 'label 2' })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label]
       }
 
@@ -1299,7 +1294,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: [label]
       }
 
@@ -1317,7 +1312,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label: 'label 2' })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label']
       }
 
@@ -1333,7 +1328,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label: 'label 2' })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label 1', 'label 2']
       }
 
@@ -1351,7 +1346,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label: 'label 2' })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label 1', 'label a'],
         labelQueryMode: 'all'
       }
@@ -1370,7 +1365,7 @@ describe('listActions2 two action tests', () => {
       await storage.updateTxLabel(2, { label: 'label a' })
       await storage.updateTxLabel(3, { label: 'label 2' })
       await storage.updateTxLabel(4, { label: 'label b' })
-      const args: bsv.ListActionsArgs = {
+      const args: ListActionsArgs = {
         labels: ['label 2', 'label b'],
         labelQueryMode: 'all'
       }
