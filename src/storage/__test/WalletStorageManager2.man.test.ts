@@ -15,7 +15,7 @@ import {
 } from '@bsv/sdk'
 
 dotenv.config()
-describe('WalletStorageManager tests', () => {
+describe('WalletStorageManager2.man.test.ts', () => {
   jest.setTimeout(99999999)
 
   const env = _tu.getEnv('test')
