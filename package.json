@@ -33,7 +33,7 @@
     "@bsv/auth-express-middleware": "^1.0.12",
     "@bsv/payment-express-middleware": "^1.0.3",
     "@bsv/sdk": "^1.4.0",
-    "axios": "^0.29.0",
+    "axios": "^1.8.2",
     "express": "^4.21.2",
     "knex": "^3.1.0",
     "mysql2": "^3.12.0",
