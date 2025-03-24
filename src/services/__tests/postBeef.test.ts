@@ -79,7 +79,7 @@ async function postBeefTest(services: Services) {
       } else {
         expect(tr!.status).toBe('error')
         expect(tr!.doubleSpend).toBe(true)
-        if (tr!.competingTxs?.length) expect(tr!.competingTxs).toEqual([c.txidUndo])
+        if (tr!.competingTxs !== undefined) expect(tr!.competingTxs).toEqual([c.txidUndo])
       }
     }
   }
