@@ -50,20 +50,31 @@ async function validateReqsAndMergeBeefs(
   const vreqs: PostReqsToNetworkDetails[] = []
 
   for (const req of reqs) {
-    const noRawTx = !req.rawTx
-    const noTxIds = !req.notify.transactionIds || req.notify.transactionIds.length < 1
-    const noInputBEEF = !req.inputBEEF
-    if (noRawTx || noTxIds || noInputBEEF) {
-      // This should have happened earlier...
-      req.addHistoryNote({ when: new Date().toISOString(), what: 'validateReqFailed', noRawTx, noTxIds, noInputBEEF })
-      req.status = 'invalid'
+    try {
+      const noRawTx = !req.rawTx
+      const noTxIds = !req.notify.transactionIds || req.notify.transactionIds.length < 1
+      const noInputBEEF = !req.inputBEEF
+      if (noRawTx || noTxIds || noInputBEEF) {
+        // This should have happened earlier...
+        req.addHistoryNote({ when: new Date().toISOString(), what: 'validateReqFailed', noRawTx, noTxIds, noInputBEEF })
+        req.status = 'invalid'
+        await req.updateStorageDynamicProperties(storage, trx)
+        r.details.push({ txid: req.txid, req, status: 'invalid' })
+      } else {
+        const vreq: PostReqsToNetworkDetails = { txid: req.txid, req, status: 'unknown' }
+        await storage.mergeReqToBeefToShareExternally(req.api, r.beef, [], trx)
+        vreqs.push(vreq)
+        r.details.push(vreq)
+      }
+    } catch (eu: unknown) {
+      const { code, message } = sdk.WalletError.fromUnknown(eu)
+      req.addHistoryNote({ when: new Date().toISOString(), what: 'validateReqError', txid: req.txid, code, message })
+      req.attempts++
+      if (req.attempts > 6) {
+        req.status = 'invalid'
+        r.details.push({ txid: req.txid, req, status: 'invalid' })
+      }
       await req.updateStorageDynamicProperties(storage, trx)
-      r.details.push({ txid: req.txid, req, status: 'invalid' })
-    } else {
-      const vreq: PostReqsToNetworkDetails = { txid: req.txid, req, status: 'unknown' }
-      vreqs.push(vreq)
-      r.details.push(vreq)
-      await storage.mergeReqToBeefToShareExternally(req.api, r.beef, [], trx)
     }
   }
   return { r, vreqs, txids: vreqs.map(r => r.txid) }
