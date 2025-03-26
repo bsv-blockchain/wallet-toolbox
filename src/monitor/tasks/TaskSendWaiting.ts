@@ -75,7 +75,7 @@ export class TaskSendWaiting extends WalletMonitorTask {
       const reqApi = reqApis[i]
       log += ' '.repeat(indent)
       log += `${i} reqId=${reqApi.provenTxReqId} attempts=${reqApi.attempts} txid=${reqApi.txid}: \n`
-      if (reqApi.status !== 'unsent') {
+      if (reqApi.status !== 'unsent' && reqApi.status !== 'sending') {
         log += `  status now ${reqApi.status}\n`
         continue
       }
