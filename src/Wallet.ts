@@ -849,21 +849,6 @@ export class Wallet implements WalletInterface, ProtoWallet {
   }
 
   /**
-   * Uses `listOutputs` special operation to compute the total value (of satoshis) for
-   * all spendable outputs in a basket (which defaults to the change 'default' basket).
-   *
-   * @param {string} basket - Optional. Defaults to 'default', the wallet change basket.
-   * @returns {number} sum of output satoshis
-   */
-  async balance(basket: string = 'default'): Promise<number> {
-    const args: ListOutputsArgs = {
-      basket: specOpWalletBalance
-    }
-    const r = await this.listOutputs(args)
-    return r.totalOutputs
-  }
-
-  /**
    * Uses `listOutputs` to iterate over chunks of up to 1000 outputs to
    * compute the sum of output satoshis.
    *
@@ -887,6 +872,20 @@ export class Wallet implements WalletInterface, ProtoWallet {
       offset += change.outputs.length
     }
     return r
+  }
+
+  /**
+   * Uses `listOutputs` special operation to compute the total value (of satoshis) for
+   * all spendable outputs in the 'default' basket.
+   *
+   * @returns {number} sum of output satoshis
+   */
+  async balance(): Promise<number> {
+    const args: ListOutputsArgs = {
+      basket: specOpWalletBalance
+    }
+    const r = await this.listOutputs(args)
+    return r.totalOutputs
   }
 
   /**

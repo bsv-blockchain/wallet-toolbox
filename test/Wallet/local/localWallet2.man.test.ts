@@ -11,12 +11,12 @@ import {
 } from './localWalletMethods'
 import { abort } from 'process'
 
-const chain: sdk.Chain = 'test'
+const chain: sdk.Chain = 'main'
 
 const options: LocalWalletTestOptions = {
   setActiveClient: true,
   useMySQLConnectionForClient: true,
-  useTestIdentityKey: true,
+  useTestIdentityKey: false,
   useIdentityKey2: false
 }
 
@@ -38,6 +38,13 @@ describe('localWallet2 tests', () => {
   test('1 recover 1 sat outputs', async () => {
     const setup = await createSetup(chain, options)
     await recoverOneSatTestOutputs(setup)
+    await setup.wallet.destroy()
+  })
+
+  test('2 create 1 sat delayed', async () => {
+    const setup = await createSetup(chain, options)
+    const car = await createOneSatTestOutput(setup, {}, 1)
+    //await trackReqByTxid(setup, car.txid!)
     await setup.wallet.destroy()
   })
 
