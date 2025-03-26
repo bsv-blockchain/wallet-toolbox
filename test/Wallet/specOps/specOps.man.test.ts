@@ -23,7 +23,7 @@ describe('specOps tests', () => {
   test('0a wallet balance method', async () => {
     const setup = await createSetup('test')
 
-    const r = await setup.wallet.balance('default')
+    const r = await setup.wallet.balance()
 
     expect(r > 0).toBe(true)
 

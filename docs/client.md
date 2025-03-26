@@ -9868,8 +9868,8 @@ export class Wallet implements WalletInterface, ProtoWallet {
     async getNetwork(args: {}, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<GetNetworkResult> 
     async getVersion(args: {}, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<GetVersionResult> 
     async sweepTo(toWallet: Wallet): Promise<void> 
-    async balance(basket: string = "default"): Promise<number> 
     async balanceAndUtxos(basket: string = "default"): Promise<sdk.WalletBalance> 
+    async balance(): Promise<number> 
     async reviewSpendableOutputs(all = false, release = false, optionalArgs?: Partial<ListOutputsArgs>): Promise<ListOutputsResult> 
     async setWalletChangeParams(count: number, satoshis: number): Promise<void> 
     async listNoSendActions(args: ListActionsArgs, abort = false): Promise<ListActionsResult> 
@@ -9931,20 +9931,15 @@ returnTxidOnly: boolean = false
 ###### Method balance
 
 Uses `listOutputs` special operation to compute the total value (of satoshis) for
-all spendable outputs in a basket (which defaults to the change 'default' basket).
+all spendable outputs in the 'default' basket.
 
 ```ts
-async balance(basket: string = "default"): Promise<number> 
+async balance(): Promise<number> 
 ```
 
 Returns
 
 sum of output satoshis
-
-Argument Details
-
-+ **basket**
-  + Optional. Defaults to 'default', the wallet change basket.
 
 ###### Method balanceAndUtxos
 
