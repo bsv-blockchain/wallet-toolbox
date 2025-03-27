@@ -36,17 +36,18 @@ export class TaskSendWaiting extends WalletMonitorTask {
     const agedLimit = new Date(Date.now() - this.agedMsecs)
     const status: ProvenTxReqStatus[] = this.includeSending ? ['unsent', 'sending'] : ['unsent']
     for (;;) {
-      const reqs = await this.storage.findProvenTxReqs({
+      let reqs = await this.storage.findProvenTxReqs({
         partial: {},
         status,
         paged: { limit, offset }
       })
+      const count = reqs.length
       if (reqs.length === 0) break
       log += `${reqs.length} reqs with status ${status.join(' or ')}\n`
       const agedReqs = reqs.filter(req => verifyTruthy(req.updated_at) < agedLimit)
       log += `  Of those reqs, ${agedReqs.length} where last updated before ${agedLimit.toISOString()}.\n`
       log += await this.processUnsent(agedReqs, 2)
-      if (reqs.length < limit) break
+      if (count < limit) break
       offset += limit
     }
     return log
