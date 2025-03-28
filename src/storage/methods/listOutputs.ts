@@ -210,14 +210,14 @@ export async function listOutputs(
         isDeleted: false
       })
       .whereNotNull('outputTagId')
-      .whereIn('tag', vargs.tags)
+      .whereIn('tag', tags)
       .select('outputTagId')
     const r = await q
     tagIds = r.map(r => r.outputTagId!)
   }
 
   const isQueryModeAll = vargs.tagQueryMode === 'all'
-  if (isQueryModeAll && tagIds.length < vargs.tags.length) return r
+  if (isQueryModeAll && tagIds.length < tags.length) return r
 
   const columns: string[] = [
     'outputId',

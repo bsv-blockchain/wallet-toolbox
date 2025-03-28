@@ -1,6 +1,6 @@
-import { EntitySyncState, sdk } from '../../../src'
+import { EntitySyncState, sdk, Services, Setup, StorageKnex } from '../../../src'
 import { _tu } from '../../utils/TestUtilsWalletStorage'
-import { specOpInvalidChange, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
+import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
 import {
   burnOneSatTestOutput,
   createOneSatTestOutput,
@@ -10,6 +10,9 @@ import {
   recoverOneSatTestOutputs
 } from './localWalletMethods'
 import { abort } from 'process'
+
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const chain: sdk.Chain = 'main'
 
@@ -92,5 +95,46 @@ describe('localWallet2 tests', () => {
       })
     }
     await setup.wallet.destroy()
+  })
+
+  test('5 cleanup change for userId', async () => {
+    const env = _tu.getEnv('main')
+    const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
+    const storage = new StorageKnex({
+      chain: env.chain,
+      knex: knex,
+      commissionSatoshis: 0,
+      commissionPubKeyHex: undefined,
+      feeModel: { model: 'sat/kb', value: 1 }
+    })
+    const servicesOptions = Services.createDefaultOptions(env.chain)
+    if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey;
+    storage.setServices(new Services(servicesOptions))
+    await storage.makeAvailable()
+    for (const userId of [76,48,166,94,110,111,81]) {
+      const auth = { userId, identityKey: '' }
+      const vargs: ValidListOutputsArgs = {
+        basket: specOpInvalidChange,
+        tags: [],
+        tagQueryMode: 'all',
+        includeLockingScripts: false,
+        includeTransactions: false,
+        includeCustomInstructions: false,
+        includeTags: false,
+        includeLabels: false,
+        limit: 0,
+        offset: 0,
+        seekPermission: false,
+        knownTxids: []
+      }
+      let r = await storage.listOutputs(auth, vargs)
+      if (r.totalOutputs > 0) {
+        console.log(`userId ${userId} releasing ${r.totalOutputs} unspendable utxos`)
+        r = await storage.listOutputs(auth, { ...vargs, tags: ['release'] })
+        r = await storage.listOutputs(auth, vargs)
+      }
+      expect(r.totalOutputs).toBe(0)
+    }
+    await storage.destroy()
   })
 })
