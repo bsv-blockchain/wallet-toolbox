@@ -108,10 +108,10 @@ describe('localWallet2 tests', () => {
       feeModel: { model: 'sat/kb', value: 1 }
     })
     const servicesOptions = Services.createDefaultOptions(env.chain)
-    if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey;
+    if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
     storage.setServices(new Services(servicesOptions))
     await storage.makeAvailable()
-    for (const userId of [76,48,166,94,110,111,81]) {
+    for (const userId of [76, 48, 166, 94, 110, 111, 81]) {
       const auth = { userId, identityKey: '' }
       const vargs: ValidListOutputsArgs = {
         basket: specOpInvalidChange,
