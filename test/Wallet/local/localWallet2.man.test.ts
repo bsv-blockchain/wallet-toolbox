@@ -1,4 +1,4 @@
-import { EntitySyncState, sdk, Services, Setup, StorageKnex } from '../../../src'
+import { EntitySyncState, sdk, Services, Setup, StorageKnex, TableOutput, TableUser } from '../../../src'
 import { _tu } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
 import {
@@ -12,6 +12,7 @@ import {
 import { abort } from 'process'
 
 import * as dotenv from 'dotenv'
+import { WalletOutput } from '@bsv/sdk'
 dotenv.config()
 
 const chain: sdk.Chain = 'main'
@@ -97,7 +98,7 @@ describe('localWallet2 tests', () => {
     await setup.wallet.destroy()
   })
 
-  test('5 cleanup change for userId', async () => {
+  test('5 review and release all production invalid change utxos', async () => {
     const env = _tu.getEnv('main')
     const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
     const storage = new StorageKnex({
@@ -111,29 +112,48 @@ describe('localWallet2 tests', () => {
     if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
     storage.setServices(new Services(servicesOptions))
     await storage.makeAvailable()
-    for (const userId of [76, 48, 166, 94, 110, 111, 81]) {
+    const users = await storage.findUsers({ partial: {} })
+    const withInvalid: Record<number, { user: TableUser, outputs: WalletOutput[], total: number }> = {}
+    // [76, 48, 166, 94, 110, 111, 81]
+    const vargs: ValidListOutputsArgs = {
+      basket: specOpInvalidChange,
+      tags: [],
+      tagQueryMode: 'all',
+      includeLockingScripts: false,
+      includeTransactions: false,
+      includeCustomInstructions: false,
+      includeTags: false,
+      includeLabels: false,
+      limit: 0,
+      offset: 0,
+      seekPermission: false,
+      knownTxids: []
+    }
+    for (const user of users ) {
+      const { userId } = user
       const auth = { userId, identityKey: '' }
-      const vargs: ValidListOutputsArgs = {
-        basket: specOpInvalidChange,
-        tags: [],
-        tagQueryMode: 'all',
-        includeLockingScripts: false,
-        includeTransactions: false,
-        includeCustomInstructions: false,
-        includeTags: false,
-        includeLabels: false,
-        limit: 0,
-        offset: 0,
-        seekPermission: false,
-        knownTxids: []
-      }
       let r = await storage.listOutputs(auth, vargs)
       if (r.totalOutputs > 0) {
-        console.log(`userId ${userId} releasing ${r.totalOutputs} unspendable utxos`)
-        r = await storage.listOutputs(auth, { ...vargs, tags: ['release'] })
-        r = await storage.listOutputs(auth, vargs)
+        const total: number = r.outputs.reduce((s, o) => s += o.satoshis, 0)
+        console.log(`userId ${userId}: ${r.totalOutputs} unspendable utxos, total ${total}, ${user.identityKey}`)
+        withInvalid[userId] = { user, outputs: r.outputs, total }
       }
-      expect(r.totalOutputs).toBe(0)
+    }
+    if (Object.keys(withInvalid).length > 0) {
+      debugger;
+      // Release invalids
+      for (const { user, outputs } of Object.values(withInvalid)) {
+        const { userId } = user
+        const auth = { userId, identityKey: '' }
+        await storage.listOutputs(auth, { ...vargs, tags: ['release'] })
+      }
+      // Verify
+      for (const { user, outputs } of Object.values(withInvalid)) {
+        const { userId } = user
+        const auth = { userId, identityKey: '' }
+        const r = await storage.listOutputs(auth, vargs)
+        expect(r.totalOutputs).toBe(0)
+      }
     }
     await storage.destroy()
   })
