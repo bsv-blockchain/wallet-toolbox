@@ -13103,7 +13103,7 @@ DEFAULT_SETTINGS = {
                 name: "Babbage Trust Services",
                 description: "Resolves identity information for Babbage-run APIs and Bitcoin infrastructure.",
                 iconUrl: "https://projectbabbage.com/favicon.ico",
-                identityKey: "028703956178067ea7ca405111f1ca698290a0112a3d7cf3d843e195bf58a7cfa6",
+                identityKey: "03daf815fe38f83da0ad83b5bedc520aa488aef5cbc93a93c67a7fe60406cbffe8",
                 trust: 4
             },
             {

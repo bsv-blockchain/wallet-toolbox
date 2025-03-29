@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS = {
         name: 'Babbage Trust Services',
         description: 'Resolves identity information for Babbage-run APIs and Bitcoin infrastructure.',
         iconUrl: 'https://projectbabbage.com/favicon.ico',
-        identityKey: '028703956178067ea7ca405111f1ca698290a0112a3d7cf3d843e195bf58a7cfa6',
+        identityKey: '03daf815fe38f83da0ad83b5bedc520aa488aef5cbc93a93c67a7fe60406cbffe8',
         trust: 4
       },
       {
@@ -62,7 +62,7 @@ export const DEFAULT_SETTINGS = {
         description: 'Certifies social media handles, phone numbers and emails',
         iconUrl: 'https://socialcert.net/favicon.ico',
         trust: 3,
-        identityKey: '03285263f06139b66fb27f51cf8a92e9dd007c4c4b83876ad6c3e7028db450a4c2'
+        identityKey: '02cf6cdf466951d8dfc9e7c9367511d0007ed6fba35ed42d425cc412fd6cfd4a17'
       }
     ]
   },
@@ -98,7 +98,7 @@ export class WalletSettingsManager {
     private config: WalletSettingsManagerConfig = {
       defaultSettings: DEFAULT_SETTINGS
     }
-  ) {}
+  ) { }
 
   /**
    * Returns a user's wallet settings
@@ -107,10 +107,10 @@ export class WalletSettingsManager {
    */
   async get(): Promise<WalletSettings> {
     // List outputs in the 'wallet-settings' basket
+    // There should only be one settings token
     const results = await this.wallet.listOutputs({
       basket: SETTINGS_BASKET,
-      include: 'locking scripts',
-      limit: 1 // There should only be one settings token
+      include: 'locking scripts'
     })
 
     // Return defaults if no settings token is found
@@ -118,7 +118,7 @@ export class WalletSettingsManager {
       return this.config.defaultSettings
     }
 
-    const { fields } = PushDrop.decode(LockingScript.fromHex(results.outputs[0].lockingScript!))
+    const { fields } = PushDrop.decode(LockingScript.fromHex(results.outputs[results.outputs.length - 1].lockingScript!))
     // Parse and return settings token
     return JSON.parse(Utils.toUTF8(fields[0]))
   }
@@ -164,15 +164,12 @@ export class WalletSettingsManager {
     // 1. List the existing token UTXO(s) for the settings basket.
     const existingUtxos = await this.wallet.listOutputs({
       basket: SETTINGS_BASKET,
-      include: 'entire transactions',
-      limit: 1
+      include: 'entire transactions'
     })
 
     // This is the "create a new token" path — no signAction, just a new locking script.
     if (!existingUtxos.outputs.length) {
       if (!newLockingScript) {
-        // The intention was to clear the token, but no tokn was found to clear.
-        // Thus, we are done.
         return true
       }
       await this.wallet.createAction({
@@ -186,14 +183,15 @@ export class WalletSettingsManager {
           }
         ],
         options: {
-          randomizeOutputs: false
+          randomizeOutputs: false,
+          acceptDelayedBroadcast: false
         }
       })
       return true
     }
 
     // 2. Prepare the token UTXO for consumption.
-    const tokenOutput = existingUtxos.outputs[0]
+    const tokenOutput = existingUtxos.outputs[existingUtxos.outputs.length - 1]
     const inputToConsume: CreateActionInput = {
       outpoint: tokenOutput.outpoint,
       unlockingScriptLength: 73,
@@ -203,13 +201,13 @@ export class WalletSettingsManager {
     // 3. Build the outputs array: if a new locking script is provided, add an output.
     const outputs = newLockingScript
       ? [
-          {
-            satoshis: TOKEN_AMOUNT,
-            lockingScript: newLockingScript.toHex(),
-            outputDescription: 'Wallet settings token',
-            basket: SETTINGS_BASKET
-          }
-        ]
+        {
+          satoshis: TOKEN_AMOUNT,
+          lockingScript: newLockingScript.toHex(),
+          outputDescription: 'Wallet settings token',
+          basket: SETTINGS_BASKET
+        }
+      ]
       : []
 
     // 4. Create a signable transaction action using the inputs and (optionally) outputs.
@@ -219,7 +217,8 @@ export class WalletSettingsManager {
       inputs: [inputToConsume], // input index 0
       outputs,
       options: {
-        randomizeOutputs: false
+        randomizeOutputs: false,
+        acceptDelayedBroadcast: false
       }
     })
     const tx = Transaction.fromBEEF(signableTransaction!.tx)

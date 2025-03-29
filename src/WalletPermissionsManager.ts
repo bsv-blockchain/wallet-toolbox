@@ -1,4 +1,4 @@
-import { WalletInterface, Utils, PushDrop, LockingScript, Transaction } from '@bsv/sdk'
+import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol } from '@bsv/sdk'
 import { validateCreateActionArgs } from './sdk'
 
 ////// TODO: ADD SUPPORT FOR ADMIN COUNTERPARTIES BASED ON WALLET STORAGE
@@ -23,7 +23,7 @@ export interface PermissionRequest {
   type: 'protocol' | 'basket' | 'certificate' | 'spending'
   originator: string // The domain or FQDN of the requesting application
   privileged?: boolean // For "protocol" or "certificate" usage, indicating privileged key usage
-  protocolID?: [0 | 1 | 2, string] // For type='protocol': BRC-43 style (securityLevel, protocolName)
+  protocolID?: WalletProtocol // For type='protocol': BRC-43 style (securityLevel, protocolName)
   counterparty?: string // For type='protocol': e.g. target public key or "self"/"anyone"
 
   basket?: string // For type='basket': the basket name being requested
@@ -509,7 +509,7 @@ export class WalletPermissionsManager implements WalletInterface {
   }: {
     originator: string
     privileged: boolean
-    protocolID: [0 | 1 | 2, string]
+    protocolID: WalletProtocol
     counterparty: string
     reason?: string
     seekPermission?: boolean
@@ -985,7 +985,7 @@ export class WalletPermissionsManager implements WalletInterface {
   private async findProtocolToken(
     originator: string,
     privileged: boolean,
-    protocolID: [0 | 1 | 2, string],
+    protocolID: WalletProtocol,
     counterparty: string,
     includeExpired: boolean
   ): Promise<PermissionToken | undefined> {
@@ -1489,7 +1489,7 @@ export class WalletPermissionsManager implements WalletInterface {
   public async hasProtocolPermission(params: {
     originator: string
     privileged: boolean
-    protocolID: [0 | 1 | 2, string]
+    protocolID: WalletProtocol
     counterparty: string
   }): Promise<boolean> {
     try {
@@ -2369,7 +2369,7 @@ export class WalletPermissionsManager implements WalletInterface {
    *
    * If it violates these rules and the caller is not admin, we consider it "admin-only."
    */
-  private isAdminProtocol(proto: [0 | 1 | 2, string]): boolean {
+  private isAdminProtocol(proto: WalletProtocol): boolean {
     const protocolName = proto[1]
     if (protocolName.startsWith('admin') || protocolName.startsWith('p ')) {
       return true
