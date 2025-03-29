@@ -20,7 +20,7 @@ export class MockTransaction {
   public outputs: any[] = []
   public fee: number = 0
 
-  constructor() { }
+  constructor() {}
   static fromAtomicBEEF() {
     // Mocked below
   }
@@ -35,7 +35,7 @@ export class MockTransaction {
   }
 }
 
-; (MockTransaction as any).fromAtomicBEEF = jest.fn(() => {
+;(MockTransaction as any).fromAtomicBEEF = jest.fn(() => {
   // We skip real validation, returning a MockTransaction with minimal structure.
   const tx = new MockTransaction()
   return tx
