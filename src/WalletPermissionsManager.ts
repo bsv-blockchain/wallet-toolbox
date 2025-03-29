@@ -951,7 +951,7 @@ export class WalletPermissionsManager implements WalletInterface {
       },
       this.adminOriginator
     )
-    return Utils.toUTF8(ciphertext) // Still a string, but scrambled.
+    return Utils.toBase64(ciphertext) // Still a string, but scrambled.
   }
 
   /**
@@ -963,7 +963,7 @@ export class WalletPermissionsManager implements WalletInterface {
     try {
       const { plaintext } = await this.underlying.decrypt(
         {
-          ciphertext: Utils.toArray(ciphertext, 'utf8'),
+          ciphertext: Utils.toArray(ciphertext, 'base64'),
           protocolID: WalletPermissionsManager.METADATA_ENCRYPTION_PROTOCOL,
           keyID: '1'
         },
