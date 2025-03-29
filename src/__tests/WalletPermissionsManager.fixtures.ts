@@ -20,7 +20,7 @@ export class MockTransaction {
   public outputs: any[] = []
   public fee: number = 0
 
-  constructor() {}
+  constructor() { }
   static fromAtomicBEEF() {
     // Mocked below
   }
@@ -35,7 +35,7 @@ export class MockTransaction {
   }
 }
 
-;(MockTransaction as any).fromAtomicBEEF = jest.fn(() => {
+; (MockTransaction as any).fromAtomicBEEF = jest.fn(() => {
   // We skip real validation, returning a MockTransaction with minimal structure.
   const tx = new MockTransaction()
   return tx
@@ -153,6 +153,12 @@ export const MockUtils = {
   toUTF8: (arr: number[]) => {
     // Converts an array of numbers to a UTF-8 string.
     return String.fromCharCode(...arr)
+  },
+
+  toBase64: (arr: number[]) => {
+    // Converts an array of numbers to a Base64 string.
+    const binaryStr = String.fromCharCode(...arr)
+    return btoa(binaryStr)
   }
 }
 
