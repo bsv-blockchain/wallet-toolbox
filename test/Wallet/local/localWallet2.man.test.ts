@@ -101,7 +101,7 @@ describe('localWallet2 tests', () => {
   test('5 review and release all production invalid change utxos', async () => {
     const { env, storage } = await createMainReviewSetup()
     const users = await storage.findUsers({ partial: {} })
-    const withInvalid: Record<number, { user: TableUser, outputs: WalletOutput[], total: number }> = {}
+    const withInvalid: Record<number, { user: TableUser; outputs: WalletOutput[]; total: number }> = {}
     // [76, 48, 166, 94, 110, 111, 81]
     const vargs: ValidListOutputsArgs = {
       basket: specOpInvalidChange,
@@ -117,18 +117,18 @@ describe('localWallet2 tests', () => {
       seekPermission: false,
       knownTxids: []
     }
-    for (const user of users ) {
+    for (const user of users) {
       const { userId } = user
       const auth = { userId, identityKey: '' }
       let r = await storage.listOutputs(auth, vargs)
       if (r.totalOutputs > 0) {
-        const total: number = r.outputs.reduce((s, o) => s += o.satoshis, 0)
+        const total: number = r.outputs.reduce((s, o) => (s += o.satoshis), 0)
         console.log(`userId ${userId}: ${r.totalOutputs} unspendable utxos, total ${total}, ${user.identityKey}`)
         withInvalid[userId] = { user, outputs: r.outputs, total }
       }
     }
     if (Object.keys(withInvalid).length > 0) {
-      debugger;
+      debugger
       // Release invalids
       for (const { user, outputs } of Object.values(withInvalid)) {
         const { userId } = user
@@ -147,9 +147,9 @@ describe('localWallet2 tests', () => {
   })
 })
 
-async function createMainReviewSetup() : Promise<{
-  env: TuEnv,
-  storage: StorageKnex,
+async function createMainReviewSetup(): Promise<{
+  env: TuEnv
+  storage: StorageKnex
   services: Services
 }> {
   const env = _tu.getEnv('main')

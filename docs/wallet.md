@@ -1402,10 +1402,7 @@ export interface PermissionRequest {
     type: "protocol" | "basket" | "certificate" | "spending";
     originator: string;
     privileged?: boolean;
-    protocolID?: [
-        0 | 1 | 2,
-        string
-    ];
+    protocolID?: WalletProtocol;
     counterparty?: string;
     basket?: string;
     certificate?: {
@@ -10250,10 +10247,7 @@ export class WalletPermissionsManager implements WalletInterface {
     public async ensureProtocolPermission({ originator, privileged, protocolID, counterparty, reason, seekPermission = true, usageType }: {
         originator: string;
         privileged: boolean;
-        protocolID: [
-            0 | 1 | 2,
-            string
-        ];
+        protocolID: WalletProtocol;
         counterparty: string;
         reason?: string;
         seekPermission?: boolean;
@@ -10301,10 +10295,7 @@ export class WalletPermissionsManager implements WalletInterface {
     public async hasProtocolPermission(params: {
         originator: string;
         privileged: boolean;
-        protocolID: [
-            0 | 1 | 2,
-            string
-        ];
+        protocolID: WalletProtocol;
         counterparty: string;
     }): Promise<boolean> 
     public async listBasketAccess(params: {
@@ -10474,10 +10465,7 @@ If no valid (unexpired) permission token is found, triggers a permission request
 public async ensureProtocolPermission({ originator, privileged, protocolID, counterparty, reason, seekPermission = true, usageType }: {
     originator: string;
     privileged: boolean;
-    protocolID: [
-        0 | 1 | 2,
-        string
-    ];
+    protocolID: WalletProtocol;
     counterparty: string;
     reason?: string;
     seekPermission?: boolean;
@@ -10561,10 +10549,7 @@ This calls `ensureProtocolPermission` with `seekPermission=false`, so it won't p
 public async hasProtocolPermission(params: {
     originator: string;
     privileged: boolean;
-    protocolID: [
-        0 | 1 | 2,
-        string
-    ];
+    protocolID: WalletProtocol;
     counterparty: string;
 }): Promise<boolean> 
 ```
@@ -13118,7 +13103,7 @@ DEFAULT_SETTINGS = {
                 description: "Certifies social media handles, phone numbers and emails",
                 iconUrl: "https://socialcert.net/favicon.ico",
                 trust: 3,
-                identityKey: "03285263f06139b66fb27f51cf8a92e9dd007c4c4b83876ad6c3e7028db450a4c2"
+                identityKey: "02cf6cdf466951d8dfc9e7c9367511d0007ed6fba35ed42d425cc412fd6cfd4a17"
             }
         ]
     },

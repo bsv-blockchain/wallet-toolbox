@@ -98,7 +98,7 @@ export class WalletSettingsManager {
     private config: WalletSettingsManagerConfig = {
       defaultSettings: DEFAULT_SETTINGS
     }
-  ) { }
+  ) {}
 
   /**
    * Returns a user's wallet settings
@@ -118,7 +118,9 @@ export class WalletSettingsManager {
       return this.config.defaultSettings
     }
 
-    const { fields } = PushDrop.decode(LockingScript.fromHex(results.outputs[results.outputs.length - 1].lockingScript!))
+    const { fields } = PushDrop.decode(
+      LockingScript.fromHex(results.outputs[results.outputs.length - 1].lockingScript!)
+    )
     // Parse and return settings token
     return JSON.parse(Utils.toUTF8(fields[0]))
   }
@@ -201,13 +203,13 @@ export class WalletSettingsManager {
     // 3. Build the outputs array: if a new locking script is provided, add an output.
     const outputs = newLockingScript
       ? [
-        {
-          satoshis: TOKEN_AMOUNT,
-          lockingScript: newLockingScript.toHex(),
-          outputDescription: 'Wallet settings token',
-          basket: SETTINGS_BASKET
-        }
-      ]
+          {
+            satoshis: TOKEN_AMOUNT,
+            lockingScript: newLockingScript.toHex(),
+            outputDescription: 'Wallet settings token',
+            basket: SETTINGS_BASKET
+          }
+        ]
       : []
 
     // 4. Create a signable transaction action using the inputs and (optionally) outputs.
