@@ -1,5 +1,5 @@
 import { EntitySyncState, sdk, Services, Setup, StorageKnex, TableOutput, TableUser } from '../../../src'
-import { _tu } from '../../utils/TestUtilsWalletStorage'
+import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
 import {
   burnOneSatTestOutput,
@@ -99,19 +99,7 @@ describe('localWallet2 tests', () => {
   })
 
   test('5 review and release all production invalid change utxos', async () => {
-    const env = _tu.getEnv('main')
-    const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
-    const storage = new StorageKnex({
-      chain: env.chain,
-      knex: knex,
-      commissionSatoshis: 0,
-      commissionPubKeyHex: undefined,
-      feeModel: { model: 'sat/kb', value: 1 }
-    })
-    const servicesOptions = Services.createDefaultOptions(env.chain)
-    if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
-    storage.setServices(new Services(servicesOptions))
-    await storage.makeAvailable()
+    const { env, storage } = await createMainReviewSetup()
     const users = await storage.findUsers({ partial: {} })
     const withInvalid: Record<number, { user: TableUser, outputs: WalletOutput[], total: number }> = {}
     // [76, 48, 166, 94, 110, 111, 81]
@@ -158,3 +146,25 @@ describe('localWallet2 tests', () => {
     await storage.destroy()
   })
 })
+
+async function createMainReviewSetup() : Promise<{
+  env: TuEnv,
+  storage: StorageKnex,
+  services: Services
+}> {
+  const env = _tu.getEnv('main')
+  const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
+  const storage = new StorageKnex({
+    chain: env.chain,
+    knex: knex,
+    commissionSatoshis: 0,
+    commissionPubKeyHex: undefined,
+    feeModel: { model: 'sat/kb', value: 1 }
+  })
+  const servicesOptions = Services.createDefaultOptions(env.chain)
+  if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
+  const services = new Services(servicesOptions)
+  storage.setServices(services)
+  await storage.makeAvailable()
+  return { env, storage, services }
+}
