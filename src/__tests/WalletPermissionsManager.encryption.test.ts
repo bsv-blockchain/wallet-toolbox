@@ -1,6 +1,7 @@
 import { mockUnderlyingWallet, MockedBSV_SDK } from './WalletPermissionsManager.fixtures'
 import { WalletPermissionsManager } from '../WalletPermissionsManager'
 import { jest } from '@jest/globals'
+import { Utils } from '@bsv/sdk'
 
 jest.mock('@bsv/sdk', () => MockedBSV_SDK)
 
@@ -62,7 +63,7 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
         plaintext: [72, 105] // 'Hi'
       })
 
-      const ciphertext = 'random-string-representing-ciphertext'
+      const ciphertext = Utils.toBase64(Utils.toArray('random-string-representing-ciphertext'))
       const result = await manager['maybeDecryptMetadata'](ciphertext)
 
       // We expect underlying.decrypt() to have been called
@@ -153,19 +154,19 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
         totalActions: 1,
         actions: [
           {
-            description: 'fake-encrypted-string-for-description',
+            description: Utils.toBase64(Utils.toArray('fake-encrypted-string-for-description')),
             inputs: [
               {
                 outpoint: 'txid1.0',
-                inputDescription: 'fake-encrypted-string-for-inputDesc'
+                inputDescription: Utils.toBase64(Utils.toArray('fake-encrypted-string-for-inputDesc'))
               }
             ],
             outputs: [
               {
                 lockingScript: 'OP_RETURN 1234',
                 satoshis: 500,
-                outputDescription: 'fake-encrypted-string-for-outputDesc',
-                customInstructions: 'fake-encrypted-string-for-customInstr'
+                outputDescription: Utils.toBase64(Utils.toArray('fake-encrypted-string-for-outputDesc')),
+                customInstructions: Utils.toBase64(Utils.toArray('fake-encrypted-string-for-customInstr'))
               }
             ]
           }
@@ -268,7 +269,7 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
       // To simulate, we make decryption pass through.
       underlying.decrypt.mockImplementation(x => x)
       const listResult = await (manager as any).listActions({}, 'nonadmin.com')
-      expect(underlying.decrypt).toHaveBeenCalledTimes(4)
+      expect(underlying.decrypt).toHaveBeenCalledTimes(3)
 
       // Confirm the returned data is the same as originally provided (plaintext)
       const [first] = listResult.actions
@@ -297,7 +298,7 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
             satoshis: 999,
             lockingScript: 'OP_RETURN something',
             basket: 'some-basket',
-            customInstructions: 'fake-encrypted-instructions-string'
+            customInstructions: Utils.toBase64(Utils.toArray('fake-encrypted-instructions-string'))
           }
         ]
       })

@@ -153,6 +153,12 @@ export const MockUtils = {
   toUTF8: (arr: number[]) => {
     // Converts an array of numbers to a UTF-8 string.
     return String.fromCharCode(...arr)
+  },
+
+  toBase64: (arr: number[]) => {
+    // Converts an array of numbers to a Base64 string.
+    const binaryStr = String.fromCharCode(...arr)
+    return btoa(binaryStr)
   }
 }
 

@@ -1,4 +1,4 @@
-import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol } from '@bsv/sdk'
+import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol, Base64String } from '@bsv/sdk'
 import { validateCreateActionArgs } from './sdk'
 
 ////// TODO: ADD SUPPORT FOR ADMIN COUNTERPARTIES BASED ON WALLET STORAGE
@@ -939,7 +939,7 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param plaintext The metadata to encrypt if configured to do so
    * @returns The encrypted metadata, or the original value if encryption was disabled.
    */
-  private async maybeEncryptMetadata(plaintext: string): Promise<string> {
+  private async maybeEncryptMetadata(plaintext: string): Promise<Base64String> {
     if (!this.config.encryptWalletMetadata) {
       return plaintext
     }
@@ -951,7 +951,7 @@ export class WalletPermissionsManager implements WalletInterface {
       },
       this.adminOriginator
     )
-    return Utils.toUTF8(ciphertext) // Still a string, but scrambled.
+    return Utils.toBase64(ciphertext)
   }
 
   /**
@@ -959,11 +959,11 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param ciphertext The metadata to attempt decryption for.
    * @returns The decrypted metadata. If decryption fails, returns the original value instead.
    */
-  private async maybeDecryptMetadata(ciphertext: string): Promise<string> {
+  private async maybeDecryptMetadata(ciphertext: Base64String): Promise<string> {
     try {
       const { plaintext } = await this.underlying.decrypt(
         {
-          ciphertext: Utils.toArray(ciphertext, 'utf8'),
+          ciphertext: Utils.toArray(ciphertext, 'base64'),
           protocolID: WalletPermissionsManager.METADATA_ENCRYPTION_PROTOCOL,
           keyID: '1'
         },
