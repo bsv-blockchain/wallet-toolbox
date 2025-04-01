@@ -1,5 +1,4 @@
-import { PubKeyHex, WalletInterface } from '@bsv/sdk'
-import LocalKVStore from 'babbage-kvstore/dist/LocalKVStore'
+import { LocalKVStore, PubKeyHex, WalletInterface } from '@bsv/sdk'
 
 export interface Certifier {
   name: string
@@ -34,7 +33,7 @@ export const DEFAULT_SETTINGS = {
     trustedCertifiers: [
       {
         name: 'Metanet Trust Services',
-        description: 'Resolves identity information for Babbage-run APIs and Bitcoin infrastructure.',
+        description: 'Registry for protocols, baskets, and certificates types',
         iconUrl: 'https://bsvblockchain.org/favicon.ico',
         identityKey: '03daf815fe38f83da0ad83b5bedc520aa488aef5cbc93a93c67a7fe60406cbffe8',
         trust: 4
@@ -76,7 +75,7 @@ export const TESTNET_DEFAULT_SETTINGS: WalletSettings = {
  */
 export class WalletSettingsManager {
   kv: LocalKVStore
-  
+
   constructor(
     private wallet: WalletInterface,
     private config: WalletSettingsManagerConfig = {
@@ -92,12 +91,7 @@ export class WalletSettingsManager {
    * @returns - Wallet settings object
    */
   async get(): Promise<WalletSettings> {
-    return JSON.parse(
-      (await this.kv.get(
-        'settings',
-        JSON.stringify(this.config.defaultSettings)
-      )) as string
-    )
+    return JSON.parse((await this.kv.get('settings', JSON.stringify(this.config.defaultSettings))) as string)
   }
 
   /**

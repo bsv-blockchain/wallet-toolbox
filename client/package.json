@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/bitcoin-sv/wallet-toolbox#readme",
   "dependencies": {
-    "@bsv/sdk": "^1.4.15",
-    "babbage-kvstore": "^2.0.0"
+    "@bsv/sdk": "^1.4.17"
   }
 }
