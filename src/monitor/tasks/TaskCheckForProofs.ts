@@ -1,4 +1,5 @@
-import { asString, doubleSha256BE, EntityProvenTx, EntityProvenTxReq, sdk, TableProvenTxReq } from '../../index.client'
+import { EntityProvenTxReq } from '../../storage/schema/entities'
+import { TableProvenTxReq } from '../../storage/schema/tables'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 

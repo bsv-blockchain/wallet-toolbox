@@ -684,6 +684,7 @@ export class Wallet implements WalletInterface, ProtoWallet {
 
     const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateCreateActionArgs)
 
+    debugger;
     if (vargs.labels.indexOf(specOpThrowReviewActions) >= 0) throwDummyReviewActions()
 
     vargs.includeAllSourceTransactions = this.includeAllSourceTransactions

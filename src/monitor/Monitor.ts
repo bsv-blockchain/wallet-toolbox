@@ -1,4 +1,3 @@
-import { sdk, wait, Services, WalletStorageManager } from '../index.client'
 import { BlockHeader, ChaintracksServiceClient } from '../services/chaintracker'
 import { TaskPurge, TaskPurgeParams } from './tasks/TaskPurge'
 import { TaskReviewStatus } from './tasks/TaskReviewStatus'
@@ -11,6 +10,10 @@ import { TaskClock } from './tasks/TaskClock'
 import { TaskNewHeader as TaskNewHeader } from './tasks/TaskNewHeader'
 import { TaskUnFail } from './tasks/TaskUnFail'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
+import { WalletStorageManager } from '../storage/WalletStorageManager'
+import * as sdk from '../sdk/index'
+import { Services } from '../services'
+import { wait } from '../utility/utilityHelpers'
 
 export type MonitorStorage = WalletStorageManager
 //export type MonitorStorage = sdk.WalletStorage
