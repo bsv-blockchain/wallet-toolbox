@@ -200,6 +200,7 @@ describe('localWallet2 tests', () => {
     }
     await storage.destroy()
   })
+
 })
 
 async function createMainReviewSetup(): Promise<{
