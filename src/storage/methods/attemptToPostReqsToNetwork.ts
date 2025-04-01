@@ -319,7 +319,7 @@ async function confirmDoubleSpend(
         }
       }
     }
-    ar.competingTxs = [...competingTxids].slice(-1, 24) // keep at most 24, if they were sorted by time, keep newest
+    ar.competingTxs = [...competingTxids].slice(-24) // keep at most 24, if they were sorted by time, keep newest
     note.competingTxs = ar.competingTxs.join(',')
   }
   req.addHistoryNote(note)
