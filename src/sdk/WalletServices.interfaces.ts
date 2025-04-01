@@ -98,6 +98,18 @@ export interface WalletServices {
   hashOutputScript(script: string): string
 
   /**
+   * For an array of one or more txids, returns for each wether it is a 'known', 'mined', or 'unknown' transaction.
+   * 
+   * Primarily useful for determining if a recently broadcast transaction is known to the processing network.
+   * 
+   * Also returns the current depth from chain tip if 'mined'.
+   * 
+   * @param txids 
+   * @param useNext 
+   */
+  getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult>
+
+  /**
    * Attempts to determine the UTXO status of a transaction output.
    *
    * Cycles through configured transaction processing services attempting to get a valid response.
@@ -164,6 +176,33 @@ export interface WalletServicesOptions {
   chaintracks?: ChaintracksServiceClient
   arcUrl: string
   arcConfig: ArcConfig
+}
+
+export interface GetStatusForTxidsResult {
+  /**
+   * The name of the service returning these results.
+   */
+  name: string
+  status: 'success' | 'error'
+  /**
+   * The first exception error that occurred during processing, if any.
+   */
+  error?: sdk.WalletError
+  results: sdk.StatusForTxidResult[]
+}
+
+export interface StatusForTxidResult {
+  txid: string,
+  /**
+   * roughly depth of block containing txid from chain tip.
+   */
+  depth: number | undefined,
+  /**
+   * 'mined' if depth > 0
+   * 'known' if depth === 0
+   * 'unknown' if depth === undefined, txid may be old an purged or never processed.
+   */
+  status: 'mined' | 'known' | 'unknown'
 }
 
 /**
@@ -415,6 +454,8 @@ export type GetUtxoStatusService = (
   outputFormat?: GetUtxoStatusOutputFormat,
   outpoint?: string
 ) => Promise<GetUtxoStatusResult>
+
+export type GetStatusForTxidsService = (txids: string[]) => Promise<sdk.GetStatusForTxidsResult>
 
 export type GetScriptHashHistoryService = (hash: string) => Promise<GetScriptHashHistoryResult>
 

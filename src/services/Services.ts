@@ -22,6 +22,7 @@ export class Services implements sdk.WalletServices {
   getRawTxServices: ServiceCollection<sdk.GetRawTxService>
   postBeefServices: ServiceCollection<sdk.PostBeefService>
   getUtxoStatusServices: ServiceCollection<sdk.GetUtxoStatusService>
+  getStatusForTxidsServices: ServiceCollection<sdk.GetStatusForTxidsService>
   getScriptHashHistoryServices: ServiceCollection<sdk.GetScriptHashHistoryService>
   updateFiatExchangeRateServices: ServiceCollection<sdk.UpdateFiatExchangeRateService>
 
@@ -56,6 +57,10 @@ export class Services implements sdk.WalletServices {
     //prettier-ignore
     this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>()
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getUtxoStatus.bind(this.whatsonchain) })
+
+    //prettier-ignore
+    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>()
+      .add({ name: 'WhatsOnChain', service: this.whatsonchain.getStatusForTxids.bind(this.whatsonchain) })
 
     //prettier-ignore
     this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>()
@@ -103,6 +108,33 @@ export class Services implements sdk.WalletServices {
   }
   get getUtxoStatsCount() {
     return this.getUtxoStatusServices.count
+  }
+
+  async getStatusForTxids(
+    txids: string[],
+    useNext?: boolean
+  ): Promise<sdk.GetStatusForTxidsResult> {
+    const services = this.getStatusForTxidsServices
+    if (useNext) services.next()
+
+    let r0: sdk.GetStatusForTxidsResult = {
+      name: '<noservices>',
+      status: 'error',
+      error: new sdk.WERR_INTERNAL('No services available.'),
+      results: []
+    }
+
+    for (let tries = 0; tries < services.count; tries++) {
+      const service = services.service
+      const r = await service(txids)
+      if (r.status === 'success') {
+        r0 = r
+        break
+      }
+      services.next()
+    }
+
+    return r0
   }
 
   /**

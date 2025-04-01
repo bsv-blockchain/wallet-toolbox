@@ -16,6 +16,73 @@ export class WhatsOnChain extends SdkWhatsOnChain {
   }
 
   /**
+   * POST
+   * https://api.whatsonchain.com/v1/bsv/main/txs/status
+   * Content-Type: application/json
+   * data: "{\"txids\":[\"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b\"]}"
+   * 
+   * result for a mined txid:
+   *     [{
+   *        "txid":"294cd1ebd5689fdee03509f92c32184c0f52f037d4046af250229b97e0c8f1aa",
+   *        "blockhash":"000000000000000004b5ce6670f2ff27354a1e87d0a01bf61f3307f4ccd358b5",
+   *        "blockheight":612251,
+   *        "blocktime":1575841517,
+   *        "confirmations":278272
+   *      }]
+   * 
+   * result for a valid recent txid:
+   *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b"}]
+   * 
+   * result for an unknown txid:
+   *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
+   */
+  async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> {
+
+    const r: sdk.GetStatusForTxidsResult = {
+      name: 'WoC',
+      status: 'error',
+      error: undefined,
+      results: []
+    }
+
+    const requestOptions = {
+      method: 'POST',
+      headers: this.getHttpHeaders(),
+      data: { txids }
+    }
+
+    const url = `${this.URL}/txs/status`
+
+    try {
+      const response = await this.httpClient.request<WhatsOnChainTxsStatusData[]>(url, requestOptions)
+
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new sdk.WERR_INVALID_OPERATION(`Unable to get status for txids at this timei.`)
+
+      const data = response.data
+      for (const txid of txids) {
+        const d = data.find(d => d.txid === txid)
+        if (!d || d.error === 'unknown')
+          r.results.push({ txid, status: 'unknown', depth: undefined })
+        else if (d.error !== undefined) {
+          console.log(`WhatsOnChain getStatusForTxids unexpected error ${d.error} ${txid}`)
+          r.results.push({ txid, status: 'unknown', depth: undefined })
+        } else if (d.confirmations === undefined)
+          r.results.push({ txid, status: 'known', depth: 0 })
+        else
+          r.results.push({ txid, status: 'mined', depth: d.confirmations })
+      }
+      r.status = 'success'
+
+    } catch (eu: unknown) {
+      const e = sdk.WalletError.fromUnknown(eu)
+      r.error = e
+    }
+
+    return r
+  }
+
+  /**
    * 2025-02-16 throwing internal server error 500.
    * @param txid
    * @returns
@@ -616,4 +683,16 @@ interface WhatsOnChainScriptHashHistoryData {
   result: WhatsOnChainScriptHashHistory[]
   error?: string
   nextPageToken?: string
+}
+
+interface WhatsOnChainTxsStatusData {
+  txid: string,
+  blockhash?: string,
+  blockheight?: number,
+  blocktime?: number,
+  confirmations?: number,
+  /**
+   * 'unknown' if txid isn't known
+   */
+  error?: string
 }

@@ -233,4 +233,26 @@ describe('Wallet services tests', () => {
       }
     }
   })
+
+  test('7 getStatusForTxids', async () => {
+    for (const { chain, services } of ctxs) {
+      {
+        const txids = ['32c691a077b0ce46051aa7a45fa3b131c71ff85950264575a32171086b02ad98']
+        const r = await services.getStatusForTxids(txids)
+        expect(r.results.length).toBe(1)
+        expect(r.results[0].txid).toBe(txids[0])
+        expect(r.name).toBeTruthy()
+        expect(r.status).toBe('success')
+        expect(r.error).toBe(undefined)
+        if (chain === 'main') {
+          expect(r.results[0].status).toBe('mined')
+          expect(r.results[0].depth).toBeGreaterThan(146)
+        } else {
+          expect(r.results[0].status).toBe('unknown')
+          expect(r.results[0].depth).toBe(undefined)
+        }
+      }
+    }
+  })
+
 })
