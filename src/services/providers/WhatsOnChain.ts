@@ -20,7 +20,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
    * https://api.whatsonchain.com/v1/bsv/main/txs/status
    * Content-Type: application/json
    * data: "{\"txids\":[\"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b\"]}"
-   * 
+   *
    * result for a mined txid:
    *     [{
    *        "txid":"294cd1ebd5689fdee03509f92c32184c0f52f037d4046af250229b97e0c8f1aa",
@@ -29,15 +29,14 @@ export class WhatsOnChain extends SdkWhatsOnChain {
    *        "blocktime":1575841517,
    *        "confirmations":278272
    *      }]
-   * 
+   *
    * result for a valid recent txid:
    *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b"}]
-   * 
+   *
    * result for an unknown txid:
    *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
    */
   async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> {
-
     const r: sdk.GetStatusForTxidsResult = {
       name: 'WoC',
       status: 'error',
@@ -62,18 +61,14 @@ export class WhatsOnChain extends SdkWhatsOnChain {
       const data = response.data
       for (const txid of txids) {
         const d = data.find(d => d.txid === txid)
-        if (!d || d.error === 'unknown')
-          r.results.push({ txid, status: 'unknown', depth: undefined })
+        if (!d || d.error === 'unknown') r.results.push({ txid, status: 'unknown', depth: undefined })
         else if (d.error !== undefined) {
           console.log(`WhatsOnChain getStatusForTxids unexpected error ${d.error} ${txid}`)
           r.results.push({ txid, status: 'unknown', depth: undefined })
-        } else if (d.confirmations === undefined)
-          r.results.push({ txid, status: 'known', depth: 0 })
-        else
-          r.results.push({ txid, status: 'mined', depth: d.confirmations })
+        } else if (d.confirmations === undefined) r.results.push({ txid, status: 'known', depth: 0 })
+        else r.results.push({ txid, status: 'mined', depth: d.confirmations })
       }
       r.status = 'success'
-
     } catch (eu: unknown) {
       const e = sdk.WalletError.fromUnknown(eu)
       r.error = e
@@ -686,11 +681,11 @@ interface WhatsOnChainScriptHashHistoryData {
 }
 
 interface WhatsOnChainTxsStatusData {
-  txid: string,
-  blockhash?: string,
-  blockheight?: number,
-  blocktime?: number,
-  confirmations?: number,
+  txid: string
+  blockhash?: string
+  blockheight?: number
+  blocktime?: number
+  confirmations?: number
   /**
    * 'unknown' if txid isn't known
    */

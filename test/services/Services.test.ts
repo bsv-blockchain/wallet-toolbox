@@ -254,5 +254,4 @@ describe('Wallet services tests', () => {
       }
     }
   })
-
 })

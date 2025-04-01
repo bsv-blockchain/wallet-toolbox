@@ -110,10 +110,7 @@ export class Services implements sdk.WalletServices {
     return this.getUtxoStatusServices.count
   }
 
-  async getStatusForTxids(
-    txids: string[],
-    useNext?: boolean
-  ): Promise<sdk.GetStatusForTxidsResult> {
+  async getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult> {
     const services = this.getStatusForTxidsServices
     if (useNext) services.next()
 

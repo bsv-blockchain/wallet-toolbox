@@ -325,10 +325,6 @@ export interface PostReqsToNetworkDetails {
     req: EntityProvenTxReq;
     status: PostReqsToNetworkDetailsStatus;
     competingTxs?: string[];
-    spentInputs?: {
-        vin: number;
-        scriptHash: string;
-    }[];
 }
 ```
 
@@ -340,17 +336,6 @@ Any competing double spend txids reported for this txid
 
 ```ts
 competingTxs?: string[]
-```
-
-###### Property spentInputs
-
-Input indices that have been spent, valid when status is 'doubleSpend'
-
-```ts
-spentInputs?: {
-    vin: number;
-    scriptHash: string;
-}[]
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)

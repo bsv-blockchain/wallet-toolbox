@@ -136,7 +136,7 @@ function aggregatePostBeefResultsByTxid(
       doubleSpendCount: 0,
       statusErrorCount: 0,
       serviceErrorCount: 0,
-      competingTxs: [],
+      competingTxs: []
     }
     r[txid] = ar
     for (const pbr of pbrs) {
@@ -292,7 +292,7 @@ async function confirmDoubleSpend(
     note[`getStatus${retry}`] = `${gsr.status}${gsr.error ? `${gsr.error.code}` : ''},${gsr.results[0]?.status}`
     if (gsr.status === 'success' && gsr.results[0].status !== 'unknown') {
       known = true
-      break;
+      break
     } else {
       await wait(1000)
     }

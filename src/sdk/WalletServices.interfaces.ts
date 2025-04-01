@@ -99,13 +99,13 @@ export interface WalletServices {
 
   /**
    * For an array of one or more txids, returns for each wether it is a 'known', 'mined', or 'unknown' transaction.
-   * 
+   *
    * Primarily useful for determining if a recently broadcast transaction is known to the processing network.
-   * 
+   *
    * Also returns the current depth from chain tip if 'mined'.
-   * 
-   * @param txids 
-   * @param useNext 
+   *
+   * @param txids
+   * @param useNext
    */
   getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult>
 
@@ -192,11 +192,11 @@ export interface GetStatusForTxidsResult {
 }
 
 export interface StatusForTxidResult {
-  txid: string,
+  txid: string
   /**
    * roughly depth of block containing txid from chain tip.
    */
-  depth: number | undefined,
+  depth: number | undefined
   /**
    * 'mined' if depth > 0
    * 'known' if depth === 0

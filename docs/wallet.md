@@ -45,34 +45,35 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
 | [FindProvenTxsArgs](#interface-findproventxsargs) | [SignActionResultX](#interface-signactionresultx) | [ValidListActionsArgs](#interface-validlistactionsargs) |
 | [FindSincePagedArgs](#interface-findsincepagedargs) | [StartAuthResponse](#interface-startauthresponse) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
-| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
-| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
-| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
-| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
-| [FindUsersArgs](#interface-findusersargs) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageIdentity](#interface-storageidentity) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidSignActionArgs](#interface-validsignactionargs) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageKnexOptions](#interface-storageknexoptions) | [ValidSignActionOptions](#interface-validsignactionoptions) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidWalletPayment](#interface-validwalletpayment) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageProvenOrReq](#interface-storageprovenorreq) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageProviderOptions](#interface-storageprovideroptions) | [WalletArgs](#interface-walletargs) |
-| [GetMerklePathResult](#interface-getmerklepathresult) | [StorageReaderOptions](#interface-storagereaderoptions) | [WalletBalance](#interface-walletbalance) |
-| [GetRawTxResult](#interface-getrawtxresult) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletServices](#interface-walletservices) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [SyncChunk](#interface-syncchunk) | [WalletServicesOptions](#interface-walletservicesoptions) |
-| [GetScriptHashHistory](#interface-getscripthashhistory) | [SyncError](#interface-syncerror) | [WalletSettings](#interface-walletsettings) |
-| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [SyncMap](#interface-syncmap) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
-| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableCertificate](#interface-tablecertificate) | [WalletSigner](#interface-walletsigner) |
-| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableCertificateField](#interface-tablecertificatefield) | [WalletStorage](#interface-walletstorage) |
-| [KeyPair](#interface-keypair) | [TableCertificateX](#interface-tablecertificatex) | [WalletStorageProvider](#interface-walletstorageprovider) |
-| [KeyPairAddress](#interface-keypairaddress) | [TableCommission](#interface-tablecommission) | [WalletStorageReader](#interface-walletstoragereader) |
-| [MonitorDaemonSetup](#interface-monitordaemonsetup) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
-| [MonitorOptions](#interface-monitoroptions) | [TableOutput](#interface-tableoutput) | [WalletStorageSync](#interface-walletstoragesync) |
-| [OutPoint](#interface-outpoint) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
-| [Paged](#interface-paged) | [TableOutputTag](#interface-tableoutputtag) | [WalletStorageWriter](#interface-walletstoragewriter) |
-| [PendingSignAction](#interface-pendingsignaction) | [TableOutputTagMap](#interface-tableoutputtagmap) | [WalletTheme](#interface-wallettheme) |
-| [PendingStorageInput](#interface-pendingstorageinput) | [TableOutputX](#interface-tableoutputx) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
+| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
+| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
+| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
+| [FindUsersArgs](#interface-findusersargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageIdentity](#interface-storageidentity) | [ValidSignActionArgs](#interface-validsignactionargs) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidSignActionOptions](#interface-validsignactionoptions) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageKnexOptions](#interface-storageknexoptions) | [ValidWalletPayment](#interface-validwalletpayment) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageProvenOrReq](#interface-storageprovenorreq) | [WalletArgs](#interface-walletargs) |
+| [GetMerklePathResult](#interface-getmerklepathresult) | [StorageProviderOptions](#interface-storageprovideroptions) | [WalletBalance](#interface-walletbalance) |
+| [GetRawTxResult](#interface-getrawtxresult) | [StorageReaderOptions](#interface-storagereaderoptions) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletServices](#interface-walletservices) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletServicesOptions](#interface-walletservicesoptions) |
+| [GetScriptHashHistory](#interface-getscripthashhistory) | [SyncChunk](#interface-syncchunk) | [WalletSettings](#interface-walletsettings) |
+| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [SyncError](#interface-syncerror) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
+| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [SyncMap](#interface-syncmap) | [WalletSigner](#interface-walletsigner) |
+| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableCertificate](#interface-tablecertificate) | [WalletStorage](#interface-walletstorage) |
+| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableCertificateField](#interface-tablecertificatefield) | [WalletStorageProvider](#interface-walletstorageprovider) |
+| [KeyPair](#interface-keypair) | [TableCertificateX](#interface-tablecertificatex) | [WalletStorageReader](#interface-walletstoragereader) |
+| [KeyPairAddress](#interface-keypairaddress) | [TableCommission](#interface-tablecommission) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
+| [MonitorDaemonSetup](#interface-monitordaemonsetup) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageSync](#interface-walletstoragesync) |
+| [MonitorOptions](#interface-monitoroptions) | [TableOutput](#interface-tableoutput) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
+| [OutPoint](#interface-outpoint) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageWriter](#interface-walletstoragewriter) |
+| [Paged](#interface-paged) | [TableOutputTag](#interface-tableoutputtag) | [WalletTheme](#interface-wallettheme) |
+| [PendingSignAction](#interface-pendingsignaction) | [TableOutputTagMap](#interface-tableoutputtagmap) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [PendingStorageInput](#interface-pendingstorageinput) | [TableOutputX](#interface-tableoutputx) |  |
 | [PermissionRequest](#interface-permissionrequest) | [TableProvenTx](#interface-tableproventx) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -1109,6 +1110,39 @@ status: "success" | "error"
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: GetStatusForTxidsResult
+
+```ts
+export interface GetStatusForTxidsResult {
+    name: string;
+    status: "success" | "error";
+    error?: sdk.WalletError;
+    results: sdk.StatusForTxidResult[];
+}
+```
+
+See also: [StatusForTxidResult](./client.md#interface-statusfortxidresult), [WalletError](./client.md#class-walleterror)
+
+###### Property error
+
+The first exception error that occurred during processing, if any.
+
+```ts
+error?: sdk.WalletError
+```
+See also: [WalletError](./client.md#class-walleterror)
+
+###### Property name
+
+The name of the service returning these results.
+
+```ts
+name: string
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Interface: GetUtxoStatusDetails
 
 ```ts
@@ -1837,10 +1871,6 @@ export interface PostReqsToNetworkDetails {
     req: EntityProvenTxReq;
     status: PostReqsToNetworkDetailsStatus;
     competingTxs?: string[];
-    spentInputs?: {
-        vin: number;
-        scriptHash: string;
-    }[];
 }
 ```
 
@@ -1852,17 +1882,6 @@ Any competing double spend txids reported for this txid
 
 ```ts
 competingTxs?: string[]
-```
-
-###### Property spentInputs
-
-Input indices that have been spent, valid when status is 'doubleSpend'
-
-```ts
-spentInputs?: {
-    vin: number;
-    scriptHash: string;
-}[]
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -2257,10 +2276,6 @@ export interface ReviewActionResult {
     status: ReviewActionResultStatus;
     competingTxs?: string[];
     competingBeef?: number[];
-    spentInputs?: {
-        vin: number;
-        scriptHash: string;
-    }[];
 }
 ```
 
@@ -2280,17 +2295,6 @@ Any competing txids reported for this txid, valid when status is 'doubleSpend'.
 
 ```ts
 competingTxs?: string[]
-```
-
-###### Property spentInputs
-
-Transaction input indices that have been spent, valid when status is 'doubleSpend'.
-
-```ts
-spentInputs?: {
-    vin: number;
-    scriptHash: string;
-}[]
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -2717,6 +2721,37 @@ export interface StartAuthResponse {
     message?: string;
     data?: any;
 }
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: StatusForTxidResult
+
+```ts
+export interface StatusForTxidResult {
+    txid: string;
+    depth: number | undefined;
+    status: "mined" | "known" | "unknown";
+}
+```
+
+###### Property depth
+
+roughly depth of block containing txid from chain tip.
+
+```ts
+depth: number | undefined
+```
+
+###### Property status
+
+'mined' if depth > 0
+'known' if depth === 0
+'unknown' if depth === undefined, txid may be old an purged or never processed.
+
+```ts
+status: "mined" | "known" | "unknown"
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -4563,6 +4598,7 @@ export interface WalletServices {
     getMerklePath(txid: string, useNext?: boolean): Promise<GetMerklePathResult>;
     postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult[]>;
     hashOutputScript(script: string): string;
+    getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult>;
     getUtxoStatus(output: string, outputFormat?: GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<GetUtxoStatusResult>;
     getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult>;
     hashToHeader(hash: string): Promise<sdk.BlockHeader>;
@@ -4570,7 +4606,7 @@ export interface WalletServices {
 }
 ```
 
-See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult)
 
 ###### Property chain
 
@@ -4688,6 +4724,19 @@ Argument Details
   + transaction hash for which raw transaction bytes are requested
 + **useNext**
   + optional, forces skip to next service before starting service requests cycle.
+
+###### Method getStatusForTxids
+
+For an array of one or more txids, returns for each wether it is a 'known', 'mined', or 'unknown' transaction.
+
+Primarily useful for determining if a recently broadcast transaction is known to the processing network.
+
+Also returns the current depth from chain tip if 'mined'.
+
+```ts
+getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult>
+```
+See also: [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult)
 
 ###### Method getUtxoStatus
 
@@ -7045,6 +7094,7 @@ export class Services implements sdk.WalletServices {
     getRawTxServices: ServiceCollection<sdk.GetRawTxService>;
     postBeefServices: ServiceCollection<sdk.PostBeefService>;
     getUtxoStatusServices: ServiceCollection<sdk.GetUtxoStatusService>;
+    getStatusForTxidsServices: ServiceCollection<sdk.GetStatusForTxidsService>;
     getScriptHashHistoryServices: ServiceCollection<sdk.GetScriptHashHistoryService>;
     updateFiatExchangeRateServices: ServiceCollection<sdk.UpdateFiatExchangeRateService>;
     chain: sdk.Chain;
@@ -7056,6 +7106,7 @@ export class Services implements sdk.WalletServices {
     get getRawTxsCount() 
     get postBeefServicesCount() 
     get getUtxoStatsCount() 
+    async getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult> 
     hashOutputScript(script: string): string 
     async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<sdk.GetUtxoStatusResult> 
     async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> 
@@ -7073,7 +7124,7 @@ export class Services implements sdk.WalletServices {
 }
 ```
 
-See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain)
+See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain)
 
 ###### Method hashOutputScript
 
@@ -11001,6 +11052,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export class WhatsOnChain extends SdkWhatsOnChain {
     services: Services;
     constructor(chain: sdk.Chain = "main", config: WhatsOnChainConfig = {}, services?: Services) 
+    async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> 
     async getTxPropagation(txid: string): Promise<number> 
     async getRawTx(txid: string): Promise<string | undefined> 
     async getRawTxResult(txid: string): Promise<sdk.GetRawTxResult> 
@@ -11015,7 +11067,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
 }
 ```
 
-See also: [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [Services](./services.md#class-services), [WalletServices](./client.md#interface-walletservices)
+See also: [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [Services](./services.md#class-services), [WalletServices](./client.md#interface-walletservices)
 
 ###### Method getRawTx
 
@@ -11028,6 +11080,33 @@ async getRawTx(txid: string): Promise<string | undefined>
 Returns
 
 raw transaction as hex string or undefined if txid not found in mined block.
+
+###### Method getStatusForTxids
+
+POST
+https://api.whatsonchain.com/v1/bsv/main/txs/status
+Content-Type: application/json
+data: "{\"txids\":[\"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b\"]}"
+
+result for a mined txid:
+    [{
+       "txid":"294cd1ebd5689fdee03509f92c32184c0f52f037d4046af250229b97e0c8f1aa",
+       "blockhash":"000000000000000004b5ce6670f2ff27354a1e87d0a01bf61f3307f4ccd358b5",
+       "blockheight":612251,
+       "blocktime":1575841517,
+       "confirmations":278272
+     }]
+
+result for a valid recent txid:
+    [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62b"}]
+
+result for an unknown txid:
+    [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
+
+```ts
+async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> 
+```
+See also: [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult)
 
 ###### Method getTxPropagation
 
@@ -12746,18 +12825,18 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | |
 | --- | --- |
-| [Chain](#type-chain) | [PostReqsToNetworkDetailsStatus](#type-postreqstonetworkdetailsstatus) |
-| [DBType](#type-dbtype) | [PostTxsService](#type-posttxsservice) |
-| [DescriptionString5to2000Bytes](#type-descriptionstring5to2000bytes) | [ProvenTxReqStatus](#type-proventxreqstatus) |
-| [EntityStorage](#type-entitystorage) | [ReqHistoryNote](#type-reqhistorynote) |
-| [GetMerklePathService](#type-getmerklepathservice) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |
-| [GetRawTxService](#type-getrawtxservice) | [ScriptHashFormat](#type-scripthashformat) |
-| [GetScriptHashHistoryService](#type-getscripthashhistoryservice) | [StorageProvidedBy](#type-storageprovidedby) |
+| [Chain](#type-chain) | [PostBeefService](#type-postbeefservice) |
+| [DBType](#type-dbtype) | [PostReqsToNetworkDetailsStatus](#type-postreqstonetworkdetailsstatus) |
+| [DescriptionString5to2000Bytes](#type-descriptionstring5to2000bytes) | [PostTxsService](#type-posttxsservice) |
+| [EntityStorage](#type-entitystorage) | [ProvenTxReqStatus](#type-proventxreqstatus) |
+| [GetMerklePathService](#type-getmerklepathservice) | [ReqHistoryNote](#type-reqhistorynote) |
+| [GetRawTxService](#type-getrawtxservice) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |
+| [GetScriptHashHistoryService](#type-getscripthashhistoryservice) | [ScriptHashFormat](#type-scripthashformat) |
+| [GetStatusForTxidsService](#type-getstatusfortxidsservice) | [StorageProvidedBy](#type-storageprovidedby) |
 | [GetUtxoStatusOutputFormat](#type-getutxostatusoutputformat) | [SyncProtocolVersion](#type-syncprotocolversion) |
 | [GetUtxoStatusService](#type-getutxostatusservice) | [SyncStatus](#type-syncstatus) |
 | [MonitorStorage](#type-monitorstorage) | [TransactionStatus](#type-transactionstatus) |
 | [PermissionEventHandler](#type-permissioneventhandler) | [UpdateFiatExchangeRateService](#type-updatefiatexchangerateservice) |
-| [PostBeefService](#type-postbeefservice) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -12830,6 +12909,17 @@ export type GetScriptHashHistoryService = (hash: string) => Promise<GetScriptHas
 ```
 
 See also: [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Type: GetStatusForTxidsService
+
+```ts
+export type GetStatusForTxidsService = (txids: string[]) => Promise<sdk.GetStatusForTxidsResult>
+```
+
+See also: [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
