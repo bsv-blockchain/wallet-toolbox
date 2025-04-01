@@ -89,6 +89,7 @@ import {
   specOpInvalidChange,
   specOpNoSendActions,
   specOpSetWalletChangeParams,
+  specOpThrowReviewActions,
   specOpWalletBalance
 } from './sdk'
 
@@ -682,6 +683,9 @@ export class Wallet implements WalletInterface, ProtoWallet {
     }
 
     const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateCreateActionArgs)
+
+    if (vargs.labels.indexOf(specOpThrowReviewActions) >= 0) throwDummyReviewActions()
+
     vargs.includeAllSourceTransactions = this.includeAllSourceTransactions
     if (this.randomVals && this.randomVals.length > 1) {
       vargs.randomVals = [...this.randomVals]
@@ -994,3 +998,29 @@ function throwIfAnyUnsuccessfulSignActions(r: SignActionResultX) {
 
   throw new sdk.WERR_REVIEW_ACTIONS(ndrs, swrs, r.txid, r.tx)
 }
+
+/**
+ * Throws a WERR_REVIEW_ACTIONS with a full set of properties to test data formats and propagation.
+ */
+function throwDummyReviewActions() {
+  const b58Beef = 'gno9MC7VXii1KoCkc2nsVyYJpqzN3dhBzYATETJcys62emMKfpBof4R7GozwYEaSapUtnNvqQ57aaYYjm3U2dv9eUJ1sV46boHkQgppYmAz9YH8FdZduV8aJayPViaKcyPmbDhEw6UW8TM5iFZLXNs7HBnJHUKCeTdNK4FUEL7vAugxAV9WUUZ43BZjJk2SmSeps9TCXjt1Ci9fKWp3d9QSoYvTpxwzyUFHjRKtbUgwq55ZfkBp5bV2Bpz9qSuKywKewW7Hh4S1nCUScwwzpKDozb3zic1V9p2k8rQxoPsRxjUJ8bjhNDdsN8d7KukFuc3n47fXzdWttvnxwsujLJRGnQbgJuknQqx3KLf5kJXHzwjG6TzigZk2t24qeB6d3hbYiaDr2fFkUJBL3tukTHhfNkQYRXuz3kucVDzvejHyqJaF51mXG8BjMN5aQj91ZJXCaPVqkMWCzmvyaqmXMdRiJdSAynhXbQK91xf6RwdNhz1tg5f9B6oJJMhsi9UYSVymmax8VLKD9AKzBCBDcfyD83m3jyS1VgKGZn3SkQmr6bsoWq88L3GsMnnmYUGogvdAYarTqg3pzkjCMxHzmJBMN6ofnUk8c1sRTXQue7BbyUaN5uZu3KW6CmFsEfpuqVvnqFW93TU1jrPP2S8yz8AexAnARPCKE8Yz7RfVaT6RCavwQKL3u5iookwRWEZXW1QWmM37yJWHD87SjVynyg327a1CLwcBxmE2CB48QeNVGyQki4CTQMqw2o8TMhDPJej1g68oniAjBcxBLSCs7KGvK3k7AfrHbCMULX9CTibYhCjdFjbsbBoocqJpxxcvkMo1fEEiAzZuiBVZQDYktDdTVbhKHvYkW25HcYX75NJrpNAhm7AjFeKLzEVxqAQkMfvTufpESNRZF4kQqg2Rg8h2ajcKTd5cpEPwXCrZLHm4EaZEmZVbg3QNfGhn7BJu1bHMtLqPD4y8eJxm2uGrW6saf6qKYmmu64F8A667NbD4yskPRQ1S863VzwGpxxmgLc1Ta3R46jEqsAoRDoZVUaCgBBZG3Yg1CTgi1EVBMXU7qvY4n3h8o2FLCEMWY4KadnV3iD4FbcdCmg4yxBosNAZgbPjhgGjCimjh4YsLd9zymGLmivmz2ZBg5m3xaiXT9NN81X9C1JUujd'
+  const beef = Beef.fromBinary(Utils.fromBase58(b58Beef))
+  const btx = beef.txs.slice(-1)[0]
+  const txid = btx.txid
+  throw new sdk.WERR_REVIEW_ACTIONS(
+    [{
+      txid, // only care that it is syntactically a txid
+      status: 'doubleSpend',
+      competingTxs: [txid], // a txid in the beef
+      competingBeef: beef.toBinary()
+    }],
+    [{
+      txid,
+      status: 'failed'
+    }],
+    txid,
+    beef.toBinaryAtomic(txid),
+    [`${txid}.0`]
+  )
+}
+

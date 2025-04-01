@@ -1,5 +1,5 @@
 import { sdk, verifyOne } from '../../../src'
-import { specOpInvalidChange, specOpSetWalletChangeParams, specOpWalletBalance } from '../../../src/sdk'
+import { specOpInvalidChange, specOpSetWalletChangeParams, specOpThrowReviewActions, specOpWalletBalance } from '../../../src/sdk'
 import { _tu, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
 describe('specOps tests', () => {
@@ -153,6 +153,26 @@ describe('specOps tests', () => {
 
     expect(r.totalActions).toBeGreaterThanOrEqual(0)
     expect(r.actions.length).toBe(r.totalActions)
+
+    await setup.wallet.destroy()
+  })
+
+  test('5 specOpThrowReviewActions', async () => {
+    const setup = await createSetup('test')
+
+    try {
+      const r = await setup.wallet.createAction({
+        labels: [
+          specOpThrowReviewActions
+        ],
+        description: 'must throw'
+      })
+      expect(true).toBe(false)
+    } catch (eu: unknown) {
+      const e = sdk.WalletError.fromUnknown(eu) as sdk.WERR_REVIEW_ACTIONS
+      expect(e.code).toBe('WERR_REVIEW_ACTIONS')
+      expect(e.reviewActionResults).toBeTruthy()
+    }
 
     await setup.wallet.destroy()
   })

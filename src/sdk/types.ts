@@ -196,3 +196,19 @@ export const specOpFailedActions = '97d4eb1e49215e3374cc2c1939a7c43a55e95c7427bf
 export function isListActionsSpecOp(label: string): boolean {
   return [specOpNoSendActions, specOpFailedActions].indexOf(label) >= 0
 }
+
+/**
+ * `createAction` special operation label name value.
+ *
+ * Causes WERR_REVIEW_ACTIONS throw with dummy properties.
+ *
+ */
+export const specOpThrowReviewActions = 'a496e747fc3ad5fabdd4ae8f91184e71f87539bd3d962aa2548942faaaf0047a'
+
+/**
+ * @param label Action / Transaction label name value.
+ * @returns true iff the `label` name is a reserved `createAction` special operation identifier.
+ */
+export function isCreateActionSpecOp(label: string): boolean {
+  return [specOpThrowReviewActions].indexOf(label) >= 0
+}
