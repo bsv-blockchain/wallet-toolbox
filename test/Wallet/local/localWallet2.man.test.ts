@@ -77,7 +77,6 @@ describe('localWallet2 tests', () => {
       const rar = e.reviewActionResults![0]!
       expect(rar.status).toBe('doubleSpend')
       expect(rar.competingTxs?.length).toBe(1)
-      expect(rar.spentInputs?.length).toBe(1)
     }
     await setup.wallet.destroy()
   })

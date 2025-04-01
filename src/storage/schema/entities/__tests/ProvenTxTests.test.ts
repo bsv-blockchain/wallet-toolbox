@@ -103,6 +103,12 @@ describe('ProvenTx class method tests', () => {
       getFiatExchangeRate: async () => 1,
       postBeef: async () => [],
 
+      getStatusForTxids: async () => ({
+        name: 'mock-service',
+        status: 'success',
+        results: []
+      }),
+
       getUtxoStatus: async () => ({
         name: 'mock-service',
         status: 'success',

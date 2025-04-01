@@ -191,7 +191,7 @@ async function shareReqsWithWorld(
     const txid = ar.txid
     const d = prtn.details.find(d => d.txid === txid)
     if (!d) throw new sdk.WERR_INTERNAL(`missing details for ${txid}`)
-    ar.ndr = { txid: d.txid, status: 'success', competingTxs: d.competingTxs, spentInputs: d.spentInputs }
+    ar.ndr = { txid: d.txid, status: 'success', competingTxs: d.competingTxs }
     switch (d.status) {
       case 'success':
         // processing network has accepted this transaction

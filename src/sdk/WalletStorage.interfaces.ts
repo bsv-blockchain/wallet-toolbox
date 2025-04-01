@@ -264,10 +264,6 @@ export interface ReviewActionResult {
    * Merged beef of competingTxs, valid when status is 'doubleSpend'.
    */
   competingBeef?: number[]
-  /**
-   * Transaction input indices that have been spent, valid when status is 'doubleSpend'.
-   */
-  spentInputs?: { vin: number; scriptHash: string }[]
 }
 
 export interface StorageProcessActionResults {
