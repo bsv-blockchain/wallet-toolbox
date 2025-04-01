@@ -1,7 +1,7 @@
 import { Beef, Transaction } from '@bsv/sdk'
 import { StorageProvider } from '../StorageProvider'
 import { EntityProvenTxReq } from '../schema/entities'
-import { sdk } from '../../index.client'
+import { sdk, wait } from '../../index.client'
 import { ReqHistoryNote } from '../../sdk'
 
 /**
@@ -137,7 +137,6 @@ function aggregatePostBeefResultsByTxid(
       statusErrorCount: 0,
       serviceErrorCount: 0,
       competingTxs: [],
-      spentInputs: []
     }
     r[txid] = ar
     for (const pbr of pbrs) {
@@ -263,7 +262,6 @@ async function updateReqsFromAggregateResults(
     const details = r.details.find(d => d.txid === txid)!
     details.status = ar.status
     details.competingTxs = ar.competingTxs
-    details.spentInputs = ar.spentInputs
   }
 }
 
@@ -286,43 +284,42 @@ async function confirmDoubleSpend(
 ): Promise<void> {
   const req = ar.vreq.req
   const note: ReqHistoryNote = { when: new Date().toISOString(), what: 'confirmDoubleSpend' }
-  const tx = Transaction.fromBinary(req.rawTx)
-  ar.spentInputs = []
-  let vin = -1
-  for (const input of tx.inputs) {
-    vin++
-    const sourceTx = beef.findTxid(input.sourceTXID!)?.tx
-    if (!sourceTx) throw new sdk.WERR_INTERNAL(`beef lacks tx for ${input.sourceTXID}`)
-    const lockingScript = sourceTx.outputs[input.sourceOutputIndex].lockingScript.toHex()
-    const hash = services.hashOutputScript(lockingScript)
-    const usr = await services.getUtxoStatus(hash, undefined, `${input.sourceTXID}.${input.sourceOutputIndex}`)
-    if (usr.isUtxo === false) {
-      ar.spentInputs.push({
-        vin,
-        scriptHash: hash,
-        sourceTXID: input.sourceTXID!,
-        sourceIndex: input.sourceOutputIndex
-      })
+
+  let known = false
+
+  for (let retry = 0; retry < 3; retry++) {
+    const gsr = await services.getStatusForTxids([req.txid])
+    note[`getStatus${retry}`] = `${gsr.status}${gsr.error ? `${gsr.error.code}` : ''},${gsr.results[0]?.status}`
+    if (gsr.status === 'success' && gsr.results[0].status !== 'unknown') {
+      known = true
+      break;
+    } else {
+      await wait(1000)
     }
   }
-  note.vins = ar.spentInputs.map(si => si.vin.toString()).join(',')
-  if (ar.spentInputs.length === 0) {
-    // Possibly NOT a double spend...
-    if (ar.successCount > 0) ar.status = 'success'
-    else ar.status = 'serviceError'
+
+  if (known) {
+    // doubleSpend -> success
+    ar.status = 'success'
     note.newStatus = ar.status
   } else {
-    // Confirmed double spend.
+    // Confirmed double spend, get txids of possible competing transactions.
+    const tx = Transaction.fromBinary(req.rawTx)
     const competingTxids = new Set(ar.competingTxs)
-    for (const si of ar.spentInputs) {
-      const shhrs = await services.getScriptHashHistory(si.scriptHash)
+    for (const input of tx.inputs) {
+      const sourceTx = beef.findTxid(input.sourceTXID!)?.tx
+      if (!sourceTx) throw new sdk.WERR_INTERNAL(`beef lacks tx for ${input.sourceTXID}`)
+      const lockingScript = sourceTx.outputs[input.sourceOutputIndex].lockingScript.toHex()
+      const hash = services.hashOutputScript(lockingScript)
+      const shhrs = await services.getScriptHashHistory(hash)
       if (shhrs.status === 'success') {
         for (const h of shhrs.history) {
-          if (h.txid !== si.sourceTXID) competingTxids.add(h.txid)
+          // Neither the source of the input nor the current transaction are competition.
+          if (h.txid !== input.sourceTXID && h.txid !== ar.txid) competingTxids.add(h.txid)
         }
       }
     }
-    ar.competingTxs = [...competingTxids].slice(0, 24) // keep at most 24, if they were sorted by time, keep oldest
+    ar.competingTxs = [...competingTxids].slice(-1, 24) // keep at most 24, if they were sorted by time, keep newest
     note.competingTxs = ar.competingTxs.join(',')
   }
   req.addHistoryNote(note)
@@ -343,10 +340,6 @@ interface AggregatePostBeefTxResult {
    * Any competing double spend txids reported for this txid
    */
   competingTxs: string[]
-  /**
-   * Input indices that have been spent, valid when status is 'doubleSpend'
-   */
-  spentInputs: { vin: number; scriptHash: string; sourceTXID: string; sourceIndex: number }[]
 }
 
 /**
@@ -378,10 +371,6 @@ export interface PostReqsToNetworkDetails {
    * Any competing double spend txids reported for this txid
    */
   competingTxs?: string[]
-  /**
-   * Input indices that have been spent, valid when status is 'doubleSpend'
-   */
-  spentInputs?: { vin: number; scriptHash: string }[]
 }
 
 export interface PostReqsToNetworkResult {
