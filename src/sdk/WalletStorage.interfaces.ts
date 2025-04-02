@@ -14,9 +14,33 @@ import {
   SendWithResult,
   TXIDHexString
 } from '@bsv/sdk'
-import { TableCertificate, TableCertificateField, TableCertificateX, TableCommission, TableMonitorEvent, TableOutput, TableOutputBasket, TableOutputTag, TableOutputTagMap, TableProvenTx, TableProvenTxReq, TableSettings, TableSyncState, TableTransaction, TableTxLabel, TableTxLabelMap, TableUser } from '../storage/schema/tables'
+import {
+  TableCertificate,
+  TableCertificateField,
+  TableCertificateX,
+  TableCommission,
+  TableMonitorEvent,
+  TableOutput,
+  TableOutputBasket,
+  TableOutputTag,
+  TableOutputTagMap,
+  TableProvenTx,
+  TableProvenTxReq,
+  TableSettings,
+  TableSyncState,
+  TableTransaction,
+  TableTxLabel,
+  TableTxLabelMap,
+  TableUser
+} from '../storage/schema/tables'
 import { WalletServices } from './WalletServices.interfaces'
-import { ValidCreateActionArgs, ValidCreateActionOutput, ValidListActionsArgs, ValidListCertificatesArgs, ValidListOutputsArgs } from './validationHelpers'
+import {
+  ValidCreateActionArgs,
+  ValidCreateActionOutput,
+  ValidListActionsArgs,
+  ValidListCertificatesArgs,
+  ValidListOutputsArgs
+} from './validationHelpers'
 import { Chain, Paged, ProvenTxReqStatus, TransactionStatus } from './types'
 import { WalletError } from './WalletError'
 

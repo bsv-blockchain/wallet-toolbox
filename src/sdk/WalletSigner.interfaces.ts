@@ -1,6 +1,4 @@
-import {
-  KeyDeriverApi,
-} from '@bsv/sdk'
+import { KeyDeriverApi } from '@bsv/sdk'
 import { Chain } from './types'
 
 /**

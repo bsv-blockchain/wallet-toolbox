@@ -149,7 +149,7 @@ describe('localWallet2 tests', () => {
     let offset = 900
     const limit = 100
     let allUnfails: number[] = []
-    for (; ;) {
+    for (;;) {
       let log = ''
       const unfails: number[] = []
       const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset } })
@@ -162,10 +162,10 @@ describe('localWallet2 tests', () => {
       }
       console.log(`OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
       allUnfails = allUnfails.concat(unfails)
-      if (reqs.length < limit) break;
+      if (reqs.length < limit) break
       offset += reqs.length
     }
-    debugger;
+    debugger
     for (const id of allUnfails) {
       await storage.updateProvenTxReq(id, { status: 'unfail' })
     }
@@ -177,7 +177,7 @@ describe('localWallet2 tests', () => {
     let offset = 400
     const limit = 100
     let allUnfails: number[] = []
-    for (; ;) {
+    for (;;) {
       let log = ''
       const unfails: number[] = []
       const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset } })
@@ -191,16 +191,15 @@ describe('localWallet2 tests', () => {
       }
       console.log(`OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
       allUnfails = allUnfails.concat(unfails)
-      if (reqs.length < limit) break;
+      if (reqs.length < limit) break
       offset += reqs.length
     }
-    debugger;
+    debugger
     for (const id of allUnfails) {
       await storage.updateProvenTxReq(id, { status: 'unfail' })
     }
     await storage.destroy()
   })
-
 })
 
 async function createMainReviewSetup(): Promise<{

@@ -9,9 +9,7 @@ import {
   RelinquishCertificateArgs,
   RelinquishOutputArgs
 } from '@bsv/sdk'
-import {
-  EntitySyncState,
-} from '../storage/schema/entities'
+import { EntitySyncState } from '../storage/schema/entities'
 import * as sdk from '../sdk'
 import {
   TableCertificate,
@@ -20,7 +18,7 @@ import {
   TableOutputBasket,
   TableProvenTxReq,
   TableSettings,
-  TableUser,
+  TableUser
 } from '../storage/schema/tables'
 import { wait } from '../utility/utilityHelpers'
 import { StorageProvider } from './StorageProvider'

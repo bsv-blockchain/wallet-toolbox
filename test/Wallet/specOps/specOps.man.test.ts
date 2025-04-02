@@ -1,6 +1,11 @@
 import { WalletClient } from '@bsv/sdk'
 import { sdk, verifyOne } from '../../../src'
-import { specOpInvalidChange, specOpSetWalletChangeParams, specOpThrowReviewActions, specOpWalletBalance } from '../../../src/sdk'
+import {
+  specOpInvalidChange,
+  specOpSetWalletChangeParams,
+  specOpThrowReviewActions,
+  specOpWalletBalance
+} from '../../../src/sdk'
 import { _tu, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
 describe('specOps tests', () => {
@@ -163,9 +168,7 @@ describe('specOps tests', () => {
 
     try {
       const r = await setup.wallet.createAction({
-        labels: [
-          specOpThrowReviewActions
-        ],
+        labels: [specOpThrowReviewActions],
         description: 'must throw'
       })
       expect(true).toBe(false)
@@ -183,9 +186,7 @@ describe('specOps tests', () => {
 
     try {
       const r = await wallet.createAction({
-        labels: [
-          specOpThrowReviewActions
-        ],
+        labels: [specOpThrowReviewActions],
         description: 'must throw'
       })
       expect(true).toBe(false)
