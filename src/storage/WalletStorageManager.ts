@@ -3,29 +3,25 @@ import {
   AbortActionResult,
   InternalizeActionArgs,
   InternalizeActionResult,
-  ListActionsArgs,
   ListActionsResult,
   ListCertificatesResult,
-  ListOutputsArgs,
   ListOutputsResult,
   RelinquishCertificateArgs,
   RelinquishOutputArgs
 } from '@bsv/sdk'
+import { EntitySyncState } from '../storage/schema/entities'
+import * as sdk from '../sdk'
 import {
-  EntitySyncState,
-  sdk,
-  StorageProvider,
-  StorageSyncReader,
   TableCertificate,
   TableCertificateX,
   TableOutput,
   TableOutputBasket,
   TableProvenTxReq,
   TableSettings,
-  TableUser,
-  wait
-} from '../index.client'
-import { WERR_INVALID_PARAMETER } from '../sdk'
+  TableUser
+} from '../storage/schema/tables'
+import { wait } from '../utility/utilityHelpers'
+import { StorageProvider } from './StorageProvider'
 
 class ManagedStorage {
   isAvailable: boolean

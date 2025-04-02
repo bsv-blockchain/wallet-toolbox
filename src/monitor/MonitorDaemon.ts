@@ -9,6 +9,9 @@ import {
   WalletStorageManager
 } from '../index.all'
 
+// This task is not "client" compatible as it imports StorageKnex
+import { TaskUnFail } from './tasks/TaskUnFail'
+
 import { Knex, knex as makeKnex } from 'knex'
 
 import dotenv from 'dotenv'
@@ -115,6 +118,7 @@ export class MonitorDaemon {
 
     if (a.monitor._tasks.length === 0) {
       a.monitor.addMultiUserTasks()
+      a.monitor.addTask(new TaskUnFail(a.monitor))
     }
   }
 

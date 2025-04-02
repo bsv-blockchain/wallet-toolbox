@@ -1,4 +1,3 @@
-import { sdk } from '../../index.client'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 

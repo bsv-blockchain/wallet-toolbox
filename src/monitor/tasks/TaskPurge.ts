@@ -1,4 +1,4 @@
-import { sdk } from '../../index.client'
+import { PurgeParams } from '../../sdk/WalletStorage.interfaces'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
@@ -27,7 +27,7 @@ import { WalletMonitorTask } from './WalletMonitorTask'
  *       + Delete mapi_responses records
  *       + proven_tx_reqs table delete records
  */
-export interface TaskPurgeParams extends sdk.PurgeParams {}
+export interface TaskPurgeParams extends PurgeParams {}
 
 export class TaskPurge extends WalletMonitorTask {
   static taskName = 'Purge'

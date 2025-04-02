@@ -1,6 +1,7 @@
 import { ArcConfig, Beef, Transaction as BsvTransaction, ChainTracker, MerklePath } from '@bsv/sdk'
-import { sdk } from '../index.client'
 import { ChaintracksServiceClient } from '../services/chaintracker'
+import { Chain, ReqHistoryNote } from './types'
+import { WalletError } from './WalletError'
 /**
  * Defines standard interfaces to access functionality implemented by external transaction processing services.
  */
@@ -8,7 +9,7 @@ export interface WalletServices {
   /**
    * The chain being serviced.
    */
-  chain: sdk.Chain
+  chain: Chain
 
   /**
    * @returns standard `ChainTracker` service which requires `options.chaintracks` be valid.
@@ -107,7 +108,7 @@ export interface WalletServices {
    * @param txids
    * @param useNext
    */
-  getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult>
+  getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult>
 
   /**
    * Attempts to determine the UTXO status of a transaction output.
@@ -131,13 +132,13 @@ export interface WalletServices {
     useNext?: boolean
   ): Promise<GetUtxoStatusResult>
 
-  getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult>
+  getScriptHashHistory(hash: string, useNext?: boolean): Promise<GetScriptHashHistoryResult>
 
   /**
    * @returns a block header
    * @param hash block hash
    */
-  hashToHeader(hash: string): Promise<sdk.BlockHeader>
+  hashToHeader(hash: string): Promise<BlockHeader>
 
   /**
    * @returns whether the locktime value allows the transaction to be mined at the current chain height
@@ -162,7 +163,7 @@ export interface FiatExchangeRates {
 }
 
 export interface WalletServicesOptions {
-  chain: sdk.Chain
+  chain: Chain
   taalApiKey?: string
   bitailsApiKey?: string
   whatsOnChainApiKey?: string
@@ -187,8 +188,8 @@ export interface GetStatusForTxidsResult {
   /**
    * The first exception error that occurred during processing, if any.
    */
-  error?: sdk.WalletError
-  results: sdk.StatusForTxidResult[]
+  error?: WalletError
+  results: StatusForTxidResult[]
 }
 
 export interface StatusForTxidResult {
@@ -225,7 +226,7 @@ export interface GetRawTxResult {
   /**
    * The first exception error that occurred during processing, if any.
    */
-  error?: sdk.WalletError
+  error?: WalletError
 }
 
 /**
@@ -247,9 +248,9 @@ export interface GetMerklePathResult {
   /**
    * The first exception error that occurred during processing, if any.
    */
-  error?: sdk.WalletError
+  error?: WalletError
 
-  notes?: sdk.ReqHistoryNote[]
+  notes?: ReqHistoryNote[]
 }
 
 export interface PostTxResultForTxid {
@@ -281,7 +282,7 @@ export interface PostTxResultForTxid {
 
   data?: object | string | PostTxResultForTxidError
 
-  notes?: sdk.ReqHistoryNote[]
+  notes?: ReqHistoryNote[]
 
   /**
    * true iff service was unable to process a potentially valid transaction
@@ -311,7 +312,7 @@ export interface PostTxsResult {
    */
   status: 'success' | 'error'
 
-  error?: sdk.WalletError
+  error?: WalletError
 
   txidResults: PostTxResultForTxid[]
 
@@ -320,7 +321,7 @@ export interface PostTxsResult {
    */
   data?: object
 
-  notes?: sdk.ReqHistoryNote[]
+  notes?: ReqHistoryNote[]
 }
 
 export interface GetUtxoStatusDetails {
@@ -363,7 +364,7 @@ export interface GetUtxoStatusResult {
   /**
    * When status is 'error', provides code and description
    */
-  error?: sdk.WalletError
+  error?: WalletError
   /**
    * true if the output is associated with at least one unspent transaction output
    */
@@ -395,7 +396,7 @@ export interface GetScriptHashHistoryResult {
   /**
    * When status is 'error', provides code and description
    */
-  error?: sdk.WalletError
+  error?: WalletError
   /**
    * Transaction txid (and height if mined) that consumes the script hash. May not be a complete history.
    */
@@ -455,13 +456,13 @@ export type GetUtxoStatusService = (
   outpoint?: string
 ) => Promise<GetUtxoStatusResult>
 
-export type GetStatusForTxidsService = (txids: string[]) => Promise<sdk.GetStatusForTxidsResult>
+export type GetStatusForTxidsService = (txids: string[]) => Promise<GetStatusForTxidsResult>
 
 export type GetScriptHashHistoryService = (hash: string) => Promise<GetScriptHashHistoryResult>
 
 export type GetMerklePathService = (txid: string, services: WalletServices) => Promise<GetMerklePathResult>
 
-export type GetRawTxService = (txid: string, chain: sdk.Chain) => Promise<GetRawTxResult>
+export type GetRawTxService = (txid: string, chain: Chain) => Promise<GetRawTxResult>
 
 export type PostTxsService = (beef: Beef, txids: string[], services: WalletServices) => Promise<PostTxsResult>
 

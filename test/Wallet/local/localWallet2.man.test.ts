@@ -1,4 +1,4 @@
-import { EntitySyncState, sdk, Services, Setup, StorageKnex, TableOutput, TableUser } from '../../../src'
+import { sdk, Services, Setup, StorageKnex, TableUser } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
 import {
@@ -9,10 +9,9 @@ import {
   LocalWalletTestOptions,
   recoverOneSatTestOutputs
 } from './localWalletMethods'
-import { abort } from 'process'
 
 import * as dotenv from 'dotenv'
-import { WalletOutput } from '@bsv/sdk'
+import { Beef, Transaction, WalletOutput } from '@bsv/sdk'
 dotenv.config()
 
 const chain: sdk.Chain = 'main'
@@ -141,6 +140,63 @@ describe('localWallet2 tests', () => {
         const r = await storage.listOutputs(auth, vargs)
         expect(r.totalOutputs).toBe(0)
       }
+    }
+    await storage.destroy()
+  })
+
+  test('6 review and unfail false doubleSpends', async () => {
+    const { env, storage, services } = await createMainReviewSetup()
+    let offset = 900
+    const limit = 100
+    let allUnfails: number[] = []
+    for (;;) {
+      let log = ''
+      const unfails: number[] = []
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset } })
+      for (const req of reqs) {
+        const gsr = await services.getStatusForTxids([req.txid])
+        if (gsr.results[0].status !== 'unknown') {
+          log += `unfail ${req.provenTxReqId} ${req.txid}\n`
+          unfails.push(req.provenTxReqId)
+        }
+      }
+      console.log(`OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
+      allUnfails = allUnfails.concat(unfails)
+      if (reqs.length < limit) break
+      offset += reqs.length
+    }
+    debugger
+    for (const id of allUnfails) {
+      await storage.updateProvenTxReq(id, { status: 'unfail' })
+    }
+    await storage.destroy()
+  })
+
+  test('7 review and unfail false invalids', async () => {
+    const { env, storage, services } = await createMainReviewSetup()
+    let offset = 400
+    const limit = 100
+    let allUnfails: number[] = []
+    for (;;) {
+      let log = ''
+      const unfails: number[] = []
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset } })
+      for (const req of reqs) {
+        if (!req.txid || !req.rawTx) continue
+        const gsr = await services.getStatusForTxids([req.txid])
+        if (gsr.results[0].status !== 'unknown') {
+          log += `unfail ${req.provenTxReqId} ${req.txid}\n`
+          unfails.push(req.provenTxReqId)
+        }
+      }
+      console.log(`OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
+      allUnfails = allUnfails.concat(unfails)
+      if (reqs.length < limit) break
+      offset += reqs.length
+    }
+    debugger
+    for (const id of allUnfails) {
+      await storage.updateProvenTxReq(id, { status: 'unfail' })
     }
     await storage.destroy()
   })

@@ -1,8 +1,9 @@
 import { Beef, Transaction } from '@bsv/sdk'
 import { StorageProvider } from '../StorageProvider'
 import { EntityProvenTxReq } from '../schema/entities'
-import { sdk, wait } from '../../index.client'
+import * as sdk from '../../sdk'
 import { ReqHistoryNote } from '../../sdk'
+import { wait } from '../../utility/utilityHelpers'
 
 /**
  * Attempt to post one or more `ProvenTxReq` with status 'unsent'
