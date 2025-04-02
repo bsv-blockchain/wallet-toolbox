@@ -1,5 +1,8 @@
-import { EntityProvenTxReq } from '../../storage/schema/entities'
+import { GetMerklePathResult } from '../../sdk'
+import { EntityProvenTx, EntityProvenTxReq } from '../../storage/schema/entities'
 import { TableProvenTxReq } from '../../storage/schema/tables'
+import { doubleSha256BE } from '../../utility/utilityHelpers'
+import { asString } from '../../utility/utilityHelpers.noBuffer'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
@@ -157,7 +160,7 @@ export async function getProofs(
 
     const since = new Date()
 
-    let r: sdk.GetMerklePathResult
+    let r: GetMerklePathResult
     let ptx: EntityProvenTx | undefined
 
     // External services will try multiple providers until one returns a proof,

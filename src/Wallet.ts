@@ -67,15 +67,7 @@ import {
   AtomicBEEF,
   BEEF
 } from '@bsv/sdk'
-import {
-  sdk,
-  toWalletNetwork,
-  Monitor,
-  WalletStorageManager,
-  WalletSigner,
-  randomBytesBase64,
-  ScriptTemplateBRC29
-} from './index.client'
+import * as sdk from './sdk'
 import { acquireDirectCertificate } from './signer/methods/acquireDirectCertificate'
 import { proveCertificate } from './signer/methods/proveCertificate'
 import { createAction, CreateActionResultX } from './signer/methods/createAction'
@@ -92,6 +84,11 @@ import {
   specOpThrowReviewActions,
   specOpWalletBalance
 } from './sdk'
+import { WalletStorageManager } from './storage/WalletStorageManager'
+import { Monitor } from './monitor/Monitor'
+import { WalletSigner } from './signer/WalletSigner'
+import { randomBytesBase64, toWalletNetwork } from './utility/utilityHelpers'
+import { ScriptTemplateBRC29 } from './utility/ScriptTemplateBRC29'
 
 export interface WalletArgs {
   chain: sdk.Chain
@@ -684,7 +681,6 @@ export class Wallet implements WalletInterface, ProtoWallet {
 
     const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateCreateActionArgs)
 
-    debugger;
     if (vargs.labels.indexOf(specOpThrowReviewActions) >= 0) throwDummyReviewActions()
 
     vargs.includeAllSourceTransactions = this.includeAllSourceTransactions

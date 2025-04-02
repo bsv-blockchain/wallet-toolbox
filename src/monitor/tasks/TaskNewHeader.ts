@@ -1,11 +1,10 @@
-import { sdk } from '../../index.client'
+import { BlockHeader } from '../../services/chaintracker/chaintracks/BlockHeaderApi'
 import { Monitor } from '../Monitor'
-import { TaskCheckForProofs } from './TaskCheckForProofs'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
 export class TaskNewHeader extends WalletMonitorTask {
   static taskName = 'NewHeader'
-  header?: sdk.BlockHeader
+  header?: BlockHeader
 
   constructor(
     monitor: Monitor,
@@ -14,7 +13,7 @@ export class TaskNewHeader extends WalletMonitorTask {
     super(monitor, TaskNewHeader.taskName)
   }
 
-  async getHeader(): Promise<sdk.BlockHeader> {
+  async getHeader(): Promise<BlockHeader> {
     return await this.monitor.chaintracks.findChainTipHeader()
   }
 

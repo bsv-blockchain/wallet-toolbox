@@ -1,4 +1,4 @@
-import { ListActionsArgs, ListActionsResult, ListOutputsArgs, ListOutputsResult } from '@bsv/sdk'
+import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import { sdk, verifyOne, verifyOneOrNone, verifyTruthy } from '../index.all'
 import {
   KnexMigrations,

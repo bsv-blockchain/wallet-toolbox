@@ -1,4 +1,3 @@
-import { asString, doubleSha256BE, EntityProvenTx, EntityProvenTxReq, sdk, TableProvenTxReq } from '../../index.client'
 import { Monitor } from '../Monitor'
 import { getProofs } from './TaskCheckForProofs'
 import { WalletMonitorTask } from './WalletMonitorTask'

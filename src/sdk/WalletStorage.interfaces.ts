@@ -14,27 +14,11 @@ import {
   SendWithResult,
   TXIDHexString
 } from '@bsv/sdk'
-import {
-  sdk,
-  TableSettings,
-  TableOutputBasket,
-  TableCertificateX,
-  TableSyncState,
-  TableUser,
-  TableCertificate,
-  TableOutput,
-  TableProvenTxReq,
-  TableProvenTx,
-  TableCertificateField,
-  TableCommission,
-  TableOutputTagMap,
-  TableOutputTag,
-  TableTransaction,
-  TableTxLabelMap,
-  TableTxLabel,
-  TableMonitorEvent
-} from '../index.client'
-import { PostReqsToNetworkDetailsStatus } from '../storage/methods/attemptToPostReqsToNetwork'
+import { TableCertificate, TableCertificateField, TableCertificateX, TableCommission, TableMonitorEvent, TableOutput, TableOutputBasket, TableOutputTag, TableOutputTagMap, TableProvenTx, TableProvenTxReq, TableSettings, TableSyncState, TableTransaction, TableTxLabel, TableTxLabelMap, TableUser } from '../storage/schema/tables'
+import { WalletServices } from './WalletServices.interfaces'
+import { ValidCreateActionArgs, ValidCreateActionOutput, ValidListActionsArgs, ValidListCertificatesArgs, ValidListOutputsArgs } from './validationHelpers'
+import { Chain, Paged, ProvenTxReqStatus, TransactionStatus } from './types'
+import { WalletError } from './WalletError'
 
 /**
  * This is the `WalletStorage` interface implemented by a class such as `WalletStorageManager`,
@@ -54,26 +38,26 @@ export interface WalletStorage {
   migrate(storageName: string, storageIdentityKey: string): Promise<string>
   destroy(): Promise<void>
 
-  setServices(v: sdk.WalletServices): void
-  getServices(): sdk.WalletServices
+  setServices(v: WalletServices): void
+  getServices(): WalletServices
   getSettings(): TableSettings
 
-  getAuth(): Promise<sdk.AuthId>
+  getAuth(): Promise<AuthId>
 
   findOrInsertUser(identityKey: string): Promise<{ user: TableUser; isNew: boolean }>
 
   abortAction(args: AbortActionArgs): Promise<AbortActionResult>
-  createAction(args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult>
-  processAction(args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults>
+  createAction(args: ValidCreateActionArgs): Promise<StorageCreateActionResult>
+  processAction(args: StorageProcessActionArgs): Promise<StorageProcessActionResults>
   internalizeAction(args: InternalizeActionArgs): Promise<InternalizeActionResult>
 
-  findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]>
-  findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]>
-  findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]>
-  findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>
+  findCertificates(args: FindCertificatesArgs): Promise<TableCertificateX[]>
+  findOutputBaskets(args: FindOutputBasketsArgs): Promise<TableOutputBasket[]>
+  findOutputs(args: FindOutputsArgs): Promise<TableOutput[]>
+  findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>
 
   listActions(args: ListActionsArgs): Promise<ListActionsResult>
-  listCertificates(args: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult>
+  listCertificates(args: ValidListCertificatesArgs): Promise<ListCertificatesResult>
   listOutputs(args: ListOutputsArgs): Promise<ListOutputsResult>
 
   insertCertificate(certificate: TableCertificateX): Promise<number>
@@ -91,12 +75,12 @@ export interface WalletStorageProvider extends WalletStorageSync {
    * @returns true if this object's interface can be extended to the full `StorageProvider` interface
    */
   isStorageProvider(): boolean
-  setServices(v: sdk.WalletServices): void
+  setServices(v: WalletServices): void
 }
 
 export interface WalletStorageSync extends WalletStorageWriter {
   findOrInsertSyncStateAuth(
-    auth: sdk.AuthId,
+    auth: AuthId,
     storageIdentityKey: string,
     storageName: string
   ): Promise<{ syncState: TableSyncState; isNew: boolean }>
@@ -106,10 +90,10 @@ export interface WalletStorageSync extends WalletStorageWriter {
    * @param auth
    * @param newActiveStorageIdentityKey
    */
-  setActive(auth: sdk.AuthId, newActiveStorageIdentityKey: string): Promise<number>
+  setActive(auth: AuthId, newActiveStorageIdentityKey: string): Promise<number>
 
-  getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk>
-  processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult>
+  getSyncChunk(args: RequestSyncChunkArgs): Promise<SyncChunk>
+  processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult>
 }
 
 /**
@@ -127,31 +111,31 @@ export interface WalletStorageWriter extends WalletStorageReader {
 
   findOrInsertUser(identityKey: string): Promise<{ user: TableUser; isNew: boolean }>
 
-  abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult>
-  createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult>
-  processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults>
-  internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult>
+  abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult>
+  createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult>
+  processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults>
+  internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult>
 
-  insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>
+  insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number>
 
-  relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number>
-  relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number>
+  relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number>
+  relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number>
 }
 
 export interface WalletStorageReader {
   isAvailable(): boolean
 
-  getServices(): sdk.WalletServices
+  getServices(): WalletServices
   getSettings(): TableSettings
 
-  findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]>
-  findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]>
-  findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>
-  findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>
+  findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]>
+  findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]>
+  findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]>
+  findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>
 
-  listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult>
-  listCertificates(auth: sdk.AuthId, vargs: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult>
-  listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult>
+  listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult>
+  listCertificates(auth: AuthId, vargs: ValidListCertificatesArgs): Promise<ListCertificatesResult>
+  listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult>
 }
 
 export interface AuthId {
@@ -162,8 +146,8 @@ export interface AuthId {
 
 export interface FindSincePagedArgs {
   since?: Date
-  paged?: sdk.Paged
-  trx?: sdk.TrxToken
+  paged?: Paged
+  trx?: TrxToken
 }
 
 export interface FindForUserSincePagedArgs extends FindSincePagedArgs {
@@ -188,7 +172,7 @@ export interface FindOutputBasketsArgs extends FindSincePagedArgs {
 export interface FindOutputsArgs extends FindSincePagedArgs {
   partial: Partial<TableOutput>
   noScript?: boolean
-  txStatus?: sdk.TransactionStatus[]
+  txStatus?: TransactionStatus[]
 }
 
 export type StorageProvidedBy = 'you' | 'storage' | 'you-and-storage'
@@ -212,7 +196,7 @@ export interface StorageCreateTransactionSdkInput {
   senderIdentityKey?: string
 }
 
-export interface StorageCreateTransactionSdkOutput extends sdk.ValidCreateActionOutput {
+export interface StorageCreateTransactionSdkOutput extends ValidCreateActionOutput {
   vout: number
   providedBy: StorageProvidedBy
   purpose?: string
@@ -345,50 +329,50 @@ export interface StorageGetBeefOptions {
 }
 
 export interface StorageSyncReaderOptions {
-  chain: sdk.Chain
+  chain: Chain
 }
 
-export interface FindCertificateFieldsArgs extends sdk.FindSincePagedArgs {
+export interface FindCertificateFieldsArgs extends FindSincePagedArgs {
   partial: Partial<TableCertificateField>
 }
 
-export interface FindCommissionsArgs extends sdk.FindSincePagedArgs {
+export interface FindCommissionsArgs extends FindSincePagedArgs {
   partial: Partial<TableCommission>
 }
-export interface FindOutputTagMapsArgs extends sdk.FindSincePagedArgs {
+export interface FindOutputTagMapsArgs extends FindSincePagedArgs {
   partial: Partial<TableOutputTagMap>
   tagIds?: number[]
 }
-export interface FindOutputTagsArgs extends sdk.FindSincePagedArgs {
+export interface FindOutputTagsArgs extends FindSincePagedArgs {
   partial: Partial<TableOutputTag>
 }
-export interface FindProvenTxReqsArgs extends sdk.FindSincePagedArgs {
+export interface FindProvenTxReqsArgs extends FindSincePagedArgs {
   partial: Partial<TableProvenTxReq>
-  status?: sdk.ProvenTxReqStatus[]
+  status?: ProvenTxReqStatus[]
   txids?: string[]
 }
-export interface FindProvenTxsArgs extends sdk.FindSincePagedArgs {
+export interface FindProvenTxsArgs extends FindSincePagedArgs {
   partial: Partial<TableProvenTx>
 }
-export interface FindSyncStatesArgs extends sdk.FindSincePagedArgs {
+export interface FindSyncStatesArgs extends FindSincePagedArgs {
   partial: Partial<TableSyncState>
 }
-export interface FindTransactionsArgs extends sdk.FindSincePagedArgs {
+export interface FindTransactionsArgs extends FindSincePagedArgs {
   partial: Partial<TableTransaction>
-  status?: sdk.TransactionStatus[]
+  status?: TransactionStatus[]
   noRawTx?: boolean
 }
-export interface FindTxLabelMapsArgs extends sdk.FindSincePagedArgs {
+export interface FindTxLabelMapsArgs extends FindSincePagedArgs {
   partial: Partial<TableTxLabelMap>
   labelIds?: number[]
 }
-export interface FindTxLabelsArgs extends sdk.FindSincePagedArgs {
+export interface FindTxLabelsArgs extends FindSincePagedArgs {
   partial: Partial<TableTxLabel>
 }
-export interface FindUsersArgs extends sdk.FindSincePagedArgs {
+export interface FindUsersArgs extends FindSincePagedArgs {
   partial: Partial<TableUser>
 }
-export interface FindMonitorEventsArgs extends sdk.FindSincePagedArgs {
+export interface FindMonitorEventsArgs extends FindSincePagedArgs {
   partial: Partial<TableMonitorEvent>
 }
 /**
@@ -401,7 +385,7 @@ export interface UpdateProvenTxReqWithNewProvenTxArgs {
   provenTxReqId: number
   txid: string
   attempts: number
-  status: sdk.ProvenTxReqStatus
+  status: ProvenTxReqStatus
   history: string
   height: number
   index: number
@@ -411,7 +395,7 @@ export interface UpdateProvenTxReqWithNewProvenTxArgs {
 }
 
 export interface UpdateProvenTxReqWithNewProvenTxResult {
-  status: sdk.ProvenTxReqStatus
+  status: ProvenTxReqStatus
   history: string
   provenTxId: number
   log?: string
@@ -513,5 +497,5 @@ export interface ProcessSyncChunkResult {
   maxUpdated_at: Date | undefined
   updates: number
   inserts: number
-  error?: sdk.WalletError
+  error?: WalletError
 }
