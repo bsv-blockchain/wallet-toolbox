@@ -1,6 +1,6 @@
 import { LocalKVStore, WalletClient } from '@bsv/sdk'
 import { Chain } from '../../src/sdk/types'
-import { createSetup, LocalWalletTestOptions } from '../wallet/local/localWalletMethods'
+import { createSetup, LocalWalletTestOptions } from '../utils/localWalletMethods'
 
 const chain: Chain = 'main'
 

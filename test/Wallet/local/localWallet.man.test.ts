@@ -2,12 +2,10 @@ import { EntitySyncState, sdk } from '../../../src'
 import { _tu } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange } from '../../../src/sdk'
 import {
-  burnOneSatTestOutput,
   createOneSatTestOutput,
   createSetup,
   LocalWalletTestOptions,
-  recoverOneSatTestOutputs
-} from './localWalletMethods'
+} from '../../utils/localWalletMethods'
 
 const chain: sdk.Chain = 'test'
 

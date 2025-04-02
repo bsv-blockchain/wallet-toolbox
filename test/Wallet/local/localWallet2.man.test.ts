@@ -1,3 +1,4 @@
+import { WalletOutput } from '@bsv/sdk'
 import { sdk, Services, Setup, StorageKnex, TableUser } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
@@ -8,10 +9,9 @@ import {
   doubleSpendOldChange,
   LocalWalletTestOptions,
   recoverOneSatTestOutputs
-} from './localWalletMethods'
+} from '../../utils/localWalletMethods'
 
 import * as dotenv from 'dotenv'
-import { Beef, Transaction, WalletOutput } from '@bsv/sdk'
 dotenv.config()
 
 const chain: sdk.Chain = 'main'

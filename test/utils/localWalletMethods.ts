@@ -5,17 +5,16 @@ import {
   CreateActionResult,
   OutpointString,
   P2PKH,
-  PrivateKey,
   PublicKey,
   Script,
   SignActionArgs,
   SignActionOptions,
   SignActionResult
 } from '@bsv/sdk'
-import { EntityProvenTxReq, ScriptTemplateBRC29, sdk, StorageKnex, verifyOne, verifyTruthy, wait } from '../../../src'
-import { _tu, logger, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
-import { validateCreateActionArgs, ValidCreateActionArgs } from '../../../src/sdk'
-import { setDisableDoubleSpendCheckForTest } from '../../../src/storage/methods/createAction'
+import { EntityProvenTxReq, ScriptTemplateBRC29, sdk, StorageKnex, verifyOne, verifyTruthy, wait } from '../../src'
+import { _tu, logger, TestWalletNoSetup } from './TestUtilsWalletStorage'
+import { validateCreateActionArgs, ValidCreateActionArgs } from '../../src/sdk'
+import { setDisableDoubleSpendCheckForTest } from '../../src/storage/methods/createAction'
 
 export interface LocalWalletTestOptions {
   setActiveClient: boolean
