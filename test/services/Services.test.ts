@@ -251,6 +251,7 @@ describe('Wallet services tests', () => {
           expect(r.results[0].status).toBe('unknown')
           expect(r.results[0].depth).toBe(undefined)
         }
+        await wait(3000)
       }
     }
   })
