@@ -11,7 +11,7 @@ import { TaskNewHeader as TaskNewHeader } from './tasks/TaskNewHeader'
 import { TaskUnFail } from './tasks/TaskUnFail'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
 import { WalletStorageManager } from '../storage/WalletStorageManager'
-import * as sdk from '../sdk/index'
+import * as sdk from '../sdk'
 import { Services } from '../services'
 import { wait } from '../utility/utilityHelpers'
 

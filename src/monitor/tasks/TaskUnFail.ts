@@ -1,8 +1,9 @@
 import { Transaction, Utils } from '@bsv/sdk'
-import { EntityProvenTxReq, sdk, TableProvenTxReq } from '../../index.client'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 import { StorageKnex } from '../../storage/StorageKnex'
+import { TableProvenTxReq } from '../../storage/schema/tables'
+import { EntityProvenTxReq } from '../../storage/schema/entities'
 
 /**
  * Setting provenTxReq status to 'unfail' when 'invalid' will attempt to find a merklePath, and if successful:

@@ -17,12 +17,12 @@ import {
   sdk,
   Services,
   StorageClient,
+  StorageKnex,
   verifyTruthy,
   Wallet,
   WalletStorageManager
-} from './index.client'
+} from './index.all'
 import { Knex, knex as makeKnex } from 'knex'
-import { StorageKnex } from './index.all'
 
 import * as dotenv from 'dotenv'
 dotenv.config()
