@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/bitcoin-sv/wallet-toolbox#readme",
   "dependencies": {
-    "@bsv/sdk": "^1.4.17"
+    "@bsv/sdk": "^1.4.18"
   }
 }
