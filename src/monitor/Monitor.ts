@@ -1,23 +1,23 @@
+import * as sdk from '../sdk'
+import { Services } from '../services'
+import { wait } from '../utility/utilityHelpers'
 import { BlockHeader, ChaintracksServiceClient } from '../services/chaintracker'
+
+import { WalletMonitorTask } from './tasks/WalletMonitorTask'
+import { WalletStorageManager } from '../storage/WalletStorageManager'
+
 import { TaskPurge, TaskPurgeParams } from './tasks/TaskPurge'
 import { TaskReviewStatus } from './tasks/TaskReviewStatus'
 import { TaskSyncWhenIdle } from './tasks/TaskSyncWhenIdle'
 import { TaskFailAbandoned } from './tasks/TaskFailAbandoned'
 import { TaskCheckForProofs } from './tasks/TaskCheckForProofs'
-import { TaskSendWaiting } from './tasks/TaskSendWaiting'
-import { WalletMonitorTask } from './tasks/WalletMonitorTask'
 import { TaskClock } from './tasks/TaskClock'
-import { TaskNewHeader as TaskNewHeader } from './tasks/TaskNewHeader'
-import { TaskUnFail } from './tasks/TaskUnFail'
+import { TaskNewHeader } from './tasks/TaskNewHeader'
+
+import { TaskSendWaiting } from './tasks/TaskSendWaiting'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
-import { WalletStorageManager } from '../storage/WalletStorageManager'
-import * as sdk from '../sdk'
-import { Services } from '../services'
-import { wait } from '../utility/utilityHelpers'
 
 export type MonitorStorage = WalletStorageManager
-//export type MonitorStorage = sdk.WalletStorage
-//export type MonitorStorage = sdk.WalletStorage
 
 export interface MonitorOptions {
   chain: sdk.Chain
@@ -133,7 +133,6 @@ export class Monitor {
     // No purging until invalid transactions are really invalid...
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
-    this._tasks.push(new TaskUnFail(this))
   }
 
   /**
@@ -150,7 +149,6 @@ export class Monitor {
     // No purging until invalid transactions are really invalid...
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
-    this._tasks.push(new TaskUnFail(this))
   }
 
   addTask(task: WalletMonitorTask): void {
