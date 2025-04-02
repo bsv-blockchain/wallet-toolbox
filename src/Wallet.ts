@@ -1005,7 +1005,7 @@ function throwDummyReviewActions() {
   const beef = Beef.fromBinary(Utils.fromBase58(b58Beef))
   const btx = beef.txs.slice(-1)[0]
   const txid = btx.txid
-  debugger;
+  debugger
   throw new sdk.WERR_REVIEW_ACTIONS(
     [
       {

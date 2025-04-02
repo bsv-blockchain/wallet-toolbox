@@ -1,6 +1,6 @@
-import { LocalKVStore, WalletClient } from "@bsv/sdk"
-import { Chain } from "../../src/sdk/types"
-import { createSetup, LocalWalletTestOptions } from "../wallet/local/localWalletMethods"
+import { LocalKVStore, WalletClient } from '@bsv/sdk'
+import { Chain } from '../../src/sdk/types'
+import { createSetup, LocalWalletTestOptions } from '../wallet/local/localWalletMethods'
 
 const chain: Chain = 'main'
 
@@ -62,7 +62,7 @@ describe('LocalKVStore tests', () => {
     expect(r5.length).toBe(1)
     const lor = await wallet.listOutputs({ basket })
     expect(lor.totalOutputs).toBe(0)
-    
+
     await wallet.destroy()
   })
 
