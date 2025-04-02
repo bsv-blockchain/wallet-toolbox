@@ -1,13 +1,4 @@
-import {
-  CreateActionInput,
-  LockingScript,
-  PubKeyHex,
-  PushDrop,
-  Transaction,
-  Utils,
-  WalletInterface,
-  WalletProtocol
-} from '@bsv/sdk'
+import { LocalKVStore, PubKeyHex, WalletInterface } from '@bsv/sdk'
 
 export interface Certifier {
   name: string
@@ -33,10 +24,7 @@ export interface WalletSettingsManagerConfig {
   defaultSettings: WalletSettings
 }
 
-const PROTOCOL_ID: WalletProtocol = [2, 'wallet settings']
-const KEY_ID = '1'
 const SETTINGS_BASKET = 'wallet settings'
-const TOKEN_AMOUNT = 1
 
 // Defaults can be overridden as needed
 export const DEFAULT_SETTINGS = {
@@ -44,18 +32,11 @@ export const DEFAULT_SETTINGS = {
     trustLevel: 2,
     trustedCertifiers: [
       {
-        name: 'Babbage Trust Services',
-        description: 'Resolves identity information for Babbage-run APIs and Bitcoin infrastructure.',
-        iconUrl: 'https://projectbabbage.com/favicon.ico',
+        name: 'Metanet Trust Services',
+        description: 'Registry for protocols, baskets, and certificates types',
+        iconUrl: 'https://bsvblockchain.org/favicon.ico',
         identityKey: '03daf815fe38f83da0ad83b5bedc520aa488aef5cbc93a93c67a7fe60406cbffe8',
         trust: 4
-      },
-      {
-        name: 'IdentiCert',
-        description: 'Certifies legal first and last name, and photos',
-        iconUrl: 'https://identicert.me/favicon.ico',
-        trust: 5,
-        identityKey: '0295bf1c7842d14babf60daf2c733956c331f9dcb2c79e41f85fd1dda6a3fa4549'
       },
       {
         name: 'SocialCert',
@@ -93,12 +74,16 @@ export const TESTNET_DEFAULT_SETTINGS: WalletSettings = {
  * Manages wallet settings
  */
 export class WalletSettingsManager {
+  kv: LocalKVStore
+
   constructor(
     private wallet: WalletInterface,
     private config: WalletSettingsManagerConfig = {
       defaultSettings: DEFAULT_SETTINGS
     }
-  ) {}
+  ) {
+    this.kv = new LocalKVStore(wallet, SETTINGS_BASKET, true)
+  }
 
   /**
    * Returns a user's wallet settings
@@ -106,23 +91,7 @@ export class WalletSettingsManager {
    * @returns - Wallet settings object
    */
   async get(): Promise<WalletSettings> {
-    // List outputs in the 'wallet-settings' basket
-    // There should only be one settings token
-    const results = await this.wallet.listOutputs({
-      basket: SETTINGS_BASKET,
-      include: 'locking scripts'
-    })
-
-    // Return defaults if no settings token is found
-    if (!results.outputs.length) {
-      return this.config.defaultSettings
-    }
-
-    const { fields } = PushDrop.decode(
-      LockingScript.fromHex(results.outputs[results.outputs.length - 1].lockingScript!)
-    )
-    // Parse and return settings token
-    return JSON.parse(Utils.toUTF8(fields[0]))
+    return JSON.parse((await this.kv.get('settings', JSON.stringify(this.config.defaultSettings))) as string)
   }
 
   /**
@@ -131,114 +100,13 @@ export class WalletSettingsManager {
    * @param settings - The wallet settings to be stored.
    */
   async set(settings: WalletSettings): Promise<void> {
-    const pushdrop = new PushDrop(this.wallet)
-
-    // Build the new locking script with the updated settings JSON.
-    const lockingScript = await pushdrop.lock(
-      [Utils.toArray(JSON.stringify(settings), 'utf8')],
-      PROTOCOL_ID,
-      KEY_ID,
-      'self'
-    )
-
-    // Consume any existing token and create a new one with the new locking script.
-    await this.updateToken(lockingScript)
+    await this.kv.set('settings', JSON.stringify(settings))
   }
 
   /**
    * Deletes the user's settings token.
    */
   async delete(): Promise<void> {
-    // Consume the token; if none exists, consumeToken simply returns.
-    await this.updateToken()
-  }
-
-  /**
-   * Updates a settings token. Any previous token is consumed, and if a new locking script
-   * is provided, it replaces what (if anything) was there before.
-   *
-   * @param newLockingScript - Optional locking script for replacing the settings token.
-   * @returns {Promise<boolean>} - True if operation succeeded, throws an error otherwise.
-   */
-  private async updateToken(newLockingScript?: LockingScript): Promise<boolean> {
-    const pushdrop = new PushDrop(this.wallet)
-
-    // 1. List the existing token UTXO(s) for the settings basket.
-    const existingUtxos = await this.wallet.listOutputs({
-      basket: SETTINGS_BASKET,
-      include: 'entire transactions'
-    })
-
-    // This is the "create a new token" path — no signAction, just a new locking script.
-    if (!existingUtxos.outputs.length) {
-      if (!newLockingScript) {
-        return true
-      }
-      await this.wallet.createAction({
-        description: 'Create a user settings token',
-        outputs: [
-          {
-            satoshis: TOKEN_AMOUNT,
-            lockingScript: newLockingScript.toHex(),
-            outputDescription: 'Wallet settings token',
-            basket: SETTINGS_BASKET
-          }
-        ],
-        options: {
-          randomizeOutputs: false,
-          acceptDelayedBroadcast: false
-        }
-      })
-      return true
-    }
-
-    // 2. Prepare the token UTXO for consumption.
-    const tokenOutput = existingUtxos.outputs[existingUtxos.outputs.length - 1]
-    const inputToConsume: CreateActionInput = {
-      outpoint: tokenOutput.outpoint,
-      unlockingScriptLength: 73,
-      inputDescription: 'Consume old wallet settings token'
-    }
-
-    // 3. Build the outputs array: if a new locking script is provided, add an output.
-    const outputs = newLockingScript
-      ? [
-          {
-            satoshis: TOKEN_AMOUNT,
-            lockingScript: newLockingScript.toHex(),
-            outputDescription: 'Wallet settings token',
-            basket: SETTINGS_BASKET
-          }
-        ]
-      : []
-
-    // 4. Create a signable transaction action using the inputs and (optionally) outputs.
-    const { signableTransaction } = await this.wallet.createAction({
-      description: `${newLockingScript ? 'Update' : 'Delete'} a user settings token`,
-      inputBEEF: existingUtxos.BEEF!,
-      inputs: [inputToConsume], // input index 0
-      outputs,
-      options: {
-        randomizeOutputs: false,
-        acceptDelayedBroadcast: false
-      }
-    })
-    const tx = Transaction.fromBEEF(signableTransaction!.tx)
-
-    // 5. Build and sign the unlocking script for the token being consumed.
-    const unlocker = pushdrop.unlock(PROTOCOL_ID, KEY_ID, 'self')
-    const unlockingScript = await unlocker.sign(tx, 0)
-
-    // 6. Sign the transaction using our unlocking script.
-    await this.wallet.signAction({
-      reference: signableTransaction!.reference,
-      spends: {
-        0: {
-          unlockingScript: unlockingScript.toHex()
-        }
-      }
-    })
-
-    return true
+    await this.kv.remove('settings')
   }
 }

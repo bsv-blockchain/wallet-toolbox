@@ -1,4 +1,4 @@
-import { EntitySyncState, sdk, Services, Setup, StorageKnex, TableOutput, TableUser } from '../../../src'
+import { sdk, Services, Setup, StorageKnex, TableUser } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
 import {

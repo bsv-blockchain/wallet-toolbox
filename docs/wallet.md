@@ -9493,6 +9493,7 @@ Manages wallet settings
 
 ```ts
 export class WalletSettingsManager {
+    kv: LocalKVStore;
     constructor(private wallet: WalletInterface, private config: WalletSettingsManagerConfig = {
         defaultSettings: DEFAULT_SETTINGS
     }) 
@@ -11919,18 +11920,11 @@ DEFAULT_SETTINGS = {
         trustLevel: 2,
         trustedCertifiers: [
             {
-                name: "Babbage Trust Services",
-                description: "Resolves identity information for Babbage-run APIs and Bitcoin infrastructure.",
-                iconUrl: "https://projectbabbage.com/favicon.ico",
+                name: "Metanet Trust Services",
+                description: "Registry for protocols, baskets, and certificates types",
+                iconUrl: "https://bsvblockchain.org/favicon.ico",
                 identityKey: "03daf815fe38f83da0ad83b5bedc520aa488aef5cbc93a93c67a7fe60406cbffe8",
                 trust: 4
-            },
-            {
-                name: "IdentiCert",
-                description: "Certifies legal first and last name, and photos",
-                iconUrl: "https://identicert.me/favicon.ico",
-                trust: 5,
-                identityKey: "0295bf1c7842d14babf60daf2c733956c331f9dcb2c79e41f85fd1dda6a3fa4549"
             },
             {
                 name: "SocialCert",
