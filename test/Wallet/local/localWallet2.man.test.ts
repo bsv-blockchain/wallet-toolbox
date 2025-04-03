@@ -146,7 +146,7 @@ describe('localWallet2 tests', () => {
 
   test('6 review and unfail false doubleSpends', async () => {
     const { env, storage, services } = await createMainReviewSetup()
-    let offset = 900
+    let offset = 1000
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
