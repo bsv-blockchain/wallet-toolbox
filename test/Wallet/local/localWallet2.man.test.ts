@@ -1,4 +1,4 @@
-import { WalletOutput } from '@bsv/sdk'
+import { Beef, WalletOutput } from '@bsv/sdk'
 import { sdk, Services, Setup, StorageKnex, TableUser } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
@@ -200,6 +200,14 @@ describe('localWallet2 tests', () => {
     }
     await storage.destroy()
   })
+
+  test('8 jackie Beef', async () => { 
+    const setup = await createSetup(chain, options)
+    const beef = Beef.fromBinary(beefJackie)
+    console.log(beef.toLogString())
+    const ok = beef.verify(await setup.services.getChainTracker())
+    await setup.wallet.destroy()
+  })
 })
 
 async function createMainReviewSetup(): Promise<{
@@ -223,3 +231,6 @@ async function createMainReviewSetup(): Promise<{
   await storage.makeAvailable()
   return { env, storage, services }
 }
+
+  const beefJackie = [
+    1, 1, 1, 1, 196, 222, 98, 76, 119, 112, 138, 49, 125, 79, 3, 8, 17, 96, 88, 134, 18, 94, 233, 6, 43, 58, 55, 200, 53, 21, 225, 58, 243, 130, 114, 64, 2, 0, 190, 239, 0, 1, 0, 1, 0, 0, 0, 1, 157, 193, 59, 124, 10, 214, 21, 108, 182, 51, 203, 122, 124, 52, 230, 65, 248, 166, 3, 136, 224, 45, 213, 116, 91, 81, 101, 168, 142, 252, 196, 20, 110, 0, 0, 0, 107, 72, 48, 69, 2, 33, 0, 144, 86, 132, 240, 56, 253, 101, 20, 254, 1, 184, 144, 98, 236, 225, 242, 239, 88, 99, 196, 58, 33, 141, 79, 234, 140, 7, 22, 254, 140, 65, 83, 2, 32, 113, 198, 86, 176, 19, 16, 165, 168, 5, 227, 70, 44, 5, 22, 144, 179, 172, 170, 13, 148, 3, 236, 35, 2, 74, 238, 235, 84, 148, 192, 102, 138, 65, 33, 3, 15, 101, 106, 207, 42, 192, 187, 51, 59, 128, 27, 240, 244, 240, 4, 224, 230, 41, 166, 89, 216, 46, 7, 24, 242, 180, 20, 90, 12, 57, 59, 144, 255, 255, 255, 255, 2, 136, 19, 0, 0, 0, 0, 0, 0, 25, 118, 169, 20, 240, 178, 178, 204, 51, 126, 211, 251, 43, 177, 154, 94, 189, 29, 53, 41, 220, 136, 142, 80, 136, 172, 208, 140, 0, 0, 0, 0, 0, 0, 25, 118, 169, 20, 217, 48, 110, 108, 236, 100, 116, 90, 181, 114, 45, 176, 198, 216, 150, 134, 16, 251, 10, 177, 136, 172, 0, 0, 0, 0]
