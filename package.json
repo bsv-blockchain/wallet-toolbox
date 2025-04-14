@@ -34,6 +34,7 @@
     "@bsv/payment-express-middleware": "^1.0.6",
     "@bsv/sdk": "^1.4.18",
     "express": "^4.21.2",
+    "idb": "^8.0.2",
     "knex": "^3.1.0",
     "mysql2": "^3.12.0",
     "sqlite3": "^5.1.7"
