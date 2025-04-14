@@ -67,7 +67,7 @@ describe('operations1 tests', () => {
     let offset = 2200
     const limit = 100
     let allUnfails: number[] = []
-    for (; ;) {
+    for (;;) {
       let log = ''
       const unfails: number[] = []
       const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset } })
@@ -94,7 +94,7 @@ describe('operations1 tests', () => {
     let offset = 500
     const limit = 100
     let allUnfails: number[] = []
-    for (; ;) {
+    for (;;) {
       let log = ''
       const unfails: number[] = []
       const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset } })
@@ -128,36 +128,41 @@ describe('operations1 tests', () => {
         and JSON_EXTRACT(f.customInstructions, '$.payee') = '${identityKey}'
         and not exists(select * from outputs as r where r.userId = ${userId} and r.txid = f.txid)
         `)
-      if (outputs.length > 0) 
-        console.log(`userId ${userId} ${identityKey} ${outputs.length} outputs`)
+      if (outputs.length > 0) console.log(`userId ${userId} ${identityKey} ${outputs.length} outputs`)
       for (const output of outputs) {
-        const req = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid: output.txid, status: 'completed' } }))
+        const req = verifyOneOrNone(
+          await storage.findProvenTxReqs({ partial: { txid: output.txid, status: 'completed' } })
+        )
         const { type, derivationPrefix, derivationSuffix, payee } = JSON.parse(output.customInstructions!)
         if (req && type === 'BRC29' && derivationPrefix && derivationSuffix) {
           const beef = await storage.getBeefForTransaction(req.txid, {})
           // {"type":"BRC29","derivationPrefix":"LDFooHSsXzw=","derivationSuffix":"4f4ixKv+6SY=","payee":"0352caa755d5b6279e15e47e096db908e7c4a73a31775e7e8720bdd4cf2d44873a"}
-          await storage.internalizeAction({ userId, identityKey: user.identityKey }, {
-            tx: beef.toBinaryAtomic(req.txid),
-            outputs: [{
-              outputIndex: 0,
-              protocol: 'wallet payment',
-              paymentRemittance: {
-                derivationPrefix: derivationPrefix,
-                derivationSuffix: derivationSuffix,
-                senderIdentityKey: user0.identityKey,
-              }
-            }],
-            description: 'Internalizing export funds tx into foreign wallet'
-          })
+          await storage.internalizeAction(
+            { userId, identityKey: user.identityKey },
+            {
+              tx: beef.toBinaryAtomic(req.txid),
+              outputs: [
+                {
+                  outputIndex: 0,
+                  protocol: 'wallet payment',
+                  paymentRemittance: {
+                    derivationPrefix: derivationPrefix,
+                    derivationSuffix: derivationSuffix,
+                    senderIdentityKey: user0.identityKey
+                  }
+                }
+              ],
+              description: 'Internalizing export funds tx into foreign wallet'
+            }
+          )
           console.log('internalize', userId, output.txid)
         }
       }
     }
-      /*
-      */
+    /*
+     */
     await storage.destroy()
   })
-
 })
 
 async function createMainReviewSetup(): Promise<{
