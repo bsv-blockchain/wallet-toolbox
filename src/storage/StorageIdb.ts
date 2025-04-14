@@ -1,5 +1,5 @@
 import { IDBPDatabase, openDB } from 'idb'
-import { Base64String, HexString, ListActionsResult, ListOutputsResult, PubKeyHex } from '@bsv/sdk'
+import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import {
   sdk,
   TableCertificate,
@@ -21,139 +21,10 @@ import {
   TableUser
 } from '../index.client'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
-import { ProvenTxReqStatus, SyncStatus, TransactionStatus } from '../sdk'
+import { StorageIdbSchema } from './schema/StorageIdbSchema'
+import { DBType } from './StorageReader'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
-
-export interface StorageIdbSchema {
-  certificates: {
-    key: number
-    value: TableCertificate
-    indexes: {
-      userId: number
-      userId_type_certifier_serialNumber: [number, Base64String, PubKeyHex, Base64String]
-    }
-  }
-  certificateFields: {
-    key: number
-    value: TableCertificateField
-    indexes: {
-      userId: number
-      certificateId: number
-    }
-  }
-  commissions: {
-    key: number
-    value: TableCommission
-    indexes: {
-      userId: number
-      transactionId: number
-    }
-  }
-  monitorEvents: {
-    key: number
-    value: TableMonitorEvent
-  }
-  outputs: {
-    key: number
-    value: TableOutput
-    indexes: {
-      userId: number
-      transactionId: number
-      basketId: number
-      spentBy: string
-      transactionId_vout_userId: [number, number, number]
-    }
-  }
-  outputBaskets: {
-    key: number
-    value: TableOutputBasket
-    indexes: {
-      userId: number
-      name_userId: [string, number]
-    }
-  }
-  outputTags: {
-    key: number
-    value: TableOutputTag
-    indexes: {
-      userId: number
-      tag_userId: [string, number]
-    }
-  }
-  outputTagMaps: {
-    key: number
-    value: TableOutputTagMap
-    indexes: {
-      outputTagId: number
-      outputId: number
-    }
-  }
-  provenTxs: {
-    key: number
-    value: TableProvenTx
-    indexes: {
-      txid: HexString
-    }
-  }
-  provenTxReqs: {
-    key: number
-    value: TableProvenTxReq
-    indexes: {
-      provenTxId: number
-      txid: HexString
-      status: ProvenTxReqStatus
-      batch: string
-    }
-  }
-  syncStates: {
-    key: number
-    value: TableSyncState
-    indexes: {
-      userId: number
-      refNum: string
-      status: SyncStatus
-    }
-  }
-  settings: {
-    key: number
-    value: TableSettings
-    indexes: Record<string, never>
-  }
-  transactions: {
-    key: number
-    value: TableTransaction
-    indexes: {
-      userId: number
-      provenTxId: number
-      reference: string
-      status: TransactionStatus
-    }
-  }
-  txLabels: {
-    key: number
-    value: TableTxLabel
-    indexes: {
-      userId: number
-      label_userId: [string, number]
-    }
-  }
-  txLabelMaps: {
-    key: number
-    value: TableTxLabelMap
-    indexes: {
-      transactionId: number
-      txLabelId: number
-    }
-  }
-  users: {
-    key: number
-    value: TableUser
-    indexes: {
-      identityKey: string
-    }
-  }
-}
 
 export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
   dbName: string
@@ -193,9 +64,22 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   async verifyDB(storageName?: string, storageIdentityKey?: string): Promise<IDBPDatabase<StorageIdbSchema>> {
     if (this.db) return this.db;
     this.db = await this.initDB(storageName, storageIdentityKey)
-    this._settings = await this.db.get('settings', 'settings')
+    this._settings = (await this.db.getAll('settings'))[0]
     this.whenLastAccess = new Date()
     return this.db
+  }
+
+  /**
+   * Convert the standard optional `TrxToken` parameter into either a direct knex database instance,
+   * or a Knex.Transaction as appropriate.
+   */
+  toDb(trx?: sdk.TrxToken) : IDBPDatabase<StorageIdbSchema> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (trx) throw new Error('not implemented');
+    if (!this.db) throw new Error('not initialized');
+    const db = this.db
+    this.whenLastAccess = new Date()
+    return db
   }
 
   /**
@@ -354,6 +238,17 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
           });
         }
 
+        if (!db.objectStoreNames.contains('sync_states')) {
+          // sync_states object store
+          const syncStatesStore = db.createObjectStore('sync_states', {
+            keyPath: 'syncStateId',
+            autoIncrement: true,
+          });
+          syncStatesStore.createIndex('userId', 'userId');
+          syncStatesStore.createIndex('refNum', 'refNum', { unique: true });
+          syncStatesStore.createIndex('status', 'status');
+        }
+
         if (!db.objectStoreNames.contains('settings')) {
           if (!storageName || !storageIdentityKey) {
             throw new sdk.WERR_INVALID_OPERATION('migrate must be called before first access')
@@ -371,17 +266,6 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
             maxOutputScript
           }
           settings.put(s)
-        }
-
-        if (!db.objectStoreNames.contains('sync_states')) {
-          // sync_states object store
-          const syncStatesStore = db.createObjectStore('sync_states', {
-            keyPath: 'syncStateId',
-            autoIncrement: true,
-          });
-          syncStatesStore.createIndex('userId', 'userId');
-          syncStatesStore.createIndex('refNum', 'refNum', { unique: true });
-          syncStatesStore.createIndex('status', 'status');
         }
 
       }
@@ -488,50 +372,113 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     throw new Error('Method not implemented.')
   }
 
-  async insertCertificate(certificate: TableCertificate, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+  async insertCertificate(certificate: TableCertificateX, trx?: sdk.TrxToken): Promise<number> {
+    const e = await this.validateEntityForInsert(certificate, trx, undefined, ['isDeleted'])
+    const fields = e.fields
+    if (e.fields) delete e.fields
+    if (e.certificateId === 0) delete e.certificateId
+    const db = await this.verifyDB()
+    const id = Number(await this.toDb(trx).add('certificates', e))
+    certificate.certificateId = id
+
+    if (fields) {
+      for (const field of fields) {
+        field.certificateId = id
+        field.userId = certificate.userId
+        await this.insertCertificateField(field, trx)
+      }
+    }
+
+    return certificate.certificateId
   }
   async insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(certificateField, trx)
+    await this.toDb(trx).add('certificate_fields', e)
   }
   async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(commission, trx)
+    if (e.commissionId === 0) delete e.commissionId
+    const id = Number(await this.toDb(trx).add('commissions', e))
+    commission.commissionId = id
+    return commission.commissionId
   }
   async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(event, trx)
+    if (e.id === 0) delete e.id
+    const id = Number(await this.toDb(trx).add('monitor_events', e))
+    event.id = id
+    return event.id
   }
   async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+      const e = await this.validateEntityForInsert(output, trx)
+      if (e.outputId === 0) delete e.outputId
+      const id = Number(await this.toDb(trx).add('outputs', e))
+      output.outputId = id
+      return output.outputId
   }
   async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(basket, trx, undefined, ['isDeleted'])
+    if (e.basketId === 0) delete e.basketId
+    const id = Number(await this.toDb(trx).add('output_baskets', e))
+    basket.basketId = id
+    return basket.basketId
   }
   async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(tag, trx, undefined, ['isDeleted'])
+    if (e.outputTagId === 0) delete e.outputTagId
+    const id = Number(await this.toDb(trx).add('output_tags', e))
+    tag.outputTagId = id
+    return tag.outputTagId
   }
   async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(tagMap, trx, undefined, ['isDeleted'])
+    const id = await this.toDb(trx).add('output_tags_map', e)
   }
   async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(tx, trx)
+    if (e.provenTxId === 0) delete e.provenTxId
+    const id = Number(await this.toDb(trx).add('proven_txs', e))
+    tx.provenTxId = id
+    return tx.provenTxId
   }
   async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(tx, trx)
+    if (e.provenTxReqId === 0) delete e.provenTxReqId
+    const id = Number(await this.toDb(trx).add('proven_tx_reqs', e))
+    tx.provenTxReqId = id
+    return tx.provenTxReqId
   }
   async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(syncState, trx, ['when'], ['init'])
+    if (e.syncStateId === 0) delete e.syncStateId
+    const id = Number(await this.toDb(trx).add('sync_states', e))
+    syncState.syncStateId = id
+    return syncState.syncStateId
   }
   async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(tx, trx)
+    if (e.transactionId === 0) delete e.transactionId
+    const id = Number(await this.toDb(trx).add('transactions', e))
+    tx.transactionId = id
+    return tx.transactionId
   }
   async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(label, trx, undefined, ['isDeleted'])
+    if (e.txLabelId === 0) delete e.txLabelId
+    const id = Number(await this.toDb(trx).add('tx_labels', e))
+    label.txLabelId = id
+    return label.txLabelId
   }
   async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(labelMap, trx, undefined, ['isDeleted'])
+    const id = await this.toDb(trx).add('tx_labels_map', e)
   }
   async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    const e = await this.validateEntityForInsert(user, trx)
+    if (e.userId === 0) delete e.userId
+    const id = Number(await this.toDb(trx).add('users', e))
+    user.userId = id
+    return user.userId
   }
 
   async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> {
@@ -609,7 +556,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   //
 
   async destroy(): Promise<void> {
-    throw new Error('Method not implemented.')
+    if (this.db) {
+      this.db.close()
+    }
+    this.db = undefined
+    this._settings = undefined
   }
 
   async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> {
@@ -696,4 +647,51 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   async getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> {
     throw new Error('Method not implemented.')
   }
+
+  async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> {
+    if (!this._settings) {
+      this._settings = await this.readSettings()
+    }
+
+    return this._settings.dbtype
+  }
+
+  /**
+   * Helper to force uniform behavior across database engines.
+   * Use to process new entities being inserted into the database.
+   */
+  async validateEntityForInsert<T extends sdk.EntityTimeStamp>(
+    entity: T,
+    trx?: sdk.TrxToken,
+    dateFields?: string[],
+    booleanFields?: string[]
+  ): Promise<any> {
+    await this.verifyReadyForDatabaseAccess(trx)
+    const v: any = { ...entity }
+    v.created_at = this.validateOptionalEntityDate(v.created_at, true)!
+    v.updated_at = this.validateOptionalEntityDate(v.updated_at, true)!
+    if (!v.created_at) delete v.created_at
+    if (!v.updated_at) delete v.updated_at
+    if (dateFields) {
+      for (const df of dateFields) {
+        if (v[df]) v[df] = this.validateOptionalEntityDate(v[df])
+      }
+    }
+    if (booleanFields) {
+      for (const df of booleanFields) {
+        if (entity[df] !== undefined) entity[df] = !!entity[df] ? 1 : 0
+      }
+    }
+    for (const key of Object.keys(v)) {
+      const val = v[key]
+      if (Array.isArray(val) && (val.length === 0 || typeof val[0] === 'number')) {
+        v[key] = Buffer.from(val)
+      } else if (val === undefined) {
+        v[key] = null
+      }
+    }
+    this.isDirty = true
+    return v
+  }
+
 }
