@@ -1117,7 +1117,8 @@ export class CWIStyleWalletManager implements WalletInterface {
     // It uses the ROOT manager internally but applies the profile's pad.
     const profilePrivilegedKeyManager = new PrivilegedKeyManager(async (reason: string) => {
       // Request the ROOT privileged key using the root manager
-      const rootPrivilegedBytes = await this.getFactor('privilegedKey', true)
+      const rootPrivileged: PrivateKey = await (this.rootPrivilegedKeyManager as any).getPrivilegedKey(reason)
+      const rootPrivilegedBytes = rootPrivileged.toArray()
 
       // Apply the profile's pad if applicable
       const profilePrivilegedBytes = profilePrivilegedPad
@@ -1562,7 +1563,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       : undefined
 
     // Create the ROOT PrivilegedKeyManager
-    this.rootPrivilegedKeyManager = new PrivilegedKeyManager(async (reason: string, forceRoot = false) => {
+    this.rootPrivilegedKeyManager = new PrivilegedKeyManager(async (reason: string) => {
       // 1. Use one-time key if available (for recovery)
       if (oneTimePrivilegedKey) {
         const tempKey = oneTimePrivilegedKey
