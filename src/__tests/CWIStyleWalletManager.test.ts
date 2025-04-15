@@ -581,7 +581,7 @@ describe('CWIStyleWalletManager Tests', () => {
 
       // Call the underlying privileged key manager’s decrypt twice.
       // (For example, we use the ciphertext from one of the token’s encrypted fields.)
-      await (manager as any).underlyingPrivilegedKeyManager.decrypt({
+      await (manager as any).rootPrivilegedKeyManager.decrypt({
         ciphertext: (manager as any).currentUMPToken.passwordKeyEncrypted,
         protocolID: [2, 'admin key wrapping'],
         keyID: '1'
@@ -590,7 +590,7 @@ describe('CWIStyleWalletManager Tests', () => {
       // Key expires after 2 minutes
       jest.advanceTimersByTime(121_000)
 
-      await (manager as any).underlyingPrivilegedKeyManager.decrypt({
+      await (manager as any).rootPrivilegedKeyManager.decrypt({
         ciphertext: (manager as any).currentUMPToken.passwordKeyEncrypted,
         protocolID: [2, 'admin key wrapping'],
         keyID: '1'

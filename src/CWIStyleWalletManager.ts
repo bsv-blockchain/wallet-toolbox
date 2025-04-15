@@ -736,6 +736,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       }
       // Build root infrastructure, load profiles, and switch to default profile initially
       await this.setupRootInfrastructure(rootPrimaryKey, rootPrivilegedKey)
+      await this.switchProfile(this.activeProfileId)
     } else {
       // New user flow (only 'presentation-key-and-password')
       if (this.authenticationMode !== 'presentation-key-and-password') {
@@ -799,6 +800,7 @@ export class CWIStyleWalletManager implements WalletInterface {
 
       // Setup root infrastructure and switch to default profile
       await this.setupRootInfrastructure(rootPrimaryKey)
+      await this.switchProfile(DEFAULT_PROFILE_ID)
 
       // Fund the *default* wallet if funder provided
       if (this.newWalletFunder && this.underlying) {
@@ -858,6 +860,7 @@ export class CWIStyleWalletManager implements WalletInterface {
 
       // Build root infrastructure, load profiles, switch to default
       await this.setupRootInfrastructure(rootPrimaryKey, rootPrivilegedKey)
+      await this.switchProfile(this.activeProfileId)
     }
   }
 
