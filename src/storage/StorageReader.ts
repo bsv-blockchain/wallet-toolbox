@@ -141,6 +141,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
     let r: Date | string | undefined = this.validateOptionalDate(date)
     if (!r && useNowAsDefault) r = new Date()
     switch (this.dbtype) {
+      case 'IndexedDB':
       case 'MySQL':
         break
       case 'SQLite':

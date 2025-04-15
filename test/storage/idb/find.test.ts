@@ -1,47 +1,29 @@
-import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
-import { sdk, StorageProvider } from '../../src/index.client'
-import { StorageKnex } from '../../src/storage/StorageKnex'
+import { _tu, TestSetup1 } from '../../utils/TestUtilsWalletStorage'
+import { sdk, StorageProvider, StorageProviderOptions } from '../../../src/index.client'
+
+import { StorageIdb } from '../../../src/storage/StorageIdb'
+
+import 'fake-indexeddb/auto';
 
 describe('find tests', () => {
   jest.setTimeout(99999999)
 
-  const storages: StorageProvider[] = []
   const chain: sdk.Chain = 'test'
-  const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
   const env = _tu.getEnv(chain)
+  let setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
-  beforeAll(async () => {
-    const localSQLiteFile = await _tu.newTmpFile('storagefindtest.sqlite', false, false, true)
-    const knexSQLite = _tu.createLocalSQLite(localSQLiteFile)
-    storages.push(
-      new StorageKnex({
-        ...StorageKnex.defaultOptions(),
-        chain,
-        knex: knexSQLite
-      })
-    )
-
-    if (env.runMySQL) {
-      const knexMySQL = _tu.createLocalMySQL('storagefindtest')
-      storages.push(
-        new StorageKnex({
-          ...StorageKnex.defaultOptions(),
-          chain,
-          knex: knexMySQL
-        })
-      )
-    }
-
-    for (const storage of storages) {
-      await storage.dropAllData()
-      await storage.migrate('find tests', '1'.repeat(64))
-      await storage.makeAvailable()
-      setups.push({ storage, setup: await _tu.createTestSetup1(storage) })
-    }
+  beforeEach(async () => {
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
+    const storage = new StorageIdb(options)
+    await storage.dropAllData()
+    await storage.migrate('idb find tests', '1'.repeat(64))
+    await storage.makeAvailable()
+    const setup = await _tu.createTestSetup1(storage)
+    setups = [{ setup, storage }]
   })
 
   afterAll(async () => {
-    for (const storage of storages) {
+    for (const { storage } of setups) {
       await storage.destroy()
     }
   })
