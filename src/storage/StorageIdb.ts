@@ -1,4 +1,4 @@
-import { IDBPDatabase, openDB } from 'idb'
+import { deleteDB, IDBPDatabase, openDB } from 'idb'
 import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import {
   sdk,
@@ -344,7 +344,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   //
 
   async dropAllData(): Promise<void> {
-    throw new Error('Method not implemented.')
+    await deleteDB(this.dbName);
   }
   async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
     throw new Error('Method not implemented.')
@@ -568,10 +568,85 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
-    throw new Error('Method not implemented.')
+    // args.partial
+    // args.since
+    // args.paged limit / offset
+    const result: TableCertificateField[] = []
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['certificate_fields'], 'readonly')
+    let cursor = await trx.objectStore('certificate_fields').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.certificateId && r.certificateId !== args.partial.certificateId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.fieldName && r.fieldName !== args.partial.fieldName) continue
+        if (args.partial.fieldValue && r.fieldValue !== args.partial.fieldValue) continue
+        if (args.partial.masterKey && r.masterKey !== args.partial.masterKey) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      result.push(r)
+      if (args.paged?.limit && result.length >= args.paged.limit) break
+    }
+    return result
   }
+
   async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
-    throw new Error('Method not implemented.')
+    // args.partial
+    // args.since
+    // args.paged limit / offset
+    // args.certifiers
+    // args.types
+    // args.includeFields
+    const result: TableCertificateX[] = []
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['certificates'], 'readonly')
+    let cursor = await trx.objectStore('certificates').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.certifiers && !args.certifiers.includes(r.certifier)) continue
+      if (args.types && !args.types.includes(r.type)) continue
+      if (args.partial) {
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.certificateId && r.certificateId !== args.partial.certificateId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.type && r.type !== args.partial.type) continue
+        if (args.partial.serialNumber && r.serialNumber !== args.partial.serialNumber) continue
+        if (args.partial.certifier && r.certifier !== args.partial.certifier) continue
+        if (args.partial.subject && r.subject !== args.partial.subject) continue
+        if (args.partial.verifier && r.verifier !== args.partial.verifier) continue
+        if (args.partial.revocationOutpoint && r.revocationOutpoint !== args.partial.revocationOutpoint) continue
+        if (args.partial.signature && r.signature !== args.partial.signature) continue
+        if (args.partial.isDeleted && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      result.push(r)
+      if (args.paged?.limit && result.length >= args.paged.limit) break
+    }
+    if (args.includeFields) {
+      for (const c of result) {
+        const fields = await this.findCertificateFields({ partial: { certificateId: c.certificateId } })
+        c.fields = fields
+      }
+    }
+    return result
   }
   async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> {
     throw new Error('Method not implemented.')
