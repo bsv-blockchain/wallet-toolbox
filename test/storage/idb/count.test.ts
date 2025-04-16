@@ -2,8 +2,7 @@ import { _tu, TestSetup1 } from '../../utils/TestUtilsWalletStorage'
 import { sdk, StorageProvider, StorageProviderOptions } from '../../../src/index.client'
 import { StorageIdb } from '../../../src/storage/StorageIdb'
 
-import 'fake-indexeddb/auto';
-
+import 'fake-indexeddb/auto'
 
 describe('count tests', () => {
   jest.setTimeout(99999999)
@@ -13,7 +12,7 @@ describe('count tests', () => {
   let setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
   beforeEach(async () => {
-    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain)
     const storage = new StorageIdb(options)
     await storage.dropAllData()
     await storage.migrate('idb find tests', '1'.repeat(64))

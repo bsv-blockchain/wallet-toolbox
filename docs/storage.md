@@ -938,7 +938,7 @@ export interface TableSettings extends sdk.StorageIdentity, sdk.EntityTimeStamp 
     storageIdentityKey: string;
     storageName: string;
     chain: sdk.Chain;
-    dbtype: "SQLite" | "MySQL";
+    dbtype: "SQLite" | "MySQL" | "IndexedDB";
     maxOutputScript: number;
 }
 ```
@@ -4262,7 +4262,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Type: DBType
 
 ```ts
-export type DBType = "SQLite" | "MySQL"
+export type DBType = "SQLite" | "MySQL" | "IndexedDB"
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)

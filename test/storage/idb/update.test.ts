@@ -21,7 +21,7 @@ import {
 
 import { StorageIdb } from '../../../src/storage/StorageIdb'
 
-import 'fake-indexeddb/auto';
+import 'fake-indexeddb/auto'
 
 setLogging(false)
 
@@ -33,7 +33,7 @@ describe('update tests', () => {
   let setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
   beforeEach(async () => {
-    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain)
     const storage = new StorageIdb(options)
     await storage.dropAllData()
     await storage.migrate('idb update tests', '1'.repeat(64))
@@ -422,9 +422,9 @@ describe('update tests', () => {
           for (const [key, value] of Object.entries(testValues)) {
             const actualValue = updatedRow[key]
             if (typeof actualValue === 'boolean') {
-              if (value === 1) {
+              if (value === 1 || value === true) {
                 expect(actualValue).toBe(true)
-              } else if (value === 0) {
+              } else if (value === 0 || value === false) {
                 expect(actualValue).toBe(false)
               } else {
                 throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
@@ -686,9 +686,9 @@ describe('update tests', () => {
           for (const [key, value] of Object.entries(testValues)) {
             const actualValue = updatedRow[key]
             if (typeof actualValue === 'boolean') {
-              if (value === 1) {
+              if (value === 1 || value === true) {
                 expect(actualValue).toBe(true)
-              } else if (value === 0) {
+              } else if (value === 0 || value === false) {
                 expect(actualValue).toBe(false)
               } else {
                 throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
@@ -744,9 +744,9 @@ describe('update tests', () => {
           for (const [key, value] of Object.entries(testValues)) {
             const actualValue = updatedRow[key]
             if (typeof actualValue === 'boolean') {
-              if (value === 1) {
+              if (value === 1 || value === true) {
                 expect(actualValue).toBe(true)
-              } else if (value === 0) {
+              } else if (value === 0 || value === false) {
                 expect(actualValue).toBe(false)
               } else {
                 throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
@@ -809,9 +809,9 @@ describe('update tests', () => {
         for (const [key, value] of Object.entries(testValues)) {
           const actualValue = updatedRow[key]
           if (typeof actualValue === 'boolean') {
-            if (value === 1) {
+            if (value === 1 || value === true) {
               expect(actualValue).toBe(true)
-            } else if (value === 0) {
+            } else if (value === 0 || value === false) {
               expect(actualValue).toBe(false)
             } else {
               throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
@@ -969,16 +969,16 @@ describe('update tests', () => {
         for (const [key, value] of Object.entries(testValues)) {
           const actualValue = updatedRow[key]
           if (typeof actualValue === 'boolean') {
-            if (value === 1) {
+            if (value === 1 || value === true) {
               expect(actualValue).toBe(true)
-            } else if (value === 0) {
+            } else if (value === 0 || value === false) {
               expect(actualValue).toBe(false)
             } else {
               throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
             }
             continue
           }
-          if (actualValue instanceof Date) {
+          if (typeof actualValue === 'object' && actualValue.constructor.name === 'Date') {
             const actualDate = new Date(actualValue)
             const expectedDate = new Date(value)
             expect(actualDate.getTime()).toBe(expectedDate.getTime())

@@ -380,7 +380,9 @@ describe('CWIStyleWalletManager Tests', () => {
     })
 
     test('Throws if not authenticated', async () => {
-      await expect(manager.changePassword('test-password')).rejects.toThrow('Not authenticated or missing required data.')
+      await expect(manager.changePassword('test-password')).rejects.toThrow(
+        'Not authenticated or missing required data.'
+      )
     })
   })
 

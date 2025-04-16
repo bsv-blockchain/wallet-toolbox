@@ -1,134 +1,150 @@
-import { Base64String, PubKeyHex, HexString } from '@bsv/sdk';
-import { ProvenTxReqStatus, SyncStatus, TransactionStatus } from '../../sdk';
-import { TableCertificate, TableCertificateField, TableCommission, TableMonitorEvent, TableOutput, TableOutputBasket, TableOutputTag, TableOutputTagMap, TableProvenTx, TableProvenTxReq, TableSyncState, TableSettings, TableTransaction, TableTxLabel, TableTxLabelMap, TableUser } from '../index.client';
-
+import { Base64String, PubKeyHex, HexString } from '@bsv/sdk'
+import { ProvenTxReqStatus, SyncStatus, TransactionStatus } from '../../sdk'
+import {
+  TableCertificate,
+  TableCertificateField,
+  TableCommission,
+  TableMonitorEvent,
+  TableOutput,
+  TableOutputBasket,
+  TableOutputTag,
+  TableOutputTagMap,
+  TableProvenTx,
+  TableProvenTxReq,
+  TableSyncState,
+  TableSettings,
+  TableTransaction,
+  TableTxLabel,
+  TableTxLabelMap,
+  TableUser
+} from '../index.client'
 
 export interface StorageIdbSchema {
   certificates: {
-    key: number;
-    value: TableCertificate;
+    key: number
+    value: TableCertificate
     indexes: {
-      userId: number;
-      userId_type_certifier_serialNumber: [number, Base64String, PubKeyHex, Base64String];
-    };
-  };
+      userId: number
+      userId_type_certifier_serialNumber: [number, Base64String, PubKeyHex, Base64String]
+    }
+  }
   certificateFields: {
-    key: number;
-    value: TableCertificateField;
+    key: number
+    value: TableCertificateField
     indexes: {
-      userId: number;
-      certificateId: number;
-    };
-  };
+      userId: number
+      certificateId: number
+    }
+  }
   commissions: {
-    key: number;
-    value: TableCommission;
+    key: number
+    value: TableCommission
     indexes: {
-      userId: number;
-      transactionId: number;
-    };
-  };
+      userId: number
+      transactionId: number
+    }
+  }
   monitorEvents: {
-    key: number;
-    value: TableMonitorEvent;
-  };
+    key: number
+    value: TableMonitorEvent
+  }
   outputs: {
-    key: number;
-    value: TableOutput;
+    key: number
+    value: TableOutput
     indexes: {
-      userId: number;
-      transactionId: number;
-      basketId: number;
-      spentBy: string;
-      transactionId_vout_userId: [number, number, number];
-    };
-  };
+      userId: number
+      transactionId: number
+      basketId: number
+      spentBy: string
+      transactionId_vout_userId: [number, number, number]
+    }
+  }
   outputBaskets: {
-    key: number;
-    value: TableOutputBasket;
+    key: number
+    value: TableOutputBasket
     indexes: {
-      userId: number;
-      name_userId: [string, number];
-    };
-  };
+      userId: number
+      name_userId: [string, number]
+    }
+  }
   outputTags: {
-    key: number;
-    value: TableOutputTag;
+    key: number
+    value: TableOutputTag
     indexes: {
-      userId: number;
-      tag_userId: [string, number];
-    };
-  };
+      userId: number
+      tag_userId: [string, number]
+    }
+  }
   outputTagMaps: {
-    key: number;
-    value: TableOutputTagMap;
+    key: number
+    value: TableOutputTagMap
     indexes: {
-      outputTagId: number;
-      outputId: number;
-    };
-  };
+      outputTagId: number
+      outputId: number
+    }
+  }
   provenTxs: {
-    key: number;
-    value: TableProvenTx;
+    key: number
+    value: TableProvenTx
     indexes: {
-      txid: HexString;
-    };
-  };
+      txid: HexString
+    }
+  }
   provenTxReqs: {
-    key: number;
-    value: TableProvenTxReq;
+    key: number
+    value: TableProvenTxReq
     indexes: {
-      provenTxId: number;
-      txid: HexString;
-      status: ProvenTxReqStatus;
-      batch: string;
-    };
-  };
+      provenTxId: number
+      txid: HexString
+      status: ProvenTxReqStatus
+      batch: string
+    }
+  }
   syncStates: {
-    key: number;
-    value: TableSyncState;
+    key: number
+    value: TableSyncState
     indexes: {
-      userId: number;
-      refNum: string;
-      status: SyncStatus;
-    };
-  };
+      userId: number
+      refNum: string
+      status: SyncStatus
+    }
+  }
   settings: {
-    key: number;
-    value: TableSettings;
-    indexes: Record<string, never>;
-  };
+    key: number
+    value: TableSettings
+    indexes: Record<string, never>
+  }
   transactions: {
-    key: number;
-    value: TableTransaction;
+    key: number
+    value: TableTransaction
     indexes: {
-      userId: number;
-      provenTxId: number;
-      reference: string;
-      status: TransactionStatus;
-    };
-  };
+      userId: number
+      provenTxId: number
+      reference: string
+      status: TransactionStatus
+    }
+  }
   txLabels: {
-    key: number;
-    value: TableTxLabel;
+    key: number
+    value: TableTxLabel
     indexes: {
-      userId: number;
-      label_userId: [string, number];
-    };
-  };
+      userId: number
+      label_userId: [string, number]
+    }
+  }
   txLabelMaps: {
-    key: number;
-    value: TableTxLabelMap;
+    key: number
+    value: TableTxLabelMap
     indexes: {
-      transactionId: number;
-      txLabelId: number;
-    };
-  };
+      transactionId: number
+      txLabelId: number
+    }
+  }
   users: {
-    key: number;
-    value: TableUser;
+    key: number
+    value: TableUser
     indexes: {
-      identityKey: string;
-    };
-  };
+      identityKey: string
+    }
+  }
 }

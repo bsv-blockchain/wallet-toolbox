@@ -1,8 +1,15 @@
 import { _tu } from '../../utils/TestUtilsWalletStorage'
-import { randomBytesBase64, randomBytesHex, sdk, StorageProvider, StorageProviderOptions, TableCommission } from '../../../src/index.client'
+import {
+  randomBytesBase64,
+  randomBytesHex,
+  sdk,
+  StorageProvider,
+  StorageProviderOptions,
+  TableCommission
+} from '../../../src/index.client'
 import { StorageIdb } from '../../../src/storage/StorageIdb'
 
-import 'fake-indexeddb/auto';
+import 'fake-indexeddb/auto'
 
 describe('idb insert tests', () => {
   jest.setTimeout(99999999)
@@ -13,10 +20,8 @@ describe('idb insert tests', () => {
 
   beforeEach(async () => {
     storages = []
-    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
-    storages.push(
-      new StorageIdb(options)
-    )
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain)
+    storages.push(new StorageIdb(options))
 
     for (const storage of storages) {
       await storage.dropAllData()

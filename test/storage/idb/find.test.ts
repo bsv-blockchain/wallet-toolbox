@@ -3,7 +3,7 @@ import { sdk, StorageProvider, StorageProviderOptions } from '../../../src/index
 
 import { StorageIdb } from '../../../src/storage/StorageIdb'
 
-import 'fake-indexeddb/auto';
+import 'fake-indexeddb/auto'
 
 describe('find tests', () => {
   jest.setTimeout(99999999)
@@ -13,7 +13,7 @@ describe('find tests', () => {
   let setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
   beforeEach(async () => {
-    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain)
     const storage = new StorageIdb(options)
     await storage.dropAllData()
     await storage.migrate('idb find tests', '1'.repeat(64))
