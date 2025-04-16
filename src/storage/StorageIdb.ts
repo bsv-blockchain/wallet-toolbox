@@ -387,7 +387,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     await deleteDB(this.dbName)
   }
 
-  async filterOutputTagMaps(args: sdk.FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void): Promise<void> {
+  async filterOutputTagMaps(args: sdk.FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void, userId?: number): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -409,6 +409,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
+      if (userId !== undefined && r.txid) {
+        const count = await this.countOutputTags({partial: {userId, outputTagId: r.outputTagId}})
+        if (count === 0) continue
+      }
       if (skipped < offset) {
         skipped++
         continue
@@ -427,7 +431,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterProvenTxReqs(args: sdk.FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void): Promise<void> {
+  async filterProvenTxReqs(args: sdk.FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void, userId?: number): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -464,6 +468,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.history && r.history !== args.partial.history) continue
         if (args.partial.notify && r.notify !== args.partial.notify) continue
       }
+      if (userId !== undefined && r.txid) {
+        const count = await this.countTransactions({partial: {userId, txid: r.txid}})
+        if (count === 0) continue
+      }
       if (skipped < offset) {
         skipped++
         continue
@@ -482,7 +490,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterProvenTxs(args: sdk.FindProvenTxsArgs, filtered: (v: TableProvenTx) => void): Promise<void> {
+  async filterProvenTxs(args: sdk.FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -516,6 +524,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.blockHash && r.blockHash !== args.partial.blockHash) continue
         if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
       }
+      if (userId !== undefined) {
+        const count = await this.countTransactions({partial: {userId, provenTxId: r.provenTxId}})
+        if (count === 0) continue
+      }
       if (skipped < offset) {
         skipped++
         continue
@@ -534,7 +546,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterTxLabelMaps(args: sdk.FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void): Promise<void> {
+  async filterTxLabelMaps(args: sdk.FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void, userId?: number): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -554,6 +566,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (userId !== undefined) {
+        const count = await this.countTxLabels({partial: {userId, txLabelId: r.txLabelId}})
+        if (count === 0) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1492,16 +1508,55 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async getProvenTxsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTx[]> {
-    throw new Error('Method not implemented.')
+    const results: TableProvenTx[] = []
+    const fargs: sdk.FindProvenTxsArgs = {
+      partial: {},
+      since: args.since,
+      paged: args.paged
+    }
+    await this.filterProvenTxs(fargs, r => {
+      results.push(this.validateEntity(r))
+    }, args.userId)
+    return results
   }
+
   async getProvenTxReqsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> {
-    throw new Error('Method not implemented.')
+    const results: TableProvenTxReq[] = []
+    const fargs: sdk.FindProvenTxReqsArgs = {
+      partial: {},
+      since: args.since,
+      paged: args.paged
+    }
+    await this.filterProvenTxReqs(fargs, r => {
+      results.push(this.validateEntity(r))
+    }, args.userId)
+    return results
   }
+
   async getTxLabelMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> {
-    throw new Error('Method not implemented.')
+    const results: TableTxLabelMap[] = []
+    const fargs: sdk.FindTxLabelMapsArgs = {
+      partial: {},
+      since: args.since,
+      paged: args.paged
+    }
+    await this.filterTxLabelMaps(fargs, r => {
+      results.push(this.validateEntity(r))
+    }, args.userId)
+    return results
   }
+
   async getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> {
-    throw new Error('Method not implemented.')
+    const results: TableOutputTagMap[] = []
+    const fargs: sdk.FindOutputTagMapsArgs = {
+      partial: {},
+      since: args.since,
+      paged: args.paged
+    }
+    await this.filterOutputTagMaps(fargs, r => {
+      results.push(this.validateEntity(r))
+    }, args.userId)
+    return results
   }
 
   async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> {
