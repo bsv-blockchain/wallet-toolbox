@@ -209,13 +209,6 @@ describe('localWallet2 tests', () => {
     await setup.wallet.destroy()
   })
 
-  test('9 brayden1 Beef', async () => { 
-    const setup = await createSetup(chain, options)
-    const beef = Beef.fromString(brayden1, 'base64')
-    console.log(beef.toLogString())
-    const ok = await beef.verify(await setup.services.getChainTracker())
-    await setup.wallet.destroy()
-  })
 })
 
 async function createMainReviewSetup(): Promise<{
