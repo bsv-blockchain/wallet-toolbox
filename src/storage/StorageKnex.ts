@@ -993,9 +993,11 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   }
 
   /**
-   *  Finds closest matching available change output to use as input for new transaction.
-   *
-   * Transactionally allocate the output such that
+   * Counts the outputs for userId in basketId that are spendable: true
+   * AND whose transaction status is one of:
+   * - completed
+   * - unproven
+   * - sending (if excludeSending is false)
    */
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
     const status: sdk.TransactionStatus[] = ['completed', 'unproven']

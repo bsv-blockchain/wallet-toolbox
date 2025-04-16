@@ -19,11 +19,13 @@ import {
   TableTxLabel,
   TableTxLabelMap,
   TableUser,
+  verifyOne,
   verifyOneOrNone
 } from '../index.client'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
+import { TransactionStatus } from '../sdk'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
@@ -340,10 +342,25 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]> {
-    throw new Error('Method not implemented.')
+    const maps = await this.findTxLabelMaps({ partial: { transactionId, isDeleted: false }, trx })
+    const labelIds = maps.map(m => m.txLabelId)
+    const labels: TableTxLabel[] = []
+    for (const txLabelId of labelIds) {
+      const label = verifyOne(await this.findTxLabels({ partial: { txLabelId, isDeleted: false }, trx }))
+      labels.push(label)
+    }
+    return labels
   }
+
   async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> {
-    throw new Error('Method not implemented.')
+    const maps = await this.findOutputTagMaps({ partial: { outputId, isDeleted: false }, trx })
+    const tagIds = maps.map(m => m.outputTagId)
+    const tags: TableOutputTag[] = []
+    for (const outputTagId of tagIds) {
+      const tag = verifyOne(await this.findOutputTags({ partial: { outputTagId, isDeleted: false }, trx }))
+      tags.push(tag)
+    }
+    return tags
   }
 
   async listActions(auth: sdk.AuthId, args: sdk.ValidListActionsArgs): Promise<ListActionsResult> {
@@ -354,7 +371,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
-    throw new Error('Method not implemented.')
+    const args: sdk.FindOutputsArgs = { partial: { userId, basketId} }
+    const status: sdk.TransactionStatus[] = ['completed', 'unproven']
+    if (!excludeSending) status.push('sending')
+    let count = 0
+    await this.filterOutputs(args, r => { count++ }, status)
+    return count
   }
 
   async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
@@ -1117,7 +1139,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void): Promise<void> {
+  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void, txStatus?: TransactionStatus[]): Promise<void> {
     // args.txStatus
     // args.noScript
     if (args.partial.lockingScript)
@@ -1163,6 +1185,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.sequenceNumber !== undefined && r.sequenceNumber !== args.partial.sequenceNumber) continue
         if (args.partial.scriptLength !== undefined && r.scriptLength !== args.partial.scriptLength) continue
         if (args.partial.scriptOffset !== undefined && r.scriptOffset !== args.partial.scriptOffset) continue
+      }
+      if (txStatus !== undefined) {
+        const count = await this.countTransactions({partial: {transactionId: r.transactionId }, status: txStatus})
+        if (count === 0) continue
       }
       if (skipped < offset) {
         skipped++
