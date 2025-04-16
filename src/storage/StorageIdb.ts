@@ -327,16 +327,25 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
-    throw new Error('Method not implemented.')
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+    args.partial.userId = auth.userId
+    return await this.findCertificates(args)
   }
   async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
-    throw new Error('Method not implemented.')
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+    args.partial.userId = auth.userId
+    return await this.findOutputBaskets(args)
   }
   async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
-    throw new Error('Method not implemented.')
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+    args.partial.userId = auth.userId
+    return await this.findOutputs(args)
   }
+
   async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> {
-    throw new Error('Method not implemented.')
+    if (!auth.userId || (certificate.userId && certificate.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+    certificate.userId = auth.userId
+    return await this.insertCertificate(certificate)
   }
 
   //
@@ -346,30 +355,192 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   async dropAllData(): Promise<void> {
     await deleteDB(this.dbName);
   }
+
+  async filterOutputTagMaps(args: sdk.FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['output_tags_map'], 'readonly')
+    let cursor = await trx.objectStore('output_tags_map').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.tagIds && !args.tagIds.includes(r.outputTagId)) continue
+      if (args.partial) {
+        if (args.partial.outputTagId && r.outputTagId !== args.partial.outputTagId) continue
+        if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
-    throw new Error('Method not implemented.')
+    const results: TableOutputTagMap[] = []
+    await this.filterOutputTagMaps(args, (r) => { results.push(r) })
+    return results
   }
+
+  async filterProvenTxReqs(args: sdk.FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void): Promise<void> {
+    if (args.partial.rawTx)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.rawTx',
+        `undefined. ProvenTxReqs may not be found by rawTx value.`
+      )
+    if (args.partial.inputBEEF)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.inputBEEF',
+        `undefined. ProvenTxReqs may not be found by inputBEEF value.`
+      )
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['proven_tx_reqs'], 'readonly')
+    let cursor = await trx.objectStore('proven_tx_reqs').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.provenTxReqId && r.provenTxReqId !== args.partial.provenTxReqId) continue
+        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.status && r.status !== args.partial.status) continue
+        if (args.partial.attempts !== undefined && r.attempts !== args.partial.attempts) continue
+        if (args.partial.notified !== undefined && r.notified !== args.partial.notified) continue
+        if (args.partial.txid && r.txid !== args.partial.txid) continue
+        if (args.partial.batch && r.batch !== args.partial.batch) continue
+        if (args.partial.history && r.history !== args.partial.history) continue
+        if (args.partial.notify && r.notify !== args.partial.notify) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
-    throw new Error('Method not implemented.')
+    const results: TableProvenTxReq[] = []
+    await this.filterProvenTxReqs(args, (r) => { results.push(r) })
+    return results
   }
+
+  async filterProvenTxs(args: sdk.FindProvenTxsArgs, filtered: (v: TableProvenTx) => void): Promise<void> {
+    if (args.partial.rawTx)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.rawTx',
+        `undefined. ProvenTxs may not be found by rawTx value.`
+      )
+    if (args.partial.merklePath)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.merklePath',
+        `undefined. ProvenTxs may not be found by merklePath value.`
+      )
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['proven_txs'], 'readonly')
+    let cursor = await trx.objectStore('proven_txs').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.txid && r.txid !== args.partial.txid) continue
+        if (args.partial.height !== undefined && r.height !== args.partial.height) continue
+        if (args.partial.index !== undefined && r.index !== args.partial.index) continue
+        if (args.partial.blockHash && r.blockHash !== args.partial.blockHash) continue
+        if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> {
-    throw new Error('Method not implemented.')
+    const results: TableProvenTx[] = []
+    await this.filterProvenTxs(args, (r) => { results.push(r) })
+    return results
   }
+
+  async filterTxLabelMaps(args: sdk.FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['tx_labels_map'], 'readonly')
+    let cursor = await trx.objectStore('tx_labels_map').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.txLabelId && r.txLabelId !== args.partial.txLabelId) continue
+        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> {
-    throw new Error('Method not implemented.')
+    const results: TableTxLabelMap[] = []
+    await this.filterTxLabelMaps(args, (r) => { results.push(r) })
+    return results
   }
 
   async countOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterOutputTagMaps(args, () => { count++ })
+    return count
   }
   async countProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterProvenTxReqs(args, () => { count++ })
+    return count
   }
   async countProvenTxs(args: sdk.FindProvenTxsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterProvenTxs(args, () => { count++ })
+    return count
   }
   async countTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterTxLabelMaps(args, () => { count++ })
+    return count
   }
 
   async insertCertificate(certificate: TableCertificateX, trx?: sdk.TrxToken): Promise<number> {
@@ -823,9 +994,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
     const results : TableOutput[] = []
     await this.filterOutputs(args, (r) => { results.push(r) })
-    if (!args.noScript) {
-      for (const o of results) {
+    for (const o of results) {
+      if (!args.noScript) {
         await this.validateOutputScript(o)
+      } else {
+        o.lockingScript = undefined
       }
     }
     return results
@@ -914,6 +1087,16 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void): Promise<void> {
+    if (args.partial.rawTx)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.rawTx',
+        `undefined. Transactions may not be found by rawTx value.`
+      )
+    if (args.partial.inputBEEF)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.inputBEEF',
+        `undefined. Transactions may not be found by inputBEEF value.`
+      )
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -927,10 +1110,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       firstTime = false
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
+      if (args.status && !args.status.includes(r.status)) continue
       if (args.partial) {
         if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
         if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.status && r.status !== args.partial.status) continue
+        if (args.partial.reference && r.reference !== args.partial.reference) continue
+        if (args.partial.isOutgoing !== undefined && r.isOutgoing !== args.partial.isOutgoing) continue
+        if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
+        if (args.partial.description && r.description !== args.partial.description) continue
+        if (args.partial.version !== undefined && r.version !== args.partial.version) continue
+        if (args.partial.lockTime !== undefined && r.lockTime !== args.partial.lockTime) continue
         if (args.partial.txid && r.txid !== args.partial.txid) continue
       }
       if (skipped < offset) { skipped++; continue }
@@ -941,13 +1134,86 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> {
-    throw new Error('Method not implemented.')
+    const results : TableTransaction[] = []
+    await this.filterTransactions(args, (r) => { results.push(r) })
+    for (const t of results) {
+      if (!args.noRawTx) {
+        await this.validateRawTransaction(t)
+      } else {
+        t.rawTx = undefined
+        t.inputBEEF = undefined
+      }
+    }
+    return results
   }
+
+  async filterTxLabels(args: sdk.FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['tx_labels'], 'readonly')
+    let cursor = await trx.objectStore('tx_labels').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.txLabelId && r.txLabelId !== args.partial.txLabelId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.label && r.label !== args.partial.label) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> {
-    throw new Error('Method not implemented.')
+    const result: TableTxLabel[] = []
+    await this.filterTxLabels(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterUsers(args: sdk.FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['users'], 'readonly')
+    let cursor = await trx.objectStore('users').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.identityKey && r.identityKey !== args.partial.identityKey) continue
+        if (args.partial.activeStorage && r.activeStorage !== args.partial.activeStorage) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> {
-    throw new Error('Method not implemented.')
+    const result: TableUser[] = []
+    await this.filterUsers(args, (r) => { result.push(r) })
+    return result
   }
 
   async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> {
@@ -991,13 +1257,19 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return count
   }
   async countTransactions(args: sdk.FindTransactionsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterTransactions(args, () => { count++ })
+    return count
   }
   async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterTxLabels(args, () => { count++ })
+    return count
   }
   async countUsers(args: sdk.FindUsersArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterUsers(args, () => { count++ })
+    return count
   }
 
   async getProvenTxsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTx[]> {
@@ -1057,6 +1329,17 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     this.isDirty = true
     return v
+  }
+
+  async validateRawTransaction(t: TableTransaction): Promise<void> {
+    // if there is no txid or there is a rawTransaction return what we have.
+    if (t.rawTx || !t.txid) return
+
+    // rawTransaction is missing, see if we moved it ...
+
+    const rawTx = await this.getRawTxOfKnownValidTransaction(t.txid)
+    if (!rawTx) return
+    t.rawTx = rawTx
   }
 
   async validateOutputScript(o: TableOutput): Promise<void> {

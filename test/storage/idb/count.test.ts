@@ -22,7 +22,7 @@ describe('count tests', () => {
     setups = [{ setup, storage }]
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     for (const { storage } of setups) {
       await storage.destroy()
     }
