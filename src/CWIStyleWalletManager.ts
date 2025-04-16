@@ -456,8 +456,8 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
 
       const decoded = PushDrop.decode(tx.outputs[outputIndex].lockingScript)
 
-      // Expecting 11 or 12 fields for UMP (12 if profiles included)
-      if (!decoded.fields || (decoded.fields.length !== 11 && decoded.fields.length !== 12)) {
+      // Expecting 11 or more fields for UMP
+      if (!decoded.fields || decoded.fields.length < 11) {
         console.warn(`Unexpected number of fields in UMP token: ${decoded.fields?.length}`)
         return undefined
       }
@@ -476,7 +476,7 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
         presentationKeyEncrypted: decoded.fields[8],
         passwordKeyEncrypted: decoded.fields[9],
         recoveryKeyEncrypted: decoded.fields[10],
-        profilesEncrypted: decoded.fields.length > 11 ? decoded.fields[11] : undefined, // Optional 12th field
+        profilesEncrypted: decoded.fields[12] ? decoded.fields[11] : undefined, // If there's a signature in field 12, use field 11
         currentOutpoint: outpoint
       }
       return t
