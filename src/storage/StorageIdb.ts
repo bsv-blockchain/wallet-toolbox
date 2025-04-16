@@ -567,13 +567,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     throw new Error('Method not implemented.')
   }
 
-  async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
-    // args.partial
-    // args.since
-    // args.paged limit / offset
-    const result: TableCertificateField[] = []
+  async filterCertificateFields(args: sdk.FindCertificateFieldsArgs, filtered: (v: TableCertificateField) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
+    let count = 0
     const db = await this.verifyDB()
     const trx = db.transaction(['certificate_fields'], 'readonly')
     let cursor = await trx.objectStore('certificate_fields').openCursor()
@@ -594,22 +591,22 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.masterKey && r.masterKey !== args.partial.masterKey) continue
       }
       if (skipped < offset) { skipped++; continue }
-      result.push(r)
-      if (args.paged?.limit && result.length >= args.paged.limit) break
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
     }
+  }
+
+  async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
+    const result: TableCertificateField[] = []
+    await this.filterCertificateFields(args, (r) => { result.push(r) })
     return result
   }
 
-  async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
-    // args.partial
-    // args.since
-    // args.paged limit / offset
-    // args.certifiers
-    // args.types
-    // args.includeFields
-    const result: TableCertificateX[] = []
+  async filterCertificates(args: sdk.FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
+    let count = 0
     const db = await this.verifyDB()
     const trx = db.transaction(['certificates'], 'readonly')
     let cursor = await trx.objectStore('certificates').openCursor()
@@ -637,9 +634,15 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.isDeleted && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (skipped < offset) { skipped++; continue }
-      result.push(r)
-      if (args.paged?.limit && result.length >= args.paged.limit) break
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
     }
+  }
+
+  async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
+    const result: TableCertificateX[] = []
+    await this.filterCertificates(args, (r) => { result.push(r) })
     if (args.includeFields) {
       for (const c of result) {
         const fields = await this.findCertificateFields({ partial: { certificateId: c.certificateId } })
@@ -648,24 +651,295 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return result
   }
+
+  async filterCommissions(args: sdk.FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> {
+    if (args.partial.lockingScript)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'partial.lockingScript',
+        `undefined. Commissions may not be found by lockingScript value.`
+      )
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['commissions'], 'readonly')
+    let cursor = await trx.objectStore('commissions').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.commissionId && r.commissionId !== args.partial.commissionId) continue
+        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
+        if (args.partial.keyOffset && r.keyOffset !== args.partial.keyOffset) continue
+        if (args.partial.isRedeemed !== undefined && r.isRedeemed !== args.partial.isRedeemed) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> {
-    throw new Error('Method not implemented.')
+    const result: TableCommission[] = []
+    await this.filterCommissions(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterMonitorEvents(args: sdk.FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['monitor_events'], 'readonly')
+    let cursor = await trx.objectStore('monitor_events').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.id && r.id !== args.partial.id) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.event && r.event !== args.partial.event) continue
+        if (args.partial.details && r.details !== args.partial.details) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> {
-    throw new Error('Method not implemented.')
+    const result: TableMonitorEvent[] = []
+    await this.filterMonitorEvents(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterOutputBaskets(args: sdk.FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['output_baskets'], 'readonly')
+    let cursor = await trx.objectStore('output_baskets').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.basketId && r.basketId !== args.partial.basketId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.name && r.name !== args.partial.name) continue
+        if (args.partial.numberOfDesiredUTXOs !== undefined && r.numberOfDesiredUTXOs !== args.partial.numberOfDesiredUTXOs) continue
+        if (args.partial.minimumDesiredUTXOValue !== undefined && r.numberOfDesiredSatoshis !== args.partial.minimumDesiredUTXOValue) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
-    throw new Error('Method not implemented.')
+    const result: TableOutputBasket[] = []
+    await this.filterOutputBaskets(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void): Promise<void> {
+    // args.txStatus
+    // args.noScript
+    if (args.partial.lockingScript)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.lockingScript',
+        `undefined. Outputs may not be found by lockingScript value.`
+      )
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['outputs'], 'readonly')
+    let cursor = await trx.objectStore('outputs').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.txStatus && !args.txStatus.includes(r.txStatus)) continue
+      if (args.partial) {
+        if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.basketId && r.basketId !== args.partial.basketId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.spendable !== undefined && r.spendable !== args.partial.spendable) continue
+        if (args.partial.change !== undefined && r.change !== args.partial.change) continue
+        if (args.partial.outputDescription && r.outputDescription !== args.partial.outputDescription) continue
+        if (args.partial.vout !== undefined && r.vout !== args.partial.vout) continue
+        if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
+        if (args.partial.providedBy && r.providedBy !== args.partial.providedBy) continue
+        if (args.partial.purpose && r.purpose !== args.partial.purpose) continue
+        if (args.partial.type && r.type !== args.partial.type) continue
+        if (args.partial.txid && r.txid !== args.partial.txid) continue
+        if (args.partial.senderIdentityKey && r.senderIdentityKey !== args.partial.senderIdentityKey) continue
+        if (args.partial.derivationPrefix && r.derivationPrefix !== args.partial.derivationPrefix) continue
+        if (args.partial.derivationSuffix && r.derivationSuffix !== args.partial.derivationSuffix) continue
+        if (args.partial.customInstructions && r.customInstructions !== args.partial.customInstructions) continue
+        if (args.partial.spentBy && r.spentBy !== args.partial.spentBy) continue
+        if (args.partial.sequenceNumber !== undefined && r.sequenceNumber !== args.partial.sequenceNumber) continue
+        if (args.partial.scriptLength !== undefined && r.scriptLength !== args.partial.scriptLength) continue
+        if (args.partial.scriptOffset !== undefined && r.scriptOffset !== args.partial.scriptOffset) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      if (args.noScript === true) { r.script = undefined }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
-    throw new Error('Method not implemented.')
+    const results : TableOutput[] = []
+    await this.filterOutputs(args, (r) => { results.push(r) })
+    if (!args.noScript) {
+      for (const o of results) {
+        await this.validateOutputScript(o)
+      }
+    }
+    return results
   }
+
+  async filterOutputTags(args: sdk.FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['output_tags'], 'readonly')
+    let cursor = await trx.objectStore('output_tags').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.outputTagId && r.outputTagId !== args.partial.outputTagId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.tag && r.tag !== args.partial.tag) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> {
-    throw new Error('Method not implemented.')
+    const result: TableOutputTag[] = []
+    await this.filterOutputTags(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterSyncStates(args: sdk.FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> {
+    if (args.partial.syncMap)
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'args.partial.syncMap',
+        `undefined. SyncStates may not be found by syncMap value.`
+      )
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['sync_states'], 'readonly')
+    let cursor = await trx.objectStore('sync_states').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.syncStateId && r.syncStateId !== args.partial.syncStateId) continue
+        if (args.partial.userId && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.storageIdentityKey && r.storageIdentityKey !== args.partial.storageIdentityKey) continue
+        if (args.partial.storageName && r.storageName !== args.partial.storageName) continue
+        if (args.partial.status && r.status !== args.partial.status) continue
+        if (args.partial.init !== undefined && r.init !== args.partial.init) continue
+        if (args.partial.refNum !== undefined && r.refNum !== args.partial.refNum) continue
+        if (args.partial.when && r.when?.getTime() !== args.partial.when.getTime()) continue
+        if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
+        if (args.partial.errorLocal && r.errorLocale !== args.partial.errorLocal) continue
+        if (args.partial.errorOther && r.errorOther !== args.partial.errorOther) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> {
-    throw new Error('Method not implemented.')
+    const result: TableSyncState[] = []
+    await this.filterSyncStates(args, (r) => { result.push(r) })
+    return result
   }
+
+  async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void): Promise<void> {
+    const offset = args.paged?.offset || 0
+    let skipped = 0
+    let count = 0
+    const db = await this.verifyDB()
+    const trx = db.transaction(['transactions'], 'readonly')
+    let cursor = await trx.objectStore('transactions').openCursor()
+    let firstTime = true
+    while (cursor) {
+      if (!firstTime) cursor = await cursor.continue();
+      if (!cursor) break;
+      firstTime = false
+      const r = cursor.value
+      if (args.since && args.since > r.updated_at) continue
+      if (args.partial) {
+        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.txid && r.txid !== args.partial.txid) continue
+      }
+      if (skipped < offset) { skipped++; continue }
+      filtered(r)
+      count++
+      if (args.paged?.limit && count >= args.paged.limit) break
+    }
+  }
+
   async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> {
     throw new Error('Method not implemented.')
   }
@@ -677,28 +951,44 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterCertificateFields(args, () => { count++ })
+    return count
   }
   async countCertificates(args: sdk.FindCertificatesArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterCertificates(args, () => { count++ })
+    return count
   }
   async countCommissions(args: sdk.FindCommissionsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterCommissions(args, () => { count++ })
+    return count
   }
   async countMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterMonitorEvents(args, () => { count++ })
+    return count
   }
   async countOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterOutputBaskets(args, () => { count++ })
+    return count
   }
   async countOutputs(args: sdk.FindOutputsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterOutputs(args, () => { count++ })
+    return count
   }
   async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterOutputTags(args, () => { count++ })
+    return count
   }
   async countSyncStates(args: sdk.FindSyncStatesArgs): Promise<number> {
-    throw new Error('Method not implemented.')
+    let count = 0
+    await this.filterSyncStates(args, () => { count++ })
+    return count
   }
   async countTransactions(args: sdk.FindTransactionsArgs): Promise<number> {
     throw new Error('Method not implemented.')
@@ -767,6 +1057,19 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     this.isDirty = true
     return v
+  }
+
+  async validateOutputScript(o: TableOutput): Promise<void> {
+    // without offset and length values return what we have (make no changes)
+    if (!o.scriptLength || !o.scriptOffset || !o.txid) return
+    // if there is an outputScript and its length is the expected length return what we have.
+    if (o.lockingScript && o.lockingScript.length === o.scriptLength) return
+
+    // outputScript is missing or has incorrect length...
+
+    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength)
+    if (!script) return
+    o.lockingScript = script
   }
 
 }
