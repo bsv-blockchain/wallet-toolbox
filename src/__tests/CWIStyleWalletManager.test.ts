@@ -305,7 +305,7 @@ describe('CWIStyleWalletManager Tests', () => {
 
     test('Throws if no token found by recovery key hash', async () => {
       ;(mockUMPTokenInteractor.findByRecoveryKeyHash as any).mockResolvedValueOnce(undefined)
-      await expect(manager.provideRecoveryKey(recoveryKey)).rejects.toThrow('No user found with this key')
+      await expect(manager.provideRecoveryKey(recoveryKey)).rejects.toThrow('No user found with this recovery key')
     })
   })
 
@@ -349,7 +349,7 @@ describe('CWIStyleWalletManager Tests', () => {
 
     test('Throws error if saving snapshot while no primary key or token set', async () => {
       // Manager is not yet authenticated
-      expect(() => manager.saveSnapshot()).toThrow('No primary key or current UMP token set')
+      expect(() => manager.saveSnapshot()).toThrow('No root primary key or current UMP token set')
     })
 
     test('Throws if snapshot is corrupt or cannot be decrypted', async () => {
@@ -380,7 +380,7 @@ describe('CWIStyleWalletManager Tests', () => {
     })
 
     test('Throws if not authenticated', async () => {
-      await expect(manager.changePassword('test-password')).rejects.toThrow('Not authenticated.')
+      await expect(manager.changePassword('test-password')).rejects.toThrow('Not authenticated or missing required data.')
     })
   })
 
@@ -407,7 +407,7 @@ describe('CWIStyleWalletManager Tests', () => {
     })
 
     test('Throws if not authenticated', async () => {
-      await expect(manager.changeRecoveryKey()).rejects.toThrow('Not authenticated.')
+      await expect(manager.changeRecoveryKey()).rejects.toThrow('Not authenticated or missing required data.')
     })
   })
 
@@ -581,7 +581,7 @@ describe('CWIStyleWalletManager Tests', () => {
 
       // Call the underlying privileged key manager’s decrypt twice.
       // (For example, we use the ciphertext from one of the token’s encrypted fields.)
-      await (manager as any).underlyingPrivilegedKeyManager.decrypt({
+      await (manager as any).rootPrivilegedKeyManager.decrypt({
         ciphertext: (manager as any).currentUMPToken.passwordKeyEncrypted,
         protocolID: [2, 'admin key wrapping'],
         keyID: '1'
@@ -590,7 +590,7 @@ describe('CWIStyleWalletManager Tests', () => {
       // Key expires after 2 minutes
       jest.advanceTimersByTime(121_000)
 
-      await (manager as any).underlyingPrivilegedKeyManager.decrypt({
+      await (manager as any).rootPrivilegedKeyManager.decrypt({
         ciphertext: (manager as any).currentUMPToken.passwordKeyEncrypted,
         protocolID: [2, 'admin key wrapping'],
         keyID: '1'

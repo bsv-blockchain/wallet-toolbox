@@ -13,64 +13,65 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ArcConfig](#interface-arcconfig) | [OutPoint](#interface-outpoint) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [Paged](#interface-paged) | [TableSettings](#interface-tablesettings) |
-| [AuthId](#interface-authid) | [PendingSignAction](#interface-pendingsignaction) | [TableSyncState](#interface-tablesyncstate) |
-| [AuthPayload](#interface-authpayload) | [PendingStorageInput](#interface-pendingstorageinput) | [TableTransaction](#interface-tabletransaction) |
-| [BaseBlockHeader](#interface-baseblockheader) | [PermissionRequest](#interface-permissionrequest) | [TableTxLabel](#interface-tabletxlabel) |
+| [ArcConfig](#interface-arcconfig) | [Paged](#interface-paged) | [TableSettings](#interface-tablesettings) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [PendingSignAction](#interface-pendingsignaction) | [TableSyncState](#interface-tablesyncstate) |
+| [AuthId](#interface-authid) | [PendingStorageInput](#interface-pendingstorageinput) | [TableTransaction](#interface-tabletransaction) |
+| [AuthPayload](#interface-authpayload) | [PermissionRequest](#interface-permissionrequest) | [TableTxLabel](#interface-tabletxlabel) |
 | [BaseBlockHeader](#interface-baseblockheader) | [PermissionToken](#interface-permissiontoken) | [TableTxLabelMap](#interface-tabletxlabelmap) |
-| [BitailsConfig](#interface-bitailsconfig) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableUser](#interface-tableuser) |
-| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [PostBeefResult](#interface-postbeefresult) | [TaskPurgeParams](#interface-taskpurgeparams) |
-| [BlockHeader](#interface-blockheader) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TrustSettings](#interface-trustsettings) |
+| [BaseBlockHeader](#interface-baseblockheader) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableUser](#interface-tableuser) |
+| [BitailsConfig](#interface-bitailsconfig) | [PostBeefResult](#interface-postbeefresult) | [TaskPurgeParams](#interface-taskpurgeparams) |
+| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TrustSettings](#interface-trustsettings) |
 | [BlockHeader](#interface-blockheader) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TrxToken](#interface-trxtoken) |
-| [BsvExchangeRate](#interface-bsvexchangerate) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
-| [CertOpsWallet](#interface-certopswallet) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TxScriptOffsets](#interface-txscriptoffsets) |
-| [Certifier](#interface-certifier) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [UMPToken](#interface-umptoken) |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [PostTxsResult](#interface-posttxsresult) | [UMPTokenInteractor](#interface-umptokeninteractor) |
-| [CompleteAuthResponse](#interface-completeauthresponse) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
-| [CreateActionResultX](#interface-createactionresultx) | [ProvenOrRawTx](#interface-provenorrawtx) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
-| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [ValidAbortActionArgs](#interface-validabortactionargs) |
-| [EntityTimeStamp](#interface-entitytimestamp) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
-| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
-| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
-| [FiatExchangeRates](#interface-fiatexchangerates) | [PurgeParams](#interface-purgeparams) | [ValidBasketInsertion](#interface-validbasketinsertion) |
-| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [PurgeResults](#interface-purgeresults) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
-| [FindCertificatesArgs](#interface-findcertificatesargs) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [ValidCreateActionInput](#interface-validcreateactioninput) |
-| [FindCommissionsArgs](#interface-findcommissionsargs) | [ReviewActionResult](#interface-reviewactionresult) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
-| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
-| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
-| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SignActionResultX](#interface-signactionresultx) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
-| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [StartAuthResponse](#interface-startauthresponse) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
-| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
-| [FindOutputsArgs](#interface-findoutputsargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidListActionsArgs](#interface-validlistactionsargs) |
-| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
-| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
-| [FindProvenTxsArgs](#interface-findproventxsargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
-| [FindSincePagedArgs](#interface-findsincepagedargs) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
-| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StorageIdentity](#interface-storageidentity) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
-| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
-| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
-| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidSignActionArgs](#interface-validsignactionargs) |
-| [FindUsersArgs](#interface-findusersargs) | [StorageProvenOrReq](#interface-storageprovenorreq) | [ValidSignActionOptions](#interface-validsignactionoptions) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageProviderOptions](#interface-storageprovideroptions) | [ValidWalletPayment](#interface-validwalletpayment) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageReaderOptions](#interface-storagereaderoptions) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletArgs](#interface-walletargs) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [SyncChunk](#interface-syncchunk) | [WalletBalance](#interface-walletbalance) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [SyncError](#interface-syncerror) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncMap](#interface-syncmap) | [WalletServices](#interface-walletservices) |
-| [GetMerklePathResult](#interface-getmerklepathresult) | [TableCertificate](#interface-tablecertificate) | [WalletServicesOptions](#interface-walletservicesoptions) |
-| [GetRawTxResult](#interface-getrawtxresult) | [TableCertificateField](#interface-tablecertificatefield) | [WalletSettings](#interface-walletsettings) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [TableCertificateX](#interface-tablecertificatex) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCommission](#interface-tablecommission) | [WalletSigner](#interface-walletsigner) |
-| [GetScriptHashHistory](#interface-getscripthashhistory) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorage](#interface-walletstorage) |
-| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [TableOutput](#interface-tableoutput) | [WalletStorageProvider](#interface-walletstorageprovider) |
-| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageReader](#interface-walletstoragereader) |
-| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableOutputTag](#interface-tableoutputtag) | [WalletStorageSync](#interface-walletstoragesync) |
-| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableOutputTagMap](#interface-tableoutputtagmap) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
-| [KeyPair](#interface-keypair) | [TableOutputX](#interface-tableoutputx) | [WalletStorageWriter](#interface-walletstoragewriter) |
-| [LiveBlockHeader](#interface-liveblockheader) | [TableProvenTx](#interface-tableproventx) | [WalletTheme](#interface-wallettheme) |
-| [MonitorOptions](#interface-monitoroptions) | [TableProvenTxReq](#interface-tableproventxreq) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [BlockHeader](#interface-blockheader) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
+| [BsvExchangeRate](#interface-bsvexchangerate) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TxScriptOffsets](#interface-txscriptoffsets) |
+| [CertOpsWallet](#interface-certopswallet) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [UMPToken](#interface-umptoken) |
+| [Certifier](#interface-certifier) | [PostTxsResult](#interface-posttxsresult) | [UMPTokenInteractor](#interface-umptokeninteractor) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
+| [CompleteAuthResponse](#interface-completeauthresponse) | [Profile](#interface-profile) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
+| [CreateActionResultX](#interface-createactionresultx) | [ProvenOrRawTx](#interface-provenorrawtx) | [ValidAbortActionArgs](#interface-validabortactionargs) |
+| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
+| [EntityTimeStamp](#interface-entitytimestamp) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
+| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
+| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [ValidBasketInsertion](#interface-validbasketinsertion) |
+| [FiatExchangeRates](#interface-fiatexchangerates) | [PurgeParams](#interface-purgeparams) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
+| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [PurgeResults](#interface-purgeresults) | [ValidCreateActionInput](#interface-validcreateactioninput) |
+| [FindCertificatesArgs](#interface-findcertificatesargs) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
+| [FindCommissionsArgs](#interface-findcommissionsargs) | [ReviewActionResult](#interface-reviewactionresult) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
+| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
+| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
+| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SignActionResultX](#interface-signactionresultx) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
+| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [StartAuthResponse](#interface-startauthresponse) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
+| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidListActionsArgs](#interface-validlistactionsargs) |
+| [FindOutputsArgs](#interface-findoutputsargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
+| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
+| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
+| [FindProvenTxsArgs](#interface-findproventxsargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
+| [FindSincePagedArgs](#interface-findsincepagedargs) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
+| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StorageIdentity](#interface-storageidentity) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
+| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
+| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidSignActionArgs](#interface-validsignactionargs) |
+| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidSignActionOptions](#interface-validsignactionoptions) |
+| [FindUsersArgs](#interface-findusersargs) | [StorageProvenOrReq](#interface-storageprovenorreq) | [ValidWalletPayment](#interface-validwalletpayment) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageProviderOptions](#interface-storageprovideroptions) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageReaderOptions](#interface-storagereaderoptions) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletArgs](#interface-walletargs) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletBalance](#interface-walletbalance) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [SyncChunk](#interface-syncchunk) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [SyncError](#interface-syncerror) | [WalletServices](#interface-walletservices) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncMap](#interface-syncmap) | [WalletServicesOptions](#interface-walletservicesoptions) |
+| [GetMerklePathResult](#interface-getmerklepathresult) | [TableCertificate](#interface-tablecertificate) | [WalletSettings](#interface-walletsettings) |
+| [GetRawTxResult](#interface-getrawtxresult) | [TableCertificateField](#interface-tablecertificatefield) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [TableCertificateX](#interface-tablecertificatex) | [WalletSigner](#interface-walletsigner) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCommission](#interface-tablecommission) | [WalletStorage](#interface-walletstorage) |
+| [GetScriptHashHistory](#interface-getscripthashhistory) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageProvider](#interface-walletstorageprovider) |
+| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [TableOutput](#interface-tableoutput) | [WalletStorageReader](#interface-walletstoragereader) |
+| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageSync](#interface-walletstoragesync) |
+| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableOutputTag](#interface-tableoutputtag) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
+| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableOutputTagMap](#interface-tableoutputtagmap) | [WalletStorageWriter](#interface-walletstoragewriter) |
+| [KeyPair](#interface-keypair) | [TableOutputX](#interface-tableoutputx) | [WalletTheme](#interface-wallettheme) |
+| [LiveBlockHeader](#interface-liveblockheader) | [TableProvenTx](#interface-tableproventx) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [MonitorOptions](#interface-monitoroptions) | [TableProvenTxReq](#interface-tableproventxreq) |  |
+| [OutPoint](#interface-outpoint) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2161,6 +2162,63 @@ See also: [WalletError](./client.md#class-walleterror)
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: Profile
+
+Describes the structure of a user profile within the wallet.
+
+```ts
+export interface Profile {
+    name: string;
+    id: number[];
+    primaryPad: number[];
+    privilegedPad: number[];
+    createdAt: number;
+}
+```
+
+###### Property createdAt
+
+Timestamp (seconds since epoch) when the profile was created.
+
+```ts
+createdAt: number
+```
+
+###### Property id
+
+Unique 16-byte identifier for the profile.
+
+```ts
+id: number[]
+```
+
+###### Property name
+
+User-defined name for the profile.
+
+```ts
+name: string
+```
+
+###### Property primaryPad
+
+32-byte random pad XOR'd with the root primary key to derive the profile's primary key.
+
+```ts
+primaryPad: number[]
+```
+
+###### Property privilegedPad
+
+32-byte random pad XOR'd with the root privileged key to derive the profile's privileged key.
+
+```ts
+privilegedPad: number[]
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Interface: ProvenOrRawTx
 
 ```ts
@@ -3592,6 +3650,7 @@ export interface UMPToken {
     presentationKeyEncrypted: number[];
     recoveryKeyEncrypted: number[];
     passwordKeyEncrypted: number[];
+    profilesEncrypted?: number[];
     currentOutpoint?: OutpointString;
 }
 ```
@@ -3606,7 +3665,7 @@ currentOutpoint?: OutpointString
 
 ###### Property passwordKeyEncrypted
 
-A copy of the password key encrypted with the privileged key.
+A copy of the password key encrypted with the root privileged key.
 
 ```ts
 passwordKeyEncrypted: number[]
@@ -3614,7 +3673,7 @@ passwordKeyEncrypted: number[]
 
 ###### Property passwordPresentationPrimary
 
-Primary key encrypted by the XOR of the password and presentation keys.
+Root Primary key encrypted by the XOR of the password and presentation keys.
 
 ```ts
 passwordPresentationPrimary: number[]
@@ -3622,7 +3681,7 @@ passwordPresentationPrimary: number[]
 
 ###### Property passwordPrimaryPrivileged
 
-Privileged key encrypted by the XOR of the password and primary keys.
+Root Privileged key encrypted by the XOR of the password and primary keys.
 
 ```ts
 passwordPrimaryPrivileged: number[]
@@ -3630,7 +3689,7 @@ passwordPrimaryPrivileged: number[]
 
 ###### Property passwordRecoveryPrimary
 
-Primary key encrypted by the XOR of the password and recovery keys.
+Root Primary key encrypted by the XOR of the password and recovery keys.
 
 ```ts
 passwordRecoveryPrimary: number[]
@@ -3654,7 +3713,7 @@ presentationHash: number[]
 
 ###### Property presentationKeyEncrypted
 
-A copy of the presentation key encrypted with the privileged key.
+A copy of the presentation key encrypted with the root privileged key.
 
 ```ts
 presentationKeyEncrypted: number[]
@@ -3662,7 +3721,7 @@ presentationKeyEncrypted: number[]
 
 ###### Property presentationRecoveryPrimary
 
-Primary key encrypted by the XOR of the presentation and recovery keys.
+Root Primary key encrypted by the XOR of the presentation and recovery keys.
 
 ```ts
 presentationRecoveryPrimary: number[]
@@ -3670,10 +3729,19 @@ presentationRecoveryPrimary: number[]
 
 ###### Property presentationRecoveryPrivileged
 
-Privileged key encrypted by the XOR of the presentation and recovery keys.
+Root Privileged key encrypted by the XOR of the presentation and recovery keys.
 
 ```ts
 presentationRecoveryPrivileged: number[]
+```
+
+###### Property profilesEncrypted
+
+Optional field containing the encrypted profile data.
+JSON string -> Encrypted Bytes using root privileged key.
+
+```ts
+profilesEncrypted?: number[]
 ```
 
 ###### Property recoveryHash
@@ -3686,7 +3754,7 @@ recoveryHash: number[]
 
 ###### Property recoveryKeyEncrypted
 
-A copy of the recovery key encrypted with the privileged key.
+A copy of the recovery key encrypted with the root privileged key.
 
 ```ts
 recoveryKeyEncrypted: number[]
@@ -5027,24 +5095,34 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: CWIStyleWalletManager
 
 Manages a "CWI-style" wallet that uses a UMP token and a
-multi-key authentication scheme (password, presentation key, and recovery key).
+multi-key authentication scheme (password, presentation key, and recovery key),
+supporting multiple user profiles under a single account.
 
 ```ts
 export class CWIStyleWalletManager implements WalletInterface {
     authenticated: boolean;
     authenticationMode: "presentation-key-and-password" | "presentation-key-and-recovery-key" | "recovery-key-and-password" = "presentation-key-and-password";
     authenticationFlow: "new-user" | "existing-user" = "new-user";
-    constructor(adminOriginator: OriginatorDomainNameStringUnder250Bytes, walletBuilder: (primaryKey: number[], privilegedKeyManager: PrivilegedKeyManager) => Promise<WalletInterface>, interactor: UMPTokenInteractor = new OverlayUMPTokenInteractor(), recoveryKeySaver: (key: number[]) => Promise<true>, passwordRetriever: (reason: string, test: (passwordCandidate: string) => boolean) => Promise<string>, newWalletFunder?: (presentationKey: number[], wallet: WalletInterface, adminOriginator: OriginatorDomainNameStringUnder250Bytes) => Promise<void>, stateSnapshot?: number[]) 
+    constructor(adminOriginator: OriginatorDomainNameStringUnder250Bytes, walletBuilder: (profilePrimaryKey: number[], profilePrivilegedKeyManager: PrivilegedKeyManager, profileId: number[]) => Promise<WalletInterface>, interactor: UMPTokenInteractor = new OverlayUMPTokenInteractor(), recoveryKeySaver: (key: number[]) => Promise<true>, passwordRetriever: (reason: string, test: (passwordCandidate: string) => boolean) => Promise<string>, newWalletFunder?: (presentationKey: number[], wallet: WalletInterface, adminOriginator: OriginatorDomainNameStringUnder250Bytes) => Promise<void>, stateSnapshot?: number[]) 
     async providePresentationKey(key: number[]): Promise<void> 
     async providePassword(password: string): Promise<void> 
     async provideRecoveryKey(recoveryKey: number[]): Promise<void> 
     saveSnapshot(): number[] 
     async loadSnapshot(snapshot: number[]): Promise<void> 
     destroy(): void 
+    listProfiles(): Array<{
+        id: number[];
+        name: string;
+        createdAt: number | null;
+        active: boolean;
+    }> 
+    async addProfile(name: string): Promise<number[]> 
+    async deleteProfile(profileId: number[]): Promise<void> 
+    async switchProfile(profileId: number[]): Promise<void> 
     async changePassword(newPassword: string): Promise<void> 
     async getRecoveryKey(): Promise<number[]> 
     async changeRecoveryKey(): Promise<void> 
-    async changePresentationKey(presentationKey: number[]): Promise<void> 
+    async changePresentationKey(newPresentationKey: number[]): Promise<void> 
     async getPublicKey(args: GetPublicKeyArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<GetPublicKeyResult> 
     async revealCounterpartyKeyLinkage(args: RevealCounterpartyKeyLinkageArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<RevealCounterpartyKeyLinkageResult> 
     async revealSpecificKeyLinkage(args: RevealSpecificKeyLinkageArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<RevealSpecificKeyLinkageResult> 
@@ -5083,7 +5161,7 @@ See also: [OverlayUMPTokenInteractor](./client.md#class-overlayumptokeninteracto
 Constructs a new CWIStyleWalletManager.
 
 ```ts
-constructor(adminOriginator: OriginatorDomainNameStringUnder250Bytes, walletBuilder: (primaryKey: number[], privilegedKeyManager: PrivilegedKeyManager) => Promise<WalletInterface>, interactor: UMPTokenInteractor = new OverlayUMPTokenInteractor(), recoveryKeySaver: (key: number[]) => Promise<true>, passwordRetriever: (reason: string, test: (passwordCandidate: string) => boolean) => Promise<string>, newWalletFunder?: (presentationKey: number[], wallet: WalletInterface, adminOriginator: OriginatorDomainNameStringUnder250Bytes) => Promise<void>, stateSnapshot?: number[]) 
+constructor(adminOriginator: OriginatorDomainNameStringUnder250Bytes, walletBuilder: (profilePrimaryKey: number[], profilePrivilegedKeyManager: PrivilegedKeyManager, profileId: number[]) => Promise<WalletInterface>, interactor: UMPTokenInteractor = new OverlayUMPTokenInteractor(), recoveryKeySaver: (key: number[]) => Promise<true>, passwordRetriever: (reason: string, test: (passwordCandidate: string) => boolean) => Promise<string>, newWalletFunder?: (presentationKey: number[], wallet: WalletInterface, adminOriginator: OriginatorDomainNameStringUnder250Bytes) => Promise<void>, stateSnapshot?: number[]) 
 ```
 See also: [OverlayUMPTokenInteractor](./client.md#class-overlayumptokeninteractor), [PrivilegedKeyManager](./client.md#class-privilegedkeymanager), [UMPTokenInteractor](./client.md#interface-umptokeninteractor)
 
@@ -5092,22 +5170,21 @@ Argument Details
 + **adminOriginator**
   + The domain name of the administrative originator.
 + **walletBuilder**
-  + A function that can build an underlying wallet instance
-from a primary key and a privileged key manager
+  + A function that can build an underlying wallet instance for a profile.
 + **interactor**
-  + An instance of UMPTokenInteractor capable of managing UMP tokens.
+  + An instance of UMPTokenInteractor.
 + **recoveryKeySaver**
-  + A function that can persist or display a newly generated recovery key.
+  + A function to persist a new recovery key.
 + **passwordRetriever**
-  + A function to request the user's password, given a reason and a test function.
+  + A function to request the user's password.
 + **newWalletFunder**
-  + An optional function called with the presentation key and a new Wallet post-construction to fund it before use.
+  + Optional function to fund a new wallet.
 + **stateSnapshot**
-  + If provided, a previously saved snapshot of the wallet's state.
+  + Optional previously saved state snapshot.
 
 ###### Property authenticated
 
-Whether the user is currently authenticated.
+Whether the user is currently authenticated (i.e., root keys are available).
 
 ```ts
 authenticated: boolean
@@ -5115,9 +5192,7 @@ authenticated: boolean
 
 ###### Property authenticationFlow
 
-Indicates whether this is a new user or an existing user flow:
- - 'new-user'
- - 'existing-user'
+Indicates new user or existing user flow.
 
 ```ts
 authenticationFlow: "new-user" | "existing-user" = "new-user"
@@ -5125,64 +5200,73 @@ authenticationFlow: "new-user" | "existing-user" = "new-user"
 
 ###### Property authenticationMode
 
-The current mode of authentication:
- - 'presentation-key-and-password'
- - 'presentation-key-and-recovery-key'
- - 'recovery-key-and-password'
+Current mode of authentication.
 
 ```ts
 authenticationMode: "presentation-key-and-password" | "presentation-key-and-recovery-key" | "recovery-key-and-password" = "presentation-key-and-password"
 ```
 
+###### Method addProfile
+
+Adds a new profile with the given name.
+Generates necessary pads and updates the UMP token.
+Does not switch to the new profile automatically.
+
+```ts
+async addProfile(name: string): Promise<number[]> 
+```
+
+Returns
+
+The ID of the newly created profile.
+
+Argument Details
+
++ **name**
+  + The desired name for the new profile.
+
 ###### Method changePassword
 
-Changes the user's password, re-wrapping the primary and privileged keys with the new password factor.
+Changes the user's password. Re-wraps keys and updates the UMP token.
 
 ```ts
 async changePassword(newPassword: string): Promise<void> 
 ```
-
-Argument Details
-
-+ **newPassword**
-  + The user's new password as a string.
-
-Throws
-
-If the user is not authenticated, or if underlying token references are missing.
 
 ###### Method changePresentationKey
 
 Changes the user's presentation key.
 
 ```ts
-async changePresentationKey(presentationKey: number[]): Promise<void> 
+async changePresentationKey(newPresentationKey: number[]): Promise<void> 
 ```
-
-Argument Details
-
-+ **presentationKey**
-  + The new presentation key (32 bytes).
-
-Throws
-
-If the user is not authenticated, or if underlying token references are missing.
 
 ###### Method changeRecoveryKey
 
-Changes the user's recovery key, prompting the user to save the new key.
+Changes the user's recovery key. Prompts user to save the new key.
 
 ```ts
 async changeRecoveryKey(): Promise<void> 
 ```
 
-Throws
+###### Method deleteProfile
 
-If the user is not authenticated, or if underlying token references are missing.
+Deletes a profile by its ID.
+Cannot delete the default profile. If the active profile is deleted,
+it switches back to the default profile.
+
+```ts
+async deleteProfile(profileId: number[]): Promise<void> 
+```
+
+Argument Details
+
++ **profileId**
+  + The 16-byte ID of the profile to delete.
 
 ###### Method destroy
 
-Destroys the underlying wallet, returning to a default state
+Destroys the wallet state, clearing keys, tokens, and profiles.
 
 ```ts
 destroy(): void 
@@ -5190,20 +5274,33 @@ destroy(): void
 
 ###### Method getRecoveryKey
 
-Retrieves the current recovery key.
+Retrieves the current recovery key. Requires privileged access.
 
 ```ts
 async getRecoveryKey(): Promise<number[]> 
 ```
 
-Throws
+###### Method listProfiles
 
-If the user is not authenticated, or if underlying token references are missing.
+Lists all available profiles, including the default profile.
+
+```ts
+listProfiles(): Array<{
+    id: number[];
+    name: string;
+    createdAt: number | null;
+    active: boolean;
+}> 
+```
+
+Returns
+
+Array of profile info objects, including an 'active' flag.
 
 ###### Method loadSnapshot
 
-Loads a previously saved state snapshot (e.g. from `saveSnapshot`).
-Upon success, the wallet becomes authenticated without needing to re-enter keys.
+Loads a previously saved state snapshot. Restores root key, UMP token, profiles, and active profile.
+Handles Version 1 (legacy) and Version 2 formats.
 
 ```ts
 async loadSnapshot(snapshot: number[]): Promise<void> 
@@ -5212,78 +5309,37 @@ async loadSnapshot(snapshot: number[]): Promise<void>
 Argument Details
 
 + **snapshot**
-  + An array of bytes that was previously produced by `saveSnapshot`.
-
-Throws
-
-If the snapshot format is invalid or decryption fails.
+  + Encrypted snapshot bytes.
 
 ###### Method providePassword
 
-Provides the password in an authentication mode that requires it.
-
-- **Existing user**:
-  Decrypts the primary key using the provided password (and either the presentation key or recovery key, depending on the mode).
-  Then builds the underlying wallet, marking the user as authenticated.
-
-- **New user**:
-  Generates a new UMP token with fresh keys (primary, privileged, recovery). Publishes it on-chain and builds the wallet.
+Provides the password.
 
 ```ts
 async providePassword(password: string): Promise<void> 
 ```
 
-Argument Details
-
-+ **password**
-  + The user's password as a string.
-
-Throws
-
-If the user is already authenticated, if the mode does not use a password, or if required keys are missing.
-
 ###### Method providePresentationKey
 
-Provides the presentation key in an authentication mode that requires it.
-If a UMP token is found based on the key's hash, this is an existing-user flow.
-Otherwise, it is treated as a new-user flow.
+Provides the presentation key.
 
 ```ts
 async providePresentationKey(key: number[]): Promise<void> 
 ```
 
-Argument Details
-
-+ **key**
-  + The user's presentation key (32 bytes).
-
-Throws
-
-if user is already authenticated, or if the current mode does not require a presentation key.
-
 ###### Method provideRecoveryKey
 
-Provides the recovery key in an authentication flow that requires it.
+Provides the recovery key.
 
 ```ts
 async provideRecoveryKey(recoveryKey: number[]): Promise<void> 
 ```
 
-Argument Details
-
-+ **recoveryKey**
-  + The user's recovery key (32 bytes).
-
-Throws
-
-if user is already authenticated, if the mode does not use a recovery key,
-or if a required presentation key is missing in "presentation-key-and-recovery-key" mode.
-
 ###### Method saveSnapshot
 
-Saves the current wallet state (including the current UMP token and primary key)
-into an encrypted snapshot. This snapshot can be stored locally and later passed
-to `loadSnapshot` to restore the wallet state without re-authenticating manually.
+Saves the current wallet state (root key, UMP token, active profile) into an encrypted snapshot.
+Version 2 format: [1 byte version=2] + [32 byte snapshot key] + [16 byte activeProfileId] + [encrypted payload]
+Encrypted Payload: [32 byte rootPrimaryKey] + [varint token length + serialized UMP token]
 
 ```ts
 saveSnapshot(): number[] 
@@ -5291,11 +5347,20 @@ saveSnapshot(): number[]
 
 Returns
 
-An array of bytes representing the encrypted snapshot.
+Encrypted snapshot bytes.
 
-Throws
+###### Method switchProfile
 
-if no primary key or token is currently set.
+Switches the active profile. This re-derives keys and rebuilds the underlying wallet.
+
+```ts
+async switchProfile(profileId: number[]): Promise<void> 
+```
+
+Argument Details
+
++ **profileId**
+  + The 16-byte ID of the profile to switch to (use DEFAULT_PROFILE_ID for default).
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -6485,7 +6550,7 @@ The outpoint of the newly created UMP token (e.g. "abcd1234...ef.0").
 Argument Details
 
 + **wallet**
-  + The wallet used to build and sign the transaction.
+  + The wallet used to build and sign the transaction (MUST be operating under the DEFAULT profile).
 + **adminOriginator**
   + The domain/FQDN of the administrative originator (wallet operator).
 + **token**
@@ -11898,20 +11963,30 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | |
 | --- | --- |
-| [DEFAULT_SETTINGS](#variable-default_settings) | [queryOverlay](#variable-queryoverlay) |
-| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [specOpFailedActions](#variable-specopfailedactions) |
-| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [specOpInvalidChange](#variable-specopinvalidchange) |
-| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [specOpNoSendActions](#variable-specopnosendactions) |
-| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |
-| [brc29ProtocolID](#variable-brc29protocolid) | [specOpThrowReviewActions](#variable-specopthrowreviewactions) |
-| [maxPossibleSatoshis](#variable-maxpossiblesatoshis) | [specOpWalletBalance](#variable-specopwalletbalance) |
-| [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
-| [parseResults](#variable-parseresults) | [transformVerifiableCertificatesWithTrust](#variable-transformverifiablecertificateswithtrust) |
+| [DEFAULT_PROFILE_ID](#variable-default_profile_id) | [queryOverlay](#variable-queryoverlay) |
+| [DEFAULT_SETTINGS](#variable-default_settings) | [specOpFailedActions](#variable-specopfailedactions) |
+| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [specOpInvalidChange](#variable-specopinvalidchange) |
+| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [specOpNoSendActions](#variable-specopnosendactions) |
+| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |
+| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [specOpThrowReviewActions](#variable-specopthrowreviewactions) |
+| [brc29ProtocolID](#variable-brc29protocolid) | [specOpWalletBalance](#variable-specopwalletbalance) |
+| [maxPossibleSatoshis](#variable-maxpossiblesatoshis) | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
+| [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) | [transformVerifiableCertificatesWithTrust](#variable-transformverifiablecertificateswithtrust) |
+| [parseResults](#variable-parseresults) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
 
+##### Variable: DEFAULT_PROFILE_ID
+
+```ts
+DEFAULT_PROFILE_ID = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Variable: DEFAULT_SETTINGS
 
 ```ts
