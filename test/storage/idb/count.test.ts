@@ -4,7 +4,7 @@ import { StorageIdb } from '../../../src/storage/StorageIdb'
 
 import 'fake-indexeddb/auto'
 
-describe('count tests', () => {
+describe('idb count tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'

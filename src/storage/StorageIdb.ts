@@ -1,4 +1,4 @@
-import { deleteDB, IDBPDatabase, openDB } from 'idb'
+import { deleteDB, IDBPDatabase, IDBPTransaction, openDB } from 'idb'
 import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import {
   sdk,
@@ -20,7 +20,8 @@ import {
   TableTxLabelMap,
   TableUser,
   verifyOne,
-  verifyOneOrNone
+  verifyOneOrNone,
+  verifyTruthy
 } from '../index.client'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
@@ -76,13 +77,17 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Convert the standard optional `TrxToken` parameter into either a direct knex database instance,
    * or a Knex.Transaction as appropriate.
    */
-  toDb(trx?: sdk.TrxToken): IDBPDatabase<StorageIdbSchema> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (trx) throw new Error('not implemented')
-    if (!this.db) throw new Error('not initialized')
-    const db = this.db
-    this.whenLastAccess = new Date()
-    return db
+  toDbTrx(stores: string[], mode: 'readonly' | 'readwrite', trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'> {
+    if (trx) {
+      const t = trx as IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'>
+      return t
+    } else {
+      if (!this.db) throw new Error('not initialized')
+      const db = this.db
+      const trx = db.transaction(stores || this.allStores, mode || 'readwrite')
+      this.whenLastAccess = new Date()
+      return trx
+    }
   }
 
   /**
@@ -303,16 +308,15 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx> {
-    const k = this.toDb(trx)
     const r: sdk.ProvenOrRawTx = {
       proven: undefined,
       rawTx: undefined,
       inputBEEF: undefined
     }
 
-    r.proven = verifyOneOrNone(await this.findProvenTxs({ partial: { txid: txid } }))
+    r.proven = verifyOneOrNone(await this.findProvenTxs({ partial: { txid: txid }, trx }))
     if (!r.proven) {
-      const req = verifyOneOrNone(await this.findProvenTxReqs({ partial: { txid: txid } }))
+      const req = verifyOneOrNone(await this.findProvenTxReqs({ partial: { txid: txid }, trx }))
       if (req && ['unsent', 'unmined', 'unconfirmed', 'sending', 'nosend', 'completed'].includes(req.status)) {
         r.rawTx = req.rawTx
         r.inputBEEF = req.inputBEEF
@@ -413,9 +417,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['output_tags_map'], 'readonly')
-    let cursor = await trx.objectStore('output_tags_map').openCursor()
+    const dbTrx = this.toDbTrx(['output_tags_map'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('output_tags_map').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -432,7 +435,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userId !== undefined && r.txid) {
-        const count = await this.countOutputTags({partial: {userId, outputTagId: r.outputTagId}})
+        const count = await this.countOutputTags({partial: {userId, outputTagId: r.outputTagId}, trx: args.trx})
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -443,6 +446,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
@@ -467,9 +471,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['proven_tx_reqs'], 'readonly')
-    let cursor = await trx.objectStore('proven_tx_reqs').openCursor()
+    const dbTrx = this.toDbTrx(['proven_tx_reqs'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('proven_tx_reqs').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -491,7 +494,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.notify && r.notify !== args.partial.notify) continue
       }
       if (userId !== undefined && r.txid) {
-        const count = await this.countTransactions({partial: {userId, txid: r.txid}})
+        const count = await this.countTransactions({partial: {userId, txid: r.txid}, trx: args.trx})
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -502,6 +505,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
@@ -526,9 +530,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['proven_txs'], 'readonly')
-    let cursor = await trx.objectStore('proven_txs').openCursor()
+    const dbTrx = this.toDbTrx(['proven_txs'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('proven_txs').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -547,7 +550,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
       }
       if (userId !== undefined) {
-        const count = await this.countTransactions({partial: {userId, provenTxId: r.provenTxId}})
+        const count = await this.countTransactions({partial: {userId, provenTxId: r.provenTxId}, trx: args.trx})
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -558,6 +561,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> {
@@ -572,9 +576,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['tx_labels_map'], 'readonly')
-    let cursor = await trx.objectStore('tx_labels_map').openCursor()
+    const dbTrx = this.toDbTrx(['tx_labels_map'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('tx_labels_map').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -590,7 +593,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userId !== undefined) {
-        const count = await this.countTxLabels({partial: {userId, txLabelId: r.txLabelId}})
+        const count = await this.countTxLabels({partial: {userId, txLabelId: r.txLabelId}, trx: args.trx})
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -601,6 +604,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> {
@@ -645,107 +649,154 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const fields = e.fields
     if (e.fields) delete e.fields
     if (e.certificateId === 0) delete e.certificateId
-    const db = await this.verifyDB()
-    const id = Number(await this.toDb(trx).add('certificates', e))
+
+    const dbTrx = this.toDbTrx(['certificates', 'certificate_fields'], 'readwrite', trx)
+    const store = dbTrx.objectStore('certificates')
+    const id = Number(await store.add!(e))
     certificate.certificateId = id
 
     if (fields) {
       for (const field of fields) {
         field.certificateId = id
         field.userId = certificate.userId
-        await this.insertCertificateField(field, trx)
+        await this.insertCertificateField(field, dbTrx)
       }
     }
 
+    if (!trx) await dbTrx.done
     return certificate.certificateId
   }
+
   async insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(certificateField, trx)
-    await this.toDb(trx).add('certificate_fields', e)
+    const dbTrx = this.toDbTrx(['certificate_fields'], 'readwrite', trx)
+    const store = dbTrx.objectStore('certificate_fields')
+    await store.add!(e)
+    if (!trx) await dbTrx.done
   }
+
   async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(commission, trx)
     if (e.commissionId === 0) delete e.commissionId
-    const id = Number(await this.toDb(trx).add('commissions', e))
+    const dbTrx = this.toDbTrx(['commissions'], 'readwrite', trx)
+    const store = dbTrx.objectStore('commissions')
+    const id = Number(await store.add!(e))
     commission.commissionId = id
+    if (!trx) await dbTrx.done
     return commission.commissionId
   }
   async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(event, trx)
     if (e.id === 0) delete e.id
-    const id = Number(await this.toDb(trx).add('monitor_events', e))
+    const dbTrx = this.toDbTrx(['monitor_events'], 'readwrite', trx)
+    const store = dbTrx.objectStore('monitor_events')
+    const id = Number(await store.add!(e))
     event.id = id
+    if (!trx) await dbTrx.done
     return event.id
   }
   async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(output, trx)
     if (e.outputId === 0) delete e.outputId
-    const id = Number(await this.toDb(trx).add('outputs', e))
+    const dbTrx = this.toDbTrx(['outputs'], 'readwrite', trx)
+    const store = dbTrx.objectStore('outputs')
+    const id = Number(await store.add!(e))
     output.outputId = id
+    if (!trx) await dbTrx.done
     return output.outputId
   }
   async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(basket, trx, undefined, ['isDeleted'])
     if (e.basketId === 0) delete e.basketId
-    const id = Number(await this.toDb(trx).add('output_baskets', e))
+    const dbTrx = this.toDbTrx(['output_baskets'], 'readwrite', trx)
+    const store = dbTrx.objectStore('output_baskets')
+    const id = Number(await store.add!(e))
     basket.basketId = id
+    if (!trx) await dbTrx.done
     return basket.basketId
   }
   async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tag, trx, undefined, ['isDeleted'])
     if (e.outputTagId === 0) delete e.outputTagId
-    const id = Number(await this.toDb(trx).add('output_tags', e))
+    const dbTrx = this.toDbTrx(['output_tags'], 'readwrite', trx)
+    const store = dbTrx.objectStore('output_tags')
+    const id = Number(await store.add!(e))
     tag.outputTagId = id
+    if (!trx) await dbTrx.done
     return tag.outputTagId
   }
   async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(tagMap, trx, undefined, ['isDeleted'])
-    const id = await this.toDb(trx).add('output_tags_map', e)
+    const dbTrx = this.toDbTrx(['output_tags_map'], 'readwrite', trx)
+    const store = dbTrx.objectStore('output_tags_map')
+    await store.add!(e)
+    if (!trx) await dbTrx.done
   }
   async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxId === 0) delete e.provenTxId
-    const id = Number(await this.toDb(trx).add('proven_txs', e))
+    const dbTrx = this.toDbTrx(['proven_txs'], 'readwrite', trx)
+    const store = dbTrx.objectStore('proven_txs')
+    const id = Number(await store.add!(e))
     tx.provenTxId = id
+    if (!trx) await dbTrx.done
     return tx.provenTxId
   }
   async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxReqId === 0) delete e.provenTxReqId
-    const id = Number(await this.toDb(trx).add('proven_tx_reqs', e))
+    const dbTrx = this.toDbTrx(['proven_tx_reqs'], 'readwrite', trx)
+    const store = dbTrx.objectStore('proven_tx_reqs')
+    const id = Number(await store.add!(e))
     tx.provenTxReqId = id
+    if (!trx) await dbTrx.done
     return tx.provenTxReqId
   }
   async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(syncState, trx, ['when'], ['init'])
     if (e.syncStateId === 0) delete e.syncStateId
-    const id = Number(await this.toDb(trx).add('sync_states', e))
+    const dbTrx = this.toDbTrx(['sync_states'], 'readwrite', trx)
+    const store = dbTrx.objectStore('sync_states')
+    const id = Number(await store.add!(e))
     syncState.syncStateId = id
+    if (!trx) await dbTrx.done
     return syncState.syncStateId
   }
   async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.transactionId === 0) delete e.transactionId
-    const id = Number(await this.toDb(trx).add('transactions', e))
+    const dbTrx = this.toDbTrx(['transactions'], 'readwrite', trx)
+    const store = dbTrx.objectStore('transactions')
+    const id = Number(await store.add!(e))
     tx.transactionId = id
+    if (!trx) await dbTrx.done
     return tx.transactionId
   }
   async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(label, trx, undefined, ['isDeleted'])
     if (e.txLabelId === 0) delete e.txLabelId
-    const id = Number(await this.toDb(trx).add('tx_labels', e))
+    const dbTrx = this.toDbTrx(['tx_labels'], 'readwrite', trx)
+    const store = dbTrx.objectStore('tx_labels')
+    const id = Number(await store.add!(e))
     label.txLabelId = id
+    if (!trx) await dbTrx.done
     return label.txLabelId
   }
   async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(labelMap, trx, undefined, ['isDeleted'])
-    const id = await this.toDb(trx).add('tx_labels_map', e)
+    const dbTrx = this.toDbTrx(['tx_labels_map'], 'readwrite', trx)
+    const store = dbTrx.objectStore('tx_labels_map')
+    await store.add!(e)
+    if (!trx) await dbTrx.done
   }
   async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(user, trx)
     if (e.userId === 0) delete e.userId
-    const id = Number(await this.toDb(trx).add('users', e))
+    const dbTrx = this.toDbTrx(['users'], 'readwrite', trx)
+    const store = dbTrx.objectStore('users')
+    const id = Number(await store.add!(e))
     user.userId = id
+    if (!trx) await dbTrx.done
     return user.userId
   }
 
@@ -760,8 +811,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       throw new sdk.WERR_INVALID_PARAMETER(`update.${keyProp}`, `undefined`)
     }
     const u = this.validatePartialForUpdate(update)
-    const tx = this.toDb(trx).transaction([storeName], 'readwrite')
-    const store = tx.objectStore(storeName)
+    const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
+    const store = dbTrx.objectStore(storeName)
     const ids = Array.isArray(id) ? id : [id]
     for (const i of ids) {
       const e = await store.get(i)
@@ -770,10 +821,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         ...e,
         ...u
       }
-      const uid = await store.put(v)
+      const uid = await store.put!(v)
       if (uid !== i) throw new sdk.WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
     }
-    await tx.done
+    if (!trx) await dbTrx.done
     return 1
   }
 
@@ -792,8 +843,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       }
     }
     const u = this.validatePartialForUpdate(update)
-    const tx = this.toDb(trx).transaction([storeName], 'readwrite')
-    const store = tx.objectStore(storeName)
+    const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
+    const store = dbTrx.objectStore(storeName)
     const e = await store.get(key)
     if (!e)
       throw new sdk.WERR_INVALID_PARAMETER(
@@ -804,11 +855,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       ...e,
       ...u
     }
-    const uid = await store.put(v)
+    const uid = await store.put!(v)
     for (let i = 0; i < key.length; i++) {
       if (uid[i] !== key[i]) throw new sdk.WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`)
     }
-    await tx.done
+    if (!trx) await dbTrx.done
     return 1
   }
 
@@ -901,8 +952,40 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     this._settings = undefined
   }
 
+  allStores: string[] = [
+    'certificates',
+    'certificate_fields',
+    'commissions',
+    'monitor_events',
+    'outputs',
+    'output_baskets',
+    'output_tags',
+    'output_tags_map',
+    'proven_txs',
+    'proven_tx_reqs',
+    'sync_states',
+    'transactions',
+    'tx_labels',
+    'tx_labels_map',
+    'users'
+  ]
+
+  /**
+   * @param scope 
+   * @param trx 
+   * @returns 
+   */
   async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> {
-    throw new Error('Method not implemented.')
+    if (trx) return await scope(trx)
+
+    const stores = this.allStores
+
+    const db = await this.verifyDB()
+    const tx = db.transaction(stores, 'readwrite')
+
+    const r = await scope(tx as sdk.TrxToken)
+    await tx.done
+    return r
   }
 
   async filterCertificateFields(
@@ -912,9 +995,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['certificate_fields'], 'readonly')
-    let cursor = await trx.objectStore('certificate_fields').openCursor()
+    const dbTrx = this.toDbTrx(['certificate_fields'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('certificate_fields').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -939,6 +1021,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
@@ -953,9 +1036,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['certificates'], 'readonly')
-    let cursor = await trx.objectStore('certificates').openCursor()
+    const dbTrx = this.toDbTrx(['certificates'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('certificates').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -987,6 +1069,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
@@ -996,7 +1079,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     })
     if (args.includeFields) {
       for (const c of result) {
-        const fields = await this.findCertificateFields({ partial: { certificateId: c.certificateId } })
+        const fields = await this.findCertificateFields({ partial: { certificateId: c.certificateId }, trx: args.trx })
         c.fields = fields
       }
     }
@@ -1012,9 +1095,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['commissions'], 'readonly')
-    let cursor = await trx.objectStore('commissions').openCursor()
+    const dbTrx = this.toDbTrx(['commissions'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('commissions').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1040,6 +1122,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> {
@@ -1054,9 +1137,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['monitor_events'], 'readonly')
-    let cursor = await trx.objectStore('monitor_events').openCursor()
+    const dbTrx = this.toDbTrx(['monitor_events'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('monitor_events').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1079,6 +1161,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> {
@@ -1093,9 +1176,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['output_baskets'], 'readonly')
-    let cursor = await trx.objectStore('output_baskets').openCursor()
+    const dbTrx = this.toDbTrx(['output_baskets'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('output_baskets').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1129,6 +1211,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
@@ -1150,9 +1233,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['outputs'], 'readonly')
-    let cursor = await trx.objectStore('outputs').openCursor()
+    const dbTrx = this.toDbTrx(['outputs'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('outputs').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1201,6 +1283,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
@@ -1222,9 +1305,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['output_tags'], 'readonly')
-    let cursor = await trx.objectStore('output_tags').openCursor()
+    const dbTrx = this.toDbTrx(['output_tags'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('output_tags').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1248,6 +1330,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> {
@@ -1267,9 +1350,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['sync_states'], 'readonly')
-    let cursor = await trx.objectStore('sync_states').openCursor()
+    const dbTrx = this.toDbTrx(['sync_states'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('sync_states').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1300,6 +1382,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> {
@@ -1324,9 +1407,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['transactions'], 'readonly')
-    let cursor = await trx.objectStore('transactions').openCursor()
+    const dbTrx = this.toDbTrx(['transactions'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('transactions').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1358,6 +1440,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> {
@@ -1367,7 +1450,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     })
     for (const t of results) {
       if (!args.noRawTx) {
-        await this.validateRawTransaction(t)
+        await this.validateRawTransaction(t, args.trx)
       } else {
         t.rawTx = undefined
         t.inputBEEF = undefined
@@ -1380,9 +1463,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['tx_labels'], 'readonly')
-    let cursor = await trx.objectStore('tx_labels').openCursor()
+    const dbTrx = this.toDbTrx(['tx_labels'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('tx_labels').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1406,6 +1488,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> {
@@ -1420,9 +1503,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const db = await this.verifyDB()
-    const trx = db.transaction(['users'], 'readonly')
-    let cursor = await trx.objectStore('users').openCursor()
+    const dbTrx = this.toDbTrx(['users'], 'readonly', args.trx)
+    let cursor = await dbTrx.objectStore('users').openCursor()
     let firstTime = true
     while (cursor) {
       if (!firstTime) cursor = await cursor.continue()
@@ -1445,6 +1527,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       count++
       if (args.paged?.limit && count >= args.paged.limit) break
     }
+    if (!args.trx) await dbTrx.done
   }
 
   async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> {
@@ -1538,7 +1621,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const fargs: sdk.FindProvenTxsArgs = {
       partial: {},
       since: args.since,
-      paged: args.paged
+      paged: args.paged,
+      trx: args.trx
     }
     await this.filterProvenTxs(fargs, r => {
       results.push(this.validateEntity(r))
@@ -1551,7 +1635,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const fargs: sdk.FindProvenTxReqsArgs = {
       partial: {},
       since: args.since,
-      paged: args.paged
+      paged: args.paged,
+      trx: args.trx
     }
     await this.filterProvenTxReqs(fargs, r => {
       results.push(this.validateEntity(r))
@@ -1564,7 +1649,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const fargs: sdk.FindTxLabelMapsArgs = {
       partial: {},
       since: args.since,
-      paged: args.paged
+      paged: args.paged,
+      trx: args.trx
     }
     await this.filterTxLabelMaps(fargs, r => {
       results.push(this.validateEntity(r))
@@ -1577,7 +1663,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const fargs: sdk.FindOutputTagMapsArgs = {
       partial: {},
       since: args.since,
-      paged: args.paged
+      paged: args.paged,
+      trx: args.trx
     }
     await this.filterOutputTagMaps(fargs, r => {
       results.push(this.validateEntity(r))
@@ -1708,7 +1795,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return v
   }
 
-  async validateRawTransaction(t: TableTransaction): Promise<void> {
+  async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> {
     // if there is no txid or there is a rawTransaction return what we have.
     if (t.rawTx || !t.txid) return
 
@@ -1719,7 +1806,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     t.rawTx = rawTx
   }
 
-  async validateOutputScript(o: TableOutput): Promise<void> {
+  async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> {
     // without offset and length values return what we have (make no changes)
     if (!o.scriptLength || !o.scriptOffset || !o.txid) return
     // if there is an outputScript and its length is the expected length return what we have.
