@@ -387,7 +387,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
     const results: TableOutputTagMap[] = []
-    await this.filterOutputTagMaps(args, (r) => { results.push(r) })
+    await this.filterOutputTagMaps(args, (r) => { results.push(this.validateEntity(r)) })
     return results
   }
 
@@ -437,7 +437,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
     const results: TableProvenTxReq[] = []
-    await this.filterProvenTxReqs(args, (r) => { results.push(r) })
+    await this.filterProvenTxReqs(args, (r) => { results.push(this.validateEntity(r)) })
     return results
   }
 
@@ -484,7 +484,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> {
     const results: TableProvenTx[] = []
-    await this.filterProvenTxs(args, (r) => { results.push(r) })
+    await this.filterProvenTxs(args, (r) => { results.push(this.validateEntity(r)) })
     return results
   }
 
@@ -518,7 +518,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> {
     const results: TableTxLabelMap[] = []
-    await this.filterTxLabelMaps(args, (r) => { results.push(r) })
+    await this.filterTxLabelMaps(args, (r) => { results.push(this.validateEntity(r)) })
     return results
   }
 
@@ -652,74 +652,99 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return user.userId
   }
 
-  async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+  async updateIdb<T>(id: number | number[], update: Partial<T>, keyProp: string, storeName: string, trx?: sdk.TrxToken): Promise<number> {
+    if (update[keyProp] !== undefined && (Array.isArray(id) || update[keyProp] !== id)) {
+      throw new sdk.WERR_INVALID_PARAMETER(`update.${keyProp}`, `undefined`)
+    }
+    const u = this.validatePartialForUpdate(update)
+    const tx = this.toDb(trx).transaction([storeName], 'readwrite')
+    const store = tx.objectStore(storeName)
+    const ids = Array.isArray(id) ? id : [id]
+    for (const i of ids) {
+      const e = await store.get(i)
+      if (!e) throw new sdk.WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`);
+      const v: T = {
+        ...e,
+        ...u
+      }
+      const uid = await store.put(v)
+      if (uid !== i) throw new sdk.WERR_INTERNAL(`updated id ${uid} does not match original ${id}`);
+    }
+    await tx.done
+    return 1
   }
-  async updateCertificateField(
-    certificateId: number,
-    fieldName: string,
-    update: Partial<TableCertificateField>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
-    throw new Error('Method not implemented.')
+
+  async updateIdbKey<T>(key: (number | string)[], update: Partial<T>, keyProps: string[], storeName: string, trx?: sdk.TrxToken): Promise<number> {
+    if (key.length !== keyProps.length)
+      throw new sdk.WERR_INTERNAL(`key.length ${key.length} !== keyProps.length ${keyProps.length}`)
+    for (let i = 0; i < key.length; i++) {
+      if (update[keyProps[i]] !== undefined && update[keyProps[i]] !== key[i]) {
+        throw new sdk.WERR_INVALID_PARAMETER(`update.${keyProps[i]}`, `undefined`)
+      }
+    }
+    const u = this.validatePartialForUpdate(update)
+    const tx = this.toDb(trx).transaction([storeName], 'readwrite')
+    const store = tx.objectStore(storeName)
+    const e = await store.get(key)
+    if (!e) throw new sdk.WERR_INVALID_PARAMETER('key', `an existing record to update ${keyProps.join(',')} ${key.join(',')} not found`);
+    const v: T = {
+      ...e,
+      ...u
+    }
+    const uid = await store.put(v)
+    for (let i = 0; i < key.length; i++) {
+      if (uid[i] !== key[i]) throw new sdk.WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`);
+    }
+    await tx.done
+    return 1
+  }
+
+  async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdb(id, update, 'certificateId', 'certificates', trx)
+  }
+
+  async updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdbKey([certificateId, fieldName], update, ['certificateId', 'fieldName'], 'certificate_fields', trx)
   }
 
   async updateCommission(id: number, update: Partial<TableCommission>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'commissionId', 'commissions', trx)
   }
   async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'id', 'monitor_events', trx)
   }
   async updateOutput(id: number, update: Partial<TableOutput>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'outputId', 'outputs', trx)
   }
   async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'basketId', 'output_baskets', trx)
   }
   async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
-  }
-  async updateOutputTagMap(
-    outputId: number,
-    tagId: number,
-    update: Partial<TableOutputTagMap>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'outputTagId', 'output_tags', trx)
   }
   async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'provenTxId', 'proven_txs', trx)
   }
-  async updateProvenTxReq(
-    id: number | number[],
-    update: Partial<TableProvenTxReq>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
-    throw new Error('Method not implemented.')
+  async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdb(id, update, 'provenTxReqId', 'proven_tx_reqs', trx)
   }
   async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'syncStateId', 'sync_states', trx)
   }
-  async updateTransaction(
-    id: number | number[],
-    update: Partial<TableTransaction>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
-    throw new Error('Method not implemented.')
+  async updateTransaction( id: number | number[], update: Partial<TableTransaction>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdb(id, update, 'transactionId', 'transactions', trx)
   }
   async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
-  }
-  async updateTxLabelMap(
-    transactionId: number,
-    txLabelId: number,
-    update: Partial<TableTxLabelMap>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'txLabelId', 'tx_labels', trx)
   }
   async updateUser(id: number, update: Partial<TableUser>, trx?: sdk.TrxToken): Promise<number> {
-    throw new Error('Method not implemented.')
+    return this.updateIdb(id, update, 'userId', 'users', trx)
+  }
+  async updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdbKey([tagId, outputId], update, ['outputTagId', 'outputId'], 'output_tags_map', trx)
+  }
+  async updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: sdk.TrxToken): Promise<number> {
+    return this.updateIdbKey([txLabelId, transactionId], update, ['txLabelId', 'transactionId'], 'tx_labels_map', trx)
   }
 
   //
@@ -770,7 +795,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
     const result: TableCertificateField[] = []
-    await this.filterCertificateFields(args, (r) => { result.push(r) })
+    await this.filterCertificateFields(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -813,7 +838,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
     const result: TableCertificateX[] = []
-    await this.filterCertificates(args, (r) => { result.push(r) })
+    await this.filterCertificates(args, (r) => { result.push(this.validateEntity(r)) })
     if (args.includeFields) {
       for (const c of result) {
         const fields = await this.findCertificateFields({ partial: { certificateId: c.certificateId } })
@@ -861,7 +886,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> {
     const result: TableCommission[] = []
-    await this.filterCommissions(args, (r) => { result.push(r) })
+    await this.filterCommissions(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -895,7 +920,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> {
     const result: TableMonitorEvent[] = []
-    await this.filterMonitorEvents(args, (r) => { result.push(r) })
+    await this.filterMonitorEvents(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -932,7 +957,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
     const result: TableOutputBasket[] = []
-    await this.filterOutputBaskets(args, (r) => { result.push(r) })
+    await this.filterOutputBaskets(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -993,7 +1018,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
     const results : TableOutput[] = []
-    await this.filterOutputs(args, (r) => { results.push(r) })
+    await this.filterOutputs(args, (r) => { results.push(this.validateEntity(r)) })
     for (const o of results) {
       if (!args.noScript) {
         await this.validateOutputScript(o)
@@ -1035,7 +1060,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> {
     const result: TableOutputTag[] = []
-    await this.filterOutputTags(args, (r) => { result.push(r) })
+    await this.filterOutputTags(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -1082,7 +1107,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> {
     const result: TableSyncState[] = []
-    await this.filterSyncStates(args, (r) => { result.push(r) })
+    await this.filterSyncStates(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -1135,7 +1160,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> {
     const results : TableTransaction[] = []
-    await this.filterTransactions(args, (r) => { results.push(r) })
+    await this.filterTransactions(args, (r) => { results.push(this.validateEntity(r)) })
     for (const t of results) {
       if (!args.noRawTx) {
         await this.validateRawTransaction(t)
@@ -1178,7 +1203,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> {
     const result: TableTxLabel[] = []
-    await this.filterTxLabels(args, (r) => { result.push(r) })
+    await this.filterTxLabels(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -1212,7 +1237,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> {
     const result: TableUser[] = []
-    await this.filterUsers(args, (r) => { result.push(r) })
+    await this.filterUsers(args, (r) => { result.push(this.validateEntity(r)) })
     return result
   }
 
@@ -1291,6 +1316,83 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
 
     return this._settings.dbtype
+  }
+
+  /**
+   * Helper to force uniform behavior across database engines.
+   * Use to process all individual records with time stamps or number[] retreived from database.
+   */
+  validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T {
+    entity.created_at = this.validateDate(entity.created_at)
+    entity.updated_at = this.validateDate(entity.updated_at)
+    if (dateFields) {
+      for (const df of dateFields) {
+        if (entity[df]) entity[df] = this.validateDate(entity[df])
+      }
+    }
+    if (booleanFields) {
+      for (const df of booleanFields) {
+        if (entity[df] !== undefined) entity[df] = !!entity[df]
+      }
+    }
+    for (const key of Object.keys(entity)) {
+      const val = entity[key]
+      if (val === null) {
+        entity[key] = undefined
+      } else if (Buffer.isBuffer(val) || val instanceof Uint8Array) {
+        entity[key] = Array.from(val)
+      }
+    }
+    return entity
+  }
+
+  /**
+   * Helper to force uniform behavior across database engines.
+   * Use to process all arrays of records with time stamps retreived from database.
+   * @returns input `entities` array with contained values validated.
+   */
+  validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] {
+    for (let i = 0; i < entities.length; i++) {
+      entities[i] = this.validateEntity(entities[i], dateFields, booleanFields)
+    }
+    return entities
+  }
+  /**
+   * Helper to force uniform behavior across database engines.
+   * Use to process the update template for entities being updated.
+   */
+  validatePartialForUpdate<T extends sdk.EntityTimeStamp>(
+    update: Partial<T>,
+    dateFields?: string[],
+    booleanFields?: string[]
+  ): Partial<T> {
+    if (!this.dbtype) throw new sdk.WERR_INTERNAL('must call verifyReadyForDatabaseAccess first')
+    const v: any = update
+    if (v.created_at) v.created_at = this.validateEntityDate(v.created_at)
+    if (v.updated_at) v.updated_at = this.validateEntityDate(v.updated_at)
+    if (!v.created_at) delete v.created_at
+    if (!v.updated_at) v.updated_at = this.validateEntityDate(new Date())
+
+    if (dateFields) {
+      for (const df of dateFields) {
+        if (v[df]) v[df] = this.validateOptionalEntityDate(v[df])
+      }
+    }
+    if (booleanFields) {
+      for (const df of booleanFields) {
+        if (update[df] !== undefined) update[df] = !!update[df] ? 1 : 0
+      }
+    }
+    for (const key of Object.keys(v)) {
+      const val = v[key]
+      if (Array.isArray(val) && (val.length === 0 || typeof val[0] === 'number')) {
+        v[key] = Buffer.from(val)
+      } else if (val === undefined) {
+        v[key] = null
+      }
+    }
+    this.isDirty = true
+    return v
   }
 
   /**

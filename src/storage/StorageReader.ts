@@ -116,6 +116,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
     if (!this.dbtype) throw new sdk.WERR_INTERNAL('must call verifyReadyForDatabaseAccess first')
     let r: Date | string = this.validateDate(date)
     switch (this.dbtype) {
+      case 'IndexedDB':
       case 'MySQL':
         break
       case 'SQLite':

@@ -1,6 +1,6 @@
-import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
-import { sdk, StorageProvider, StorageKnex, verifyOne } from '../../src/index.all'
-import { normalizeDate, setLogging, updateTable, verifyValues } from '../utils/TestUtilsWalletStorage'
+import { _tu, TestSetup1 } from '../../utils/TestUtilsWalletStorage'
+import { sdk, StorageProvider, StorageProviderOptions, verifyOne } from '../../../src/index.client'
+import { normalizeDate, setLogging, updateTable, verifyValues } from '../../utils/TestUtilsWalletStorage'
 import {
   TableProvenTx,
   TableProvenTxReq,
@@ -17,7 +17,11 @@ import {
   TableTxLabelMap,
   TableMonitorEvent,
   TableSyncState
-} from '../../src/storage/schema/tables'
+} from '../../../src/storage/schema/tables'
+
+import { StorageIdb } from '../../../src/storage/StorageIdb'
+
+import 'fake-indexeddb/auto';
 
 setLogging(false)
 
@@ -25,46 +29,21 @@ describe('update tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'
-  const env = _tu.getEnvFlags(chain)
-  const testName = () => expect.getState().currentTestName || 'test'
-
-  let storages: StorageProvider[]
-  let setups: { setup: TestSetup1; storage: StorageProvider }[]
+  const env = _tu.getEnv(chain)
+  let setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
   beforeEach(async () => {
-    setups = []
-    storages = []
-    const databaseName = testName()
-
-    const localSQLiteFile = await _tu.newTmpFile(`${databaseName}.sqlite`, false, false, true)
-    const knexSQLite = _tu.createLocalSQLite(localSQLiteFile)
-    storages.push(
-      new StorageKnex({
-        ...StorageKnex.defaultOptions(),
-        chain,
-        knex: knexSQLite
-      })
-    )
-    if (env.runMySQL) {
-      const knexMySQL = _tu.createLocalMySQL(`${databaseName}.mysql`)
-      storages.push(
-        new StorageKnex({
-          ...StorageKnex.defaultOptions(),
-          chain,
-          knex: knexMySQL
-        })
-      )
-    }
-    for (const storage of storages) {
-      await storage.dropAllData()
-      await storage.migrate('update tests', '1'.repeat(64))
-      await storage.makeAvailable()
-      setups.push({ storage, setup: await _tu.createTestSetup1(storage) })
-    }
+    const options: StorageProviderOptions = StorageProvider.createStorageBaseOptions(chain);
+    const storage = new StorageIdb(options)
+    await storage.dropAllData()
+    await storage.migrate('idb update tests', '1'.repeat(64))
+    await storage.makeAvailable()
+    const setup = await _tu.createTestSetup1(storage)
+    setups = [{ setup, storage }]
   })
 
   afterEach(async () => {
-    for (const storage of storages) {
+    for (const { storage } of setups) {
       await storage.destroy()
     }
   })
@@ -328,9 +307,9 @@ describe('update tests', () => {
               continue
             }
             if (typeof actualValue === 'boolean') {
-              if (value === 1) {
+              if (value === 1 || value) {
                 expect(actualValue).toBe(true)
-              } else if (value === 0) {
+              } else if (value === 0 || value === false) {
                 expect(actualValue).toBe(false)
               } else {
                 throw new Error(`Unexpected value for expectedValue: ${value}. Must be 0 or 1.`)
