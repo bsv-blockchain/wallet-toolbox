@@ -58,7 +58,7 @@ import {
 import { Knex, knex as makeKnex } from 'knex'
 
 import * as dotenv from 'dotenv'
-import { WalletServicesOptions } from '../../src/sdk'
+import { TrxToken, WalletServicesOptions } from '../../src/sdk'
 dotenv.config()
 
 const localMySqlConnection = process.env.MYSQL_CONNECTION || ''
@@ -854,7 +854,7 @@ export abstract class TestUtilsWalletStorage {
     return { cert, subject, certifier }
   }
 
-  static async insertTestProvenTx(storage: StorageProvider, txid?: string) {
+  static async insertTestProvenTx(storage: StorageProvider, txid?: string, trx?: TrxToken) {
     const now = new Date()
     const ptx: TableProvenTx = {
       created_at: now,
@@ -868,7 +868,7 @@ export abstract class TestUtilsWalletStorage {
       blockHash: randomBytesHex(32),
       merkleRoot: randomBytesHex(32)
     }
-    await storage.insertProvenTx(ptx)
+    await storage.insertProvenTx(ptx, trx)
     return ptx
   }
 

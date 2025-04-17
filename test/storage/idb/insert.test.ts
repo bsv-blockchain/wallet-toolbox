@@ -43,7 +43,7 @@ describe('idb insert tests', () => {
       expect(ptx.provenTxId).toBe(1)
       ptx.provenTxId = 0
       // duplicate must throw
-      //await expect(storage.insertProvenTx(ptx)).rejects.toThrow()
+      await expect(storage.insertProvenTx(ptx)).rejects.toThrow()
       ptx.provenTxId = 0
       ptx.txid = '4'.repeat(64)
       ptx.provenTxId = await storage.insertProvenTx(ptx)
@@ -58,8 +58,7 @@ describe('idb insert tests', () => {
       expect(ptxreq.provenTxReqId).toBe(1)
       ptxreq.provenTxReqId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertProvenTxReq(ptxreq)).rejects.toThrow()
+      await expect(storage.insertProvenTxReq(ptxreq)).rejects.toThrow()
       ptxreq.provenTxReqId = 0
       ptxreq.txid = '4'.repeat(64)
       const id = await storage.insertProvenTxReq(ptxreq)
@@ -74,8 +73,7 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       e.userId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertUser(e)).rejects.toThrow()
+      await expect(storage.insertUser(e)).rejects.toThrow()
       e.userId = 0
       e.identityKey = randomBytesHex(33)
       await storage.insertUser(e)
@@ -89,10 +87,8 @@ describe('idb insert tests', () => {
       const e = await _tu.insertTestCertificate(storage)
       const id = e.certificateId
       expect(id).toBeGreaterThan(0)
-      e.certificateId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertCertificate(e)).rejects.toThrow()
+      await expect(storage.insertCertificate(e)).rejects.toThrow()
       e.certificateId = 0
       e.serialNumber = randomBytesBase64(33)
       await storage.insertCertificate(e)
@@ -109,8 +105,7 @@ describe('idb insert tests', () => {
       expect(e.userId).toBe(c.userId)
       expect(e.fieldName).toBe('prize')
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertCertificateField(e)).rejects.toThrow()
+      await expect(storage.insertCertificateField(e)).rejects.toThrow()
       e.fieldName = 'address'
       await storage.insertCertificateField(e)
       // MySQL counts the failed insertion as a used id, SQLite does not.
@@ -125,8 +120,7 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       e.basketId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertOutputBasket(e)).rejects.toThrow()
+      await expect(storage.insertOutputBasket(e)).rejects.toThrow()
       e.basketId = 0
       e.name = randomBytesHex(10)
       await storage.insertOutputBasket(e)
@@ -142,8 +136,7 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       e.transactionId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertTransaction(e)).rejects.toThrow()
+      await expect(storage.insertTransaction(e)).rejects.toThrow()
       e.transactionId = 0
       e.reference = randomBytesBase64(10)
       await storage.insertTransaction(e)
@@ -160,8 +153,7 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       e.commissionId = 0
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertCommission(e)).rejects.toThrow()
+      await expect(storage.insertCommission(e)).rejects.toThrow()
       e.commissionId = 0
       const { tx: t2 } = await _tu.insertTestTransaction(storage)
       e.transactionId = t2.transactionId
@@ -182,10 +174,9 @@ describe('idb insert tests', () => {
       expect(e.transactionId).toBe(t.transactionId)
       expect(e.vout).toBe(0)
       expect(e.satoshis).toBe(101)
-      // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
       e.outputId = 0
-      //await expect(storage.insertOutput(e)).rejects.toThrow()
+      // duplicate must throw
+      await expect(storage.insertOutput(e)).rejects.toThrow()
       e.vout = 1
       await storage.insertOutput(e)
       // MySQL counts the failed insertion as a used id, SQLite does not.
@@ -201,10 +192,9 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       expect(e.userId).toBe(u.userId)
       expect(e.tag).toBeTruthy()
-      // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
       e.outputTagId = 0
-      //await expect(storage.insertOutputTag(e)).rejects.toThrow()
+      // duplicate must throw
+      await expect(storage.insertOutputTag(e)).rejects.toThrow()
       e.tag = randomBytesHex(6)
       await storage.insertOutputTag(e)
       // MySQL counts the failed insertion as a used id, SQLite does not.
@@ -221,8 +211,7 @@ describe('idb insert tests', () => {
       expect(e.outputId).toBe(o.outputId)
       expect(e.outputTagId).toBe(tag.outputTagId)
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertOutputTagMap(e)).rejects.toThrow()
+      await expect(storage.insertOutputTagMap(e)).rejects.toThrow()
       const tag2 = await _tu.insertTestOutputTag(storage, user)
       const e2 = await _tu.insertTestOutputTagMap(storage, o, tag2)
     }
@@ -236,10 +225,9 @@ describe('idb insert tests', () => {
       expect(id).toBeGreaterThan(0)
       expect(e.userId).toBe(u.userId)
       expect(e.label).toBeTruthy()
-      // duplicate must throw
       e.txLabelId = 0
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertTxLabel(e)).rejects.toThrow()
+      // duplicate must throw
+      await expect(storage.insertTxLabel(e)).rejects.toThrow()
       e.label = randomBytesHex(6)
       await storage.insertTxLabel(e)
       // MySQL counts the failed insertion as a used id, SQLite does not.
@@ -255,8 +243,7 @@ describe('idb insert tests', () => {
       expect(e.transactionId).toBe(tx.transactionId)
       expect(e.txLabelId).toBe(label.txLabelId)
       // duplicate must throw
-      // fake-indexeddb throw AbortError on jest cleanup...
-      //await expect(storage.insertTxLabelMap(e)).rejects.toThrow()
+      await expect(storage.insertTxLabelMap(e)).rejects.toThrow()
       const label2 = await _tu.insertTestTxLabel(storage, user)
       const e2 = await _tu.insertTestTxLabelMap(storage, tx, label2)
     }

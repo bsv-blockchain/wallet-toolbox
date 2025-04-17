@@ -652,18 +652,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
     const dbTrx = this.toDbTrx(['certificates', 'certificate_fields'], 'readwrite', trx)
     const store = dbTrx.objectStore('certificates')
-    const id = Number(await store.add!(e))
-    certificate.certificateId = id
+    try {
+      const id = Number(await store.add!(e))
+      certificate.certificateId = id
 
-    if (fields) {
-      for (const field of fields) {
-        field.certificateId = id
-        field.userId = certificate.userId
-        await this.insertCertificateField(field, dbTrx)
+      if (fields) {
+        for (const field of fields) {
+          field.certificateId = certificate.certificateId
+          field.userId = certificate.userId
+          await this.insertCertificateField(field, dbTrx)
+        }
       }
+    } finally {
+      if (!trx) await dbTrx.done
     }
-
-    if (!trx) await dbTrx.done
     return certificate.certificateId
   }
 
@@ -671,8 +673,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const e = await this.validateEntityForInsert(certificateField, trx)
     const dbTrx = this.toDbTrx(['certificate_fields'], 'readwrite', trx)
     const store = dbTrx.objectStore('certificate_fields')
-    await store.add!(e)
-    if (!trx) await dbTrx.done
+    try {
+      await store.add!(e)
+    } finally {
+      if (!trx) await dbTrx.done
+    }
   }
 
   async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> {
@@ -680,9 +685,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.commissionId === 0) delete e.commissionId
     const dbTrx = this.toDbTrx(['commissions'], 'readwrite', trx)
     const store = dbTrx.objectStore('commissions')
-    const id = Number(await store.add!(e))
-    commission.commissionId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      commission.commissionId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return commission.commissionId
   }
   async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> {
@@ -690,9 +698,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.id === 0) delete e.id
     const dbTrx = this.toDbTrx(['monitor_events'], 'readwrite', trx)
     const store = dbTrx.objectStore('monitor_events')
-    const id = Number(await store.add!(e))
-    event.id = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      event.id = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return event.id
   }
   async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> {
@@ -700,9 +711,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.outputId === 0) delete e.outputId
     const dbTrx = this.toDbTrx(['outputs'], 'readwrite', trx)
     const store = dbTrx.objectStore('outputs')
-    const id = Number(await store.add!(e))
-    output.outputId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      output.outputId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return output.outputId
   }
   async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> {
@@ -710,9 +724,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.basketId === 0) delete e.basketId
     const dbTrx = this.toDbTrx(['output_baskets'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_baskets')
-    const id = Number(await store.add!(e))
-    basket.basketId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      basket.basketId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return basket.basketId
   }
   async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> {
@@ -720,26 +737,35 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.outputTagId === 0) delete e.outputTagId
     const dbTrx = this.toDbTrx(['output_tags'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_tags')
-    const id = Number(await store.add!(e))
-    tag.outputTagId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      tag.outputTagId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return tag.outputTagId
   }
   async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(tagMap, trx, undefined, ['isDeleted'])
     const dbTrx = this.toDbTrx(['output_tags_map'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_tags_map')
+    try {
     await store.add!(e)
-    if (!trx) await dbTrx.done
+    } finally {
+      if (!trx) await dbTrx.done
+    }
   }
   async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxId === 0) delete e.provenTxId
     const dbTrx = this.toDbTrx(['proven_txs'], 'readwrite', trx)
     const store = dbTrx.objectStore('proven_txs')
-    const id = Number(await store.add!(e))
-    tx.provenTxId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      tx.provenTxId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return tx.provenTxId
   }
   async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> {
@@ -747,9 +773,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.provenTxReqId === 0) delete e.provenTxReqId
     const dbTrx = this.toDbTrx(['proven_tx_reqs'], 'readwrite', trx)
     const store = dbTrx.objectStore('proven_tx_reqs')
-    const id = Number(await store.add!(e))
-    tx.provenTxReqId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      tx.provenTxReqId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return tx.provenTxReqId
   }
   async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> {
@@ -757,9 +786,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.syncStateId === 0) delete e.syncStateId
     const dbTrx = this.toDbTrx(['sync_states'], 'readwrite', trx)
     const store = dbTrx.objectStore('sync_states')
-    const id = Number(await store.add!(e))
-    syncState.syncStateId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      syncState.syncStateId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return syncState.syncStateId
   }
   async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> {
@@ -767,9 +799,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.transactionId === 0) delete e.transactionId
     const dbTrx = this.toDbTrx(['transactions'], 'readwrite', trx)
     const store = dbTrx.objectStore('transactions')
-    const id = Number(await store.add!(e))
-    tx.transactionId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      tx.transactionId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return tx.transactionId
   }
   async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> {
@@ -777,26 +812,35 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (e.txLabelId === 0) delete e.txLabelId
     const dbTrx = this.toDbTrx(['tx_labels'], 'readwrite', trx)
     const store = dbTrx.objectStore('tx_labels')
-    const id = Number(await store.add!(e))
-    label.txLabelId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      label.txLabelId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return label.txLabelId
   }
   async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(labelMap, trx, undefined, ['isDeleted'])
     const dbTrx = this.toDbTrx(['tx_labels_map'], 'readwrite', trx)
     const store = dbTrx.objectStore('tx_labels_map')
-    await store.add!(e)
-    if (!trx) await dbTrx.done
+    try {
+      await store.add!(e)
+    } finally {
+      if (!trx) await dbTrx.done
+    }
   }
   async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(user, trx)
     if (e.userId === 0) delete e.userId
     const dbTrx = this.toDbTrx(['users'], 'readwrite', trx)
     const store = dbTrx.objectStore('users')
-    const id = Number(await store.add!(e))
-    user.userId = id
-    if (!trx) await dbTrx.done
+    try {
+      const id = Number(await store.add!(e))
+      user.userId = id
+    } finally {
+      if (!trx) await dbTrx.done
+    }
     return user.userId
   }
 
@@ -983,9 +1027,15 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const db = await this.verifyDB()
     const tx = db.transaction(stores, 'readwrite')
 
-    const r = await scope(tx as sdk.TrxToken)
-    await tx.done
-    return r
+    try {
+      const r = await scope(tx as sdk.TrxToken)
+      await tx.done
+      return r
+    } catch (err) {
+      tx.abort()
+      await tx.done
+      throw err
+    }
   }
 
   async filterCertificateFields(
