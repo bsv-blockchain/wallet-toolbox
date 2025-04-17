@@ -296,6 +296,24 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     throw new Error('Method not implemented.')
   }
 
+  /**
+   * Proceeds in three stages:
+   * 1. Find an output that exactly funds the transaction (if exactSatoshis is not undefined).
+   * 2. Find an output that overfunds by the least amount (targetSatoshis).
+   * 3. Find an output that comes as close to funding as possible (targetSatoshis).
+   * 4. Return undefined if no output is found.
+   * 
+   * Outputs must belong to userId and basketId and have spendable true.
+   * Their corresponding transaction must have status of 'completed', 'unproven', or 'sending' (if excludeSending is false).
+   * 
+   * @param userId 
+   * @param basketId 
+   * @param targetSatoshis 
+   * @param exactSatoshis 
+   * @param excludeSending 
+   * @param transactionId 
+   * @returns next funding output to add to transaction or undefined if there are none.
+   */
   async allocateChangeInput(
     userId: number,
     basketId: number,
@@ -304,7 +322,50 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     excludeSending: boolean,
     transactionId: number
   ): Promise<TableOutput | undefined> {
-    throw new Error('Method not implemented.')
+    const dbTrx = this.toDbTrx(['outputs', 'transactions'], 'readwrite')
+    try {
+      const txStatus: TransactionStatus[] = ['completed', 'unproven']
+      if (!excludeSending) txStatus.push('sending');
+      const args: sdk.FindOutputsArgs = {
+        partial: { userId, basketId, spendable: true },
+        txStatus,
+        trx: dbTrx
+      }
+      const outputs = await this.findOutputs(args)
+      let output: TableOutput | undefined
+      let scores: { output: TableOutput; score: number }[] = []
+      for (const o of outputs) {
+        if (exactSatoshis && o.satoshis === exactSatoshis) {
+          output = o
+          break
+        }
+        const score = o.satoshis - targetSatoshis
+        scores.push({ output: o, score })
+      }
+      if (!output) {
+        // sort scores increasing by score property
+        scores = scores.sort((a, b) => a.score - b.score)
+        // find the first score that is greater than or equal to 0
+        const o = scores.find(s => s.score >= 0)
+        if (o) {
+          // stage 2 satisfied (minimally funded)
+          output = o.output
+        } else if (scores.length > 0) {
+          // stage 3 satisfied (minimally under-funded)
+          output = scores.slice(-1)[0].output
+        } else {
+          // no available funding outputs
+          output = undefined
+        }
+      } 
+      if (output) {
+        // mark output as spent by transactionId
+        await this.updateOutput(output.outputId, { spendable: false, spentBy: transactionId }, dbTrx)
+      }
+      return output
+    } finally {
+      await dbTrx.done
+    }
   }
 
   async getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx> {
@@ -375,11 +436,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
-    const args: sdk.FindOutputsArgs = { partial: { userId, basketId} }
-    const status: sdk.TransactionStatus[] = ['completed', 'unproven']
-    if (!excludeSending) status.push('sending')
+    const txStatus: sdk.TransactionStatus[] = ['completed', 'unproven']
+    if (!excludeSending) txStatus.push('sending')
+    const args: sdk.FindOutputsArgs = { partial: { userId, basketId}, txStatus }
     let count = 0
-    await this.filterOutputs(args, r => { count++ }, status)
+    await this.filterOutputs(args, r => { count++ })
     return count
   }
 
@@ -1272,7 +1333,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void, txStatus?: TransactionStatus[]): Promise<void> {
+  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void): Promise<void> {
     // args.txStatus
     // args.noScript
     if (args.partial.lockingScript)
@@ -1292,7 +1353,6 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       firstTime = false
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
-      if (args.txStatus && !args.txStatus.includes(r.txStatus)) continue
       if (args.partial) {
         if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
         if (args.partial.userId && r.userId !== args.partial.userId) continue
@@ -1318,8 +1378,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.scriptLength !== undefined && r.scriptLength !== args.partial.scriptLength) continue
         if (args.partial.scriptOffset !== undefined && r.scriptOffset !== args.partial.scriptOffset) continue
       }
-      if (txStatus !== undefined) {
-        const count = await this.countTransactions({partial: {transactionId: r.transactionId }, status: txStatus})
+      if (args.txStatus !== undefined) {
+        const count = await this.countTransactions({partial: {transactionId: r.transactionId }, status: args.txStatus, trx: args.trx})
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -1851,7 +1911,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
     // rawTransaction is missing, see if we moved it ...
 
-    const rawTx = await this.getRawTxOfKnownValidTransaction(t.txid)
+    const rawTx = await this.getRawTxOfKnownValidTransaction(t.txid, undefined, undefined, trx)
     if (!rawTx) return
     t.rawTx = rawTx
   }
@@ -1864,7 +1924,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
     // outputScript is missing or has incorrect length...
 
-    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength)
+    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength, trx)
     if (!script) return
     o.lockingScript = script
   }

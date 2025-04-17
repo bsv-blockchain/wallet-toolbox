@@ -1038,7 +1038,7 @@ export abstract class TestUtilsWalletStorage {
       senderIdentityKey: requiredOnly ? undefined : randomBytesHex(32),
       derivationPrefix: requiredOnly ? undefined : randomBytesHex(16),
       derivationSuffix: requiredOnly ? undefined : randomBytesHex(16),
-      spentBy: undefined, // must be a valid transsactionId
+      spentBy: undefined, // must be a valid transactionId
       sequenceNumber: requiredOnly ? undefined : 42,
       spendingDescription: requiredOnly ? undefined : randomBytesHex(16),
       scriptLength: requiredOnly ? undefined : 36,
