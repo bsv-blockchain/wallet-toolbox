@@ -811,7 +811,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const dbTrx = this.toDbTrx(['output_tags_map'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_tags_map')
     try {
-    await store.add!(e)
+      await store.add!(e)
     } finally {
       if (!trx) await dbTrx.done
     }
@@ -919,17 +919,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
     const store = dbTrx.objectStore(storeName)
     const ids = Array.isArray(id) ? id : [id]
-    for (const i of ids) {
-      const e = await store.get(i)
-      if (!e) throw new sdk.WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`)
-      const v: T = {
-        ...e,
-        ...u
+    try {
+      for (const i of ids) {
+        const e = await store.get(i)
+        if (!e) throw new sdk.WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`)
+        const v: T = {
+          ...e,
+          ...u
+        }
+        const uid = await store.put!(v)
+        if (uid !== i) throw new sdk.WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
       }
-      const uid = await store.put!(v)
-      if (uid !== i) throw new sdk.WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
+    } finally {
+      if (!trx) await dbTrx.done
     }
-    if (!trx) await dbTrx.done
     return 1
   }
 
@@ -950,21 +953,25 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const u = this.validatePartialForUpdate(update)
     const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
     const store = dbTrx.objectStore(storeName)
-    const e = await store.get(key)
-    if (!e)
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'key',
-        `an existing record to update ${keyProps.join(',')} ${key.join(',')} not found`
-      )
-    const v: T = {
-      ...e,
-      ...u
+    try {
+      const e = await store.get(key)
+      if (!e)
+        throw new sdk.WERR_INVALID_PARAMETER(
+          'key',
+          `an existing record to update ${keyProps.join(',')} ${key.join(',')} not found`
+        )
+      const v: T = {
+        ...e,
+        ...u
+      }
+      const uid = await store.put!(v)
+      for (let i = 0; i < key.length; i++) {
+        if (uid[i] !== key[i]) throw new sdk.WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`)
+      }
+    } finally {
+      if (!trx) await dbTrx.done
     }
-    const uid = await store.put!(v)
-    for (let i = 0; i < key.length; i++) {
-      if (uid[i] !== key[i]) throw new sdk.WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`)
-    }
-    if (!trx) await dbTrx.done
+
     return 1
   }
 
