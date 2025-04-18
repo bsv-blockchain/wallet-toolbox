@@ -79,7 +79,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Convert the standard optional `TrxToken` parameter into either a direct knex database instance,
    * or a Knex.Transaction as appropriate.
    */
-  toDbTrx(stores: string[], mode: 'readonly' | 'readwrite', trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'> {
+  toDbTrx(
+    stores: string[],
+    mode: 'readonly' | 'readwrite',
+    trx?: sdk.TrxToken
+  ): IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'> {
     if (trx) {
       const t = trx as IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'>
       return t
@@ -179,7 +183,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
           })
           transactionsStore.createIndex('userId', 'userId')
           transactionsStore.createIndex('status', 'status'),
-          transactionsStore.createIndex('status_userId', ['status', 'userId'])
+            transactionsStore.createIndex('status_userId', ['status', 'userId'])
           transactionsStore.createIndex('provenTxId', 'provenTxId')
           transactionsStore.createIndex('reference', 'reference', { unique: true })
         }
@@ -305,16 +309,16 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * 2. Find an output that overfunds by the least amount (targetSatoshis).
    * 3. Find an output that comes as close to funding as possible (targetSatoshis).
    * 4. Return undefined if no output is found.
-   * 
+   *
    * Outputs must belong to userId and basketId and have spendable true.
    * Their corresponding transaction must have status of 'completed', 'unproven', or 'sending' (if excludeSending is false).
-   * 
-   * @param userId 
-   * @param basketId 
-   * @param targetSatoshis 
-   * @param exactSatoshis 
-   * @param excludeSending 
-   * @param transactionId 
+   *
+   * @param userId
+   * @param basketId
+   * @param targetSatoshis
+   * @param exactSatoshis
+   * @param excludeSending
+   * @param transactionId
    * @returns next funding output to add to transaction or undefined if there are none.
    */
   async allocateChangeInput(
@@ -328,7 +332,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const dbTrx = this.toDbTrx(['outputs', 'transactions'], 'readwrite')
     try {
       const txStatus: TransactionStatus[] = ['completed', 'unproven']
-      if (!excludeSending) txStatus.push('sending');
+      if (!excludeSending) txStatus.push('sending')
       const args: sdk.FindOutputsArgs = {
         partial: { userId, basketId, spendable: true },
         txStatus,
@@ -360,7 +364,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
           // no available funding outputs
           output = undefined
         }
-      } 
+      }
       if (output) {
         // mark output as spent by transactionId
         await this.updateOutput(output.outputId, { spendable: false, spentBy: transactionId }, dbTrx)
@@ -443,9 +447,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
     const txStatus: sdk.TransactionStatus[] = ['completed', 'unproven']
     if (!excludeSending) txStatus.push('sending')
-    const args: sdk.FindOutputsArgs = { partial: { userId, basketId}, txStatus }
+    const args: sdk.FindOutputsArgs = { partial: { userId, basketId }, txStatus }
     let count = 0
-    await this.filterOutputs(args, r => { count++ })
+    await this.filterOutputs(args, r => {
+      count++
+    })
     return count
   }
 
@@ -479,15 +485,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     await deleteDB(this.dbName)
   }
 
-  async filterOutputTagMaps(args: sdk.FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void, userId?: number): Promise<void> {
+  async filterOutputTagMaps(
+    args: sdk.FindOutputTagMapsArgs,
+    filtered: (v: TableOutputTagMap) => void,
+    userId?: number
+  ): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
     const dbTrx = this.toDbTrx(['output_tags_map'], 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], "output_tags_map", unknown, "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "output_tags_map", "outputTagId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "output_tags_map", "outputId", "readwrite" | "readonly">
-     | null
+    let cursor:
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'output_tags_map', unknown, 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'output_tags_map', 'outputTagId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'output_tags_map', 'outputId', 'readwrite' | 'readonly'>
+      | null
     if (args.partial?.outputTagId !== undefined) {
       cursor = await dbTrx.objectStore('output_tags_map').index('outputTagId').openCursor(args.partial.outputTagId)
     } else if (args.partial?.outputId !== undefined) {
@@ -511,7 +522,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userId !== undefined && r.txid) {
-        const count = await this.countOutputTags({partial: {userId, outputTagId: r.outputTagId}, trx: args.trx})
+        const count = await this.countOutputTags({ partial: { userId, outputTagId: r.outputTagId }, trx: args.trx })
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -533,7 +544,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterProvenTxReqs(args: sdk.FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void, userId?: number): Promise<void> {
+  async filterProvenTxReqs(
+    args: sdk.FindProvenTxReqsArgs,
+    filtered: (v: TableProvenTxReq) => void,
+    userId?: number
+  ): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -570,7 +585,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.notify && r.notify !== args.partial.notify) continue
       }
       if (userId !== undefined && r.txid) {
-        const count = await this.countTransactions({partial: {userId, txid: r.txid}, trx: args.trx})
+        const count = await this.countTransactions({ partial: { userId, txid: r.txid }, trx: args.trx })
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -592,7 +607,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterProvenTxs(args: sdk.FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> {
+  async filterProvenTxs(
+    args: sdk.FindProvenTxsArgs,
+    filtered: (v: TableProvenTx) => void,
+    userId?: number
+  ): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -626,7 +645,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
       }
       if (userId !== undefined) {
-        const count = await this.countTransactions({partial: {userId, provenTxId: r.provenTxId}, trx: args.trx})
+        const count = await this.countTransactions({ partial: { userId, provenTxId: r.provenTxId }, trx: args.trx })
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -648,15 +667,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterTxLabelMaps(args: sdk.FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void, userId?: number): Promise<void> {
+  async filterTxLabelMaps(
+    args: sdk.FindTxLabelMapsArgs,
+    filtered: (v: TableTxLabelMap) => void,
+    userId?: number
+  ): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
     const dbTrx = this.toDbTrx(['tx_labels_map'], 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels_map", unknown, "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels_map", "transactionId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels_map", "txLabelId", "readwrite" | "readonly">
-     | null
+    let cursor:
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels_map', unknown, 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels_map', 'transactionId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels_map', 'txLabelId', 'readwrite' | 'readonly'>
+      | null
     if (args.partial?.transactionId !== undefined) {
       cursor = await dbTrx.objectStore('tx_labels_map').index('transactionId').openCursor(args.partial.transactionId)
     } else if (args.partial?.txLabelId !== undefined) {
@@ -679,7 +703,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userId !== undefined) {
-        const count = await this.countTxLabels({partial: {userId, txLabelId: r.txLabelId}, trx: args.trx})
+        const count = await this.countTxLabels({ partial: { userId, txLabelId: r.txLabelId }, trx: args.trx })
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -1108,9 +1132,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   ]
 
   /**
-   * @param scope 
-   * @param trx 
-   * @returns 
+   * @param scope
+   * @param trx
+   * @returns
    */
   async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> {
     if (trx) return await scope(trx)
@@ -1411,7 +1435,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.scriptOffset !== undefined && r.scriptOffset !== args.partial.scriptOffset) continue
       }
       if (args.txStatus !== undefined) {
-        const count = await this.countTransactions({partial: {transactionId: r.transactionId }, status: args.txStatus, trx: args.trx})
+        const count = await this.countTransactions({
+          partial: { transactionId: r.transactionId },
+          status: args.txStatus,
+          trx: args.trx
+        })
         if (count === 0) continue
       }
       if (skipped < offset) {
@@ -1535,7 +1563,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void, labelIds?: number[], isQueryModeAll?: boolean): Promise<void> {
+  async filterTransactions(
+    args: sdk.FindTransactionsArgs,
+    filtered: (v: TableTransaction) => void,
+    labelIds?: number[],
+    isQueryModeAll?: boolean
+  ): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -1554,16 +1587,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       stores.push('tx_labels_map')
     }
     const dbTrx = this.toDbTrx(stores, 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", unknown, "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", "userId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", "status", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", "status_userId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", "provenTxId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "transactions", "reference", "readwrite" | "readonly">
-     | null
+    let cursor:
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', unknown, 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', 'userId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', 'status', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', 'status_userId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', 'provenTxId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'transactions', 'reference', 'readwrite' | 'readonly'>
+      | null
     if (args.partial?.userId !== undefined) {
       if (args.partial?.status !== undefined) {
-        cursor = await dbTrx.objectStore('transactions').index('status_userId').openCursor([args.partial.status, args.partial.userId])
+        cursor = await dbTrx
+          .objectStore('transactions')
+          .index('status_userId')
+          .openCursor([args.partial.status, args.partial.userId])
       } else {
         cursor = await dbTrx.objectStore('transactions').index('userId').openCursor(args.partial.userId)
       }
@@ -1626,11 +1663,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<TableTransaction[]> {
+  async findTransactions(
+    args: sdk.FindTransactionsArgs,
+    labelIds?: number[],
+    isQueryModeAll?: boolean
+  ): Promise<TableTransaction[]> {
     const results: TableTransaction[] = []
-    await this.filterTransactions(args, r => {
-      results.push(this.validateEntity(r))
-    }, labelIds, isQueryModeAll)
+    await this.filterTransactions(
+      args,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      labelIds,
+      isQueryModeAll
+    )
     for (const t of results) {
       if (!args.noRawTx) {
         await this.validateRawTransaction(t, args.trx)
@@ -1647,13 +1693,17 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     let skipped = 0
     let count = 0
     const dbTrx = this.toDbTrx(['tx_labels'], 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels", unknown, "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels", "userId", "readwrite" | "readonly">
-     | IDBPCursorWithValue<StorageIdbSchema, string[], "tx_labels", "label_userId", "readwrite" | "readonly">
-     | null
+    let cursor:
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels', unknown, 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels', 'userId', 'readwrite' | 'readonly'>
+      | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels', 'label_userId', 'readwrite' | 'readonly'>
+      | null
     if (args.partial?.userId !== undefined) {
       if (args.partial?.label !== undefined) {
-        cursor = await dbTrx.objectStore('tx_labels').index('label_userId').openCursor([args.partial.label, args.partial.userId])
+        cursor = await dbTrx
+          .objectStore('tx_labels')
+          .index('label_userId')
+          .openCursor([args.partial.label, args.partial.userId])
       } else {
         cursor = await dbTrx.objectStore('tx_labels').index('userId').openCursor(args.partial.userId)
       }
@@ -1770,7 +1820,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
   async countOutputs(args: sdk.FindOutputsArgs): Promise<number> {
     let count = 0
-    await this.filterOutputs({...args, noScript: true}, () => {
+    await this.filterOutputs({ ...args, noScript: true }, () => {
       count++
     })
     return count
@@ -1789,11 +1839,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     })
     return count
   }
-  async countTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> {
+  async countTransactions(
+    args: sdk.FindTransactionsArgs,
+    labelIds?: number[],
+    isQueryModeAll?: boolean
+  ): Promise<number> {
     let count = 0
-    await this.filterTransactions({...args, noRawTx: true}, () => {
-      count++
-    }, labelIds, isQueryModeAll)
+    await this.filterTransactions(
+      { ...args, noRawTx: true },
+      () => {
+        count++
+      },
+      labelIds,
+      isQueryModeAll
+    )
     return count
   }
   async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> {
@@ -1819,9 +1878,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       paged: args.paged,
       trx: args.trx
     }
-    await this.filterProvenTxs(fargs, r => {
-      results.push(this.validateEntity(r))
-    }, args.userId)
+    await this.filterProvenTxs(
+      fargs,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      args.userId
+    )
     return results
   }
 
@@ -1833,9 +1896,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       paged: args.paged,
       trx: args.trx
     }
-    await this.filterProvenTxReqs(fargs, r => {
-      results.push(this.validateEntity(r))
-    }, args.userId)
+    await this.filterProvenTxReqs(
+      fargs,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      args.userId
+    )
     return results
   }
 
@@ -1847,9 +1914,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       paged: args.paged,
       trx: args.trx
     }
-    await this.filterTxLabelMaps(fargs, r => {
-      results.push(this.validateEntity(r))
-    }, args.userId)
+    await this.filterTxLabelMaps(
+      fargs,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      args.userId
+    )
     return results
   }
 
@@ -1861,9 +1932,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       paged: args.paged,
       trx: args.trx
     }
-    await this.filterOutputTagMaps(fargs, r => {
-      results.push(this.validateEntity(r))
-    }, args.userId)
+    await this.filterOutputTagMaps(
+      fargs,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      args.userId
+    )
     return results
   }
 

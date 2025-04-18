@@ -75,9 +75,22 @@ export async function listActionsIdb(
 
   const noLabels = labelIds.length === 0
 
-  const txs = await storage.findTransactions({ partial: { userId: auth.userId }, status: stati, paged: { limit: vargs.limit, offset: vargs.offset }, noRawTx: true }, labelIds, isQueryModeAll)
+  const txs = await storage.findTransactions(
+    {
+      partial: { userId: auth.userId },
+      status: stati,
+      paged: { limit: vargs.limit, offset: vargs.offset },
+      noRawTx: true
+    },
+    labelIds,
+    isQueryModeAll
+  )
   if (txs.length === vargs.limit) {
-    r.totalActions = await storage.countTransactions({ partial: { userId: auth.userId }, status: stati }, labelIds, isQueryModeAll)
+    r.totalActions = await storage.countTransactions(
+      { partial: { userId: auth.userId }, status: stati },
+      labelIds,
+      isQueryModeAll
+    )
   } else {
     r.totalActions = txs.length
   }

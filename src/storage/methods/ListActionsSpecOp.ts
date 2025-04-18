@@ -1,23 +1,23 @@
-import { sdk } from '../../index.client';
-import { TableTransaction } from '../index.client';
-import { StorageProvider } from '../StorageProvider';
+import { sdk } from '../../index.client'
+import { TableTransaction } from '../index.client'
+import { StorageProvider } from '../StorageProvider'
 
 export interface ListActionsSpecOp {
-  name: string;
+  name: string
   /**
    * undefined to intercept no labels from vargs,
    * empty array to intercept all labels,
    * or an explicit array of labels to intercept.
    */
-  labelsToIntercept?: string[];
-  setStatusFilter?: () => sdk.TransactionStatus[];
+  labelsToIntercept?: string[]
+  setStatusFilter?: () => sdk.TransactionStatus[]
   postProcess?: (
     s: StorageProvider,
     auth: sdk.AuthId,
     vargs: sdk.ValidListActionsArgs,
     specOpLabels: string[],
     txs: Partial<TableTransaction>[]
-  ) => Promise<void>;
+  ) => Promise<void>
 }
 
 export const labelToSpecOp: Record<string, ListActionsSpecOp> = {

@@ -33,7 +33,7 @@ describe('idb insert tests', () => {
   afterEach(async () => {
     for (const storage of storages) {
       await storage.destroy()
-      await new Promise(resolve => setTimeout(resolve, 0)); // Allow fake-indexeddb to clean up
+      await new Promise(resolve => setTimeout(resolve, 0)) // Allow fake-indexeddb to clean up
     }
   })
 

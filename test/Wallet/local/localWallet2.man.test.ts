@@ -208,7 +208,6 @@ describe('localWallet2 tests', () => {
     const ok = await beef.verify(await setup.services.getChainTracker())
     await setup.wallet.destroy()
   })
-
 })
 
 async function createMainReviewSetup(): Promise<{

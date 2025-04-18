@@ -22,22 +22,22 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TableOutputTag](#interface-tableoutputtag) |
-| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TableOutputTagMap](#interface-tableoutputtagmap) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [TableOutputX](#interface-tableoutputx) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageKnexOptions](#interface-storageknexoptions) | [TableProvenTx](#interface-tableproventx) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageProviderOptions](#interface-storageprovideroptions) | [TableProvenTxReq](#interface-tableproventxreq) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageReaderOptions](#interface-storagereaderoptions) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [TableSettings](#interface-tablesettings) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [SyncError](#interface-syncerror) | [TableSyncState](#interface-tablesyncstate) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncMap](#interface-syncmap) | [TableTransaction](#interface-tabletransaction) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [TableCertificate](#interface-tablecertificate) | [TableTxLabel](#interface-tabletxlabel) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCertificateField](#interface-tablecertificatefield) | [TableTxLabelMap](#interface-tabletxlabelmap) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [TableOutputBasket](#interface-tableoutputbasket) |
+| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TableOutputTag](#interface-tableoutputtag) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TableOutputTagMap](#interface-tableoutputtagmap) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [TableOutputX](#interface-tableoutputx) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageKnexOptions](#interface-storageknexoptions) | [TableProvenTx](#interface-tableproventx) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageProviderOptions](#interface-storageprovideroptions) | [TableProvenTxReq](#interface-tableproventxreq) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageReaderOptions](#interface-storagereaderoptions) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [TableSettings](#interface-tablesettings) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncError](#interface-syncerror) | [TableSyncState](#interface-tablesyncstate) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [SyncMap](#interface-syncmap) | [TableTransaction](#interface-tabletransaction) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCertificate](#interface-tablecertificate) | [TableTxLabel](#interface-tabletxlabel) |
+| [ListActionsSpecOp](#interface-listactionsspecop) | [TableCertificateField](#interface-tablecertificatefield) | [TableTxLabelMap](#interface-tabletxlabelmap) |
 | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableCertificateX](#interface-tablecertificatex) | [TableUser](#interface-tableuser) |
 | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableCommission](#interface-tablecommission) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
 | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
 | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [TableOutput](#interface-tableoutput) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
-| [ProvenTxReqHistory](#interface-proventxreqhistory) | [TableOutputBasket](#interface-tableoutputbasket) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -279,6 +279,32 @@ export interface GetReqsAndBeefResult {
 ```
 
 See also: [GetReqsAndBeefDetail](./storage.md#interface-getreqsandbeefdetail)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: ListActionsSpecOp
+
+```ts
+export interface ListActionsSpecOp {
+    name: string;
+    labelsToIntercept?: string[];
+    setStatusFilter?: () => sdk.TransactionStatus[];
+    postProcess?: (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]) => Promise<void>;
+}
+```
+
+See also: [AuthId](./client.md#interface-authid), [StorageProvider](./storage.md#class-storageprovider), [TableTransaction](./storage.md#interface-tabletransaction), [TransactionStatus](./client.md#type-transactionstatus), [ValidListActionsArgs](./client.md#interface-validlistactionsargs)
+
+###### Property labelsToIntercept
+
+undefined to intercept no labels from vargs,
+empty array to intercept all labels,
+or an explicit array of labels to intercept.
+
+```ts
+labelsToIntercept?: string[]
+```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3014,7 +3040,6 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
     async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
     override async getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]> 
-    async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: sdk.TrxToken): Promise<TableOutputX> 
     override async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> 
     override async purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> 
     override async reviewStatus(args: {
@@ -3110,7 +3135,7 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
 }
 ```
 
-See also: [AuthId](./client.md#interface-authid), [DBType](./storage.md#type-dbtype), [EntityTimeStamp](./client.md#interface-entitytimestamp), [FindCertificateFieldsArgs](./client.md#interface-findcertificatefieldsargs), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindCommissionsArgs](./client.md#interface-findcommissionsargs), [FindForUserSincePagedArgs](./client.md#interface-findforusersincepagedargs), [FindMonitorEventsArgs](./client.md#interface-findmonitoreventsargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputTagMapsArgs](./client.md#interface-findoutputtagmapsargs), [FindOutputTagsArgs](./client.md#interface-findoutputtagsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [FindPartialSincePagedArgs](./client.md#interface-findpartialsincepagedargs), [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [FindProvenTxsArgs](./client.md#interface-findproventxsargs), [FindSyncStatesArgs](./client.md#interface-findsyncstatesargs), [FindTransactionsArgs](./client.md#interface-findtransactionsargs), [FindTxLabelMapsArgs](./client.md#interface-findtxlabelmapsargs), [FindTxLabelsArgs](./client.md#interface-findtxlabelsargs), [FindUsersArgs](./client.md#interface-findusersargs), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [StorageKnexOptions](./storage.md#interface-storageknexoptions), [StorageProvider](./storage.md#class-storageprovider), [TableCertificate](./storage.md#interface-tablecertificate), [TableCertificateField](./storage.md#interface-tablecertificatefield), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableCommission](./storage.md#interface-tablecommission), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableOutputTagMap](./storage.md#interface-tableoutputtagmap), [TableOutputX](./storage.md#interface-tableoutputx), [TableProvenTx](./storage.md#interface-tableproventx), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableSettings](./storage.md#interface-tablesettings), [TableSyncState](./storage.md#interface-tablesyncstate), [TableTransaction](./storage.md#interface-tabletransaction), [TableTxLabel](./storage.md#interface-tabletxlabel), [TableTxLabelMap](./storage.md#interface-tabletxlabelmap), [TableUser](./storage.md#interface-tableuser), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [listActions](./storage.md#function-listactions), [listOutputs](./storage.md#function-listoutputs), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus), [verifyTruthy](./client.md#function-verifytruthy)
+See also: [AuthId](./client.md#interface-authid), [DBType](./storage.md#type-dbtype), [EntityTimeStamp](./client.md#interface-entitytimestamp), [FindCertificateFieldsArgs](./client.md#interface-findcertificatefieldsargs), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindCommissionsArgs](./client.md#interface-findcommissionsargs), [FindForUserSincePagedArgs](./client.md#interface-findforusersincepagedargs), [FindMonitorEventsArgs](./client.md#interface-findmonitoreventsargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputTagMapsArgs](./client.md#interface-findoutputtagmapsargs), [FindOutputTagsArgs](./client.md#interface-findoutputtagsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [FindPartialSincePagedArgs](./client.md#interface-findpartialsincepagedargs), [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [FindProvenTxsArgs](./client.md#interface-findproventxsargs), [FindSyncStatesArgs](./client.md#interface-findsyncstatesargs), [FindTransactionsArgs](./client.md#interface-findtransactionsargs), [FindTxLabelMapsArgs](./client.md#interface-findtxlabelmapsargs), [FindTxLabelsArgs](./client.md#interface-findtxlabelsargs), [FindUsersArgs](./client.md#interface-findusersargs), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [StorageKnexOptions](./storage.md#interface-storageknexoptions), [StorageProvider](./storage.md#class-storageprovider), [TableCertificate](./storage.md#interface-tablecertificate), [TableCertificateField](./storage.md#interface-tablecertificatefield), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableCommission](./storage.md#interface-tablecommission), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableOutputTagMap](./storage.md#interface-tableoutputtagmap), [TableProvenTx](./storage.md#interface-tableproventx), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableSettings](./storage.md#interface-tablesettings), [TableSyncState](./storage.md#interface-tablesyncstate), [TableTransaction](./storage.md#interface-tabletransaction), [TableTxLabel](./storage.md#interface-tabletxlabel), [TableTxLabelMap](./storage.md#interface-tabletxlabelmap), [TableUser](./storage.md#interface-tableuser), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [listActions](./storage.md#function-listactions), [listOutputs](./storage.md#function-listoutputs), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus), [verifyTruthy](./client.md#function-verifytruthy)
 
 ###### Method allocateChangeInput
 
@@ -3125,9 +3150,11 @@ See also: [TableOutput](./storage.md#interface-tableoutput)
 
 ###### Method countChangeInputs
 
-Finds closest matching available change output to use as input for new transaction.
-
-Transactionally allocate the output such that
+Counts the outputs for userId in basketId that are spendable: true
+AND whose transaction status is one of:
+- completed
+- unproven
+- sending (if excludeSending is false)
 
 ```ts
 async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> 
@@ -3261,10 +3288,11 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
         invalidSpendableOutputs: TableOutput[];
     }> 
     async updateProvenTxReqDynamics(id: number, update: Partial<TableProvenTxReqDynamics>, trx?: sdk.TrxToken): Promise<number> 
+    async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: sdk.TrxToken): Promise<TableOutputX> 
 }
 ```
 
-See also: [AuthId](./client.md#interface-authid), [Chain](./client.md#type-chain), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ProcessSyncChunkResult](./client.md#interface-processsyncchunkresult), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageFeeModel](./client.md#interface-storagefeemodel), [StorageGetBeefOptions](./client.md#interface-storagegetbeefoptions), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvenOrReq](./client.md#interface-storageprovenorreq), [StorageProviderOptions](./storage.md#interface-storageprovideroptions), [StorageReaderWriter](./storage.md#class-storagereaderwriter), [SyncChunk](./client.md#interface-syncchunk), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableProvenTxReqDynamics](./storage.md#interface-tableproventxreqdynamics), [TableTxLabel](./storage.md#interface-tabletxlabel), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [attemptToPostReqsToNetwork](./storage.md#function-attempttopostreqstonetwork), [createAction](./storage.md#function-createaction), [getBeefForTransaction](./storage.md#function-getbeeffortransaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus)
+See also: [AuthId](./client.md#interface-authid), [Chain](./client.md#type-chain), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ProcessSyncChunkResult](./client.md#interface-processsyncchunkresult), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageFeeModel](./client.md#interface-storagefeemodel), [StorageGetBeefOptions](./client.md#interface-storagegetbeefoptions), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvenOrReq](./client.md#interface-storageprovenorreq), [StorageProviderOptions](./storage.md#interface-storageprovideroptions), [StorageReaderWriter](./storage.md#class-storagereaderwriter), [SyncChunk](./client.md#interface-syncchunk), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableOutputX](./storage.md#interface-tableoutputx), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableProvenTxReqDynamics](./storage.md#interface-tableproventxreqdynamics), [TableTxLabel](./storage.md#interface-tabletxlabel), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [attemptToPostReqsToNetwork](./storage.md#function-attempttopostreqstonetwork), [createAction](./storage.md#function-createaction), [getBeefForTransaction](./storage.md#function-getbeeffortransaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus)
 
 ###### Method confirmSpendableOutputs
 
@@ -4303,6 +4331,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | |
 | --- |
+| [labelToSpecOp](#variable-labeltospecop) |
 | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) |
 | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) |
 | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
@@ -4311,6 +4340,47 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ---
 
+##### Variable: labelToSpecOp
+
+```ts
+labelToSpecOp: Record<string, ListActionsSpecOp> = {
+    [sdk.specOpNoSendActions]: {
+        name: "noSendActions",
+        labelsToIntercept: ["abort"],
+        setStatusFilter: () => ["nosend"],
+        postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            if (specOpLabels.indexOf("abort") >= 0) {
+                for (const tx of txs) {
+                    if (tx.status === "nosend") {
+                        await s.abortAction(auth, { reference: tx.reference! });
+                        tx.status = "failed";
+                    }
+                }
+            }
+        }
+    },
+    [sdk.specOpFailedActions]: {
+        name: "failedActions",
+        labelsToIntercept: ["unfail"],
+        setStatusFilter: () => ["failed"],
+        postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            if (specOpLabels.indexOf("unfail") >= 0) {
+                for (const tx of txs) {
+                    if (tx.status === "failed") {
+                        await s.updateTransaction(tx.transactionId!, { status: "unfail" });
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+See also: [AuthId](./client.md#interface-authid), [ListActionsSpecOp](./storage.md#interface-listactionsspecop), [StorageProvider](./storage.md#class-storageprovider), [TableTransaction](./storage.md#interface-tabletransaction), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [specOpFailedActions](./client.md#variable-specopfailedactions), [specOpNoSendActions](./client.md#variable-specopnosendactions)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Variable: maxPossibleSatoshis
 
 ```ts

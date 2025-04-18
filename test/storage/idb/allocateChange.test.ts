@@ -63,18 +63,46 @@ describe('idb transactionAbort tests', () => {
 
   test('1 exactSatoshis', async () => {
     for (const { storage, setup } of setups) {
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, 11113, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        11113,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o4.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, 11113, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        11113,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o5.outputId)
     }
   })
 
   test('2 targetSatoshis exact', async () => {
     for (const { storage, setup } of setups) {
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o4.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o5.outputId)
     }
   })
@@ -82,9 +110,23 @@ describe('idb transactionAbort tests', () => {
   test('2a targetSatoshis exact unproven', async () => {
     for (const { storage, setup } of setups) {
       await storage.updateTransaction(setup.u1tx2.transactionId, { status: 'unproven' })
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o4.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o5.outputId)
     }
   })
@@ -92,38 +134,101 @@ describe('idb transactionAbort tests', () => {
   test('2b targetSatoshis exact sending', async () => {
     for (const { storage, setup } of setups) {
       await storage.updateTransaction(setup.u1tx2.transactionId, { status: 'sending' })
-      const r3 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, true, setup.u1tx3.transactionId)
+      const r3 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r3).toBeUndefined()
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, false, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        false,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o4.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11113, undefined, false, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11113,
+        undefined,
+        false,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o5.outputId)
     }
   })
 
   test('3 targetSatoshis high', async () => {
     for (const { storage, setup } of setups) {
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11114, undefined, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11114,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o5.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11114, undefined, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11114,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o6.outputId)
     }
   })
 
   test('4 targetSatoshis low', async () => {
     for (const { storage, setup } of setups) {
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11112, undefined, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11112,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o4.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 11112, undefined, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        11112,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o5.outputId)
     }
   })
 
   test('5 targetSatoshis above max', async () => {
     for (const { storage, setup } of setups) {
-      const r = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 111111114, undefined, true, setup.u1tx3.transactionId)
+      const r = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        111111114,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r?.outputId).toBe(setup.u1tx2o8.outputId)
-      const r2 = await storage.allocateChangeInput(setup.u1.userId, setup.u1basket1.basketId, 111111114, undefined, true, setup.u1tx3.transactionId)
+      const r2 = await storage.allocateChangeInput(
+        setup.u1.userId,
+        setup.u1basket1.basketId,
+        111111114,
+        undefined,
+        true,
+        setup.u1tx3.transactionId
+      )
       expect(r2?.outputId).toBe(setup.u1tx2o7.outputId)
     }
   })
