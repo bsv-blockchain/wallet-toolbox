@@ -995,7 +995,7 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: BASKET_MAP.protocol,
         tags: [
           `originator ${originator}`,
-          `privileged ${privileged}`,
+          `privileged ${!!privileged}`,
           `protocolName ${protoName}`,
           `protocolSecurityLevel ${secLevel}`,
           `counterparty ${counterparty}`
@@ -1109,7 +1109,7 @@ export class WalletPermissionsManager implements WalletInterface {
     const result = await this.underlying.listOutputs(
       {
         basket: BASKET_MAP.certificate,
-        tags: [`originator ${originator}`, `privileged ${privileged}`, `type ${certType}`, `verifier ${verifier}`],
+        tags: [`originator ${originator}`, `privileged ${!!privileged}`, `type ${certType}`, `verifier ${verifier}`],
         tagQueryMode: 'all',
         include: 'locking scripts'
       },
@@ -1364,7 +1364,7 @@ export class WalletPermissionsManager implements WalletInterface {
         return [
           await this.encryptPermissionTokenField(r.originator), // domain
           await this.encryptPermissionTokenField(String(expiry)), // expiry
-          await this.encryptPermissionTokenField(r.privileged ? 'true' : 'false'),
+          await this.encryptPermissionTokenField(r.privileged === true ? 'true' : 'false'),
           await this.encryptPermissionTokenField(String(secLevel)),
           await this.encryptPermissionTokenField(protoName),
           await this.encryptPermissionTokenField(r.counterparty!)
@@ -1407,7 +1407,7 @@ export class WalletPermissionsManager implements WalletInterface {
     const tags: string[] = [`originator ${r.originator}`]
     switch (r.type) {
       case 'protocol': {
-        tags.push(`privileged ${r.privileged}`)
+        tags.push(`privileged ${!!r.privileged}`)
         tags.push(`protocolName ${r.protocolID![1]}`)
         tags.push(`protocolSecurityLevel ${r.protocolID![0]}`)
         tags.push(`counterparty ${r.counterparty}`)
@@ -1418,7 +1418,7 @@ export class WalletPermissionsManager implements WalletInterface {
         break
       }
       case 'certificate': {
-        tags.push(`privileged ${r.privileged}`)
+        tags.push(`privileged ${!!r.privileged}`)
         tags.push(`type ${r.certificate!.certType}`)
         tags.push(`verifier ${r.certificate!.verifier}`)
         break
@@ -2412,11 +2412,11 @@ export class WalletPermissionsManager implements WalletInterface {
   private buildRequestKey(r: PermissionRequest): string {
     switch (r.type) {
       case 'protocol':
-        return `proto:${r.originator}:${r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
+        return `proto:${r.originator}:${!!r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
       case 'basket':
         return `basket:${r.originator}:${r.basket}`
       case 'certificate':
-        return `cert:${r.originator}:${r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
+        return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
       case 'spending':
         return `spend:${r.originator}`
     }
