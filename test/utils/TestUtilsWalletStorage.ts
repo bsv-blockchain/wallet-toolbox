@@ -59,6 +59,7 @@ import { Knex, knex as makeKnex } from 'knex'
 
 import * as dotenv from 'dotenv'
 import { TrxToken, WalletServicesOptions } from '../../src/sdk'
+import { StorageIdb } from '../../src/storage/StorageIdb'
 dotenv.config()
 
 const localMySqlConnection = process.env.MYSQL_CONNECTION || ''
@@ -815,6 +816,64 @@ export abstract class TestUtilsWalletStorage {
     const wallet = new Wallet({ chain, keyDeriver, storage, services, monitor })
     const userId = verifyTruthy(await activeStorage.findUserByIdentityKey(identityKey)).userId
     const r: TestWallet<{}> = {
+      rootKey,
+      identityKey,
+      keyDeriver,
+      chain,
+      activeStorage,
+      storage,
+      setup: {},
+      services,
+      monitor,
+      wallet,
+      userId
+    }
+    return r
+  }
+
+  static async createIdbLegacyWalletCopy(
+    databaseName: string,
+  ): Promise<TestWalletProviderNoSetup> {
+    const chain: sdk.Chain = 'test'
+
+    const readerFile = await _tu.existingDataFile(`walletLegacyTestData.sqlite`)
+    const readerKnex = _tu.createLocalSQLite(readerFile)
+    const reader = new StorageKnex({
+      chain,
+      knex: readerKnex,
+      commissionSatoshis: 0,
+      commissionPubKeyHex: undefined,
+      feeModel: { model: 'sat/kb', value: 1 }
+    })
+    await reader.makeAvailable()
+
+    const rootKeyHex = _tu.legacyRootKeyHex
+    const identityKey = '03ac2d10bdb0023f4145cc2eba2fcd2ad3070cb2107b0b48170c46a9440e4cc3fe'
+    const rootKey = PrivateKey.fromHex(rootKeyHex)
+    const keyDeriver = new KeyDeriver(rootKey)
+    const activeStorage = new StorageIdb({
+      chain,
+      commissionSatoshis: 0,
+      commissionPubKeyHex: undefined,
+      feeModel: { model: 'sat/kb', value: 1 }
+    })
+    await activeStorage.dropAllData()
+    await activeStorage.migrate(databaseName, randomBytesHex(33))
+    await activeStorage.makeAvailable()
+
+    const storage = new WalletStorageManager(identityKey, activeStorage)
+    await storage.makeAvailable()
+
+    await storage.syncFromReader(identityKey, new StorageSyncReader({ identityKey }, reader))
+
+    await reader.destroy()
+
+    const services = new Services(chain)
+    const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services)
+    const monitor = new Monitor(monopts)
+    const wallet = new Wallet({ chain, keyDeriver, storage, services, monitor })
+    const userId = verifyTruthy(await activeStorage.findUserByIdentityKey(identityKey)).userId
+    const r: TestWalletProvider<{}> = {
       rootKey,
       identityKey,
       keyDeriver,
@@ -1640,6 +1699,24 @@ export interface MockData {
 
 export interface TestSetup2 extends MockData {}
 
+export interface TestWalletProvider<T> extends TestWalletOnly {
+  activeStorage: StorageProvider
+  setup?: T
+  userId: number
+
+  rootKey: PrivateKey
+  identityKey: string
+  keyDeriver: KeyDeriver
+  chain: sdk.Chain
+  storage: WalletStorageManager
+  services: Services
+  monitor: Monitor
+  wallet: Wallet
+  localStorageIdentityKey?: string
+  clientStorageIdentityKey?: string
+  localBackupStorageIdentityKey?: string
+}
+
 export interface TestWallet<T> extends TestWalletOnly {
   activeStorage: StorageKnex
   setup?: T
@@ -1676,6 +1753,7 @@ async function insertEmptySetup(storage: StorageKnex, identityKey: string): Prom
 export type TestSetup2Wallet = TestWallet<TestSetup2>
 export type TestSetup1Wallet = TestWallet<TestSetup1>
 export type TestWalletNoSetup = TestWallet<{}>
+export type TestWalletProviderNoSetup = TestWalletProvider<{}>
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function expectToThrowWERR<R>(

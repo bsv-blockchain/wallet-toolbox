@@ -1528,7 +1528,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const dbTrx = this.toDbTrx(['transactions'], 'readonly', args.trx)
+    const stores = ['transactions']
+    if (labelIds && labelIds.length > 0) {
+      stores.push('tx_labels_map')
+    }
+    const dbTrx = this.toDbTrx(stores, 'readonly', args.trx)
     let cursor = await dbTrx.objectStore('transactions').openCursor()
     let firstTime = true
     while (cursor) {

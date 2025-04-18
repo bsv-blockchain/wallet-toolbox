@@ -1,6 +1,9 @@
 import { ListActionsArgs } from '@bsv/sdk'
 import { sdk, StorageProvider } from '../../../src/index.client'
-import { _tu, expectToThrowWERR, TestSetup1, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
+import { _tu, expectToThrowWERR, TestSetup1, TestWalletNoSetup, TestWalletProviderNoSetup } from '../../utils/TestUtilsWalletStorage'
+import path from 'path'
+
+import 'fake-indexeddb/auto'
 
 describe('listActions tests', () => {
   jest.setTimeout(99999999)
@@ -10,15 +13,16 @@ describe('listActions tests', () => {
   const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
 
   const env = _tu.getEnv('test')
-  const ctxs: TestWalletNoSetup[] = []
+  const ctxs: TestWalletProviderNoSetup[] = []
   const testName = () => expect.getState().currentTestName || 'test'
-  const name = testName.name
+  const databaseName = path.parse(expect.getState().testPath!).name
 
   beforeAll(async () => {
     if (env.runMySQL) {
-      ctxs.push(await _tu.createLegacyWalletMySQLCopy(name))
+      ctxs.push(await _tu.createLegacyWalletMySQLCopy(databaseName))
     }
-    ctxs.push(await _tu.createLegacyWalletSQLiteCopy(name))
+    //ctxs.push(await _tu.createIdbLegacyWalletCopy(databaseName))
+    ctxs.push(await _tu.createLegacyWalletSQLiteCopy(databaseName))
   })
 
   afterAll(async () => {
