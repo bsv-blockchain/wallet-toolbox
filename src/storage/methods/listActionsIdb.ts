@@ -8,19 +8,17 @@ import {
 } from '@bsv/sdk'
 import { TableOutputX, TableTransaction, TableTxLabel } from '../index.client'
 import { asString, sdk, verifyOne } from '../../index.client'
-import { StorageKnex } from '../StorageKnex'
-import { isListActionsSpecOp } from '../../sdk'
+import { isListActionsSpecOp, TransactionStatus } from '../../sdk'
+import { StorageIdb } from '../StorageIdb'
 import { labelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
 
-export async function listActions(
-  storage: StorageKnex,
+export async function listActionsIdb(
+  storage: StorageIdb,
   auth: sdk.AuthId,
   vargs: sdk.ValidListActionsArgs
 ): Promise<ListActionsResult> {
   const limit = vargs.limit
   const offset = vargs.offset
-
-  const k = storage.toDb(undefined)
 
   const r: ListActionsResult = {
     totalActions: 0,
@@ -55,16 +53,11 @@ export async function listActions(
 
   let labelIds: number[] = []
   if (labels.length > 0) {
-    const q = k<TableTxLabel>('tx_labels')
-      .where({
-        userId: auth.userId,
-        isDeleted: false
-      })
-      .whereNotNull('txLabelId')
-      .whereIn('label', labels)
-      .select('txLabelId')
-    const r = await q
-    labelIds = r.map(r => r.txLabelId!)
+    await storage.filterTxLabels({ partial: { userId: auth.userId, isDeleted: false } }, tl => {
+      if (labels.includes(tl.label)) {
+        labelIds.push(tl.txLabelId)
+      }
+    })
   }
 
   const isQueryModeAll = vargs.labelQueryMode === 'all'
@@ -76,67 +69,21 @@ export async function listActions(
     // any and only non-existing labels, impossible to satisfy.
     return r
 
-  const columns: string[] = [
-    'transactionId',
-    'reference',
-    'txid',
-    'satoshis',
-    'status',
-    'isOutgoing',
-    'description',
-    'version',
-    'lockTime'
-  ]
-
-  const stati: string[] = specOp?.setStatusFilter
+  const stati: TransactionStatus[] = specOp?.setStatusFilter
     ? specOp.setStatusFilter()
     : ['completed', 'unprocessed', 'sending', 'unproven', 'unsigned', 'nosend', 'nonfinal']
 
   const noLabels = labelIds.length === 0
 
-  const makeWithLabelsQueries = () => {
-    const cteq = k.raw(`
-            SELECT ${columns.map(c => 't.' + c).join(',')}, 
-                    (SELECT COUNT(*) 
-                    FROM tx_labels_map AS m 
-                    WHERE m.transactionId = t.transactionId 
-                    AND m.txLabelId IN (${labelIds.join(',')}) 
-                    ) AS lc
-            FROM transactions AS t
-            WHERE t.userId = ${auth.userId}
-            AND t.status in (${stati.map(s => `'${s}'`).join(',')})
-            `)
-
-    const q = k.with('tlc', cteq)
-    q.from('tlc')
-    if (isQueryModeAll) q.where('lc', labelIds.length)
-    else q.where('lc', '>', 0)
-    const qcount = q.clone()
-    q.select(columns)
-    qcount.count('transactionId as total')
-    return { q, qcount }
+  const txs = await storage.findTransactions({ partial: { userId: auth.userId }, status: stati, paged: { limit: vargs.limit, offset: vargs.offset }, noRawTx: true }, labelIds, isQueryModeAll)
+  if (txs.length === vargs.limit) {
+    r.totalActions = await storage.countTransactions({ partial: { userId: auth.userId }, status: stati }, labelIds, isQueryModeAll)
+  } else {
+    r.totalActions = txs.length
   }
-
-  const makeWithoutLabelsQueries = () => {
-    const q = k('transactions').where('userId', auth.userId).whereIn('status', stati)
-    const qcount = q.clone().count('transactionId as total')
-    return { q, qcount }
-  }
-
-  const { q, qcount } = noLabels ? makeWithoutLabelsQueries() : makeWithLabelsQueries()
-
-  q.limit(limit).offset(offset).orderBy('transactionId', 'asc')
-
-  const txs: Partial<TableTransaction>[] = await q
 
   if (specOp?.postProcess) {
     await specOp.postProcess(storage, auth, vargs, specOpLabels, txs)
-  }
-
-  if (!limit || txs.length < limit) r.totalActions = txs.length
-  else {
-    const total = verifyOne(await qcount)['total']
-    r.totalActions = Number(total)
   }
 
   for (const tx of txs) {

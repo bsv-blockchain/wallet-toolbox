@@ -22,6 +22,7 @@ import {
   TableOutput,
   TableOutputBasket,
   TableOutputTag,
+  TableOutputX,
   TableProvenTxReq,
   TableProvenTxReqDynamics,
   TableTransaction,
@@ -634,6 +635,20 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     if (update['notify']) partial['notify'] = update['notify']
 
     return await this.updateProvenTxReq(id, partial, trx)
+  }
+
+  async extendOutput(
+    o: TableOutput,
+    includeBasket = false,
+    includeTags = false,
+    trx?: sdk.TrxToken
+  ): Promise<TableOutputX> {
+    const ox = o as TableOutputX
+    if (includeBasket && ox.basketId) ox.basket = await this.findOutputBasketById(o.basketId!, trx)
+    if (includeTags) {
+      ox.tags = await this.getTagsForOutputId(o.outputId)
+    }
+    return o
   }
 }
 

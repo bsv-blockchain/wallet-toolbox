@@ -11,6 +11,7 @@ import {
   TableOutputBasket,
   TableOutputTag,
   TableOutputTagMap,
+  TableOutputX,
   TableProvenTx,
   TableProvenTxReq,
   TableSettings,
@@ -27,6 +28,7 @@ import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
 import { TransactionStatus } from '../sdk'
+import { listActionsIdb } from './methods/listActionsIdb'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
@@ -428,9 +430,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return tags
   }
 
-  async listActions(auth: sdk.AuthId, args: sdk.ValidListActionsArgs): Promise<ListActionsResult> {
-    throw new Error('Method not implemented.')
+  async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> {
+    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+    return await listActionsIdb(this, auth, vargs)
   }
+
   async listOutputs(auth: sdk.AuthId, args: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> {
     throw new Error('Method not implemented.')
   }
@@ -1510,7 +1514,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void): Promise<void> {
+  async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void, labelIds?: number[], isQueryModeAll?: boolean): Promise<void> {
     if (args.partial.rawTx)
       throw new sdk.WERR_INVALID_PARAMETER(
         'args.partial.rawTx',
@@ -1549,6 +1553,22 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         if (args.partial.lockTime !== undefined && r.lockTime !== args.partial.lockTime) continue
         if (args.partial.txid && r.txid !== args.partial.txid) continue
       }
+      if (labelIds && labelIds.length > 0) {
+        let ids = [...labelIds]
+        await this.filterTxLabelMaps({ partial: { transactionId: r.transactionId }, trx: dbTrx }, lm => {
+          if (ids.length > 0) {
+            const i = ids.indexOf(lm.txLabelId)
+            if (i >= 0) {
+              if (isQueryModeAll) {
+                ids.splice(i, 1)
+              } else {
+                ids = []
+              }
+            }
+          }
+        })
+        if (ids.length > 0) continue
+      }
       if (skipped < offset) {
         skipped++
         continue
@@ -1560,11 +1580,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> {
+  async findTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<TableTransaction[]> {
     const results: TableTransaction[] = []
     await this.filterTransactions(args, r => {
       results.push(this.validateEntity(r))
-    })
+    }, labelIds, isQueryModeAll)
     for (const t of results) {
       if (!args.noRawTx) {
         await this.validateRawTransaction(t, args.trx)
@@ -1692,7 +1712,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
   async countOutputs(args: sdk.FindOutputsArgs): Promise<number> {
     let count = 0
-    await this.filterOutputs(args, () => {
+    await this.filterOutputs({...args, noScript: true}, () => {
       count++
     })
     return count
@@ -1711,11 +1731,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     })
     return count
   }
-  async countTransactions(args: sdk.FindTransactionsArgs): Promise<number> {
+  async countTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
-    await this.filterTransactions(args, () => {
+    await this.filterTransactions({...args, noRawTx: true}, () => {
       count++
-    })
+    }, labelIds, isQueryModeAll)
     return count
   }
   async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> {

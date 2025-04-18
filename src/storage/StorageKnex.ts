@@ -961,20 +961,6 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     return this.validateEntities(labels, undefined, ['isDeleted'])
   }
 
-  async extendOutput(
-    o: TableOutput,
-    includeBasket = false,
-    includeTags = false,
-    trx?: sdk.TrxToken
-  ): Promise<TableOutputX> {
-    const ox = o as TableOutputX
-    if (includeBasket && ox.basketId) ox.basket = await this.findOutputBasketById(o.basketId!, trx)
-    if (includeTags) {
-      ox.tags = await this.getTagsForOutputId(o.outputId)
-    }
-    return o
-  }
-
   override async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> {
     const tags = await this.toDb(trx)<TableOutputTag>('output_tags')
       .join('output_tags_map', 'output_tags_map.outputTagId', 'output_tags.outputTagId')
