@@ -831,6 +831,108 @@ export abstract class TestUtilsWalletStorage {
     return r
   }
 
+  static wrapProfiling(o: Object, name: string) : Record<string, { count: number, totalMsecs: number }> {
+    const getFunctionsNames = (obj: Object) => {
+      let fNames: string[] = [];
+      do {
+        fNames = fNames.concat(Object.getOwnPropertyNames(obj).filter((p) => (p !== 'constructor' && typeof obj[p] === 'function')));
+      } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
+
+      return fNames;
+    };
+
+    const notifyPerformance = (fn, performanceDetails) => {
+      setTimeout(() => {
+          let {functionName, args, startTime, endTime} = performanceDetails;
+          let _args = args;
+          if (Array.isArray(args)) {
+              _args = args.map((arg) => {
+                  if (typeof arg === 'function') {
+                      let fName = arg.name;
+                      if (!fName) {
+                          fName = 'function';
+                      } else if (fName === 'callbackWrapper') {
+                          fName = 'callback';
+                      }
+                      arg = `[${fName} Function]`;
+                  }
+                  return arg;
+              });
+          }
+          fn({functionName, args: _args, startTime, endTime});
+      }, 0);
+    }
+
+    const stats: Record<string, { count: number, totalMsecs: number }> = {};
+
+    function logger(args: {functionName: string, args: any, startTime: number, endTime: number }) {
+      let s = stats[args.functionName];
+      if (!s) {
+        s = { count: 0, totalMsecs: 0 };
+        stats[args.functionName] = s;
+      }
+      s.count++;
+      s.totalMsecs += (args.endTime - args.startTime);
+    } 
+
+    const performanceWrapper = (obj: Object, objectName: string, performanceNotificationCallback: any) => {
+      let _notifyPerformance = notifyPerformance.bind(null, performanceNotificationCallback);
+      let fNames = getFunctionsNames(obj);
+      for (let fName of fNames) {
+        let originalFunction = obj[fName];
+        let wrapperFunction = (...args) => {
+          let callbackFnIndex = -1;
+          let startTime = Date.now();
+          let _callBack = args.filter((arg, i) => {
+            let _isFunction = (typeof arg === 'function');
+            if (_isFunction) {
+              callbackFnIndex = i;
+            }
+            return _isFunction;
+          })[0];
+          if (_callBack) {
+            let callbackWrapper = (...callbackArgs) => {
+              let endTime = Date.now();
+              _notifyPerformance({ 'functionName': `${objectName}.${fName}`, args, startTime, endTime });
+              _callBack.apply(null, callbackArgs);
+            }
+            args[callbackFnIndex] = callbackWrapper;
+          }
+          let originalReturnObject = originalFunction.apply(obj, args);
+          let isPromiseType = (originalReturnObject && typeof originalReturnObject.then === 'function'
+            && typeof originalReturnObject.catch === 'function');
+          if (isPromiseType) {
+            return originalReturnObject
+              .then((resolveArgs) => {
+                let endTime = Date.now();
+                _notifyPerformance({ 'functionName': `${objectName}.${fName}`, args, startTime, endTime });
+                return Promise.resolve(resolveArgs);
+              })
+              .catch((...rejectArgs) => {
+                let endTime = Date.now();
+                _notifyPerformance({ 'functionName': `${objectName}.${fName}`, args, startTime, endTime });
+                return Promise.reject(...rejectArgs);
+              })
+          }
+          if (!_callBack && !isPromiseType) {
+            let endTime = Date.now();
+            _notifyPerformance({ 'functionName': `${objectName}.${fName}`, args, startTime, endTime });
+          }
+          return originalReturnObject;
+        }
+        obj[fName] = wrapperFunction;
+      }
+
+      return obj;
+    }
+
+    const functionNames = getFunctionsNames(o)
+
+    performanceWrapper(o, name, logger)
+
+    return stats
+  }
+
   static async createIdbLegacyWalletCopy(
     databaseName: string,
   ): Promise<TestWalletProviderNoSetup> {
@@ -851,12 +953,14 @@ export abstract class TestUtilsWalletStorage {
     const identityKey = '03ac2d10bdb0023f4145cc2eba2fcd2ad3070cb2107b0b48170c46a9440e4cc3fe'
     const rootKey = PrivateKey.fromHex(rootKeyHex)
     const keyDeriver = new KeyDeriver(rootKey)
+
     const activeStorage = new StorageIdb({
       chain,
       commissionSatoshis: 0,
       commissionPubKeyHex: undefined,
       feeModel: { model: 'sat/kb', value: 1 }
     })
+
     await activeStorage.dropAllData()
     await activeStorage.migrate(databaseName, randomBytesHex(33))
     await activeStorage.makeAvailable()
