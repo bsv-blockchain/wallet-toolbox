@@ -1029,7 +1029,7 @@ export class WalletPermissionsManager implements WalletInterface {
 
       if (
         domainDecoded !== originator ||
-        privDecoded !== privileged ||
+        privDecoded !== !!privileged ||
         secLevelDecoded !== secLevel ||
         protoNameDecoded !== protoName ||
         cptyDecoded !== counterparty
@@ -1132,7 +1132,7 @@ export class WalletPermissionsManager implements WalletInterface {
 
       if (
         domainDecoded !== originator ||
-        privDecoded !== privileged ||
+        privDecoded !== !!privileged ||
         typeDecoded !== certType ||
         verifierDec !== verifier
       ) {
