@@ -339,6 +339,7 @@ describe('WalletPermissionsManager - Permission Request Flow & Active Requests',
         }
         // second time => pretend we found a valid token
         const mockToken: PermissionToken = {
+          tx: [],
           txid: 'abcdef',
           outputIndex: 0,
           outputScript: '00',
@@ -400,6 +401,7 @@ describe('WalletPermissionsManager - Permission Request Flow & Active Requests',
 
       // We'll mock findProtocolToken to return an expired token
       const expiredToken: PermissionToken = {
+        tx: [],
         txid: 'expiredTxid123',
         outputIndex: 0,
         outputScript: '76a914xxxx...88ac',

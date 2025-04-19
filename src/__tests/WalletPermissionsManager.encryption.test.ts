@@ -1,4 +1,4 @@
-import { mockUnderlyingWallet, MockedBSV_SDK } from './WalletPermissionsManager.fixtures'
+import { mockUnderlyingWallet, MockedBSV_SDK, MockTransaction } from './WalletPermissionsManager.fixtures'
 import { WalletPermissionsManager } from '../WalletPermissionsManager'
 import { jest } from '@jest/globals'
 import { Utils } from '@bsv/sdk'
@@ -282,6 +282,22 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
 
   describe('Integration Test for listOutputs decryption', () => {
     it('should decrypt customInstructions in listOutputs if encryptWalletMetadata=true', async () => {
+      jest.spyOn(MockedBSV_SDK.Transaction, 'fromBEEF').mockImplementation(() => {
+        const mockTx = new MockTransaction()
+        // Add outputs with lockingScript
+        mockTx.outputs = [
+          {
+            lockingScript: {
+              // Ensure this matches what PushDrop.decode expects to work with
+              toHex: () => 'some script'
+            }
+          }
+        ]
+        // Add the toBEEF method
+        mockTx.toBEEF = () => []
+        return mockTx
+      })
+
       const manager = new WalletPermissionsManager(underlying, 'admin.domain.com', {
         encryptWalletMetadata: true
       })
@@ -332,6 +348,31 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
     })
 
     it('should fallback to the original ciphertext if decrypt fails in listOutputs', async () => {
+      jest.spyOn(MockedBSV_SDK.Transaction, 'fromBEEF').mockImplementation(() => {
+        const mockTx = new MockTransaction()
+        // Add outputs with lockingScript
+        mockTx.outputs = [
+          {
+            lockingScript: {
+              // Ensure this matches what PushDrop.decode expects to work with
+              toHex: () => 'some script'
+            }
+          }
+        ]
+        // Add the toBEEF method
+        mockTx.toBEEF = () => []
+        return mockTx
+      })
+      // Add this to your test alongside the Transaction.fromBEEF mock
+      jest.spyOn(MockedBSV_SDK.PushDrop, 'decode').mockReturnValue({
+        fields: [
+          // Values that will decrypt to the expected values for domain, expiry, and basket
+          Utils.toArray('encoded-domain'),
+          Utils.toArray('encoded-expiry'),
+          Utils.toArray('encoded-basket')
+        ]
+      })
+
       const manager = new WalletPermissionsManager(underlying, 'admin.domain.com', {
         encryptWalletMetadata: true
       })
@@ -342,7 +383,7 @@ describe('WalletPermissionsManager - Metadata Encryption & Decryption', () => {
         totalOutputs: 1,
         outputs: [
           {
-            outpoint: 'fakeTxid.1',
+            outpoint: 'fakeTxid.0',
             satoshis: 500,
             lockingScript: 'OP_RETURN something',
             basket: 'some-basket',

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
-import { mockUnderlyingWallet, MockedBSV_SDK } from './WalletPermissionsManager.fixtures'
+import { mockUnderlyingWallet, MockedBSV_SDK, MockTransaction } from './WalletPermissionsManager.fixtures'
 import { WalletPermissionsManager, PermissionRequest, PermissionToken } from '../WalletPermissionsManager'
+import { Utils } from '@bsv/sdk'
 
 // Re-mock @bsv/sdk with our fixture classes (MockTransaction, MockLockingScript, etc.)
 jest.mock('@bsv/sdk', () => MockedBSV_SDK)
@@ -340,6 +341,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     it('should spend the old token input and create a new protocol token output with updated expiry', async () => {
       // Suppose the user has an old protocol token:
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'oldTokenTX',
         outputIndex: 2,
         outputScript: '76a914...ac', // not used by the mock
@@ -399,6 +401,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
 
     it('should allow updating the authorizedAmount in DSAP renewal', async () => {
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'dsap-old-tx',
         outputIndex: 0,
         outputScript: 'sample script',
@@ -462,6 +465,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     it('should create a transaction that consumes (spends) the old token with no new outputs', async () => {
       // A sample old token
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'revocableToken.txid',
         outputIndex: 1,
         outputScript: 'fakePushdropScript',
@@ -498,8 +502,43 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     })
 
     it('should remove the old token from listing after revocation', async () => {
+      jest.spyOn(MockedBSV_SDK.Transaction, 'fromBEEF').mockImplementation(() => {
+        const mockTx = new MockTransaction()
+        // Add outputs with lockingScript
+        mockTx.outputs = [
+          {
+            lockingScript: {
+              // Ensure this matches what PushDrop.decode expects to work with
+              toHex: () => 'some script'
+            }
+          }
+        ]
+        // Add the toBEEF method
+        mockTx.toBEEF = () => []
+        return mockTx
+      })
+      // Add this to your test alongside the Transaction.fromBEEF mock
+      jest.spyOn(MockedBSV_SDK.PushDrop, 'decode').mockReturnValue({
+        fields: [
+          // Values that will decrypt to the expected values for domain, expiry, and basket
+          Utils.toArray('encoded-domain'),
+          Utils.toArray('encoded-expiry'),
+          Utils.toArray('encoded-basket')
+        ]
+      })
+
+      // You'll also need to mock the decryptPermissionTokenField method
+      // to handle these encoded values
+      jest.spyOn(manager as any, 'decryptPermissionTokenField').mockImplementation(field => {
+        if (field === 'encoded-domain') return new Uint8Array([...Buffer.from('example.com')])
+        if (field === 'encoded-expiry') return new Uint8Array([...Buffer.from('1735689600')])
+        if (field === 'encoded-basket') return new Uint8Array([...Buffer.from('protocol-permission')])
+        return new Uint8Array()
+      })
+
       // 1) Setup the underlying wallet to initially return the old token in listOutputs
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'aaaa1111',
         outputIndex: 0,
         outputScript: 'some script',

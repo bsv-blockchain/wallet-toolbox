@@ -186,6 +186,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
       // Suppose the user already had a token but it’s expired. We mock `findProtocolToken` so that
       // it returns an expired token, forcing a renewal request.
       const expiredToken: PermissionToken = {
+        tx: [],
         txid: 'oldtxid123',
         outputIndex: 0,
         outputScript: 'deadbeef',
@@ -366,7 +367,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
       expect(underlying.listOutputs).toHaveBeenLastCalledWith(
         {
           basket: 'admin basket-access',
-          include: 'locking scripts',
+          include: 'entire transactions',
           tagQueryMode: 'all',
           tags: ['originator some-user.com', 'basket user-basket']
         },
@@ -470,6 +471,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
 
       // Suppose we find an existing token that covers fields: ['name', 'dob', 'nationality']
       const existingToken: PermissionToken = {
+        tx: [],
         txid: 'aabbcc',
         outputIndex: 0,
         outputScript: 'scriptHex',
@@ -541,6 +543,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
 
       // Mock an expired token
       const expiredCertToken: PermissionToken = {
+        tx: [],
         txid: 'old-expired',
         outputIndex: 0,
         outputScript: 'deadbeef',
@@ -666,6 +669,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
       // Suppose we find an existing DSAP token with authorizedAmount=500
       // manager.findSpendingToken() is used internally, so let's mock it
       const existingSpendingToken: PermissionToken = {
+        tx: [],
         txid: 'dsap-old',
         outputIndex: 0,
         outputScript: 'scriptHex',
@@ -711,6 +715,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
 
       // existing DSAP token with authorizedAmount=1000
       const dsapToken: PermissionToken = {
+        tx: [],
         txid: 'dsap123',
         outputIndex: 0,
         outputScript: '9218',

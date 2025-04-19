@@ -33,6 +33,11 @@ export class MockTransaction {
   getFee(): number {
     return this.fee
   }
+
+  toBEEF(): number[] {
+    // Return an empty array for the BEEF representation
+    return []
+  }
 }
 
 ;(MockTransaction as any).fromAtomicBEEF = jest.fn(() => {
@@ -256,7 +261,7 @@ export function mockUnderlyingWallet(): jest.Mocked<any> {
       subject: '02aaaaaaaaaa...',
       serialNumber: 'serial123',
       certifier: '02ccccccccccc...',
-      revocationOutpoint: 'some.txid.1',
+      revocationOutpoint: 'sometxid.1',
       signature: 'deadbeef',
       fields: { name: 'Alice', dob: '1990-01-01' }
     }),
