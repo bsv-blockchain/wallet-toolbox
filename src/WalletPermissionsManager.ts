@@ -70,6 +70,9 @@ export interface PermissionToken {
   /** The transaction ID where this token resides. */
   txid: string
 
+  /** The current transaction encapsulating the token. */
+  tx: number[]
+
   /** The output index within that transaction. */
   outputIndex: number
 
@@ -1001,14 +1004,15 @@ export class WalletPermissionsManager implements WalletInterface {
           `counterparty ${counterparty}`
         ],
         tagQueryMode: 'all',
-        include: 'locking scripts'
+        include: 'entire transactions'
       },
       this.adminOriginator
     )
 
     for (const out of result.outputs) {
-      const script = LockingScript.fromHex(out.lockingScript!)
-      const dec = PushDrop.decode(script)
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec || !dec.fields || dec.fields.length < 6) continue
       const domainRaw = dec.fields[0]
       const expiryRaw = dec.fields[1]
@@ -1040,9 +1044,10 @@ export class WalletPermissionsManager implements WalletInterface {
         continue
       }
       return {
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         satoshis: out.satoshis,
         originator,
         privileged,
@@ -1066,13 +1071,15 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: BASKET_MAP.basket,
         tags: [`originator ${originator}`, `basket ${basket}`],
         tagQueryMode: 'all',
-        include: 'locking scripts'
+        include: 'entire transactions'
       },
       this.adminOriginator
     )
 
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 3) continue
       const domainRaw = dec.fields[0]
       const expiryRaw = dec.fields[1]
@@ -1085,9 +1092,10 @@ export class WalletPermissionsManager implements WalletInterface {
       if (!includeExpired && this.isTokenExpired(expiryDecoded)) continue
 
       return {
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         satoshis: out.satoshis,
         originator,
         basketName: basketDecoded,
@@ -1111,13 +1119,15 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: BASKET_MAP.certificate,
         tags: [`originator ${originator}`, `privileged ${!!privileged}`, `type ${certType}`, `verifier ${verifier}`],
         tagQueryMode: 'all',
-        include: 'locking scripts'
+        include: 'entire transactions'
       },
       this.adminOriginator
     )
 
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 6) continue
       const [domainRaw, expiryRaw, privRaw, typeRaw, fieldsRaw, verifierRaw] = dec.fields
 
@@ -1147,9 +1157,10 @@ export class WalletPermissionsManager implements WalletInterface {
         continue
       }
       return {
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         satoshis: out.satoshis,
         originator,
         privileged,
@@ -1169,13 +1180,15 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: BASKET_MAP.spending,
         tags: [`originator ${originator}`],
         tagQueryMode: 'all',
-        include: 'locking scripts'
+        include: 'entire transactions'
       },
       this.adminOriginator
     )
 
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 2) continue
       const domainRaw = dec.fields[0]
       const amtRaw = dec.fields[1]
@@ -1186,9 +1199,10 @@ export class WalletPermissionsManager implements WalletInterface {
       const authorizedAmount = parseInt(amtDecodedStr, 10)
 
       return {
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         satoshis: out.satoshis,
         originator,
         authorizedAmount,
@@ -1313,6 +1327,7 @@ export class WalletPermissionsManager implements WalletInterface {
     const { signableTransaction } = await this.createAction(
       {
         description: `Renew ${r.type} permission`,
+        inputBEEF: oldToken.tx,
         inputs: [
           {
             outpoint: oldOutpoint,
@@ -1447,7 +1462,7 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: basketName,
         tags,
         tagQueryMode: 'all',
-        include: 'locking scripts',
+        include: 'entire transactions',
         limit: 100
       },
       this.adminOriginator
@@ -1455,7 +1470,9 @@ export class WalletPermissionsManager implements WalletInterface {
 
     const tokens: PermissionToken[] = []
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 6) continue
       const [domainRaw, expiryRaw, privRaw, secRaw, protoRaw, cptyRaw] = dec.fields
 
@@ -1467,9 +1484,10 @@ export class WalletPermissionsManager implements WalletInterface {
       const cptyDec = Utils.toUTF8(await this.decryptPermissionTokenField(cptyRaw))
 
       tokens.push({
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         satoshis: out.satoshis,
         originator: domainDec,
         expiry: expiryDec,
@@ -1519,7 +1537,7 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: basketName,
         tags,
         tagQueryMode: 'all',
-        include: 'locking scripts',
+        include: 'entire transactions',
         limit: 10000
       },
       this.adminOriginator
@@ -1527,17 +1545,20 @@ export class WalletPermissionsManager implements WalletInterface {
 
     const tokens: PermissionToken[] = []
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 3) continue
       const [domainRaw, expiryRaw, basketRaw] = dec.fields
       const domainDecoded = Utils.toUTF8(await this.decryptPermissionTokenField(domainRaw))
       const expiryDecoded = parseInt(Utils.toUTF8(await this.decryptPermissionTokenField(expiryRaw)), 10)
       const basketDecoded = Utils.toUTF8(await this.decryptPermissionTokenField(basketRaw))
       tokens.push({
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
         satoshis: out.satoshis,
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         originator: domainDecoded,
         basketName: basketDecoded,
         expiry: expiryDecoded
@@ -1577,7 +1598,7 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: basketName,
         tags,
         tagQueryMode: 'all',
-        include: 'locking scripts',
+        include: 'entire transactions',
         limit: 10000
       },
       this.adminOriginator
@@ -1585,17 +1606,20 @@ export class WalletPermissionsManager implements WalletInterface {
 
     const tokens: PermissionToken[] = []
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 2) continue
       const [domainRaw, amtRaw] = dec.fields
       const domainDecoded = Utils.toUTF8(await this.decryptPermissionTokenField(domainRaw))
       const amtDecodedStr = Utils.toUTF8(await this.decryptPermissionTokenField(amtRaw))
       const authorizedAmount = parseInt(amtDecodedStr, 10)
       tokens.push({
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
         satoshis: out.satoshis,
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         originator: domainDecoded,
         authorizedAmount,
         expiry: 0
@@ -1635,7 +1659,7 @@ export class WalletPermissionsManager implements WalletInterface {
         basket: basketName,
         tags,
         tagQueryMode: 'all',
-        include: 'locking scripts',
+        include: 'entire transactions',
         limit: 10000
       },
       this.adminOriginator
@@ -1643,7 +1667,9 @@ export class WalletPermissionsManager implements WalletInterface {
 
     const tokens: PermissionToken[] = []
     for (const out of result.outputs) {
-      const dec = PushDrop.decode(LockingScript.fromHex(out.lockingScript!))
+      const [txid, outputIndexStr] = out.outpoint.split('.')
+      const tx = Transaction.fromBEEF(result.BEEF!, txid)
+      const dec = PushDrop.decode(tx.outputs[Number(outputIndexStr)].lockingScript)
       if (!dec?.fields || dec.fields.length < 6) continue
       const [domainRaw, expiryRaw, privRaw, typeRaw, fieldsRaw, verifierRaw] = dec.fields
       const domainDecoded = Utils.toUTF8(await this.decryptPermissionTokenField(domainRaw))
@@ -1654,10 +1680,11 @@ export class WalletPermissionsManager implements WalletInterface {
       const fieldsJson = await this.decryptPermissionTokenField(fieldsRaw)
       const allFields = JSON.parse(Utils.toUTF8(fieldsJson)) as string[]
       tokens.push({
+        tx: tx.toBEEF(),
         txid: out.outpoint.split('.')[0],
         outputIndex: parseInt(out.outpoint.split('.')[1], 10),
         satoshis: out.satoshis,
-        outputScript: out.lockingScript!,
+        outputScript: tx.outputs[Number(outputIndexStr)].lockingScript.toHex(),
         originator: domainDecoded,
         privileged: privDecoded,
         certType: typeDecoded,
@@ -1705,6 +1732,7 @@ export class WalletPermissionsManager implements WalletInterface {
     const { signableTransaction } = await this.createAction(
       {
         description: `Revoke permission`,
+        inputBEEF: oldToken.tx,
         inputs: [
           {
             outpoint: oldOutpoint,

@@ -340,6 +340,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     it('should spend the old token input and create a new protocol token output with updated expiry', async () => {
       // Suppose the user has an old protocol token:
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'oldTokenTX',
         outputIndex: 2,
         outputScript: '76a914...ac', // not used by the mock
@@ -399,6 +400,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
 
     it('should allow updating the authorizedAmount in DSAP renewal', async () => {
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'dsap-old-tx',
         outputIndex: 0,
         outputScript: 'sample script',
@@ -462,6 +464,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     it('should create a transaction that consumes (spends) the old token with no new outputs', async () => {
       // A sample old token
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'revocableToken.txid',
         outputIndex: 1,
         outputScript: 'fakePushdropScript',
@@ -500,6 +503,7 @@ describe('WalletPermissionsManager - On-Chain Token Creation, Renewal & Revocati
     it('should remove the old token from listing after revocation', async () => {
       // 1) Setup the underlying wallet to initially return the old token in listOutputs
       const oldToken: PermissionToken = {
+        tx: [],
         txid: 'aaaa1111',
         outputIndex: 0,
         outputScript: 'some script',
