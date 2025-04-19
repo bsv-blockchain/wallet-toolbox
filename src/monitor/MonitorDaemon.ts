@@ -118,7 +118,6 @@ export class MonitorDaemon {
 
     if (a.monitor._tasks.length === 0) {
       a.monitor.addMultiUserTasks()
-      a.monitor.addTask(new TaskUnFail(a.monitor))
     }
   }
 
