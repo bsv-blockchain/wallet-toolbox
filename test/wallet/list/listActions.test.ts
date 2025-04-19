@@ -28,7 +28,7 @@ describe('listActions tests', () => {
       ctxs.push(await _tu.createLegacyWalletMySQLCopy(databaseName))
     }
     ctxs.push(await _tu.createIdbLegacyWalletCopy(databaseName))
-    //ctxs.push(await _tu.createLegacyWalletSQLiteCopy(databaseName))
+    ctxs.push(await _tu.createLegacyWalletSQLiteCopy(databaseName))
   })
 
   afterAll(async () => {
