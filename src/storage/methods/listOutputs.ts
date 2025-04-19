@@ -106,7 +106,6 @@ export async function listOutputs(
     // any and only non-existing labels, impossible to satisfy.
     return r
 
-
   const columns: string[] = [
     'outputId',
     'transactionId',

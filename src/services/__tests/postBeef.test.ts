@@ -29,7 +29,7 @@ function createServices(chain: sdk.Chain): Services {
   }
   if (env.whatsonchainApiKey) options.whatsOnChainApiKey = env.whatsonchainApiKey
   if (env.bitailsApiKey) options.bitailsApiKey = env.bitailsApiKey
-  console.log(`
+  logger(`
 API Keys:
 TAAL ${options.taalApiKey!.slice(0, 20)}
 WHATSONCHAIN ${options.whatsOnChainApiKey!.slice(0, 20)}

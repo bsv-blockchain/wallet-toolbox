@@ -1,5 +1,5 @@
 import { ListActionsArgs } from '@bsv/sdk'
-import { _tu } from '../../utils/TestUtilsWalletStorage'
+import { _tu, logger } from '../../utils/TestUtilsWalletStorage'
 
 import 'fake-indexeddb/auto'
 
@@ -29,6 +29,6 @@ describe('idbSpeed tests', () => {
     for (const [key, value] of Object.entries(stats)) {
       log += `${key},${value.count},${value.totalMsecs},${value.totalMsecs / value.count}\n`
     }
-    console.log(log)
+    logger(log)
   })
 })

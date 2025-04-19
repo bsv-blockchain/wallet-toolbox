@@ -7748,6 +7748,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     }> 
     async updateProvenTxReqDynamics(id: number, update: Partial<TableProvenTxReqDynamics>, trx?: sdk.TrxToken): Promise<number> 
     async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: sdk.TrxToken): Promise<TableOutputX> 
+    async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> 
 }
 ```
 

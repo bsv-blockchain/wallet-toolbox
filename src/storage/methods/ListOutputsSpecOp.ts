@@ -1,43 +1,43 @@
-import { ListOutputsResult } from '@bsv/sdk';
-import { StorageProvider, TableOutput } from '../index.client';
-import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client';
-import { ValidListOutputsArgs } from '../../sdk/validationHelpers';
+import { ListOutputsResult } from '@bsv/sdk'
+import { StorageProvider, TableOutput } from '../index.client'
+import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client'
+import { ValidListOutputsArgs } from '../../sdk/validationHelpers'
 
 export interface ListOutputsSpecOp {
-  name: string;
-  useBasket?: string;
-  ignoreLimit?: boolean;
-  includeOutputScripts?: boolean;
+  name: string
+  useBasket?: string
+  ignoreLimit?: boolean
+  includeOutputScripts?: boolean
   resultFromTags?: (
     s: StorageProvider,
     auth: sdk.AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[]
-  ) => Promise<ListOutputsResult>;
+  ) => Promise<ListOutputsResult>
   resultFromOutputs?: (
     s: StorageProvider,
     auth: sdk.AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[],
     outputs: TableOutput[]
-  ) => Promise<ListOutputsResult>;
+  ) => Promise<ListOutputsResult>
   filterOutputs?: (
     s: StorageProvider,
     auth: sdk.AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[],
     outputs: TableOutput[]
-  ) => Promise<TableOutput[]>;
+  ) => Promise<TableOutput[]>
   /**
    * undefined to intercept no tags from vargs,
    * empty array to intercept all tags,
    * or an explicit array of tags to intercept.
    */
-  tagsToIntercept?: string[];
+  tagsToIntercept?: string[]
   /**
    * How many positional tags to intercept.
    */
-  tagsParamsCount?: number;
+  tagsParamsCount?: number
 }
 
 export const basketToSpecOp: Record<string, ListOutputsSpecOp> = {

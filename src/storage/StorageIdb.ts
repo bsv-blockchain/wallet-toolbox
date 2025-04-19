@@ -1387,7 +1387,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     let skipped = 0
     let count = 0
     const dbTrx = this.toDbTrx(['monitor_events'], 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], 'monitor_events', unknown, 'readwrite' | 'readonly'> | null
+    let cursor: IDBPCursorWithValue<
+      StorageIdbSchema,
+      string[],
+      'monitor_events',
+      unknown,
+      'readwrite' | 'readonly'
+    > | null
     if (args.partial?.id) {
       cursor = await dbTrx.objectStore('monitor_events').openCursor(args.partial.id)
     } else {
@@ -1624,9 +1630,14 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
   async findOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> {
     const results: TableOutput[] = []
-    await this.filterOutputs(args, r => {
-      results.push(this.validateEntity(r))
-    }, tagIds, isQueryModeAll)
+    await this.filterOutputs(
+      args,
+      r => {
+        results.push(this.validateEntity(r))
+      },
+      tagIds,
+      isQueryModeAll
+    )
     for (const o of results) {
       if (!args.noScript) {
         await this.validateOutputScript(o)
@@ -2024,9 +2035,14 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
   async countOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
-    await this.filterOutputs({ ...args, noScript: true }, () => {
-      count++
-    }, tagIds, isQueryModeAll)
+    await this.filterOutputs(
+      { ...args, noScript: true },
+      () => {
+        count++
+      },
+      tagIds,
+      isQueryModeAll
+    )
     return count
   }
   async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> {

@@ -338,7 +338,6 @@ describe('listOutputs test', () => {
         }
         expect(missingTags.length).toBe(0)
       })
-
     }
   })
 })

@@ -22,22 +22,23 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [TableOutputBasket](#interface-tableoutputbasket) |
-| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TableOutputTag](#interface-tableoutputtag) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TableOutputTagMap](#interface-tableoutputtagmap) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [TableOutputX](#interface-tableoutputx) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageKnexOptions](#interface-storageknexoptions) | [TableProvenTx](#interface-tableproventx) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageProviderOptions](#interface-storageprovideroptions) | [TableProvenTxReq](#interface-tableproventxreq) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageReaderOptions](#interface-storagereaderoptions) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [TableSettings](#interface-tablesettings) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncError](#interface-syncerror) | [TableSyncState](#interface-tablesyncstate) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [SyncMap](#interface-syncmap) | [TableTransaction](#interface-tabletransaction) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCertificate](#interface-tablecertificate) | [TableTxLabel](#interface-tabletxlabel) |
-| [ListActionsSpecOp](#interface-listactionsspecop) | [TableCertificateField](#interface-tablecertificatefield) | [TableTxLabelMap](#interface-tabletxlabelmap) |
-| [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableCertificateX](#interface-tablecertificatex) | [TableUser](#interface-tableuser) |
-| [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableCommission](#interface-tablecommission) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
-| [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
-| [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [TableOutput](#interface-tableoutput) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [TableOutputTag](#interface-tableoutputtag) |
+| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TableOutputTagMap](#interface-tableoutputtagmap) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TableOutputX](#interface-tableoutputx) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [TableProvenTx](#interface-tableproventx) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageKnexOptions](#interface-storageknexoptions) | [TableProvenTxReq](#interface-tableproventxreq) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageProviderOptions](#interface-storageprovideroptions) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageReaderOptions](#interface-storagereaderoptions) | [TableSettings](#interface-tablesettings) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [TableSyncState](#interface-tablesyncstate) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncError](#interface-syncerror) | [TableTransaction](#interface-tabletransaction) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [SyncMap](#interface-syncmap) | [TableTxLabel](#interface-tabletxlabel) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCertificate](#interface-tablecertificate) | [TableTxLabelMap](#interface-tabletxlabelmap) |
+| [ListActionsSpecOp](#interface-listactionsspecop) | [TableCertificateField](#interface-tablecertificatefield) | [TableUser](#interface-tableuser) |
+| [ListOutputsSpecOp](#interface-listoutputsspecop) | [TableCertificateX](#interface-tablecertificatex) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
+| [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableCommission](#interface-tablecommission) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
+| [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableMonitorEvent](#interface-tablemonitorevent) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TableOutput](#interface-tableoutput) |  |
+| [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [TableOutputBasket](#interface-tableoutputbasket) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -304,6 +305,45 @@ or an explicit array of labels to intercept.
 
 ```ts
 labelsToIntercept?: string[]
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: ListOutputsSpecOp
+
+```ts
+export interface ListOutputsSpecOp {
+    name: string;
+    useBasket?: string;
+    ignoreLimit?: boolean;
+    includeOutputScripts?: boolean;
+    resultFromTags?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]) => Promise<ListOutputsResult>;
+    resultFromOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<ListOutputsResult>;
+    filterOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<TableOutput[]>;
+    tagsToIntercept?: string[];
+    tagsParamsCount?: number;
+}
+```
+
+See also: [AuthId](./client.md#interface-authid), [StorageProvider](./storage.md#class-storageprovider), [TableOutput](./storage.md#interface-tableoutput), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs)
+
+###### Property tagsParamsCount
+
+How many positional tags to intercept.
+
+```ts
+tagsParamsCount?: number
+```
+
+###### Property tagsToIntercept
+
+undefined to intercept no tags from vargs,
+empty array to intercept all tags,
+or an explicit array of tags to intercept.
+
+```ts
+tagsToIntercept?: string[]
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -3034,7 +3074,6 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     override async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> 
     toDb(trx?: sdk.TrxToken) 
     async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> 
-    async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> 
     _verifiedReadyForDatabaseAccess: boolean = false;
     async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> 
     validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
@@ -3289,6 +3328,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     }> 
     async updateProvenTxReqDynamics(id: number, update: Partial<TableProvenTxReqDynamics>, trx?: sdk.TrxToken): Promise<number> 
     async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: sdk.TrxToken): Promise<TableOutputX> 
+    async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> 
 }
 ```
 
@@ -4331,6 +4371,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | |
 | --- |
+| [basketToSpecOp](#variable-baskettospecop) |
 | [labelToSpecOp](#variable-labeltospecop) |
 | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) |
 | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) |
@@ -4340,6 +4381,81 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ---
 
+##### Variable: basketToSpecOp
+
+```ts
+basketToSpecOp: Record<string, ListOutputsSpecOp> = {
+    [sdk.specOpWalletBalance]: {
+        name: "totalOutputsIsWalletBalance",
+        useBasket: "default",
+        ignoreLimit: true,
+        resultFromOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<ListOutputsResult> => {
+            let totalOutputs = 0;
+            for (const o of outputs)
+                totalOutputs += o.satoshis;
+            return { totalOutputs, outputs: [] };
+        }
+    },
+    [sdk.specOpInvalidChange]: {
+        name: "invalidChangeOutputs",
+        useBasket: "default",
+        ignoreLimit: true,
+        includeOutputScripts: true,
+        tagsToIntercept: ["release", "all"],
+        filterOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<TableOutput[]> => {
+            const filteredOutputs: TableOutput[] = [];
+            const services = s.getServices();
+            for (const o of outputs) {
+                await s.validateOutputScript(o);
+                let ok: boolean | undefined = false;
+                let r: sdk.GetUtxoStatusResult;
+                if (o.lockingScript && o.lockingScript.length > 0) {
+                    const hash = services.hashOutputScript(asString(o.lockingScript));
+                    r = await services.getUtxoStatus(hash, undefined, `${o.txid}.${o.vout}`);
+                    ok = r.isUtxo;
+                }
+                else {
+                    ok = undefined;
+                }
+                if (ok === false) {
+                    filteredOutputs.push(o);
+                }
+            }
+            if (specOpTags.indexOf("release") >= 0) {
+                for (const o of filteredOutputs) {
+                    await s.updateOutput(o.outputId, { spendable: false });
+                    o.spendable = false;
+                }
+            }
+            return filteredOutputs;
+        }
+    },
+    [sdk.specOpSetWalletChangeParams]: {
+        name: "setWalletChangeParams",
+        tagsParamsCount: 2,
+        resultFromTags: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]): Promise<ListOutputsResult> => {
+            if (specOpTags.length !== 2)
+                throw new sdk.WERR_INVALID_PARAMETER("numberOfDesiredUTXOs and minimumDesiredUTXOValue", "valid");
+            const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]));
+            const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]));
+            const basket = verifyOne(await s.findOutputBaskets({
+                partial: { userId: verifyId(auth.userId), name: "default" }
+            }));
+            await s.updateOutputBasket(basket.basketId, {
+                numberOfDesiredUTXOs,
+                minimumDesiredUTXOValue
+            });
+            return { totalOutputs: 0, outputs: [] };
+        }
+    }
+}
+```
+
+See also: [AuthId](./client.md#interface-authid), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [ListOutputsSpecOp](./storage.md#interface-listoutputsspecop), [StorageProvider](./storage.md#class-storageprovider), [TableOutput](./storage.md#interface-tableoutput), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WERR_INVALID_PARAMETER](./client.md#class-werr_invalid_parameter), [asString](./client.md#function-asstring), [specOpInvalidChange](./client.md#variable-specopinvalidchange), [specOpSetWalletChangeParams](./client.md#variable-specopsetwalletchangeparams), [specOpWalletBalance](./client.md#variable-specopwalletbalance), [verifyId](./client.md#function-verifyid), [verifyInteger](./client.md#function-verifyinteger), [verifyOne](./client.md#function-verifyone)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Variable: labelToSpecOp
 
 ```ts
