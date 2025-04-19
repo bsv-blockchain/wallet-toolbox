@@ -29,6 +29,7 @@ import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
 import { TransactionStatus } from '../sdk'
 import { listActionsIdb } from './methods/listActionsIdb'
+import { listOutputsIdb } from './methods/listOutputsIdb'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
@@ -440,8 +441,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return await listActionsIdb(this, auth, vargs)
   }
 
-  async listOutputs(auth: sdk.AuthId, args: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> {
-    throw new Error('Method not implemented.')
+  async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> {
+    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+    return await listOutputsIdb(this, auth, vargs)
   }
 
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
@@ -1385,13 +1387,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     let skipped = 0
     let count = 0
     const dbTrx = this.toDbTrx(['monitor_events'], 'readonly', args.trx)
-    let cursor: IDBPCursorWithValue<
-      StorageIdbSchema,
-      string[],
-      'monitor_events',
-      unknown,
-      'readwrite' | 'readonly'
-    > | null
+    let cursor: IDBPCursorWithValue<StorageIdbSchema, string[], 'monitor_events', unknown, 'readwrite' | 'readonly'> | null
     if (args.partial?.id) {
       cursor = await dbTrx.objectStore('monitor_events').openCursor(args.partial.id)
     } else {
@@ -1498,7 +1494,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void): Promise<void> {
+  async filterOutputs(
+    args: sdk.FindOutputsArgs,
+    filtered: (v: TableOutput) => void,
+    tagIds?: number[],
+    isQueryModeAll?: boolean
+  ): Promise<void> {
     // args.txStatus
     // args.noScript
     if (args.partial.lockingScript)
@@ -1509,7 +1510,14 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
-    const dbTrx = this.toDbTrx(['outputs'], 'readonly', args.trx)
+    const stores = ['outputs']
+    if (tagIds && tagIds.length > 0) {
+      stores.push('output_tags_map')
+    }
+    if (args.txStatus) {
+      stores.push('transactions')
+    }
+    const dbTrx = this.toDbTrx(stores, 'readonly', args.trx)
     let cursor:
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'outputs', unknown, 'readwrite' | 'readonly'>
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'outputs', 'userId', 'readwrite' | 'readonly'>
@@ -1580,9 +1588,25 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         const count = await this.countTransactions({
           partial: { transactionId: r.transactionId },
           status: args.txStatus,
-          trx: args.trx
+          trx: dbTrx
         })
         if (count === 0) continue
+      }
+      if (tagIds && tagIds.length > 0) {
+        let ids = [...tagIds]
+        await this.filterOutputTagMaps({ partial: { outputId: r.outputId }, trx: dbTrx }, tm => {
+          if (ids.length > 0) {
+            const i = ids.indexOf(tm.outputTagId)
+            if (i >= 0) {
+              if (isQueryModeAll) {
+                ids.splice(i, 1)
+              } else {
+                ids = []
+              }
+            }
+          }
+        })
+        if (ids.length > 0) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1598,11 +1622,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
+  async findOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> {
     const results: TableOutput[] = []
     await this.filterOutputs(args, r => {
       results.push(this.validateEntity(r))
-    })
+    }, tagIds, isQueryModeAll)
     for (const o of results) {
       if (!args.noScript) {
         await this.validateOutputScript(o)
@@ -1998,11 +2022,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     })
     return count
   }
-  async countOutputs(args: sdk.FindOutputsArgs): Promise<number> {
+  async countOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
     await this.filterOutputs({ ...args, noScript: true }, () => {
       count++
-    })
+    }, tagIds, isQueryModeAll)
     return count
   }
   async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> {
@@ -2254,18 +2278,5 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const rawTx = await this.getRawTxOfKnownValidTransaction(t.txid, undefined, undefined, trx)
     if (!rawTx) return
     t.rawTx = rawTx
-  }
-
-  async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> {
-    // without offset and length values return what we have (make no changes)
-    if (!o.scriptLength || !o.scriptOffset || !o.txid) return
-    // if there is an outputScript and its length is the expected length return what we have.
-    if (o.lockingScript && o.lockingScript.length === o.scriptLength) return
-
-    // outputScript is missing or has incorrect length...
-
-    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength, trx)
-    if (!script) return
-    o.lockingScript = script
   }
 }

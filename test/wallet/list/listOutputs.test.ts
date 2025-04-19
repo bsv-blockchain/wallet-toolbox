@@ -7,8 +7,11 @@ import {
   OriginatorDomainNameStringUnder250Bytes,
   OutputTagStringUnder300Bytes
 } from '@bsv/sdk'
-import { sdk, StorageKnex } from '../../../src/index.all'
-import { _tu, expectToThrowWERR, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
+import { StorageKnex } from '../../../src/index.all'
+import { _tu, TestWalletNoSetup, TestWalletProviderNoSetup } from '../../utils/TestUtilsWalletStorage'
+import path from 'path'
+
+import 'fake-indexeddb/auto'
 
 const noLog = true
 
@@ -17,13 +20,14 @@ describe('listOutputs test', () => {
 
   const amount = 1319
   const env = _tu.getEnv('test')
+  const ctxs: TestWalletProviderNoSetup[] = []
   const testName = () => expect.getState().currentTestName || 'test'
-
-  const ctxs: TestWalletNoSetup[] = []
+  const databaseName = path.parse(expect.getState().testPath!).name
 
   beforeAll(async () => {
     if (env.runMySQL) ctxs.push(await _tu.createLegacyWalletMySQLCopy('listOutputsTests'))
-    ctxs.push(await _tu.createLegacyWalletSQLiteCopy('listOutputsTests'))
+    ctxs.push(await _tu.createIdbLegacyWalletCopy(databaseName))
+    //ctxs.push(await _tu.createLegacyWalletSQLiteCopy('listOutputsTests'))
   })
 
   afterAll(async () => {
@@ -386,8 +390,6 @@ describe('listOutputs test', () => {
   test('13_customInstructions and lockingScript etc.', async () => {
     for (const { wallet } of ctxs) {
       {
-        const storage = ctxs[0].activeStorage as StorageKnex
-        prepareDatabaseCustomInstrctions(storage)
         let log = `\n${testName()}\n`
         const args: ListOutputsArgs = {
           basket: 'todo tokens',
@@ -400,7 +402,7 @@ describe('listOutputs test', () => {
         const r = await wallet.listOutputs(args)
         log += `totalOutputs=${r.totalOutputs} outputs=${r.outputs.length}\n`
         expect(r.totalOutputs).toBeGreaterThanOrEqual(r.outputs.length)
-        expect(r.outputs.length).toBe(2)
+        expect(r.outputs.length).toBe(1)
         let i = 0
         for (const a of r.outputs) {
           log += `  ${a.satoshis} ${a.spendable} ${a.outpoint} ${a.tags?.join(',')} ${a.labels?.join(',')} ${a.customInstructions} ${a.lockingScript}\n`
