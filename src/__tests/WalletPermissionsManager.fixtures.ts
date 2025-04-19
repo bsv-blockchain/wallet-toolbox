@@ -33,6 +33,11 @@ export class MockTransaction {
   getFee(): number {
     return this.fee
   }
+
+  toBEEF(): number[] {
+    // Return an empty array for the BEEF representation
+    return []
+  }
 }
 
 ;(MockTransaction as any).fromAtomicBEEF = jest.fn(() => {

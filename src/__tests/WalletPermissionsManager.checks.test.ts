@@ -367,7 +367,7 @@ describe('WalletPermissionsManager - Permission Checks', () => {
       expect(underlying.listOutputs).toHaveBeenLastCalledWith(
         {
           basket: 'admin basket-access',
-          include: 'locking scripts',
+          include: 'entire transactions',
           tagQueryMode: 'all',
           tags: ['originator some-user.com', 'basket user-basket']
         },

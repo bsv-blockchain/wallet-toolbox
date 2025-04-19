@@ -926,15 +926,19 @@ export class WalletPermissionsManager implements WalletInterface {
   }
 
   private async decryptPermissionTokenField(ciphertext: number[]): Promise<number[]> {
-    const { plaintext } = await this.underlying.decrypt(
-      {
-        ciphertext,
-        protocolID: WalletPermissionsManager.PERM_TOKEN_ENCRYPTION_PROTOCOL,
-        keyID: '1'
-      },
-      this.adminOriginator
-    )
-    return plaintext
+    try {
+      const { plaintext } = await this.underlying.decrypt(
+        {
+          ciphertext,
+          protocolID: WalletPermissionsManager.PERM_TOKEN_ENCRYPTION_PROTOCOL,
+          keyID: '1'
+        },
+        this.adminOriginator
+      )
+      return plaintext
+    } catch (e) {
+      return ciphertext
+    }
   }
 
   /**

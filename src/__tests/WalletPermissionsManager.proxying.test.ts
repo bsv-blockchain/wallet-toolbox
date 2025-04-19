@@ -362,11 +362,25 @@ describe('WalletPermissionsManager - Regression & Integration with Underlying Wa
    * ----------------------------------------------------------------------- */
 
   it('should ensure basket listing permission then call listOutputs, decrypting customInstructions', async () => {
+    jest.spyOn(MockedBSV_SDK.Transaction, 'fromBEEF').mockImplementation(() => {
+      const mockTx = new MockTransaction()
+      // Add outputs with lockingScript
+      mockTx.outputs = [
+        {
+          lockingScript: {
+            // Ensure this matches what PushDrop.decode expects to work with
+            toHex: () => 'mockLockingScriptHex'
+          }
+        }
+      ]
+      return mockTx
+    })
+
     underlying.listOutputs.mockResolvedValue({
       totalOutputs: 1,
       outputs: [
         {
-          outpoint: 'zzz.1',
+          outpoint: 'zzz.0',
           satoshis: 100,
           lockingScript: 'mockscript',
           customInstructions: 'EncryptedWeird'
@@ -381,7 +395,7 @@ describe('WalletPermissionsManager - Regression & Integration with Underlying Wa
       [
         {
           basket: 'admin basket-access',
-          include: 'locking scripts',
+          include: 'entire transactions',
           tagQueryMode: 'all',
           tags: ['originator app.example.com', 'basket user-basket']
         },
