@@ -1604,6 +1604,7 @@ It can represent any of the four permission categories by having the relevant fi
 ```ts
 export interface PermissionToken {
     txid: string;
+    tx: number[];
     outputIndex: number;
     outputScript: string;
     satoshis: number;
@@ -1723,6 +1724,14 @@ The security level (0,1,2) for DPACP.
 
 ```ts
 securityLevel?: 0 | 1 | 2
+```
+
+###### Property tx
+
+The current transaction encapsulating the token.
+
+```ts
+tx: number[]
 ```
 
 ###### Property txid
