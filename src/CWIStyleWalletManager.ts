@@ -1040,7 +1040,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       await this.getFactor('presentationKey'),
       await this.getFactor('recoveryKey'),
       this.rootPrimaryKey,
-      await this.getFactor('privilegedKey', true), // Get ROOT privileged key
+      await this.getFactor('privilegedKey'), // Get ROOT privileged key
       this.profiles // Pass the updated profile list
     )
 
@@ -1082,7 +1082,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       await this.getFactor('presentationKey'),
       await this.getFactor('recoveryKey'),
       this.rootPrimaryKey,
-      await this.getFactor('privilegedKey', true), // Get ROOT privileged key
+      await this.getFactor('privilegedKey'), // Get ROOT privileged key
       this.profiles // Pass updated list
     )
   }
@@ -1161,7 +1161,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     // Decrypt existing factors needed for re-encryption, using the *root* privileged key manager
     const recoveryKey = await this.getFactor('recoveryKey')
     const presentationKey = await this.getFactor('presentationKey')
-    const rootPrivilegedKey = await this.getFactor('privilegedKey', true) // Get ROOT privileged key
+    const rootPrivilegedKey = await this.getFactor('privilegedKey') // Get ROOT privileged key
 
     await this.updateAuthFactors(
       passwordSalt,
@@ -1195,7 +1195,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     // Decrypt existing factors needed
     const passwordKey = await this.getFactor('passwordKey')
     const presentationKey = await this.getFactor('presentationKey')
-    const rootPrivilegedKey = await this.getFactor('privilegedKey', true) // Get ROOT privileged key
+    const rootPrivilegedKey = await this.getFactor('privilegedKey') // Get ROOT privileged key
 
     // Generate and save new recovery key
     const newRecoveryKey = Random(32)
@@ -1226,7 +1226,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     // Decrypt existing factors
     const recoveryKey = await this.getFactor('recoveryKey')
     const passwordKey = await this.getFactor('passwordKey')
-    const rootPrivilegedKey = await this.getFactor('privilegedKey', true) // Get ROOT privileged key
+    const rootPrivilegedKey = await this.getFactor('privilegedKey') // Get ROOT privileged key
 
     await this.updateAuthFactors(
       this.currentUMPToken.passwordSalt,
@@ -1268,8 +1268,7 @@ export class CWIStyleWalletManager implements WalletInterface {
    * @returns The decrypted key bytes.
    */
   private async getFactor(
-    factorName: 'passwordKey' | 'presentationKey' | 'recoveryKey' | 'privilegedKey',
-    getRoot: boolean = false
+    factorName: 'passwordKey' | 'presentationKey' | 'recoveryKey' | 'privilegedKey'
   ): Promise<number[]> {
     if (!this.authenticated || !this.currentUMPToken || !this.rootPrivilegedKeyManager) {
       throw new Error(`Cannot get factor "${factorName}": Wallet not ready.`)
@@ -1356,13 +1355,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     if (profiles && profiles.length > 0) {
       const profilesJson = JSON.stringify(profiles)
       const profilesBytes = Utils.toArray(profilesJson, 'utf8')
-      profilesEncrypted = (
-        await tempRootPrivilegedKeyManager.encrypt({
-          plaintext: profilesBytes,
-          protocolID: [2, 'admin profile wrapping'], // Separate protocol for profiles
-          keyID: '1'
-        })
-      ).ciphertext
+      profilesEncrypted = new SymmetricKey(rootPrimaryKey).encrypt(profilesBytes) as number[]
     }
 
     // Construct the new UMP token data
@@ -1614,13 +1607,9 @@ export class CWIStyleWalletManager implements WalletInterface {
     this.profiles = [] // Clear existing profiles before loading
     if (this.currentUMPToken.profilesEncrypted && this.currentUMPToken.profilesEncrypted.length > 0) {
       try {
-        const decryptedProfileBytes = (
-          await this.rootPrivilegedKeyManager.decrypt({
-            ciphertext: this.currentUMPToken.profilesEncrypted,
-            protocolID: [2, 'admin profile wrapping'], // Use profile protocol ID
-            keyID: '1'
-          })
-        ).plaintext
+        const decryptedProfileBytes = new SymmetricKey(rootPrimaryKey).decrypt(
+          this.currentUMPToken.profilesEncrypted
+        ) as number[]
         const profilesJson = Utils.toUTF8(decryptedProfileBytes)
         this.profiles = JSON.parse(profilesJson) as Profile[]
       } catch (error) {
