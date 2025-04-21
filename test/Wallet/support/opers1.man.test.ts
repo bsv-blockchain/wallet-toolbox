@@ -62,9 +62,45 @@ describe('operations1 tests', () => {
     await storage.destroy()
   })
 
+  test.skip('0a review all spendable outputs for userId', async () => {
+    const { env, storage } = await createMainReviewSetup()
+    const users = await storage.findUsers({ partial: { } })
+    const withInvalid: Record<number, { user: TableUser; outputs: WalletOutput[]; total: number }> = {}
+    const vargs: ValidListOutputsArgs = {
+      basket: specOpInvalidChange,
+      tags: ['release', 'all'],
+      tagQueryMode: 'all',
+      includeLockingScripts: false,
+      includeTransactions: false,
+      includeCustomInstructions: false,
+      includeTags: false,
+      includeLabels: false,
+      limit: 0,
+      offset: 0,
+      seekPermission: false,
+      knownTxids: []
+    }
+    let log = ''
+    for (const user of users) {
+      const { userId } = user
+      const auth = { userId, identityKey: '' }
+      let r = await storage.listOutputs(auth, vargs)
+      if (r.totalOutputs > 0) {
+        const total: number = r.outputs.reduce((s, o) => (s += o.satoshis), 0)
+        log += `userId ${userId}: ${r.totalOutputs} unspendable utxos, total ${total}, ${user.identityKey}\n`
+        for (const o of r.outputs) {
+          log += `  ${o.outpoint} ${o.satoshis}\n`
+        }
+        withInvalid[userId] = { user, outputs: r.outputs, total }
+      }
+    }
+    console.log(log || 'Found zero invalid change outputs.')
+    await storage.destroy()
+  })
+
   test('6 review and unfail false doubleSpends', async () => {
     const { env, storage, services } = await createMainReviewSetup()
-    let offset = 2300
+    let offset = 2400
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
