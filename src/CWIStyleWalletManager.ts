@@ -1607,7 +1607,9 @@ export class CWIStyleWalletManager implements WalletInterface {
     this.profiles = [] // Clear existing profiles before loading
     if (this.currentUMPToken.profilesEncrypted && this.currentUMPToken.profilesEncrypted.length > 0) {
       try {
-        const decryptedProfileBytes = new SymmetricKey(rootPrimaryKey).decrypt(this.currentUMPToken.profilesEncrypted) as number[]
+        const decryptedProfileBytes = new SymmetricKey(rootPrimaryKey).decrypt(
+          this.currentUMPToken.profilesEncrypted
+        ) as number[]
         const profilesJson = Utils.toUTF8(decryptedProfileBytes)
         this.profiles = JSON.parse(profilesJson) as Profile[]
       } catch (error) {
