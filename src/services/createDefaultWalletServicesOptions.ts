@@ -43,6 +43,6 @@ export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.Wallet
 }
 
 export function arcDefaultUrl(chain: sdk.Chain): string {
-  const url = chain === 'main' ? 'https://api.taal.com/arc' : 'https://arc-test.taal.com'
+  const url = chain === 'main' ? 'https://arc.taal.com' : 'https://arc-test.taal.com'
   return url
 }
