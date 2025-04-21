@@ -11,7 +11,6 @@ import {
   TableOutputBasket,
   TableOutputTag,
   TableOutputTagMap,
-  TableOutputX,
   TableProvenTx,
   TableProvenTxReq,
   TableSettings,
@@ -22,7 +21,6 @@ import {
   TableUser,
   verifyOne,
   verifyOneOrNone,
-  verifyTruthy
 } from '../index.client'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
