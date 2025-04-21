@@ -20,7 +20,7 @@ import {
   TableTxLabelMap,
   TableUser,
   verifyOne,
-  verifyOneOrNone,
+  verifyOneOrNone
 } from '../index.client'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'

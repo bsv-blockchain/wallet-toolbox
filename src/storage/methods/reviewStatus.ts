@@ -6,14 +6,14 @@ import { StorageKnex } from '../StorageKnex'
 
 /**
  * Looks for unpropagated state:
- * 
+ *
  * 1. set transactions to 'failed' if not already failed and provenTxReq with matching txid has status of 'invalid'.
  * 2. sets outputs to spendable true, spentBy undefined if spentBy is a transaction with status 'failed'.
  * 3. sets transactions to 'completed' if provenTx with matching txid exists and current provenTxId is null.
- * 
- * @param storage 
- * @param args 
- * @returns 
+ *
+ * @param storage
+ * @param args
+ * @returns
  */
 export async function reviewStatus(
   storage: StorageKnex,
