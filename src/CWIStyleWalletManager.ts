@@ -366,7 +366,7 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
           acceptDelayedBroadcast: false
         }
       },
-      adminOriginator,
+      adminOriginator
     )
 
     // If the transaction is fully processed by the wallet
