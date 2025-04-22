@@ -360,9 +360,13 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
         description: oldTokenToConsume ? 'Renew UMP token (consume old, create new)' : 'Create new UMP token',
         inputs,
         outputs,
-        inputBEEF: inputToken?.beef
+        inputBEEF: inputToken?.beef,
+        options: {
+          randomizeOutputs: false,
+          acceptDelayedBroadcast: false
+        }
       },
-      adminOriginator
+      adminOriginator,
     )
 
     // If the transaction is fully processed by the wallet
@@ -1398,7 +1402,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     const currentActiveId = this.activeProfileId
     let walletToUse: WalletInterface | undefined = this.underlying
 
-    if (currentActiveId.every(x => x === 0)) {
+    if (!currentActiveId.every(x => x === 0)) {
       console.log('Temporarily switching to default profile to update UMP token...')
       await this.switchProfile(DEFAULT_PROFILE_ID) // This rebuilds this.underlying
       walletToUse = this.underlying
@@ -1411,7 +1415,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     // Publish the new token on-chain, consuming the old one
     try {
       newTokenData.currentOutpoint = await this.UMPTokenInteractor.buildAndSend(
-        walletToUse, // Use the (potentially temporarily activated) default profile wallet
+        walletToUse,
         this.adminOriginator,
         newTokenData,
         oldTokenToConsume // Consume the previous token
