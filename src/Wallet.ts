@@ -708,7 +708,7 @@ export class Wallet implements WalletInterface, ProtoWallet {
     sdk.validateOriginator(originator)
 
     const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateSignActionArgs)
-    const r = await signAction(this, auth, vargs)
+    const r = await signAction(this, auth, vargs, args.options || {})
 
     if (!vargs.isDelayed) throwIfAnyUnsuccessfulSignActions(r)
 

@@ -5,6 +5,7 @@ import {
   Beef,
   Transaction as BsvTransaction,
   SendWithResult,
+  SignActionOptions,
   SignActionResult,
   SignActionSpend,
   TXIDHexString
@@ -23,12 +24,15 @@ export interface SignActionResultX extends SignActionResult {
 export async function signAction(
   wallet: Wallet,
   auth: sdk.AuthId,
-  vargs: sdk.ValidSignActionArgs
+  vargs: sdk.ValidSignActionArgs,
+  options: SignActionOptions
 ): Promise<SignActionResultX> {
   const prior = wallet.pendingSignActions[vargs.reference]
   if (!prior)
     throw new sdk.WERR_NOT_IMPLEMENTED('recovery of out-of-session signAction reference data is not yet implemented.')
   if (!prior.dcr.inputBeef) throw new sdk.WERR_INTERNAL('prior.dcr.inputBeef must be valid')
+  
+  mergePriorOptions(prior.args, vargs, options)
 
   prior.tx = await completeSignedTransaction(prior, vargs.spends, wallet)
 
@@ -105,4 +109,11 @@ export async function completeSignedTransaction(
   await prior.tx.sign()
 
   return prior.tx
+}
+
+function mergePriorOptions(caVargs: sdk.ValidCreateActionArgs, saVargs: sdk.ValidSignActionArgs, saOptions: SignActionOptions ) {
+  if (saOptions.acceptDelayedBroadcast === undefined) saOptions.acceptDelayedBroadcast = caVargs.options.acceptDelayedBroadcast
+  if (saOptions.returnTXIDOnly === undefined) saOptions.returnTXIDOnly = caVargs.options.returnTXIDOnly
+  if (saOptions.noSend === undefined) saOptions.noSend = caVargs.options.noSend
+  if (saOptions.sendWith === undefined) saOptions.sendWith = caVargs.options.sendWith
 }
