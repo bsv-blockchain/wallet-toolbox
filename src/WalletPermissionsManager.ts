@@ -1289,7 +1289,10 @@ export class WalletPermissionsManager implements WalletInterface {
             basket: basketName,
             tags
           }
-        ]
+        ],
+        options: {
+          acceptDelayedBroadcast: false
+        }
       },
       this.adminOriginator
     )
@@ -1347,7 +1350,10 @@ export class WalletPermissionsManager implements WalletInterface {
             basket: BASKET_MAP[r.type],
             tags
           }
-        ]
+        ],
+        options: {
+          acceptDelayedBroadcast: false
+        }
       },
       this.adminOriginator
     )
@@ -1743,7 +1749,10 @@ export class WalletPermissionsManager implements WalletInterface {
             unlockingScriptLength: 73, // length of signature
             inputDescription: `Consume old permission token`
           }
-        ]
+        ],
+        options: {
+          acceptDelayedBroadcast: false
+        }
       },
       this.adminOriginator
     )
