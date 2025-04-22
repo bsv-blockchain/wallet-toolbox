@@ -75,11 +75,8 @@ export const basketToSpecOp: Record<string, ListOutputsSpecOp> = {
       for (const o of outputs) {
         await s.validateOutputScript(o)
         let ok: boolean | undefined = false
-        let r: sdk.GetUtxoStatusResult
         if (o.lockingScript && o.lockingScript.length > 0) {
-          const hash = services.hashOutputScript(asString(o.lockingScript))
-          r = await services.getUtxoStatus(hash, undefined, `${o.txid}.${o.vout}`)
-          ok = r.isUtxo
+          ok = await services.isUtxo(o)
         } else {
           ok = undefined
         }

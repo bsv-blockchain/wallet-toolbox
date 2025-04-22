@@ -1,9 +1,9 @@
 import { Transaction, Utils } from '@bsv/sdk'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
-import { StorageKnex } from '../../storage/StorageKnex'
 import { TableProvenTxReq } from '../../storage/schema/tables'
 import { EntityProvenTxReq } from '../../storage/schema/entities'
+import { StorageProvider } from '../../index.client'
 
 /**
  * Setting provenTxReq status to 'unfail' when 'invalid' will attempt to find a merklePath, and if successful:
@@ -103,7 +103,7 @@ export class TaskUnFail extends WalletMonitorTask {
     for (const id of txIds) {
       const bsvtx = Transaction.fromBinary(req.rawTx)
       await this.storage.runAsStorageProvider(async sp => {
-        const spk = sp as StorageKnex
+        const spk = sp as StorageProvider
         const tx = await sp.findTransactionById(id, undefined, true)
         if (!tx) {
           log += ' '.repeat(indent) + `transaction ${id} was not found\n`
@@ -134,8 +134,7 @@ export class TaskUnFail extends WalletMonitorTask {
           if (!o.lockingScript) {
             log += ' '.repeat(indent + 2) + `output ${o.outputId} does not have a valid locking script\n`
           } else {
-            const or = await services.getUtxoStatus(Utils.toHex(o.lockingScript!))
-            const isUtxo = or.isUtxo === true
+            const isUtxo = await services.isUtxo(o)
             if (isUtxo !== o.spendable) {
               log += ' '.repeat(indent + 2) + `output ${o.outputId} set to ${isUtxo ? 'spendable' : 'spent'}\n`
               await sp.updateOutput(o.outputId, { spendable: isUtxo })

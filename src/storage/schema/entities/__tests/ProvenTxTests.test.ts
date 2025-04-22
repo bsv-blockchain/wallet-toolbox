@@ -116,6 +116,8 @@ describe('ProvenTx class method tests', () => {
         details: []
       }),
 
+      isUtxo: async () => true,
+
       getScriptHashHistory: async () => ({
         name: 'mock-service',
         status: 'success',

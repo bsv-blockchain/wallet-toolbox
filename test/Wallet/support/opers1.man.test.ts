@@ -64,7 +64,7 @@ describe('operations1 tests', () => {
 
   test.skip('0a review all spendable outputs for userId', async () => {
     const { env, storage } = await createMainReviewSetup()
-    const users = await storage.findUsers({ partial: { } })
+    const users = await storage.findUsers({ partial: {} })
     const withInvalid: Record<number, { user: TableUser; outputs: WalletOutput[]; total: number }> = {}
     const vargs: ValidListOutputsArgs = {
       basket: specOpInvalidChange,

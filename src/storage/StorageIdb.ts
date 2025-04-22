@@ -28,6 +28,8 @@ import { DBType } from './StorageReader'
 import { TransactionStatus } from '../sdk'
 import { listActionsIdb } from './methods/listActionsIdb'
 import { listOutputsIdb } from './methods/listOutputsIdb'
+import { reviewStatusIdb } from './methods/reviewStatusIdb'
+import { purgeDataIdb } from './methods/purgeDataIdb'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
@@ -295,11 +297,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   //
 
   async reviewStatus(args: { agedLimit: Date; trx?: sdk.TrxToken }): Promise<{ log: string }> {
-    throw new Error('Method not implemented.')
+    return await reviewStatusIdb(this, args)
   }
 
   async purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> {
-    throw new Error('Method not implemented.')
+    return await purgeDataIdb(this, params, trx)
   }
 
   /**
