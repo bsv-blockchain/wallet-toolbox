@@ -184,18 +184,23 @@ export async function createOneSatTestOutput(
   return car
 }
 
-export async function recoverOneSatTestOutputs(setup: LocalTestWalletSetup): Promise<void> {
+export async function recoverOneSatTestOutputs(setup: LocalTestWalletSetup, testOptionsMode?: 1): Promise<void> {
   const outputs = await setup.wallet.listOutputs({
     basket: 'test-output',
     include: 'entire transactions',
     limit: 1000
   })
 
-  if (outputs.outputs.length > 8) {
+  if (outputs.outputs.length > 0) {
     const args: CreateActionArgs = {
       inputBEEF: outputs.BEEF!,
       inputs: [],
       description: 'recover test output'
+    }
+    if (testOptionsMode === 1) {
+      args.options = {
+        acceptDelayedBroadcast: false
+      }
     }
     const p2pkh = new P2PKH()
     for (const o of outputs.outputs) {

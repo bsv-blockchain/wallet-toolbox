@@ -113,7 +113,7 @@ export async function completeSignedTransaction(
 }
 
 function mergePriorOptions(caVargs: sdk.ValidCreateActionArgs, saArgs: SignActionArgs) : sdk.ValidSignActionArgs {
-  const saOptions = saArgs.options || {}
+  const saOptions = saArgs.options ||= {}
   if (saOptions.acceptDelayedBroadcast === undefined) saOptions.acceptDelayedBroadcast = caVargs.options.acceptDelayedBroadcast
   if (saOptions.returnTXIDOnly === undefined) saOptions.returnTXIDOnly = caVargs.options.returnTXIDOnly
   if (saOptions.noSend === undefined) saOptions.noSend = caVargs.options.noSend
