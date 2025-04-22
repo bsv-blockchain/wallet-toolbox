@@ -5,6 +5,7 @@ import {
   Beef,
   Transaction as BsvTransaction,
   SendWithResult,
+  SignActionArgs,
   SignActionOptions,
   SignActionResult,
   SignActionSpend,
@@ -13,6 +14,7 @@ import {
 import { asBsvSdkScript, PendingSignAction, ScriptTemplateBRC29, sdk, Wallet } from '../../index.client'
 import { processAction } from './createAction'
 import { ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
+import { validateSignActionArgs } from '../../sdk'
 
 export interface SignActionResultX extends SignActionResult {
   txid?: TXIDHexString
@@ -24,15 +26,14 @@ export interface SignActionResultX extends SignActionResult {
 export async function signAction(
   wallet: Wallet,
   auth: sdk.AuthId,
-  vargs: sdk.ValidSignActionArgs,
-  options: SignActionOptions
+  args: SignActionArgs
 ): Promise<SignActionResultX> {
-  const prior = wallet.pendingSignActions[vargs.reference]
+  const prior = wallet.pendingSignActions[args.reference]
   if (!prior)
     throw new sdk.WERR_NOT_IMPLEMENTED('recovery of out-of-session signAction reference data is not yet implemented.')
   if (!prior.dcr.inputBeef) throw new sdk.WERR_INTERNAL('prior.dcr.inputBeef must be valid')
   
-  mergePriorOptions(prior.args, vargs, options)
+  const vargs = mergePriorOptions(prior.args, args)
 
   prior.tx = await completeSignedTransaction(prior, vargs.spends, wallet)
 
@@ -111,9 +112,11 @@ export async function completeSignedTransaction(
   return prior.tx
 }
 
-function mergePriorOptions(caVargs: sdk.ValidCreateActionArgs, saVargs: sdk.ValidSignActionArgs, saOptions: SignActionOptions ) {
+function mergePriorOptions(caVargs: sdk.ValidCreateActionArgs, saArgs: SignActionArgs) : sdk.ValidSignActionArgs {
+  const saOptions = saArgs.options || {}
   if (saOptions.acceptDelayedBroadcast === undefined) saOptions.acceptDelayedBroadcast = caVargs.options.acceptDelayedBroadcast
   if (saOptions.returnTXIDOnly === undefined) saOptions.returnTXIDOnly = caVargs.options.returnTXIDOnly
   if (saOptions.noSend === undefined) saOptions.noSend = caVargs.options.noSend
   if (saOptions.sendWith === undefined) saOptions.sendWith = caVargs.options.sendWith
+  return validateSignActionArgs(saArgs)
 }
