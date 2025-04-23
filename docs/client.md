@@ -10883,10 +10883,10 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: signAction
 
 ```ts
-export async function signAction(wallet: Wallet, auth: sdk.AuthId, vargs: sdk.ValidSignActionArgs): Promise<SignActionResultX> 
+export async function signAction(wallet: Wallet, auth: sdk.AuthId, args: SignActionArgs): Promise<SignActionResultX> 
 ```
 
-See also: [AuthId](./client.md#interface-authid), [SignActionResultX](./client.md#interface-signactionresultx), [ValidSignActionArgs](./client.md#interface-validsignactionargs), [Wallet](./client.md#class-wallet)
+See also: [AuthId](./client.md#interface-authid), [SignActionResultX](./client.md#interface-signactionresultx), [Wallet](./client.md#class-wallet)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

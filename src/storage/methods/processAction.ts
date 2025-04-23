@@ -390,7 +390,7 @@ async function validateCommitNewTxToStorageArgs(
       )
     const update: Partial<TableOutput> = {
       txid: vargs.txid,
-      spendable: true, // spendability is gated by transaction status. Remains true until the output is spent.
+      spendable: o.basketId !== undefined, // spendability is gated by transaction status. Remains true until the output is spent.
       scriptLength: offset.length,
       scriptOffset: offset.offset
     }
