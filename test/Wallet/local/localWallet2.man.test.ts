@@ -42,7 +42,7 @@ describe('localWallet2 tests', () => {
 
   test('1 recover 1 sat outputs', async () => {
     const setup = await createSetup(chain, options)
-    await recoverOneSatTestOutputs(setup)
+    await recoverOneSatTestOutputs(setup, 1)
     await setup.wallet.destroy()
   })
 
