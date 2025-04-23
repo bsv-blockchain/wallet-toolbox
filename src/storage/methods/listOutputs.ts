@@ -3,11 +3,13 @@ import { TableOutput, TableOutputBasket, TableOutputTag } from '../index.client'
 import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
 import { ValidListOutputsArgs } from '../../sdk'
+import { spec } from 'node:test/reporters'
 
 interface ListOutputsSpecOp {
   name: string
   useBasket?: string
   ignoreLimit?: boolean
+  includeSpent?: boolean
   includeOutputScripts?: boolean
   resultFromTags?: (
     s: StorageKnex,
@@ -62,6 +64,7 @@ const basketToSpecOp: Record<string, ListOutputsSpecOp> = {
     name: 'invalidChangeOutputs',
     useBasket: 'default',
     ignoreLimit: true,
+    includeSpent: false,
     includeOutputScripts: true,
     tagsToIntercept: ['release', 'all'],
     filterOutputs: async (
@@ -71,7 +74,8 @@ const basketToSpecOp: Record<string, ListOutputsSpecOp> = {
       specOpTags: string[],
       outputs: TableOutput[]
     ): Promise<TableOutput[]> => {
-      const filteredOutputs: TableOutput[] = []
+      const updateToSpent: TableOutput[] = []
+      const updateToSpendable: TableOutput[] = []
       const services = s.getServices()
       for (const o of outputs) {
         await s.validateOutputScript(o)
@@ -84,17 +88,23 @@ const basketToSpecOp: Record<string, ListOutputsSpecOp> = {
         } else {
           ok = undefined
         }
-        if (ok === false) {
-          filteredOutputs.push(o)
+        if (ok === false && o.spendable) {
+          updateToSpent.push(o)
+        } else if (ok === true && !o.spendable) {
+          updateToSpendable.push(o)
         }
       }
       if (specOpTags.indexOf('release') >= 0) {
-        for (const o of filteredOutputs) {
+        for (const o of updateToSpent) {
           await s.updateOutput(o.outputId, { spendable: false })
           o.spendable = false
         }
+        for (const o of updateToSpendable) {
+          await s.updateOutput(o.outputId, { spendable: true })
+          o.spendable = true
+        }
       }
-      return filteredOutputs
+      return updateToSpent.concat(updateToSpendable)
     }
   },
   [sdk.specOpSetWalletChangeParams]: {
@@ -236,7 +246,7 @@ export async function listOutputs(
   ]
 
   const noTags = tagIds.length === 0
-  const includeSpent = false
+  const includeSpent = specOp && specOp.includeSpent ? specOp.includeSpent : false
 
   const txStatusOk = `(select status as tstatus from transactions where transactions.transactionId = outputs.transactionId) in ('completed', 'unproven', 'nosend')`
   const txStatusOkCteq = `(select status as tstatus from transactions where transactions.transactionId = o.transactionId) in ('completed', 'unproven', 'nosend')`
