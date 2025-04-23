@@ -30,8 +30,6 @@ import { KeyPairAddress, SetupClientWalletArgs, SetupWallet } from './SetupWalle
  * It serves as a starting point for experimentation and customization.
  */
 export abstract class SetupClient {
-
-
   /**
    * Create a `Wallet`. Storage can optionally be provided or configured later.
    *
@@ -119,8 +117,7 @@ export abstract class SetupClient {
   static async createWalletClient(args: SetupWalletClientArgs): Promise<SetupWalletClient> {
     const wo = await SetupClient.createWallet(args)
 
-    const endpointUrl =
-      args.endpointUrl || `https://${args.chain !== 'main' ? 'staging-' : ''}storage.babbage.systems`
+    const endpointUrl = args.endpointUrl || `https://${args.chain !== 'main' ? 'staging-' : ''}storage.babbage.systems`
 
     const client = new StorageClient(wo.wallet, endpointUrl)
     await wo.storage.addWalletStorageProvider(client)

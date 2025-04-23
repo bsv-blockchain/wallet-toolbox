@@ -1,7 +1,7 @@
-import { PrivateKey, KeyDeriver, PublicKey } from '@bsv/sdk';
-import { WalletStorageManager, Monitor, sdk } from './index.client';
-import { Services } from './services';
-import { Wallet } from './Wallet';
+import { PrivateKey, KeyDeriver, PublicKey } from '@bsv/sdk'
+import { WalletStorageManager, Monitor, sdk } from './index.client'
+import { Services } from './services'
+import { Wallet } from './Wallet'
 
 /**
  * When creating a BRC-100 compatible `Wallet`, many components come into play.
@@ -15,34 +15,34 @@ export interface SetupWallet {
   /**
    * The rootKey of the `KeyDeriver`. The private key from which other keys are derived.
    */
-  rootKey: PrivateKey;
+  rootKey: PrivateKey
   /**
    * The pubilc key associated with the `rootKey` which also serves as the wallet's identity.
    */
-  identityKey: string;
+  identityKey: string
   /**
    * The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
    */
-  keyDeriver: KeyDeriver;
+  keyDeriver: KeyDeriver
   /**
    * The chain ('main' or 'test') which the wallet accesses.
    */
-  chain: sdk.Chain;
+  chain: sdk.Chain
   /**
    * The `WalletStorageManager` that manages all the configured storage providers (active and backups)
    * accessed by the wallet.
    */
-  storage: WalletStorageManager;
+  storage: WalletStorageManager
   /**
    * The network `Services` component which provides the wallet with access to external services hosted
    * on the public network.
    */
-  services: Services;
+  services: Services
   /**
    * The background task `Monitor` component available to the wallet to offload tasks
    * that speed up wallet operations and maintain data integrity.
    */
-  monitor: Monitor;
+  monitor: Monitor
   /**
    * The actual BRC-100 `Wallet` to which all the other properties and components contribute.
    *
@@ -51,8 +51,8 @@ export interface SetupWallet {
    * experimentation, testing and customization. Any changes made to the configuration of these
    * components after construction may disrupt the normal operation of the wallet.
    */
-  wallet: Wallet;
-}/**
+  wallet: Wallet
+} /**
  * A private key and associated public key and address.
  */
 
@@ -91,4 +91,3 @@ export interface SetupClientWalletArgs {
 
   taalApiKey?: string
 }
-

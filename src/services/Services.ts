@@ -145,7 +145,10 @@ export class Services implements sdk.WalletServices {
 
   async isUtxo(output: TableOutput): Promise<boolean> {
     if (!output.lockingScript) {
-      throw new sdk.WERR_INVALID_PARAMETER('output.lockingScript', 'validated by storage provider validateOutputScript.')
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'output.lockingScript',
+        'validated by storage provider validateOutputScript.'
+      )
     }
     const hash = this.hashOutputScript(Utils.toHex(output.lockingScript))
     const or = await this.getUtxoStatus(hash, undefined, `${output.txid}.${output.vout}`)
