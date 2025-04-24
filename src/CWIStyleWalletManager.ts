@@ -338,12 +338,19 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
     const inputs: CreateActionInput[] = []
     let inputToken: { beef: number[]; outputIndex: number } | undefined
     if (oldTokenToConsume?.currentOutpoint) {
-      inputs.push({
-        outpoint: oldTokenToConsume.currentOutpoint,
-        unlockingScriptLength: 73, // typical signature length
-        inputDescription: 'Consume old UMP token'
-      })
       inputToken = await this.findByOutpoint(oldTokenToConsume.currentOutpoint)
+      // If there is no token on the overlay, we can't consume it. Just start over with a new token.
+      if (!inputToken) {
+        oldTokenToConsume = undefined
+
+      // Otherwise, add the input
+      } else {
+        inputs.push({
+          outpoint: oldTokenToConsume.currentOutpoint,
+          unlockingScriptLength: 73, // typical signature length
+          inputDescription: 'Consume old UMP token'
+        })
+      }
     }
 
     const outputs = [
