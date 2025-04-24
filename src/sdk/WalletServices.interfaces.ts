@@ -121,15 +121,6 @@ export interface WalletServices {
   isUtxo(output: TableOutput): Promise<boolean>
 
   /**
-   * Calls getUtxoStatus with the hash of the output's lockingScript,
-   * and ensures that the output's outpoint matches an unspent use of that script.
-   *
-   * @param output
-   * @returns true if the output appears to currently be spendable.
-   */
-  isUtxo(output: TableOutput): Promise<boolean>
-
-  /**
    * Attempts to determine the UTXO status of a transaction output.
    *
    * Cycles through configured transaction processing services attempting to get a valid response.

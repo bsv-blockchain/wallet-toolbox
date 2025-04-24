@@ -4410,7 +4410,6 @@ export interface WalletServices {
     hashOutputScript(script: string): string;
     getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult>;
     isUtxo(output: TableOutput): Promise<boolean>;
-    isUtxo(output: TableOutput): Promise<boolean>;
     getUtxoStatus(output: string, outputFormat?: GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<GetUtxoStatusResult>;
     getScriptHashHistory(hash: string, useNext?: boolean): Promise<GetScriptHashHistoryResult>;
     hashToHeader(hash: string): Promise<BlockHeader>;
@@ -4608,20 +4607,6 @@ Argument Details
 
 + **hash**
   + block hash
-
-###### Method isUtxo
-
-Calls getUtxoStatus with the hash of the output's lockingScript,
-and ensures that the output's outpoint matches an unspent use of that script.
-
-```ts
-isUtxo(output: TableOutput): Promise<boolean>
-```
-See also: [TableOutput](./storage.md#interface-tableoutput)
-
-Returns
-
-true if the output appears to currently be spendable.
 
 ###### Method isUtxo
 
