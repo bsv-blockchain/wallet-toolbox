@@ -1,4 +1,4 @@
-import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
+import { ListActionsResult, ListOutputsResult, Transaction } from '@bsv/sdk'
 import { sdk, verifyOne, verifyOneOrNone, verifyTruthy } from '../index.all'
 import {
   KnexMigrations,
@@ -25,7 +25,7 @@ import {
 } from './index.all'
 
 import { Knex } from 'knex'
-import { StorageProvider, StorageProviderOptions } from './StorageProvider'
+import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { purgeData } from './methods/purgeData'
 import { listActions } from './methods/listActionsKnex'
 import { listOutputs } from './methods/listOutputsKnex'
@@ -1125,5 +1125,168 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
       entities[i] = this.validateEntity(entities[i], dateFields, booleanFields)
     }
     return entities
+  }
+
+  async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
+    if (this.dbtype !== 'MySQL')
+      throw new sdk.WERR_NOT_IMPLEMENTED('adminStats, only MySQL is supported');
+
+    const one_day_ago = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const one_week_ago = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const one_month_ago = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+    const [[{
+      usersDay, usersMonth, usersWeek, usersTotal,
+      transactionsDay, transactionsMonth, transactionsWeek, transactionsTotal,
+      txCompletedDay, txCompletedMonth, txCompletedWeek, txCompletedTotal,
+      txFailedDay, txFailedMonth, txFailedWeek, txFailedTotal,
+      txUnprocessedDay, txUnprocessedMonth, txUnprocessedWeek, txUnprocessedTotal,
+      txSendingDay, txSendingMonth, txSendingWeek, txSendingTotal,
+      txUnprovenDay, txUnprovenMonth, txUnprovenWeek, txUnprovenTotal,
+      txUnsignedDay, txUnsignedMonth, txUnsignedWeek, txUnsignedTotal,
+      txNosendDay, txNosendMonth, txNosendWeek, txNosendTotal,
+      txNonfinalDay, txNonfinalMonth, txNonfinalWeek, txNonfinalTotal,
+      txUnfailDay, txUnfailMonth, txUnfailWeek, txUnfailTotal,
+      satoshisDefaultDay, satoshisDefaultMonth, satoshisDefaultWeek, satoshisDefaultTotal,
+      satoshisOtherDay, satoshisOtherMonth, satoshisOtherWeek, satoshisOtherTotal,
+      basketsDay, basketsMonth, basketsWeek, basketsTotal,
+      labelsDay, labelsMonth, labelsWeek, labelsTotal,
+      tagsDay, tagsMonth, tagsWeek, tagsTotal,
+     }]] = await this.knex.raw(`
+select
+    (select count(*) from users where created_at > '${one_day_ago}') as usersDay,
+    (select count(*) from users where created_at > '${one_week_ago}') as usersWeek,
+    (select count(*) from users where created_at > '${one_month_ago}') as usersMonth,
+	  (select count(*) from users) as usersTotal,
+    (select count(*) from transactions where created_at > '${one_day_ago}') as transactionsDay,
+    (select count(*) from transactions where created_at > '${one_week_ago}') as transactionsWeek,
+    (select count(*) from transactions where created_at > '${one_month_ago}') as transactionsMonth,
+	  (select count(*) from transactions) as transactionsTotal,
+    (select count(*) from transactions where status = 'completed' and created_at > '${one_day_ago}') as txCompletedDay,
+    (select count(*) from transactions where status = 'completed' and created_at > '${one_week_ago}') as txCompletedWeek,
+    (select count(*) from transactions where status = 'completed' and created_at > '${one_month_ago}') as txCompletedMonth,
+	  (select count(*) from transactions where status = 'completed') as txCompletedTotal,
+    (select count(*) from transactions where status = 'failed' and created_at > '${one_day_ago}') as txFailedDay,
+    (select count(*) from transactions where status = 'failed' and created_at > '${one_week_ago}') as txFailedWeek,
+    (select count(*) from transactions where status = 'failed' and created_at > '${one_month_ago}') as txFailedMonth,
+	  (select count(*) from transactions where status = 'failed') as txFailedTotal,
+    (select count(*) from transactions where status = 'unprocessed' and created_at > '${one_day_ago}') as txUnprocessedDay,
+    (select count(*) from transactions where status = 'unprocessed' and created_at > '${one_week_ago}') as txUnprocessedWeek,
+    (select count(*) from transactions where status = 'unprocessed' and created_at > '${one_month_ago}') as txUnprocessedMonth,
+	  (select count(*) from transactions where status = 'unprocessed') as txUnprocessedTotal,
+    (select count(*) from transactions where status = 'sending' and created_at > '${one_day_ago}') as txSendingDay,
+    (select count(*) from transactions where status = 'sending' and created_at > '${one_week_ago}') as txSendingWeek,
+    (select count(*) from transactions where status = 'sending' and created_at > '${one_month_ago}') as txSendingMonth,
+	  (select count(*) from transactions where status = 'sending') as txSendingTotal,
+    (select count(*) from transactions where status = 'unproven' and created_at > '${one_day_ago}') as txUnprovenDay,
+    (select count(*) from transactions where status = 'unproven' and created_at > '${one_week_ago}') as txUnprovenWeek,
+    (select count(*) from transactions where status = 'unproven' and created_at > '${one_month_ago}') as txUnprovenMonth,
+	  (select count(*) from transactions where status = 'unproven') as txUnprovenTotal,
+    (select count(*) from transactions where status = 'unsigned' and created_at > '${one_day_ago}') as txUnsignedDay,
+    (select count(*) from transactions where status = 'unsigned' and created_at > '${one_week_ago}') as txUnsignedWeek,
+    (select count(*) from transactions where status = 'unsigned' and created_at > '${one_month_ago}') as txUnsignedMonth,
+	  (select count(*) from transactions where status = 'unsigned') as txUnsignedTotal,
+    (select count(*) from transactions where status = 'nosend' and created_at > '${one_day_ago}') as txNosendDay,
+    (select count(*) from transactions where status = 'nosend' and created_at > '${one_week_ago}') as txNosendWeek,
+    (select count(*) from transactions where status = 'nosend' and created_at > '${one_month_ago}') as txNosendMonth,
+	  (select count(*) from transactions where status = 'nosend') as txNosendTotal,
+    (select count(*) from transactions where status = 'nonfinal' and created_at > '${one_day_ago}') as txNonfinalDay,
+    (select count(*) from transactions where status = 'nonfinal' and created_at > '${one_week_ago}') as txNonfinalWeek,
+    (select count(*) from transactions where status = 'nonfinal' and created_at > '${one_month_ago}') as txNonfinalMonth,
+	  (select count(*) from transactions where status = 'nonfinal') as txNonfinalTotal,
+    (select count(*) from transactions where status = 'unfail' and created_at > '${one_day_ago}') as txUnfailDay,
+    (select count(*) from transactions where status = 'unfail' and created_at > '${one_week_ago}') as txUnfailWeek,
+    (select count(*) from transactions where status = 'unfail' and created_at > '${one_month_ago}') as txUnfailMonth,
+	  (select count(*) from transactions where status = 'unfail') as txUnfailTotal,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 1 and created_at > '${one_day_ago}') as satoshisDefaultDay,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 1 and created_at > '${one_week_ago}') as satoshisDefaultWeek,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 1 and created_at > '${one_month_ago}') as satoshisDefaultMonth,
+	  (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 1) as satoshisDefaultTotal,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 0 and not basketId is null and created_at > '${one_day_ago}') as satoshisOtherDay,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 0 and not basketId is null and created_at > '${one_week_ago}') as satoshisOtherWeek,
+    (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 0 and not basketId is null and created_at > '${one_month_ago}') as satoshisOtherMonth,
+	  (select sum(satoshis) from outputs where spendable = 1 and \`change\` = 0 and not basketId is null) as satoshisOtherTotal,
+    (select count(*) from output_baskets where created_at > '${one_day_ago}') as basketsDay,
+    (select count(*) from output_baskets where created_at > '${one_week_ago}') as basketsWeek,
+    (select count(*) from output_baskets where created_at > '${one_month_ago}') as basketsMonth,
+	  (select count(*) from output_baskets) as basketsTotal,
+    (select count(*) from tx_labels where created_at > '${one_day_ago}') as labelsDay,
+    (select count(*) from tx_labels where created_at > '${one_week_ago}') as labelsWeek,
+    (select count(*) from tx_labels where created_at > '${one_month_ago}') as labelsMonth,
+	  (select count(*) from tx_labels) as labelsTotal,
+    (select count(*) from output_tags where created_at > '${one_day_ago}') as tagsDay,
+    (select count(*) from output_tags where created_at > '${one_week_ago}') as tagsWeek,
+    (select count(*) from output_tags where created_at > '${one_month_ago}') as tagsMonth,
+	  (select count(*) from output_tags) as tagsTotal
+      `)
+    const r: StorageAdminStats = {
+      requestedBy: adminIdentityKey,
+      when: new Date().toISOString(),
+      usersDay,
+      usersWeek,
+      usersMonth,
+      usersTotal,
+      transactionsDay,
+      transactionsWeek,
+      transactionsMonth,
+      transactionsTotal,
+      txCompletedDay,
+      txCompletedWeek,
+      txCompletedMonth,
+      txCompletedTotal,
+      txFailedDay,
+      txFailedWeek,
+      txFailedMonth,
+	    txFailedTotal,
+      txUnprocessedDay,
+      txUnprocessedWeek,
+      txUnprocessedMonth,
+	    txUnprocessedTotal,
+      txSendingDay,
+      txSendingWeek,
+      txSendingMonth,
+	    txSendingTotal,
+      txUnprovenDay,
+      txUnprovenWeek,
+      txUnprovenMonth,
+	    txUnprovenTotal,
+      txUnsignedDay,
+      txUnsignedWeek,
+      txUnsignedMonth,
+	    txUnsignedTotal,
+      txNosendDay,
+      txNosendWeek,
+      txNosendMonth,
+	    txNosendTotal,
+      txNonfinalDay,
+      txNonfinalWeek,
+      txNonfinalMonth,
+	    txNonfinalTotal,
+      txUnfailDay,
+      txUnfailWeek,
+      txUnfailMonth,
+	    txUnfailTotal,
+      satoshisDefaultDay,
+      satoshisDefaultWeek,
+      satoshisDefaultMonth,
+      satoshisDefaultTotal,
+      satoshisOtherDay,
+      satoshisOtherWeek,
+      satoshisOtherMonth,
+      satoshisOtherTotal,
+      basketsDay,
+      basketsWeek,
+      basketsMonth,
+      basketsTotal,
+      labelsDay,
+      labelsWeek,
+      labelsMonth,
+      labelsTotal,
+      tagsDay,
+      tagsWeek,
+      tagsMonth,
+      tagsTotal,
+    }
+    return r
   }
 }

@@ -22,7 +22,7 @@ import {
   verifyOne,
   verifyOneOrNone
 } from '../index.client'
-import { StorageProvider, StorageProviderOptions } from './StorageProvider'
+import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
 import { TransactionStatus } from '../sdk'
@@ -40,6 +40,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   constructor(options: StorageIdbOptions) {
     super(options)
     this.dbName = `wallet-toolbox-${this.chain}net`
+  }
+
+  override adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
+    throw new Error('Method not implemented.')
   }
 
   /**

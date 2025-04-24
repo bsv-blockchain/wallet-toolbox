@@ -106,6 +106,8 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
   abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>
   abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>
 
+  abstract adminStats(adminIdentityKey: string) : Promise<StorageAdminStats>
+
   override isStorageProvider(): boolean {
     return true
   }
@@ -663,6 +665,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     if (!script) return
     o.lockingScript = script
   }
+
 }
 
 export interface StorageProviderOptions extends StorageReaderWriterOptions {
@@ -693,4 +696,73 @@ export function validateStorageFeeModel(v?: sdk.StorageFeeModel): sdk.StorageFee
     }
   }
   return r
+}
+
+export interface StorageAdminStats {
+  requestedBy: string
+  when: string
+  usersDay: number
+  usersWeek: number
+  usersMonth: number
+  usersTotal: number
+  transactionsDay: number
+  transactionsWeek: number
+  transactionsMonth: number
+  transactionsTotal: number
+  txCompletedDay: number
+  txCompletedWeek: number
+  txCompletedMonth: number
+  txCompletedTotal: number
+  txFailedDay: number
+  txFailedWeek: number
+  txFailedMonth: number
+  txFailedTotal: number
+  txUnprocessedDay: number
+  txUnprocessedWeek: number
+  txUnprocessedMonth: number
+  txUnprocessedTotal: number
+  txSendingDay: number
+  txSendingWeek: number
+  txSendingMonth: number
+  txSendingTotal: number
+  txUnprovenDay: number
+  txUnprovenWeek: number
+  txUnprovenMonth: number
+  txUnprovenTotal: number
+  txUnsignedDay: number
+  txUnsignedWeek: number
+  txUnsignedMonth: number
+  txUnsignedTotal: number
+  txNosendDay: number
+  txNosendWeek: number
+  txNosendMonth: number
+  txNosendTotal: number
+  txNonfinalDay: number
+  txNonfinalWeek: number
+  txNonfinalMonth: number
+  txNonfinalTotal: number
+  txUnfailDay: number
+  txUnfailWeek: number
+  txUnfailMonth: number
+  txUnfailTotal: number
+  satoshisDefaultDay: number
+  satoshisDefaultWeek: number
+  satoshisDefaultMonth: number
+  satoshisDefaultTotal: number
+  satoshisOtherDay: number
+  satoshisOtherWeek: number
+  satoshisOtherMonth: number
+  satoshisOtherTotal: number
+  basketsDay: number
+  basketsWeek: number
+  basketsMonth: number
+  basketsTotal: number
+  labelsDay: number
+  labelsWeek: number
+  labelsMonth: number
+  labelsTotal: number
+  tagsDay: number
+  tagsWeek: number
+  tagsMonth: number
+  tagsTotal: number
 }

@@ -11,13 +11,12 @@ import { AuthMiddlewareOptions, createAuthMiddleware } from '@bsv/auth-express-m
 import { createPaymentMiddleware } from '@bsv/payment-express-middleware'
 import { sdk, Wallet, StorageProvider } from '../../index.all'
 
-import { StorageKnex } from '../StorageKnex'
-
 export interface WalletStorageServerOptions {
   port: number
   wallet: Wallet
   monetize: boolean
   calculateRequestPrice?: (req: Request) => number | Promise<number>
+  adminIdentityKeys?: string[]
 }
 
 export class StorageServer {
@@ -27,6 +26,7 @@ export class StorageServer {
   private wallet: Wallet
   private monetize: boolean
   private calculateRequestPrice?: (req: Request) => number | Promise<number>
+  private adminIdentityKeys?: string[]
 
   constructor(storage: StorageProvider, options: WalletStorageServerOptions) {
     this.storage = storage
@@ -34,6 +34,7 @@ export class StorageServer {
     this.wallet = options.wallet
     this.monetize = options.monetize
     this.calculateRequestPrice = options.calculateRequestPrice
+    this.adminIdentityKeys = options.adminIdentityKeys
 
     this.setupRoutes()
   }
@@ -101,6 +102,15 @@ export class StorageServer {
               {
                 if (params[0] !== req.auth.identityKey)
                   throw new sdk.WERR_UNAUTHORIZED('function may only access authenticated user.')
+              }
+              break
+            case 'adminStats':
+              {
+                // TODO: add check for admin user
+                if (params[0] !== req.auth.identityKey)
+                  throw new sdk.WERR_UNAUTHORIZED('function may only access authenticated admin user.')
+                if (!this.adminIdentityKeys || !this.adminIdentityKeys.includes(req.auth.identityKey))
+                  throw new sdk.WERR_UNAUTHORIZED('function may only be accessed by admin user.')
               }
               break
             case 'processSyncChunk':
