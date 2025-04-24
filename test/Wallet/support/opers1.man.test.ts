@@ -28,7 +28,7 @@ describe('operations1 tests', () => {
 
   test('0 review and release all production invalid change utxos', async () => {
     const { env, storage } = await createMainReviewSetup()
-    const users = await storage.findUsers({ partial: {} })
+    const users = await storage.findUsers({ partial: { userId: 296 } })
     const withInvalid: Record<number, { user: TableUser; outputs: WalletOutput[]; total: number }> = {}
     const vargs: ValidListOutputsArgs = {
       basket: specOpInvalidChange,
@@ -62,9 +62,9 @@ describe('operations1 tests', () => {
     await storage.destroy()
   })
 
-  test('6 review and unfail false doubleSpends', async () => {
+  test('1 review and unfail false doubleSpends', async () => {
     const { env, storage, services } = await createMainReviewSetup()
-    let offset = 2200
+    let offset = 2400
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
@@ -89,7 +89,7 @@ describe('operations1 tests', () => {
     await storage.destroy()
   })
 
-  test('7 review and unfail false invalids', async () => {
+  test('2 review and unfail false invalids', async () => {
     const { env, storage, services } = await createMainReviewSetup()
     let offset = 500
     const limit = 100
