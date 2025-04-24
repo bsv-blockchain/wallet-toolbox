@@ -106,7 +106,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
   abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>
   abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>
 
-  abstract adminStats(adminIdentityKey: string) : Promise<StorageAdminStats>
+  abstract adminStats(adminIdentityKey: string): Promise<StorageAdminStats>
 
   override isStorageProvider(): boolean {
     return true
@@ -665,7 +665,6 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     if (!script) return
     o.lockingScript = script
   }
-
 }
 
 export interface StorageProviderOptions extends StorageReaderWriterOptions {

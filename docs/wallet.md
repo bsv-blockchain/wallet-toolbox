@@ -13,65 +13,65 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ArcConfig](#interface-arcconfig) | [Paged](#interface-paged) | [TableSettings](#interface-tablesettings) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [PendingSignAction](#interface-pendingsignaction) | [TableSyncState](#interface-tablesyncstate) |
-| [AuthId](#interface-authid) | [PendingStorageInput](#interface-pendingstorageinput) | [TableTransaction](#interface-tabletransaction) |
-| [AuthPayload](#interface-authpayload) | [PermissionRequest](#interface-permissionrequest) | [TableTxLabel](#interface-tabletxlabel) |
-| [BaseBlockHeader](#interface-baseblockheader) | [PermissionToken](#interface-permissiontoken) | [TableTxLabelMap](#interface-tabletxlabelmap) |
-| [BaseBlockHeader](#interface-baseblockheader) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableUser](#interface-tableuser) |
-| [BitailsConfig](#interface-bitailsconfig) | [PostBeefResult](#interface-postbeefresult) | [TaskPurgeParams](#interface-taskpurgeparams) |
-| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TrustSettings](#interface-trustsettings) |
-| [BlockHeader](#interface-blockheader) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TrxToken](#interface-trxtoken) |
-| [BlockHeader](#interface-blockheader) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
-| [BsvExchangeRate](#interface-bsvexchangerate) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TxScriptOffsets](#interface-txscriptoffsets) |
-| [CertOpsWallet](#interface-certopswallet) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [UMPToken](#interface-umptoken) |
-| [Certifier](#interface-certifier) | [PostTxsResult](#interface-posttxsresult) | [UMPTokenInteractor](#interface-umptokeninteractor) |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
-| [CompleteAuthResponse](#interface-completeauthresponse) | [Profile](#interface-profile) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
-| [CreateActionResultX](#interface-createactionresultx) | [ProvenOrRawTx](#interface-provenorrawtx) | [ValidAbortActionArgs](#interface-validabortactionargs) |
-| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
-| [EntityTimeStamp](#interface-entitytimestamp) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
-| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
-| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [ValidBasketInsertion](#interface-validbasketinsertion) |
-| [FiatExchangeRates](#interface-fiatexchangerates) | [PurgeParams](#interface-purgeparams) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
-| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [PurgeResults](#interface-purgeresults) | [ValidCreateActionInput](#interface-validcreateactioninput) |
-| [FindCertificatesArgs](#interface-findcertificatesargs) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
-| [FindCommissionsArgs](#interface-findcommissionsargs) | [ReviewActionResult](#interface-reviewactionresult) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
-| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
-| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
-| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SignActionResultX](#interface-signactionresultx) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
-| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [StartAuthResponse](#interface-startauthresponse) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
-| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidListActionsArgs](#interface-validlistactionsargs) |
-| [FindOutputsArgs](#interface-findoutputsargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
-| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
-| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
-| [FindProvenTxsArgs](#interface-findproventxsargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
-| [FindSincePagedArgs](#interface-findsincepagedargs) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
-| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StorageIdentity](#interface-storageidentity) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
-| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
-| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidSignActionArgs](#interface-validsignactionargs) |
-| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidSignActionOptions](#interface-validsignactionoptions) |
-| [FindUsersArgs](#interface-findusersargs) | [StorageProvenOrReq](#interface-storageprovenorreq) | [ValidWalletPayment](#interface-validwalletpayment) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageProviderOptions](#interface-storageprovideroptions) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageReaderOptions](#interface-storagereaderoptions) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletArgs](#interface-walletargs) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletBalance](#interface-walletbalance) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [SyncChunk](#interface-syncchunk) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [SyncError](#interface-syncerror) | [WalletServices](#interface-walletservices) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncMap](#interface-syncmap) | [WalletServicesOptions](#interface-walletservicesoptions) |
-| [GetMerklePathResult](#interface-getmerklepathresult) | [TableCertificate](#interface-tablecertificate) | [WalletSettings](#interface-walletsettings) |
-| [GetRawTxResult](#interface-getrawtxresult) | [TableCertificateField](#interface-tablecertificatefield) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [TableCertificateX](#interface-tablecertificatex) | [WalletSigner](#interface-walletsigner) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCommission](#interface-tablecommission) | [WalletStorage](#interface-walletstorage) |
-| [GetScriptHashHistory](#interface-getscripthashhistory) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageProvider](#interface-walletstorageprovider) |
-| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [TableOutput](#interface-tableoutput) | [WalletStorageReader](#interface-walletstoragereader) |
-| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageSync](#interface-walletstoragesync) |
-| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableOutputTag](#interface-tableoutputtag) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
-| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableOutputTagMap](#interface-tableoutputtagmap) | [WalletStorageWriter](#interface-walletstoragewriter) |
-| [KeyPair](#interface-keypair) | [TableOutputX](#interface-tableoutputx) | [WalletTheme](#interface-wallettheme) |
-| [LiveBlockHeader](#interface-liveblockheader) | [TableProvenTx](#interface-tableproventx) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
-| [MonitorOptions](#interface-monitoroptions) | [TableProvenTxReq](#interface-tableproventxreq) |  |
-| [OutPoint](#interface-outpoint) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |  |
+| [ArcConfig](#interface-arcconfig) | [Paged](#interface-paged) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [PendingSignAction](#interface-pendingsignaction) | [TableSettings](#interface-tablesettings) |
+| [AuthId](#interface-authid) | [PendingStorageInput](#interface-pendingstorageinput) | [TableSyncState](#interface-tablesyncstate) |
+| [AuthPayload](#interface-authpayload) | [PermissionRequest](#interface-permissionrequest) | [TableTransaction](#interface-tabletransaction) |
+| [BaseBlockHeader](#interface-baseblockheader) | [PermissionToken](#interface-permissiontoken) | [TableTxLabel](#interface-tabletxlabel) |
+| [BaseBlockHeader](#interface-baseblockheader) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableTxLabelMap](#interface-tabletxlabelmap) |
+| [BitailsConfig](#interface-bitailsconfig) | [PostBeefResult](#interface-postbeefresult) | [TableUser](#interface-tableuser) |
+| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TaskPurgeParams](#interface-taskpurgeparams) |
+| [BlockHeader](#interface-blockheader) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TrustSettings](#interface-trustsettings) |
+| [BlockHeader](#interface-blockheader) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TrxToken](#interface-trxtoken) |
+| [BsvExchangeRate](#interface-bsvexchangerate) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
+| [CertOpsWallet](#interface-certopswallet) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [TxScriptOffsets](#interface-txscriptoffsets) |
+| [Certifier](#interface-certifier) | [PostTxsResult](#interface-posttxsresult) | [UMPToken](#interface-umptoken) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [UMPTokenInteractor](#interface-umptokeninteractor) |
+| [CompleteAuthResponse](#interface-completeauthresponse) | [Profile](#interface-profile) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
+| [CreateActionResultX](#interface-createactionresultx) | [ProvenOrRawTx](#interface-provenorrawtx) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
+| [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [ValidAbortActionArgs](#interface-validabortactionargs) |
+| [EntityTimeStamp](#interface-entitytimestamp) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
+| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
+| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
+| [FiatExchangeRates](#interface-fiatexchangerates) | [PurgeParams](#interface-purgeparams) | [ValidBasketInsertion](#interface-validbasketinsertion) |
+| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [PurgeResults](#interface-purgeresults) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
+| [FindCertificatesArgs](#interface-findcertificatesargs) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [ValidCreateActionInput](#interface-validcreateactioninput) |
+| [FindCommissionsArgs](#interface-findcommissionsargs) | [ReviewActionResult](#interface-reviewactionresult) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
+| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
+| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
+| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SignActionResultX](#interface-signactionresultx) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
+| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [StartAuthResponse](#interface-startauthresponse) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
+| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
+| [FindOutputsArgs](#interface-findoutputsargs) | [StorageAdminStats](#interface-storageadminstats) | [ValidListActionsArgs](#interface-validlistactionsargs) |
+| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
+| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
+| [FindProvenTxsArgs](#interface-findproventxsargs) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
+| [FindSincePagedArgs](#interface-findsincepagedargs) | [StorageFeeModel](#interface-storagefeemodel) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
+| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
+| [FindTransactionsArgs](#interface-findtransactionsargs) | [StorageIdentity](#interface-storageidentity) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
+| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
+| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [ValidSignActionArgs](#interface-validsignactionargs) |
+| [FindUsersArgs](#interface-findusersargs) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [ValidSignActionOptions](#interface-validsignactionoptions) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StorageProvenOrReq](#interface-storageprovenorreq) | [ValidWalletPayment](#interface-validwalletpayment) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StorageProviderOptions](#interface-storageprovideroptions) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageReaderOptions](#interface-storagereaderoptions) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletArgs](#interface-walletargs) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletBalance](#interface-walletbalance) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [SyncChunk](#interface-syncchunk) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [SyncError](#interface-syncerror) | [WalletServices](#interface-walletservices) |
+| [GetMerklePathResult](#interface-getmerklepathresult) | [SyncMap](#interface-syncmap) | [WalletServicesOptions](#interface-walletservicesoptions) |
+| [GetRawTxResult](#interface-getrawtxresult) | [TableCertificate](#interface-tablecertificate) | [WalletSettings](#interface-walletsettings) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [TableCertificateField](#interface-tablecertificatefield) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [TableCertificateX](#interface-tablecertificatex) | [WalletSigner](#interface-walletsigner) |
+| [GetScriptHashHistory](#interface-getscripthashhistory) | [TableCommission](#interface-tablecommission) | [WalletStorage](#interface-walletstorage) |
+| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletStorageProvider](#interface-walletstorageprovider) |
+| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [TableOutput](#interface-tableoutput) | [WalletStorageReader](#interface-walletstoragereader) |
+| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [TableOutputBasket](#interface-tableoutputbasket) | [WalletStorageSync](#interface-walletstoragesync) |
+| [GetUtxoStatusResult](#interface-getutxostatusresult) | [TableOutputTag](#interface-tableoutputtag) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
+| [KeyPair](#interface-keypair) | [TableOutputTagMap](#interface-tableoutputtagmap) | [WalletStorageWriter](#interface-walletstoragewriter) |
+| [LiveBlockHeader](#interface-liveblockheader) | [TableOutputX](#interface-tableoutputx) | [WalletTheme](#interface-wallettheme) |
+| [MonitorOptions](#interface-monitoroptions) | [TableProvenTx](#interface-tableproventx) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
+| [OutPoint](#interface-outpoint) | [TableProvenTxReq](#interface-tableproventxreq) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2572,6 +2572,82 @@ depth: number | undefined
 
 ```ts
 status: "mined" | "known" | "unknown"
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: StorageAdminStats
+
+```ts
+export interface StorageAdminStats {
+    requestedBy: string;
+    when: string;
+    usersDay: number;
+    usersWeek: number;
+    usersMonth: number;
+    usersTotal: number;
+    transactionsDay: number;
+    transactionsWeek: number;
+    transactionsMonth: number;
+    transactionsTotal: number;
+    txCompletedDay: number;
+    txCompletedWeek: number;
+    txCompletedMonth: number;
+    txCompletedTotal: number;
+    txFailedDay: number;
+    txFailedWeek: number;
+    txFailedMonth: number;
+    txFailedTotal: number;
+    txUnprocessedDay: number;
+    txUnprocessedWeek: number;
+    txUnprocessedMonth: number;
+    txUnprocessedTotal: number;
+    txSendingDay: number;
+    txSendingWeek: number;
+    txSendingMonth: number;
+    txSendingTotal: number;
+    txUnprovenDay: number;
+    txUnprovenWeek: number;
+    txUnprovenMonth: number;
+    txUnprovenTotal: number;
+    txUnsignedDay: number;
+    txUnsignedWeek: number;
+    txUnsignedMonth: number;
+    txUnsignedTotal: number;
+    txNosendDay: number;
+    txNosendWeek: number;
+    txNosendMonth: number;
+    txNosendTotal: number;
+    txNonfinalDay: number;
+    txNonfinalWeek: number;
+    txNonfinalMonth: number;
+    txNonfinalTotal: number;
+    txUnfailDay: number;
+    txUnfailWeek: number;
+    txUnfailMonth: number;
+    txUnfailTotal: number;
+    satoshisDefaultDay: number;
+    satoshisDefaultWeek: number;
+    satoshisDefaultMonth: number;
+    satoshisDefaultTotal: number;
+    satoshisOtherDay: number;
+    satoshisOtherWeek: number;
+    satoshisOtherMonth: number;
+    satoshisOtherTotal: number;
+    basketsDay: number;
+    basketsWeek: number;
+    basketsMonth: number;
+    basketsTotal: number;
+    labelsDay: number;
+    labelsWeek: number;
+    labelsMonth: number;
+    labelsTotal: number;
+    tagsDay: number;
+    tagsWeek: number;
+    tagsMonth: number;
+    tagsTotal: number;
+}
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -7736,6 +7812,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     abstract findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]>;
     abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>;
     abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>;
+    abstract adminStats(adminIdentityKey: string): Promise<StorageAdminStats>;
     override isStorageProvider(): boolean 
     setServices(v: sdk.WalletServices) 
     getServices(): sdk.WalletServices 
@@ -7768,7 +7845,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
 }
 ```
 
-See also: [AuthId](./client.md#interface-authid), [Chain](./client.md#type-chain), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ProcessSyncChunkResult](./client.md#interface-processsyncchunkresult), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageFeeModel](./client.md#interface-storagefeemodel), [StorageGetBeefOptions](./client.md#interface-storagegetbeefoptions), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvenOrReq](./client.md#interface-storageprovenorreq), [StorageProviderOptions](./storage.md#interface-storageprovideroptions), [StorageReaderWriter](./storage.md#class-storagereaderwriter), [SyncChunk](./client.md#interface-syncchunk), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableOutputX](./storage.md#interface-tableoutputx), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableProvenTxReqDynamics](./storage.md#interface-tableproventxreqdynamics), [TableTxLabel](./storage.md#interface-tabletxlabel), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [attemptToPostReqsToNetwork](./storage.md#function-attempttopostreqstonetwork), [createAction](./storage.md#function-createaction), [getBeefForTransaction](./storage.md#function-getbeeffortransaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus)
+See also: [AuthId](./client.md#interface-authid), [Chain](./client.md#type-chain), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ProcessSyncChunkResult](./client.md#interface-processsyncchunkresult), [ProvenOrRawTx](./client.md#interface-provenorrawtx), [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [StorageAdminStats](./storage.md#interface-storageadminstats), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageFeeModel](./client.md#interface-storagefeemodel), [StorageGetBeefOptions](./client.md#interface-storagegetbeefoptions), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvenOrReq](./client.md#interface-storageprovenorreq), [StorageProviderOptions](./storage.md#interface-storageprovideroptions), [StorageReaderWriter](./storage.md#class-storagereaderwriter), [SyncChunk](./client.md#interface-syncchunk), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableMonitorEvent](./storage.md#interface-tablemonitorevent), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableOutputTag](./storage.md#interface-tableoutputtag), [TableOutputX](./storage.md#interface-tableoutputx), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableProvenTxReqDynamics](./storage.md#interface-tableproventxreqdynamics), [TableTxLabel](./storage.md#interface-tabletxlabel), [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken), [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [attemptToPostReqsToNetwork](./storage.md#function-attempttopostreqstonetwork), [createAction](./storage.md#function-createaction), [getBeefForTransaction](./storage.md#function-getbeeffortransaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction), [purgeData](./storage.md#function-purgedata), [reviewStatus](./storage.md#function-reviewstatus)
 
 ###### Method confirmSpendableOutputs
 

@@ -46,7 +46,8 @@ import {
   TableUser,
   sdk,
   Services,
-  EntityProvenTx
+  EntityProvenTx,
+  StorageAdminStats
 } from '../../index.client'
 
 describe('getBeefForTransaction tests', () => {
@@ -369,6 +370,9 @@ class ProtoStorage extends StorageProvider {
     throw this.nip
   }
   override getOutputTagMapsForUser(args: FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> {
+    throw this.nip
+  }
+  override adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
     throw this.nip
   }
 }
