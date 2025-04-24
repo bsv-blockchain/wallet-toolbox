@@ -466,8 +466,8 @@ export class WhatsOnChain extends SdkWhatsOnChain {
           headers: this.getHttpHeaders()
         }
 
-        const response = await this.httpClient.request<WhatsOnChainUtxoStatus[]>(
-          `${this.URL}/script/${scriptHash}/unspent`,
+        const response = await this.httpClient.request<WhatsOnChainUtxoStatus>(
+          `${this.URL}/script/${scriptHash}/unspent/all`,
           requestOptions
         )
         if (response.statusText === 'Too Many Requests' && retry < 2) {
@@ -479,30 +479,31 @@ export class WhatsOnChain extends SdkWhatsOnChain {
         if (!response.data || !response.ok || response.status !== 200)
           throw new sdk.WERR_INVALID_OPERATION(`WoC getUtxoStatus response ${response.statusText}`)
 
-        if (Array.isArray(response.data)) {
-          const data = response.data
-          if (data.length === 0) {
-            r.status = 'success'
-            r.error = undefined
-            r.isUtxo = false
-          } else {
-            r.status = 'success'
-            r.error = undefined
-            for (const s of data) {
-              r.details.push({
-                txid: s.tx_hash,
-                satoshis: s.value,
-                height: s.height,
-                index: s.tx_pos
-              })
-            }
-            if (outpoint) {
-              const { txid, vout } = parseWalletOutpoint(outpoint)
-              r.isUtxo = r.details.find(d => d.txid === txid && d.index === vout) !== undefined
-            } else r.isUtxo = r.details.length > 0
-          }
+        const data = response.data
+
+        if (data.script !== scriptHash || !Array.isArray(data.result)) {
+          throw new sdk.WERR_INTERNAL('data. is not an array')
+        }
+
+        if (data.result.length === 0) {
+          r.status = 'success'
+          r.error = undefined
+          r.isUtxo = false
         } else {
-          throw new sdk.WERR_INTERNAL('data is not an array')
+          r.status = 'success'
+          r.error = undefined
+          for (const s of data.result) {
+            r.details.push({
+              txid: s.tx_hash,
+              satoshis: s.value,
+              height: s.height,
+              index: s.tx_pos
+            })
+          }
+          if (outpoint) {
+            const { txid, vout } = parseWalletOutpoint(outpoint)
+            r.isUtxo = r.details.find(d => d.txid === txid && d.index === vout) !== undefined
+          } else r.isUtxo = r.details.length > 0
         }
 
         return r
@@ -661,13 +662,6 @@ interface WhatsOnChainTscProof {
   txOrId: string
 }
 
-interface WhatsOnChainUtxoStatus {
-  value: number
-  height: number
-  tx_pos: number
-  tx_hash: string
-}
-
 interface WhatsOnChainScriptHashHistory {
   tx_hash: string
   height?: number
@@ -690,4 +684,41 @@ interface WhatsOnChainTxsStatusData {
    * 'unknown' if txid isn't known
    */
   error?: string
+}
+
+/**
+ * GET https://api.whatsonchain.com/v1/bsv/<network>/script/<scriptHash>/unspent/all
+ * 
+ * Response
+{
+  "error":"",
+  "status":200,
+  "statusText":"OK",
+  "ok":true,
+  "data":{
+    "script":"d3ef8eeb691e7405caca142bfcd6f499b142884d7883e6701a0ee76047b4af32",
+    "result":[
+      {
+        "height":893652,
+        "tx_pos":11,
+        "tx_hash":"2178a1e93d46edda946d9069f9b157ddfacb451fee0278e657941f09bfdb5d8f",
+        "value":1005,
+        "isSpentInMempoolTx":false,
+        "status":"confirmed"
+      }
+    ]
+  }
+}
+ * 
+ */
+interface WhatsOnChainUtxoStatus {
+  script: string
+  result: {
+    value: number
+    height: number
+    tx_pos: number
+    tx_hash: string
+    isSpentInMempoolTx: boolean
+    status: string // 'confirmed'
+  }[]
 }

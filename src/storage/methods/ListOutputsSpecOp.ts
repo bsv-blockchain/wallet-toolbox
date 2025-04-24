@@ -8,6 +8,7 @@ export interface ListOutputsSpecOp {
   useBasket?: string
   ignoreLimit?: boolean
   includeOutputScripts?: boolean
+  includeSpent?: boolean
   resultFromTags?: (
     s: StorageProvider,
     auth: sdk.AuthId,
@@ -63,6 +64,7 @@ export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => 
       useBasket: 'default',
       ignoreLimit: true,
       includeOutputScripts: true,
+      includeSpent: false,
       tagsToIntercept: ['release', 'all'],
       filterOutputs: async (
         s: StorageProvider,
