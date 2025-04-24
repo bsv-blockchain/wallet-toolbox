@@ -22,6 +22,7 @@ import {
   TableOutput,
   TableOutputBasket,
   TableOutputTag,
+  TableOutputX,
   TableProvenTxReq,
   TableProvenTxReqDynamics,
   TableTransaction,
@@ -634,6 +635,33 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     if (update['notify']) partial['notify'] = update['notify']
 
     return await this.updateProvenTxReq(id, partial, trx)
+  }
+
+  async extendOutput(
+    o: TableOutput,
+    includeBasket = false,
+    includeTags = false,
+    trx?: sdk.TrxToken
+  ): Promise<TableOutputX> {
+    const ox = o as TableOutputX
+    if (includeBasket && ox.basketId) ox.basket = await this.findOutputBasketById(o.basketId!, trx)
+    if (includeTags) {
+      ox.tags = await this.getTagsForOutputId(o.outputId)
+    }
+    return o
+  }
+
+  async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> {
+    // without offset and length values return what we have (make no changes)
+    if (!o.scriptLength || !o.scriptOffset || !o.txid) return
+    // if there is an outputScript and its length is the expected length return what we have.
+    if (o.lockingScript && o.lockingScript.length === o.scriptLength) return
+
+    // outputScript is missing or has incorrect length...
+
+    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength, trx)
+    if (!script) return
+    o.lockingScript = script
   }
 }
 

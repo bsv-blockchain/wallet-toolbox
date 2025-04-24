@@ -27,8 +27,8 @@ import {
 import { Knex } from 'knex'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { purgeData } from './methods/purgeData'
-import { listActions } from './methods/listActions'
-import { listOutputs } from './methods/listOutputs'
+import { listActions } from './methods/listActionsKnex'
+import { listOutputs } from './methods/listOutputsKnex'
 import { DBType } from './StorageReader'
 import { reviewStatus } from './methods/reviewStatus'
 
@@ -835,19 +835,6 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     t.rawTx = rawTx
   }
 
-  async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> {
-    // without offset and length values return what we have (make no changes)
-    if (!o.scriptLength || !o.scriptOffset || !o.txid) return
-    // if there is an outputScript and its length is the expected length return what we have.
-    if (o.lockingScript && o.lockingScript.length === o.scriptLength) return
-
-    // outputScript is missing or has incorrect length...
-
-    const script = await this.getRawTxOfKnownValidTransaction(o.txid, o.scriptOffset, o.scriptLength, trx)
-    if (!script) return
-    o.lockingScript = script
-  }
-
   _verifiedReadyForDatabaseAccess: boolean = false
 
   /**
@@ -961,20 +948,6 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     return this.validateEntities(labels, undefined, ['isDeleted'])
   }
 
-  async extendOutput(
-    o: TableOutput,
-    includeBasket = false,
-    includeTags = false,
-    trx?: sdk.TrxToken
-  ): Promise<TableOutputX> {
-    const ox = o as TableOutputX
-    if (includeBasket && ox.basketId) ox.basket = await this.findOutputBasketById(o.basketId!, trx)
-    if (includeTags) {
-      ox.tags = await this.getTagsForOutputId(o.outputId)
-    }
-    return o
-  }
-
   override async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> {
     const tags = await this.toDb(trx)<TableOutputTag>('output_tags')
       .join('output_tags_map', 'output_tags_map.outputTagId', 'output_tags.outputTagId')
@@ -993,9 +966,11 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   }
 
   /**
-   *  Finds closest matching available change output to use as input for new transaction.
-   *
-   * Transactionally allocate the output such that
+   * Counts the outputs for userId in basketId that are spendable: true
+   * AND whose transaction status is one of:
+   * - completed
+   * - unproven
+   * - sending (if excludeSending is false)
    */
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
     const status: sdk.TransactionStatus[] = ['completed', 'unproven']

@@ -16,6 +16,7 @@ import { TaskNewHeader } from './tasks/TaskNewHeader'
 
 import { TaskSendWaiting } from './tasks/TaskSendWaiting'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
+import { TaskUnFail } from './tasks/TaskUnFail'
 
 export type MonitorStorage = WalletStorageManager
 
@@ -114,6 +115,7 @@ export class Monitor {
     this._otherTasks.push(new TaskSendWaiting(this))
     this._otherTasks.push(new TaskCheckForProofs(this))
     this._otherTasks.push(new TaskCheckNoSends(this))
+    this._otherTasks.push(new TaskUnFail(this))
 
     this._otherTasks.push(new TaskFailAbandoned(this))
 
@@ -130,6 +132,7 @@ export class Monitor {
     this._tasks.push(new TaskCheckForProofs(this, 2 * this.oneHour)) // Every two hours if no block found
     this._tasks.push(new TaskCheckNoSends(this))
     this._tasks.push(new TaskFailAbandoned(this, 8 * this.oneMinute))
+    this._tasks.push(new TaskUnFail(this))
     // No purging until invalid transactions are really invalid...
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
@@ -146,6 +149,7 @@ export class Monitor {
     this._tasks.push(new TaskCheckForProofs(this, 2 * this.oneHour)) // Every two hours if no block found
     this._tasks.push(new TaskCheckNoSends(this))
     this._tasks.push(new TaskFailAbandoned(this, 8 * this.oneMinute))
+    this._tasks.push(new TaskUnFail(this))
     // No purging until invalid transactions are really invalid...
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))

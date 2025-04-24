@@ -12,6 +12,6 @@ export interface TableSettings extends sdk.StorageIdentity, sdk.EntityTimeStamp 
    */
   storageName: string
   chain: sdk.Chain
-  dbtype: 'SQLite' | 'MySQL'
+  dbtype: 'SQLite' | 'MySQL' | 'IndexedDB'
   maxOutputScript: number
 }

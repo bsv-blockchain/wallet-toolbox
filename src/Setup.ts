@@ -1,3 +1,4 @@
+import { KeyPairAddress, SetupWallet, SetupWalletClient } from './SetupWallet'
 import {
   BEEF,
   CreateActionArgs,
@@ -514,15 +515,6 @@ export interface SetupWalletKnex extends SetupWallet {
 }
 
 /**
- * A private key and associated public key and address.
- */
-export interface KeyPairAddress {
-  privateKey: PrivateKey
-  publicKey: PublicKey
-  address: string
-}
-
-/**
  * `SetupEnv` provides a starting point for managing secrets that
  * must not appear in source code.
  *
@@ -562,56 +554,6 @@ export interface SetupEnv {
 }
 
 /**
- * When creating a BRC-100 compatible `Wallet`, many components come into play.
- *
- * All of the `createWallet` functions in the `Setup` and `SetupClient` classes return
- * an object with direct access to each component to facilitate experimentation, testing
- * and customization.
- */
-export interface SetupWallet {
-  /**
-   * The rootKey of the `KeyDeriver`. The private key from which other keys are derived.
-   */
-  rootKey: PrivateKey
-  /**
-   * The pubilc key associated with the `rootKey` which also serves as the wallet's identity.
-   */
-  identityKey: string
-  /**
-   * The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
-   */
-  keyDeriver: KeyDeriver
-  /**
-   * The chain ('main' or 'test') which the wallet accesses.
-   */
-  chain: sdk.Chain
-  /**
-   * The `WalletStorageManager` that manages all the configured storage providers (active and backups)
-   * accessed by the wallet.
-   */
-  storage: WalletStorageManager
-  /**
-   * The network `Services` component which provides the wallet with access to external services hosted
-   * on the public network.
-   */
-  services: Services
-  /**
-   * The background task `Monitor` component available to the wallet to offload tasks
-   * that speed up wallet operations and maintain data integrity.
-   */
-  monitor: Monitor
-  /**
-   * The actual BRC-100 `Wallet` to which all the other properties and components contribute.
-   *
-   * Note that internally, the wallet is itself linked to all these properties and components.
-   * They are included in this interface to facilitate access after wallet construction for
-   * experimentation, testing and customization. Any changes made to the configuration of these
-   * components after construction may disrupt the normal operation of the wallet.
-   */
-  wallet: Wallet
-}
-
-/**
  * Extension `SetupWalletClientArgs` of `SetupWalletArgs` is used by `createWalletClient`
  * to construct a `SetupWalletClient`.
  */
@@ -622,16 +564,4 @@ export interface SetupWalletClientArgs extends SetupWalletArgs {
    * the active storage provider of the newly created wallet.
    */
   endpointUrl?: string
-}
-
-/**
- * Extension `SetupWalletClient` of `SetupWallet` is returned by `createWalletClient`
- */
-export interface SetupWalletClient extends SetupWallet {
-  /**
-   * The endpoint URL of the service hosting the `StorageServer` JSON-RPC service to
-   * which a `StorageClient` instance is connected to function as
-   * the active storage provider of the wallet.
-   */
-  endpointUrl: string
 }

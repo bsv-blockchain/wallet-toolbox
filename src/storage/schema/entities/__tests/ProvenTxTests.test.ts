@@ -109,7 +109,7 @@ describe('ProvenTx class method tests', () => {
         results: []
       }),
 
-      isUtxo: async () => (true),
+      isUtxo: async () => true,
 
       getUtxoStatus: async () => ({
         name: 'mock-service',
