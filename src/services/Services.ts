@@ -1,5 +1,5 @@
 import { Transaction as BsvTransaction, Beef, ChainTracker, Utils } from '@bsv/sdk'
-import { asArray, asString, doubleSha256BE, sdk, sha256Hash, wait } from '../index.client'
+import { asArray, asString, doubleSha256BE, sdk, sha256Hash, TableOutput, wait } from '../index.client'
 import { ServiceCollection } from './ServiceCollection'
 import { createDefaultWalletServicesOptions } from './createDefaultWalletServicesOptions'
 import { ChaintracksChainTracker } from './chaintracker'
@@ -141,6 +141,18 @@ export class Services implements sdk.WalletServices {
   hashOutputScript(script: string): string {
     const hash = Utils.toHex(sha256Hash(Utils.toArray(script, 'hex')))
     return hash
+  }
+
+  async isUtxo(output: TableOutput): Promise<boolean> {
+    if (!output.lockingScript) {
+      throw new sdk.WERR_INVALID_PARAMETER(
+        'output.lockingScript',
+        'validated by storage provider validateOutputScript.'
+      )
+    }
+    const hash = this.hashOutputScript(Utils.toHex(output.lockingScript))
+    const or = await this.getUtxoStatus(hash, undefined, `${output.txid}.${output.vout}`)
+    return or.isUtxo === true
   }
 
   async getUtxoStatus(

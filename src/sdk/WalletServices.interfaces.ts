@@ -2,6 +2,8 @@ import { ArcConfig, Beef, Transaction as BsvTransaction, ChainTracker, MerklePat
 import { ChaintracksServiceClient } from '../services/chaintracker'
 import { Chain, ReqHistoryNote } from './types'
 import { WalletError } from './WalletError'
+import { TableOutput } from '../storage/schema/tables/Output'
+
 /**
  * Defines standard interfaces to access functionality implemented by external transaction processing services.
  */
@@ -109,6 +111,16 @@ export interface WalletServices {
    * @param useNext
    */
   getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult>
+
+
+  /**
+   * Calls getUtxoStatus with the hash of the output's lockingScript,
+   * and ensures that the output's outpoint matches an unspent use of that script.
+   * 
+   * @param output 
+   * @returns true if the output appears to currently be spendable.
+   */
+  isUtxo(output: TableOutput): Promise<boolean>
 
   /**
    * Attempts to determine the UTXO status of a transaction output.
