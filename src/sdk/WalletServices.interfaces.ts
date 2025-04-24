@@ -112,12 +112,11 @@ export interface WalletServices {
    */
   getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult>
 
-
   /**
    * Calls getUtxoStatus with the hash of the output's lockingScript,
    * and ensures that the output's outpoint matches an unspent use of that script.
-   * 
-   * @param output 
+   *
+   * @param output
    * @returns true if the output appears to currently be spendable.
    */
   isUtxo(output: TableOutput): Promise<boolean>
