@@ -40,82 +40,84 @@ export interface ListOutputsSpecOp {
   tagsParamsCount?: number
 }
 
-export const basketToSpecOp: Record<string, ListOutputsSpecOp> = {
-  [sdk.specOpWalletBalance]: {
-    name: 'totalOutputsIsWalletBalance',
-    useBasket: 'default',
-    ignoreLimit: true,
-    resultFromOutputs: async (
-      s: StorageProvider,
-      auth: sdk.AuthId,
-      vargs: ValidListOutputsArgs,
-      specOpTags: string[],
-      outputs: TableOutput[]
-    ): Promise<ListOutputsResult> => {
-      let totalOutputs = 0
-      for (const o of outputs) totalOutputs += o.satoshis
-      return { totalOutputs, outputs: [] }
-    }
-  },
-  [sdk.specOpInvalidChange]: {
-    name: 'invalidChangeOutputs',
-    useBasket: 'default',
-    ignoreLimit: true,
-    includeOutputScripts: true,
-    tagsToIntercept: ['release', 'all'],
-    filterOutputs: async (
-      s: StorageProvider,
-      auth: sdk.AuthId,
-      vargs: ValidListOutputsArgs,
-      specOpTags: string[],
-      outputs: TableOutput[]
-    ): Promise<TableOutput[]> => {
-      const filteredOutputs: TableOutput[] = []
-      const services = s.getServices()
-      for (const o of outputs) {
-        await s.validateOutputScript(o)
-        let ok: boolean | undefined = false
-        if (o.lockingScript && o.lockingScript.length > 0) {
-          ok = await services.isUtxo(o)
-        } else {
-          ok = undefined
-        }
-        if (ok === false) {
-          filteredOutputs.push(o)
-        }
+export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => {
+  return {
+    [sdk.specOpWalletBalance]: {
+      name: 'totalOutputsIsWalletBalance',
+      useBasket: 'default',
+      ignoreLimit: true,
+      resultFromOutputs: async (
+        s: StorageProvider,
+        auth: sdk.AuthId,
+        vargs: ValidListOutputsArgs,
+        specOpTags: string[],
+        outputs: TableOutput[]
+      ): Promise<ListOutputsResult> => {
+        let totalOutputs = 0
+        for (const o of outputs) totalOutputs += o.satoshis
+        return { totalOutputs, outputs: [] }
       }
-      if (specOpTags.indexOf('release') >= 0) {
-        for (const o of filteredOutputs) {
-          await s.updateOutput(o.outputId, { spendable: false })
-          o.spendable = false
+    },
+    [sdk.specOpInvalidChange]: {
+      name: 'invalidChangeOutputs',
+      useBasket: 'default',
+      ignoreLimit: true,
+      includeOutputScripts: true,
+      tagsToIntercept: ['release', 'all'],
+      filterOutputs: async (
+        s: StorageProvider,
+        auth: sdk.AuthId,
+        vargs: ValidListOutputsArgs,
+        specOpTags: string[],
+        outputs: TableOutput[]
+      ): Promise<TableOutput[]> => {
+        const filteredOutputs: TableOutput[] = []
+        const services = s.getServices()
+        for (const o of outputs) {
+          await s.validateOutputScript(o)
+          let ok: boolean | undefined = false
+          if (o.lockingScript && o.lockingScript.length > 0) {
+            ok = await services.isUtxo(o)
+          } else {
+            ok = undefined
+          }
+          if (ok === false) {
+            filteredOutputs.push(o)
+          }
         }
+        if (specOpTags.indexOf('release') >= 0) {
+          for (const o of filteredOutputs) {
+            await s.updateOutput(o.outputId, { spendable: false })
+            o.spendable = false
+          }
+        }
+        return filteredOutputs
       }
-      return filteredOutputs
-    }
-  },
-  [sdk.specOpSetWalletChangeParams]: {
-    name: 'setWalletChangeParams',
-    tagsParamsCount: 2,
-    resultFromTags: async (
-      s: StorageProvider,
-      auth: sdk.AuthId,
-      vargs: ValidListOutputsArgs,
-      specOpTags: string[]
-    ): Promise<ListOutputsResult> => {
-      if (specOpTags.length !== 2)
-        throw new sdk.WERR_INVALID_PARAMETER('numberOfDesiredUTXOs and minimumDesiredUTXOValue', 'valid')
-      const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]))
-      const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]))
-      const basket = verifyOne(
-        await s.findOutputBaskets({
-          partial: { userId: verifyId(auth.userId), name: 'default' }
+    },
+    [sdk.specOpSetWalletChangeParams]: {
+      name: 'setWalletChangeParams',
+      tagsParamsCount: 2,
+      resultFromTags: async (
+        s: StorageProvider,
+        auth: sdk.AuthId,
+        vargs: ValidListOutputsArgs,
+        specOpTags: string[]
+      ): Promise<ListOutputsResult> => {
+        if (specOpTags.length !== 2)
+          throw new sdk.WERR_INVALID_PARAMETER('numberOfDesiredUTXOs and minimumDesiredUTXOValue', 'valid')
+        const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]))
+        const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]))
+        const basket = verifyOne(
+          await s.findOutputBaskets({
+            partial: { userId: verifyId(auth.userId), name: 'default' }
+          })
+        )
+        await s.updateOutputBasket(basket.basketId, {
+          numberOfDesiredUTXOs,
+          minimumDesiredUTXOValue
         })
-      )
-      await s.updateOutputBasket(basket.basketId, {
-        numberOfDesiredUTXOs,
-        minimumDesiredUTXOValue
-      })
-      return { totalOutputs: 0, outputs: [] }
+        return { totalOutputs: 0, outputs: [] }
+      }
     }
   }
 }

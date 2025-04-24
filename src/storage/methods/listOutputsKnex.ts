@@ -2,8 +2,7 @@ import { Beef, ListOutputsResult, OriginatorDomainNameStringUnder250Bytes, Walle
 import { TableOutput, TableOutputBasket, TableOutputTag } from '../index.client'
 import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
-import { ValidListOutputsArgs } from '../../sdk'
-import { basketToSpecOp, ListOutputsSpecOp } from './ListOutputsSpecOp'
+import { getBasketToSpecOp, ListOutputsSpecOp } from './ListOutputsSpecOp'
 
 export async function listOutputs(
   dsk: StorageKnex,
@@ -40,7 +39,7 @@ export async function listOutputs(
   const basketsById: Record<number, TableOutputBasket> = {}
   if (vargs.basket) {
     let b = vargs.basket
-    specOp = basketToSpecOp[b]
+    specOp = getBasketToSpecOp()[b]
     b = specOp ? (specOp.useBasket ? specOp.useBasket : '') : b
     if (b) {
       const baskets = await dsk.findOutputBaskets({

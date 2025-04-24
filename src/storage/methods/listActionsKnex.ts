@@ -10,7 +10,7 @@ import { TableOutputX, TableTransaction, TableTxLabel } from '../index.client'
 import { asString, sdk, verifyOne } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
 import { isListActionsSpecOp } from '../../sdk'
-import { labelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
+import { getLabelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
 
 export async function listActions(
   storage: StorageKnex,
@@ -32,7 +32,7 @@ export async function listActions(
   let labels: string[] = []
   for (const label of vargs.labels) {
     if (isListActionsSpecOp(label)) {
-      specOp = labelToSpecOp[label]
+      specOp = getLabelToSpecOp()[label]
     } else {
       labels.push(label)
     }

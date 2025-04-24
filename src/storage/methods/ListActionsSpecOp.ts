@@ -20,44 +20,46 @@ export interface ListActionsSpecOp {
   ) => Promise<void>
 }
 
-export const labelToSpecOp: Record<string, ListActionsSpecOp> = {
-  [sdk.specOpNoSendActions]: {
-    name: 'noSendActions',
-    labelsToIntercept: ['abort'],
-    setStatusFilter: () => ['nosend'],
-    postProcess: async (
-      s: StorageProvider,
-      auth: sdk.AuthId,
-      vargs: sdk.ValidListActionsArgs,
-      specOpLabels: string[],
-      txs: Partial<TableTransaction>[]
-    ): Promise<void> => {
-      if (specOpLabels.indexOf('abort') >= 0) {
-        for (const tx of txs) {
-          if (tx.status === 'nosend') {
-            await s.abortAction(auth, { reference: tx.reference! })
-            tx.status = 'failed'
+export const getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
+  return {
+    [sdk.specOpNoSendActions]: {
+      name: 'noSendActions',
+      labelsToIntercept: ['abort'],
+      setStatusFilter: () => ['nosend'],
+      postProcess: async (
+        s: StorageProvider,
+        auth: sdk.AuthId,
+        vargs: sdk.ValidListActionsArgs,
+        specOpLabels: string[],
+        txs: Partial<TableTransaction>[]
+      ): Promise<void> => {
+        if (specOpLabels.indexOf('abort') >= 0) {
+          for (const tx of txs) {
+            if (tx.status === 'nosend') {
+              await s.abortAction(auth, { reference: tx.reference! })
+              tx.status = 'failed'
+            }
           }
         }
       }
-    }
-  },
-  [sdk.specOpFailedActions]: {
-    name: 'failedActions',
-    labelsToIntercept: ['unfail'],
-    setStatusFilter: () => ['failed'],
-    postProcess: async (
-      s: StorageProvider,
-      auth: sdk.AuthId,
-      vargs: sdk.ValidListActionsArgs,
-      specOpLabels: string[],
-      txs: Partial<TableTransaction>[]
-    ): Promise<void> => {
-      if (specOpLabels.indexOf('unfail') >= 0) {
-        for (const tx of txs) {
-          if (tx.status === 'failed') {
-            await s.updateTransaction(tx.transactionId!, { status: 'unfail' })
-            // wallet wire does not support 'unfail' status, return as 'failed'.
+    },
+    [sdk.specOpFailedActions]: {
+      name: 'failedActions',
+      labelsToIntercept: ['unfail'],
+      setStatusFilter: () => ['failed'],
+      postProcess: async (
+        s: StorageProvider,
+        auth: sdk.AuthId,
+        vargs: sdk.ValidListActionsArgs,
+        specOpLabels: string[],
+        txs: Partial<TableTransaction>[]
+      ): Promise<void> => {
+        if (specOpLabels.indexOf('unfail') >= 0) {
+          for (const tx of txs) {
+            if (tx.status === 'failed') {
+              await s.updateTransaction(tx.transactionId!, { status: 'unfail' })
+              // wallet wire does not support 'unfail' status, return as 'failed'.
+            }
           }
         }
       }

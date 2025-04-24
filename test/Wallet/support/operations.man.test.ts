@@ -1,14 +1,9 @@
 import { WalletOutput } from '@bsv/sdk'
 import { sdk, Services, Setup, StorageKnex, TableOutput, TableUser, verifyOne, verifyOneOrNone } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
-import { specOpInvalidChange, ValidListOutputsArgs, WERR_REVIEW_ACTIONS } from '../../../src/sdk'
+import { specOpInvalidChange, ValidListOutputsArgs } from '../../../src/sdk'
 import {
-  burnOneSatTestOutput,
-  createOneSatTestOutput,
-  createSetup,
-  doubleSpendOldChange,
   LocalWalletTestOptions,
-  recoverOneSatTestOutputs
 } from '../../utils/localWalletMethods'
 
 import * as dotenv from 'dotenv'
@@ -23,7 +18,7 @@ const options: LocalWalletTestOptions = {
   useIdentityKey2: false
 }
 
-describe('operations1 tests', () => {
+describe('operations.man tests', () => {
   jest.setTimeout(99999999)
 
   test('0 review and release all production invalid change utxos', async () => {

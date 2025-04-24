@@ -91,3 +91,15 @@ export interface SetupClientWalletArgs {
 
   taalApiKey?: string
 }
+
+/**
+ * Extension `SetupWalletClient` of `SetupWallet` is returned by `createWalletClient`
+ */
+export interface SetupWalletClient extends SetupWallet {
+  /**
+   * The endpoint URL of the service hosting the `StorageServer` JSON-RPC service to
+   * which a `StorageClient` instance is connected to function as
+   * the active storage provider of the wallet.
+   */
+  endpointUrl: string
+}

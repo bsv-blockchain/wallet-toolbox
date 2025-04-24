@@ -10,7 +10,7 @@ import { TableOutputX, TableTransaction, TableTxLabel } from '../index.client'
 import { asString, sdk, verifyOne } from '../../index.client'
 import { isListActionsSpecOp, TransactionStatus } from '../../sdk'
 import { StorageIdb } from '../StorageIdb'
-import { labelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
+import { getLabelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
 
 export async function listActionsIdb(
   storage: StorageIdb,
@@ -30,7 +30,7 @@ export async function listActionsIdb(
   let labels: string[] = []
   for (const label of vargs.labels) {
     if (isListActionsSpecOp(label)) {
-      specOp = labelToSpecOp[label]
+      specOp = getLabelToSpecOp()[label]
     } else {
       labels.push(label)
     }

@@ -27,8 +27,8 @@ import {
 import { Knex } from 'knex'
 import { StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { purgeData } from './methods/purgeData'
-import { listActions } from './methods/listActions'
-import { listOutputs } from './methods/listOutputs'
+import { listActions } from './methods/listActionsKnex'
+import { listOutputs } from './methods/listOutputsKnex'
 import { DBType } from './StorageReader'
 import { reviewStatus } from './methods/reviewStatus'
 

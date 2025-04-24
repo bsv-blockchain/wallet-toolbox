@@ -17,11 +17,11 @@ import {
   sdk,
   Services,
   StorageClient,
-  StorageIdb,
   Wallet,
   WalletStorageManager
 } from './index.client'
-import { KeyPairAddress, SetupClientWalletArgs, SetupWallet } from './SetupWallet'
+import { KeyPairAddress, SetupClientWalletArgs, SetupWallet, SetupWalletClient } from './SetupWallet'
+import { StorageIdb } from './storage/StorageIdb'
 
 /**
  * The 'Setup` class provides static setup functions to construct BRC-100 compatible
@@ -114,7 +114,7 @@ export abstract class SetupClient {
   /**
    * @publicbody
    */
-  static async createWalletClient(args: SetupWalletClientArgs): Promise<SetupWalletClient> {
+  static async createWalletClient(args: SetupClientWalletClientArgs): Promise<SetupWalletClient> {
     const wo = await SetupClient.createWallet(args)
 
     const endpointUrl = args.endpointUrl || `https://${args.chain !== 'main' ? 'staging-' : ''}storage.babbage.systems`
@@ -310,23 +310,11 @@ export interface SetupWalletIdb extends SetupWallet {
  * Extension `SetupWalletClientArgs` of `SetupWalletArgs` is used by `createWalletClient`
  * to construct a `SetupWalletClient`.
  */
-export interface SetupWalletClientArgs extends SetupClientWalletArgs {
+export interface SetupClientWalletClientArgs extends SetupClientWalletArgs {
   /**
    * The endpoint URL of a service hosting the `StorageServer` JSON-RPC service to
    * which a `StorageClient` instance should connect to function as
    * the active storage provider of the newly created wallet.
    */
   endpointUrl?: string
-}
-
-/**
- * Extension `SetupWalletClient` of `SetupWallet` is returned by `createWalletClient`
- */
-export interface SetupWalletClient extends SetupWallet {
-  /**
-   * The endpoint URL of the service hosting the `StorageServer` JSON-RPC service to
-   * which a `StorageClient` instance is connected to function as
-   * the active storage provider of the wallet.
-   */
-  endpointUrl: string
 }
