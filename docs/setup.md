@@ -18,35 +18,18 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | | |
 | --- | --- |
 | [KeyPairAddress](#interface-keypairaddress) | [SetupWalletClientArgs](#interface-setupwalletclientargs) |
-| [KeyPairAddress](#interface-keypairaddress) | [SetupWalletClientArgs](#interface-setupwalletclientargs) |
 | [SetupClientWalletArgs](#interface-setupclientwalletargs) | [SetupWalletIdb](#interface-setupwalletidb) |
-| [SetupEnv](#interface-setupenv) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) |
-| [SetupWallet](#interface-setupwallet) | [SetupWalletKnex](#interface-setupwalletknex) |
+| [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) |
+| [SetupEnv](#interface-setupenv) | [SetupWalletKnex](#interface-setupwalletknex) |
 | [SetupWallet](#interface-setupwallet) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
 | [SetupWalletArgs](#interface-setupwalletargs) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
 | [SetupWalletClient](#interface-setupwalletclient) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) |
-| [SetupWalletClient](#interface-setupwalletclient) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
 
 ##### Interface: KeyPairAddress
-
-```ts
-export interface KeyPairAddress {
-    privateKey: PrivateKey;
-    publicKey: PublicKey;
-    address: string;
-}
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Interface: KeyPairAddress
-
-A private key and associated public key and address.
 
 ```ts
 export interface KeyPairAddress {
@@ -113,6 +96,32 @@ The non-privileged private key used to initialize the `KeyDeriver` and determine
 
 ```ts
 rootKeyHex: string
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: SetupClientWalletClientArgs
+
+Extension `SetupWalletClientArgs` of `SetupWalletArgs` is used by `createWalletClient`
+to construct a `SetupWalletClient`.
+
+```ts
+export interface SetupClientWalletClientArgs extends SetupClientWalletArgs {
+    endpointUrl?: string;
+}
+```
+
+See also: [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs)
+
+###### Property endpointUrl
+
+The endpoint URL of a service hosting the `StorageServer` JSON-RPC service to
+which a `StorageClient` instance should connect to function as
+the active storage provider of the newly created wallet.
+
+```ts
+endpointUrl?: string
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -197,109 +206,6 @@ A vaild TAAL API key for use by `Services`
 ```ts
 taalApiKey: string
 ```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Interface: SetupWallet
-
-When creating a BRC-100 compatible `Wallet`, many components come into play.
-
-All of the `createWallet` functions in the `Setup` and `SetupClient` classes return
-an object with direct access to each component to facilitate experimentation, testing
-and customization.
-
-```ts
-export interface SetupWallet {
-    rootKey: PrivateKey;
-    identityKey: string;
-    keyDeriver: KeyDeriver;
-    chain: sdk.Chain;
-    storage: WalletStorageManager;
-    services: Services;
-    monitor: Monitor;
-    wallet: Wallet;
-}
-```
-
-See also: [Chain](./client.md#type-chain), [Monitor](./monitor.md#class-monitor), [Services](./services.md#class-services), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager)
-
-###### Property chain
-
-The chain ('main' or 'test') which the wallet accesses.
-
-```ts
-chain: sdk.Chain
-```
-See also: [Chain](./client.md#type-chain)
-
-###### Property identityKey
-
-The pubilc key associated with the `rootKey` which also serves as the wallet's identity.
-
-```ts
-identityKey: string
-```
-
-###### Property keyDeriver
-
-The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
-
-```ts
-keyDeriver: KeyDeriver
-```
-
-###### Property monitor
-
-The background task `Monitor` component available to the wallet to offload tasks
-that speed up wallet operations and maintain data integrity.
-
-```ts
-monitor: Monitor
-```
-See also: [Monitor](./monitor.md#class-monitor)
-
-###### Property rootKey
-
-The rootKey of the `KeyDeriver`. The private key from which other keys are derived.
-
-```ts
-rootKey: PrivateKey
-```
-
-###### Property services
-
-The network `Services` component which provides the wallet with access to external services hosted
-on the public network.
-
-```ts
-services: Services
-```
-See also: [Services](./services.md#class-services)
-
-###### Property storage
-
-The `WalletStorageManager` that manages all the configured storage providers (active and backups)
-accessed by the wallet.
-
-```ts
-storage: WalletStorageManager
-```
-See also: [WalletStorageManager](./storage.md#class-walletstoragemanager)
-
-###### Property wallet
-
-The actual BRC-100 `Wallet` to which all the other properties and components contribute.
-
-Note that internally, the wallet is itself linked to all these properties and components.
-They are included in this interface to facilitate access after wallet construction for
-experimentation, testing and customization. Any changes made to the configuration of these
-components after construction may disrupt the normal operation of the wallet.
-
-```ts
-wallet: Wallet
-```
-See also: [Wallet](./client.md#class-wallet)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -499,57 +405,6 @@ the active storage provider of the wallet.
 
 ```ts
 endpointUrl: string
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Interface: SetupWalletClient
-
-Extension `SetupWalletClient` of `SetupWallet` is returned by `createWalletClient`
-
-```ts
-export interface SetupWalletClient extends SetupWallet {
-    endpointUrl: string;
-}
-```
-
-See also: [SetupWallet](./setup.md#interface-setupwallet)
-
-###### Property endpointUrl
-
-The endpoint URL of the service hosting the `StorageServer` JSON-RPC service to
-which a `StorageClient` instance is connected to function as
-the active storage provider of the wallet.
-
-```ts
-endpointUrl: string
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Interface: SetupWalletClientArgs
-
-Extension `SetupWalletClientArgs` of `SetupWalletArgs` is used by `createWalletClient`
-to construct a `SetupWalletClient`.
-
-```ts
-export interface SetupWalletClientArgs extends SetupClientWalletArgs {
-    endpointUrl?: string;
-}
-```
-
-See also: [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs)
-
-###### Property endpointUrl
-
-The endpoint URL of a service hosting the `StorageServer` JSON-RPC service to
-which a `StorageClient` instance should connect to function as
-the active storage provider of the newly created wallet.
-
-```ts
-endpointUrl?: string
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -1189,7 +1044,7 @@ export abstract class SetupClient {
         storageUrl?: string;
         privilegedKeyGetter?: () => Promise<PrivateKey>;
     }): Promise<Wallet> 
-    static async createWalletClient(args: SetupWalletClientArgs): Promise<SetupWalletClient> {
+    static async createWalletClient(args: SetupClientWalletClientArgs): Promise<SetupWalletClient> {
         const wo = await SetupClient.createWallet(args);
         const endpointUrl = args.endpointUrl || `https://${args.chain !== "main" ? "staging-" : ""}storage.babbage.systems`;
         const client = new StorageClient(wo.wallet, endpointUrl);
@@ -1286,7 +1141,7 @@ export abstract class SetupClient {
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [KeyPairAddress](./setup.md#interface-keypairaddress), [Monitor](./monitor.md#class-monitor), [PrivilegedKeyManager](./client.md#class-privilegedkeymanager), [ScriptTemplateUnlock](./client.md#interface-scripttemplateunlock), [Services](./services.md#class-services), [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs), [SetupWallet](./setup.md#interface-setupwallet), [SetupWalletClient](./setup.md#interface-setupwalletclient), [SetupWalletClientArgs](./setup.md#interface-setupwalletclientargs), [SetupWalletIdb](./setup.md#interface-setupwalletidb), [SetupWalletIdbArgs](./setup.md#interface-setupwalletidbargs), [StorageClient](./storage.md#class-storageclient), [StorageIdb](./storage.md#class-storageidb), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager), [createAction](./storage.md#function-createaction)
+See also: [Chain](./client.md#type-chain), [KeyPairAddress](./setup.md#interface-keypairaddress), [Monitor](./monitor.md#class-monitor), [PrivilegedKeyManager](./client.md#class-privilegedkeymanager), [ScriptTemplateUnlock](./client.md#interface-scripttemplateunlock), [Services](./services.md#class-services), [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs), [SetupClientWalletClientArgs](./setup.md#interface-setupclientwalletclientargs), [SetupWallet](./setup.md#interface-setupwallet), [SetupWalletClient](./setup.md#interface-setupwalletclient), [SetupWalletIdb](./setup.md#interface-setupwalletidb), [SetupWalletIdbArgs](./setup.md#interface-setupwalletidbargs), [StorageClient](./storage.md#class-storageclient), [StorageIdb](./storage.md#class-storageidb), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager), [createAction](./storage.md#function-createaction)
 
 ###### Method createStorageIdb
 

@@ -2,9 +2,7 @@ import { WalletOutput } from '@bsv/sdk'
 import { sdk, Services, Setup, StorageKnex, TableOutput, TableUser, verifyOne, verifyOneOrNone } from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs } from '../../../src/sdk'
-import {
-  LocalWalletTestOptions,
-} from '../../utils/localWalletMethods'
+import { LocalWalletTestOptions } from '../../utils/localWalletMethods'
 
 import * as dotenv from 'dotenv'
 dotenv.config()

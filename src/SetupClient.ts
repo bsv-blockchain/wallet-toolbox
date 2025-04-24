@@ -11,15 +11,7 @@ import {
   PublicKey,
   WalletInterface
 } from '@bsv/sdk'
-import {
-  Monitor,
-  randomBytesHex,
-  sdk,
-  Services,
-  StorageClient,
-  Wallet,
-  WalletStorageManager
-} from './index.client'
+import { Monitor, randomBytesHex, sdk, Services, StorageClient, Wallet, WalletStorageManager } from './index.client'
 import { KeyPairAddress, SetupClientWalletArgs, SetupWallet, SetupWalletClient } from './SetupWallet'
 import { StorageIdb } from './storage/StorageIdb'
 

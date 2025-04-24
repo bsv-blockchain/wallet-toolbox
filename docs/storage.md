@@ -318,6 +318,7 @@ export interface ListOutputsSpecOp {
     useBasket?: string;
     ignoreLimit?: boolean;
     includeOutputScripts?: boolean;
+    includeSpent?: boolean;
     resultFromTags?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]) => Promise<ListOutputsResult>;
     resultFromOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<ListOutputsResult>;
     filterOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<TableOutput[]>;
@@ -4860,8 +4861,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | |
 | --- |
-| [basketToSpecOp](#variable-baskettospecop) |
-| [labelToSpecOp](#variable-labeltospecop) |
+| [getBasketToSpecOp](#variable-getbaskettospecop) |
+| [getLabelToSpecOp](#variable-getlabeltospecop) |
 | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) |
 | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) |
 | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
@@ -4870,70 +4871,73 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ---
 
-##### Variable: basketToSpecOp
+##### Variable: getBasketToSpecOp
 
 ```ts
-basketToSpecOp: Record<string, ListOutputsSpecOp> = {
-    [sdk.specOpWalletBalance]: {
-        name: "totalOutputsIsWalletBalance",
-        useBasket: "default",
-        ignoreLimit: true,
-        resultFromOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<ListOutputsResult> => {
-            let totalOutputs = 0;
-            for (const o of outputs)
-                totalOutputs += o.satoshis;
-            return { totalOutputs, outputs: [] };
-        }
-    },
-    [sdk.specOpInvalidChange]: {
-        name: "invalidChangeOutputs",
-        useBasket: "default",
-        ignoreLimit: true,
-        includeOutputScripts: true,
-        tagsToIntercept: ["release", "all"],
-        filterOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<TableOutput[]> => {
-            const filteredOutputs: TableOutput[] = [];
-            const services = s.getServices();
-            for (const o of outputs) {
-                await s.validateOutputScript(o);
-                let ok: boolean | undefined = false;
-                if (o.lockingScript && o.lockingScript.length > 0) {
-                    ok = await services.isUtxo(o);
-                }
-                else {
-                    ok = undefined;
-                }
-                if (ok === false) {
-                    filteredOutputs.push(o);
-                }
+getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => {
+    return {
+        [sdk.specOpWalletBalance]: {
+            name: "totalOutputsIsWalletBalance",
+            useBasket: "default",
+            ignoreLimit: true,
+            resultFromOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<ListOutputsResult> => {
+                let totalOutputs = 0;
+                for (const o of outputs)
+                    totalOutputs += o.satoshis;
+                return { totalOutputs, outputs: [] };
             }
-            if (specOpTags.indexOf("release") >= 0) {
-                for (const o of filteredOutputs) {
-                    await s.updateOutput(o.outputId, { spendable: false });
-                    o.spendable = false;
+        },
+        [sdk.specOpInvalidChange]: {
+            name: "invalidChangeOutputs",
+            useBasket: "default",
+            ignoreLimit: true,
+            includeOutputScripts: true,
+            includeSpent: false,
+            tagsToIntercept: ["release", "all"],
+            filterOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<TableOutput[]> => {
+                const filteredOutputs: TableOutput[] = [];
+                const services = s.getServices();
+                for (const o of outputs) {
+                    await s.validateOutputScript(o);
+                    let ok: boolean | undefined = false;
+                    if (o.lockingScript && o.lockingScript.length > 0) {
+                        ok = await services.isUtxo(o);
+                    }
+                    else {
+                        ok = undefined;
+                    }
+                    if (ok === false) {
+                        filteredOutputs.push(o);
+                    }
                 }
+                if (specOpTags.indexOf("release") >= 0) {
+                    for (const o of filteredOutputs) {
+                        await s.updateOutput(o.outputId, { spendable: false });
+                        o.spendable = false;
+                    }
+                }
+                return filteredOutputs;
             }
-            return filteredOutputs;
+        },
+        [sdk.specOpSetWalletChangeParams]: {
+            name: "setWalletChangeParams",
+            tagsParamsCount: 2,
+            resultFromTags: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]): Promise<ListOutputsResult> => {
+                if (specOpTags.length !== 2)
+                    throw new sdk.WERR_INVALID_PARAMETER("numberOfDesiredUTXOs and minimumDesiredUTXOValue", "valid");
+                const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]));
+                const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]));
+                const basket = verifyOne(await s.findOutputBaskets({
+                    partial: { userId: verifyId(auth.userId), name: "default" }
+                }));
+                await s.updateOutputBasket(basket.basketId, {
+                    numberOfDesiredUTXOs,
+                    minimumDesiredUTXOValue
+                });
+                return { totalOutputs: 0, outputs: [] };
+            }
         }
-    },
-    [sdk.specOpSetWalletChangeParams]: {
-        name: "setWalletChangeParams",
-        tagsParamsCount: 2,
-        resultFromTags: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]): Promise<ListOutputsResult> => {
-            if (specOpTags.length !== 2)
-                throw new sdk.WERR_INVALID_PARAMETER("numberOfDesiredUTXOs and minimumDesiredUTXOValue", "valid");
-            const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]));
-            const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]));
-            const basket = verifyOne(await s.findOutputBaskets({
-                partial: { userId: verifyId(auth.userId), name: "default" }
-            }));
-            await s.updateOutputBasket(basket.basketId, {
-                numberOfDesiredUTXOs,
-                minimumDesiredUTXOValue
-            });
-            return { totalOutputs: 0, outputs: [] };
-        }
-    }
+    };
 }
 ```
 
@@ -4942,39 +4946,41 @@ See also: [AuthId](./client.md#interface-authid), [ListOutputsSpecOp](./storage.
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
-##### Variable: labelToSpecOp
+##### Variable: getLabelToSpecOp
 
 ```ts
-labelToSpecOp: Record<string, ListActionsSpecOp> = {
-    [sdk.specOpNoSendActions]: {
-        name: "noSendActions",
-        labelsToIntercept: ["abort"],
-        setStatusFilter: () => ["nosend"],
-        postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
-            if (specOpLabels.indexOf("abort") >= 0) {
-                for (const tx of txs) {
-                    if (tx.status === "nosend") {
-                        await s.abortAction(auth, { reference: tx.reference! });
-                        tx.status = "failed";
+getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
+    return {
+        [sdk.specOpNoSendActions]: {
+            name: "noSendActions",
+            labelsToIntercept: ["abort"],
+            setStatusFilter: () => ["nosend"],
+            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+                if (specOpLabels.indexOf("abort") >= 0) {
+                    for (const tx of txs) {
+                        if (tx.status === "nosend") {
+                            await s.abortAction(auth, { reference: tx.reference! });
+                            tx.status = "failed";
+                        }
+                    }
+                }
+            }
+        },
+        [sdk.specOpFailedActions]: {
+            name: "failedActions",
+            labelsToIntercept: ["unfail"],
+            setStatusFilter: () => ["failed"],
+            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+                if (specOpLabels.indexOf("unfail") >= 0) {
+                    for (const tx of txs) {
+                        if (tx.status === "failed") {
+                            await s.updateTransaction(tx.transactionId!, { status: "unfail" });
+                        }
                     }
                 }
             }
         }
-    },
-    [sdk.specOpFailedActions]: {
-        name: "failedActions",
-        labelsToIntercept: ["unfail"],
-        setStatusFilter: () => ["failed"],
-        postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
-            if (specOpLabels.indexOf("unfail") >= 0) {
-                for (const tx of txs) {
-                    if (tx.status === "failed") {
-                        await s.updateTransaction(tx.transactionId!, { status: "unfail" });
-                    }
-                }
-            }
-        }
-    }
+    };
 }
 ```
 
