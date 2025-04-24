@@ -21,7 +21,7 @@ import {
 
 setLogging(false)
 
-describe('update tests', () => {
+describe('idb update tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'
@@ -57,7 +57,7 @@ describe('update tests', () => {
     }
     for (const storage of storages) {
       await storage.dropAllData()
-      await storage.migrate('insert tests', '1'.repeat(64))
+      await storage.migrate('update tests', '1'.repeat(64))
       await storage.makeAvailable()
       setups.push({ storage, setup: await _tu.createTestSetup1(storage) })
     }

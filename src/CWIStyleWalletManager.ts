@@ -343,7 +343,7 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
       if (!inputToken) {
         oldTokenToConsume = undefined
 
-      // Otherwise, add the input
+        // Otherwise, add the input
       } else {
         inputs.push({
           outpoint: oldTokenToConsume.currentOutpoint,

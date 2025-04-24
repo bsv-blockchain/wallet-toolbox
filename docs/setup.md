@@ -15,18 +15,15 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 #### Interfaces
 
-| |
-| --- |
-| [KeyPairAddress](#interface-keypairaddress) |
-| [SetupEnv](#interface-setupenv) |
-| [SetupWallet](#interface-setupwallet) |
-| [SetupWalletArgs](#interface-setupwalletargs) |
-| [SetupWalletClient](#interface-setupwalletclient) |
-| [SetupWalletClientArgs](#interface-setupwalletclientargs) |
-| [SetupWalletKnex](#interface-setupwalletknex) |
-| [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
-| [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
-| [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) |
+| | |
+| --- | --- |
+| [KeyPairAddress](#interface-keypairaddress) | [SetupWalletClientArgs](#interface-setupwalletclientargs) |
+| [SetupClientWalletArgs](#interface-setupclientwalletargs) | [SetupWalletIdb](#interface-setupwalletidb) |
+| [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) |
+| [SetupEnv](#interface-setupenv) | [SetupWalletKnex](#interface-setupwalletknex) |
+| [SetupWallet](#interface-setupwallet) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
+| [SetupWalletArgs](#interface-setupwalletargs) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
+| [SetupWalletClient](#interface-setupwalletclient) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -34,14 +31,97 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ##### Interface: KeyPairAddress
 
-A private key and associated public key and address.
-
 ```ts
 export interface KeyPairAddress {
     privateKey: PrivateKey;
     publicKey: PublicKey;
     address: string;
 }
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: SetupClientWalletArgs
+
+Arguments used by `createWallet` to construct a `SetupWallet`.
+
+Extension `SetupWalletClientArgs` used by `createWalletClient` to construct a `SetupWalletClient`.
+
+Extension `SetupWalletIdbArgs` used by `createWalletIdb` to construct a `SetupWalletIdb`.
+
+```ts
+export interface SetupClientWalletArgs {
+    chain: sdk.Chain;
+    rootKeyHex: string;
+    privilegedKeyGetter?: () => Promise<PrivateKey>;
+    active?: sdk.WalletStorageProvider;
+    backups?: sdk.WalletStorageProvider[];
+    taalApiKey?: string;
+}
+```
+
+See also: [Chain](./client.md#type-chain), [WalletStorageProvider](./client.md#interface-walletstorageprovider)
+
+###### Property active
+
+Optional. Active wallet storage. Can be added later.
+
+```ts
+active?: sdk.WalletStorageProvider
+```
+See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
+
+###### Property backups
+
+Optional. One or more storage providers managed as backup destinations. Can be added later.
+
+```ts
+backups?: sdk.WalletStorageProvider[]
+```
+See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
+
+###### Property privilegedKeyGetter
+
+Optional. The privileged private key getter used to initialize the `PrivilegedKeyManager`.
+Defaults to undefined.
+
+```ts
+privilegedKeyGetter?: () => Promise<PrivateKey>
+```
+
+###### Property rootKeyHex
+
+The non-privileged private key used to initialize the `KeyDeriver` and determine the `identityKey`.
+
+```ts
+rootKeyHex: string
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: SetupClientWalletClientArgs
+
+Extension `SetupWalletClientArgs` of `SetupWalletArgs` is used by `createWalletClient`
+to construct a `SetupWalletClient`.
+
+```ts
+export interface SetupClientWalletClientArgs extends SetupClientWalletArgs {
+    endpointUrl?: string;
+}
+```
+
+See also: [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs)
+
+###### Property endpointUrl
+
+The endpoint URL of a service hosting the `StorageServer` JSON-RPC service to
+which a `StorageClient` instance should connect to function as
+the active storage provider of the newly created wallet.
+
+```ts
+endpointUrl?: string
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -356,6 +436,41 @@ endpointUrl?: string
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: SetupWalletIdb
+
+```ts
+export interface SetupWalletIdb extends SetupWallet {
+    activeStorage: StorageIdb;
+    userId: number;
+    rootKey: PrivateKey;
+    identityKey: string;
+    keyDeriver: KeyDeriver;
+    chain: sdk.Chain;
+    storage: WalletStorageManager;
+    services: Services;
+    monitor: Monitor;
+    wallet: Wallet;
+}
+```
+
+See also: [Chain](./client.md#type-chain), [Monitor](./monitor.md#class-monitor), [Services](./services.md#class-services), [SetupWallet](./setup.md#interface-setupwallet), [StorageIdb](./storage.md#class-storageidb), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: SetupWalletIdbArgs
+
+```ts
+export interface SetupWalletIdbArgs extends SetupClientWalletArgs {
+    databaseName: string;
+}
+```
+
+See also: [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Interface: SetupWalletKnex
 
 ```ts
@@ -420,6 +535,15 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ---
 #### Classes
+
+| |
+| --- |
+| [Setup](#class-setup) |
+| [SetupClient](#class-setupclient) |
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 
 ##### Class: Setup
 
@@ -864,6 +988,272 @@ See also: [Chain](./client.md#type-chain)
 Returns
 
 true if .env is not valid for chain
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: SetupClient
+
+The 'Setup` class provides static setup functions to construct BRC-100 compatible
+wallets in a variety of configurations.
+
+It serves as a starting point for experimentation and customization.
+
+```ts
+export abstract class SetupClient {
+    static async createWallet(args: SetupClientWalletArgs): Promise<SetupWallet> {
+        const chain = args.chain;
+        const rootKey = PrivateKey.fromHex(args.rootKeyHex);
+        const identityKey = rootKey.toPublicKey().toString();
+        const keyDeriver = new KeyDeriver(rootKey);
+        const storage = new WalletStorageManager(identityKey, args.active, args.backups);
+        if (storage.canMakeAvailable())
+            await storage.makeAvailable();
+        const serviceOptions = Services.createDefaultOptions(chain);
+        serviceOptions.taalApiKey = args.taalApiKey;
+        const services = new Services(serviceOptions);
+        const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services);
+        const monitor = new Monitor(monopts);
+        monitor.addDefaultTasks();
+        const privilegedKeyManager = args.privilegedKeyGetter
+            ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+            : undefined;
+        const wallet = new Wallet({
+            chain,
+            keyDeriver,
+            storage,
+            services,
+            monitor,
+            privilegedKeyManager
+        });
+        const r: SetupWallet = {
+            rootKey,
+            identityKey,
+            keyDeriver,
+            chain,
+            storage,
+            services,
+            monitor,
+            wallet
+        };
+        return r;
+    }
+    static async createWalletClientNoEnv(args: {
+        chain: sdk.Chain;
+        rootKeyHex: string;
+        storageUrl?: string;
+        privilegedKeyGetter?: () => Promise<PrivateKey>;
+    }): Promise<Wallet> 
+    static async createWalletClient(args: SetupClientWalletClientArgs): Promise<SetupWalletClient> {
+        const wo = await SetupClient.createWallet(args);
+        const endpointUrl = args.endpointUrl || `https://${args.chain !== "main" ? "staging-" : ""}storage.babbage.systems`;
+        const client = new StorageClient(wo.wallet, endpointUrl);
+        await wo.storage.addWalletStorageProvider(client);
+        await wo.storage.makeAvailable();
+        return {
+            ...wo,
+            endpointUrl
+        };
+    }
+    static getKeyPair(priv?: string | PrivateKey): KeyPairAddress {
+        if (priv === undefined)
+            priv = PrivateKey.fromRandom();
+        else if (typeof priv === "string")
+            priv = new PrivateKey(priv, "hex");
+        const pub = PublicKey.fromPrivateKey(priv);
+        const address = pub.toAddress();
+        return { privateKey: priv, publicKey: pub, address };
+    }
+    static getLockP2PKH(address: string): LockingScript {
+        const p2pkh = new P2PKH();
+        const lock = p2pkh.lock(address);
+        return lock;
+    }
+    static getUnlockP2PKH(priv: PrivateKey, satoshis: number): sdk.ScriptTemplateUnlock {
+        const p2pkh = new P2PKH();
+        const lock = SetupClient.getLockP2PKH(SetupClient.getKeyPair(priv).address);
+        const unlock = p2pkh.unlock(priv, "all", false, satoshis, lock);
+        return unlock;
+    }
+    static createP2PKHOutputs(outputs: {
+        address: string;
+        satoshis: number;
+        outputDescription?: string;
+        basket?: string;
+        tags?: string[];
+    }[]): CreateActionOutput[] {
+        const os: CreateActionOutput[] = [];
+        const count = outputs.length;
+        for (let i = 0; i < count; i++) {
+            const o = outputs[i];
+            os.push({
+                basket: o.basket,
+                tags: o.tags,
+                satoshis: o.satoshis,
+                lockingScript: SetupClient.getLockP2PKH(o.address).toHex(),
+                outputDescription: o.outputDescription || `p2pkh ${i}`
+            });
+        }
+        return os;
+    }
+    static async createP2PKHOutputsAction(wallet: WalletInterface, outputs: {
+        address: string;
+        satoshis: number;
+        outputDescription?: string;
+        basket?: string;
+        tags?: string[];
+    }[], options?: CreateActionOptions): Promise<{
+        cr: CreateActionResult;
+        outpoints: string[] | undefined;
+    }> {
+        const os = SetupClient.createP2PKHOutputs(outputs);
+        const createArgs: CreateActionArgs = {
+            description: `createP2PKHOutputs`,
+            outputs: os,
+            options: {
+                ...options,
+                randomizeOutputs: false
+            }
+        };
+        const cr = await wallet.createAction(createArgs);
+        let outpoints: string[] | undefined;
+        if (cr.txid) {
+            outpoints = os.map((o, i) => `${cr.txid}.${i}`);
+        }
+        return { cr, outpoints };
+    }
+    static async fundWalletFromP2PKHOutpoints(wallet: WalletInterface, outpoints: string[], p2pkhKey: KeyPairAddress, inputBEEF?: BEEF) {
+    }
+    static async createWalletIdb(args: SetupWalletIdbArgs): Promise<SetupWalletIdb> {
+        const wo = await SetupClient.createWallet(args);
+        const activeStorage = await SetupClient.createStorageIdb(args);
+        await wo.storage.addWalletStorageProvider(activeStorage);
+        const { user, isNew } = await activeStorage.findOrInsertUser(wo.identityKey);
+        const userId = user.userId;
+        const r: SetupWalletIdb = {
+            ...wo,
+            activeStorage,
+            userId
+        };
+        return r;
+    }
+    static async createStorageIdb(args: SetupWalletIdbArgs): Promise<StorageIdb> 
+}
+```
+
+See also: [Chain](./client.md#type-chain), [KeyPairAddress](./setup.md#interface-keypairaddress), [Monitor](./monitor.md#class-monitor), [PrivilegedKeyManager](./client.md#class-privilegedkeymanager), [ScriptTemplateUnlock](./client.md#interface-scripttemplateunlock), [Services](./services.md#class-services), [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs), [SetupClientWalletClientArgs](./setup.md#interface-setupclientwalletclientargs), [SetupWallet](./setup.md#interface-setupwallet), [SetupWalletClient](./setup.md#interface-setupwalletclient), [SetupWalletIdb](./setup.md#interface-setupwalletidb), [SetupWalletIdbArgs](./setup.md#interface-setupwalletidbargs), [StorageClient](./storage.md#class-storageclient), [StorageIdb](./storage.md#class-storageidb), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager), [createAction](./storage.md#function-createaction)
+
+###### Method createStorageIdb
+
+```ts
+static async createStorageIdb(args: SetupWalletIdbArgs): Promise<StorageIdb> 
+```
+See also: [SetupWalletIdbArgs](./setup.md#interface-setupwalletidbargs), [StorageIdb](./storage.md#class-storageidb)
+
+Returns
+
+- `Knex` based storage provider for a wallet. May be used for either active storage or backup storage.
+
+###### Method createWallet
+
+Create a `Wallet`. Storage can optionally be provided or configured later.
+
+The following components are configured: KeyDeriver, WalletStorageManager, WalletService, WalletStorage.
+Optionally, PrivilegedKeyManager is also configured.
+
+```ts
+static async createWallet(args: SetupClientWalletArgs): Promise<SetupWallet> {
+    const chain = args.chain;
+    const rootKey = PrivateKey.fromHex(args.rootKeyHex);
+    const identityKey = rootKey.toPublicKey().toString();
+    const keyDeriver = new KeyDeriver(rootKey);
+    const storage = new WalletStorageManager(identityKey, args.active, args.backups);
+    if (storage.canMakeAvailable())
+        await storage.makeAvailable();
+    const serviceOptions = Services.createDefaultOptions(chain);
+    serviceOptions.taalApiKey = args.taalApiKey;
+    const services = new Services(serviceOptions);
+    const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services);
+    const monitor = new Monitor(monopts);
+    monitor.addDefaultTasks();
+    const privilegedKeyManager = args.privilegedKeyGetter
+        ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+        : undefined;
+    const wallet = new Wallet({
+        chain,
+        keyDeriver,
+        storage,
+        services,
+        monitor,
+        privilegedKeyManager
+    });
+    const r: SetupWallet = {
+        rootKey,
+        identityKey,
+        keyDeriver,
+        chain,
+        storage,
+        services,
+        monitor,
+        wallet
+    };
+    return r;
+}
+```
+See also: [Monitor](./monitor.md#class-monitor), [PrivilegedKeyManager](./client.md#class-privilegedkeymanager), [Services](./services.md#class-services), [SetupClientWalletArgs](./setup.md#interface-setupclientwalletargs), [SetupWallet](./setup.md#interface-setupwallet), [Wallet](./client.md#class-wallet), [WalletStorageManager](./storage.md#class-walletstoragemanager)
+
+###### Method createWalletClientNoEnv
+
+Setup a new `Wallet` without requiring a .env file.
+
+```ts
+static async createWalletClientNoEnv(args: {
+    chain: sdk.Chain;
+    rootKeyHex: string;
+    storageUrl?: string;
+    privilegedKeyGetter?: () => Promise<PrivateKey>;
+}): Promise<Wallet> 
+```
+See also: [Chain](./client.md#type-chain), [Wallet](./client.md#class-wallet)
+
+Argument Details
+
++ **args.chain**
+  + 'main' or 'test'
++ **args.rootKeyHex**
+  + Root private key for wallet's key deriver.
++ **args.storageUrl**
+  + Optional. `StorageClient` and `chain` compatible endpoint URL.
++ **args.privilegedKeyGetter**
+  + Optional. Method that will return the privileged `PrivateKey`, on demand.
+
+###### Method createWalletIdb
+
+Adds `indexedDB` based storage to a `Wallet` configured by `SetupClient.createWalletOnly`
+
+```ts
+static async createWalletIdb(args: SetupWalletIdbArgs): Promise<SetupWalletIdb> {
+    const wo = await SetupClient.createWallet(args);
+    const activeStorage = await SetupClient.createStorageIdb(args);
+    await wo.storage.addWalletStorageProvider(activeStorage);
+    const { user, isNew } = await activeStorage.findOrInsertUser(wo.identityKey);
+    const userId = user.userId;
+    const r: SetupWalletIdb = {
+        ...wo,
+        activeStorage,
+        userId
+    };
+    return r;
+}
+```
+See also: [SetupClient](./setup.md#class-setupclient), [SetupWalletIdb](./setup.md#interface-setupwalletidb), [SetupWalletIdbArgs](./setup.md#interface-setupwalletidbargs)
+
+Argument Details
+
++ **args.databaseName**
+  + Name for this storage. For MySQL, the schema name within the MySQL instance.
++ **args.chain**
+  + Which chain this wallet is on: 'main' or 'test'. Defaults to 'test'.
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
