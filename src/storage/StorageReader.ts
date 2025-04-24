@@ -1,6 +1,5 @@
 import {
   sdk,
-  TableCertificate,
   TableCertificateField,
   TableCertificateX,
   TableCommission,
@@ -118,6 +117,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
     switch (this.dbtype) {
       case 'IndexedDB':
       case 'MySQL':
+      case 'PostgreSQL':
         break
       case 'SQLite':
         r = r.toISOString()
@@ -144,6 +144,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
     switch (this.dbtype) {
       case 'IndexedDB':
       case 'MySQL':
+      case 'PostgreSQL':
         break
       case 'SQLite':
         if (r) r = r.toISOString()
@@ -174,6 +175,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
     switch (this.dbtype) {
       case 'IndexedDB':
       case 'MySQL':
+      case 'PostgreSQL':
         r = vdate
         break
       case 'SQLite':
@@ -190,7 +192,7 @@ export interface StorageReaderOptions {
   chain: sdk.Chain
 }
 
-export type DBType = 'SQLite' | 'MySQL' | 'IndexedDB'
+export type DBType = 'SQLite' | 'MySQL' | 'IndexedDB' | 'PostgreSQL'
 
 type DbEntityTimeStamp<T extends sdk.EntityTimeStamp> = {
   [K in keyof T]: T[K] extends Date ? Date | string : T[K]

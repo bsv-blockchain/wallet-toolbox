@@ -1,4 +1,4 @@
-import { ListActionsResult, ListOutputsResult, Transaction } from '@bsv/sdk'
+import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import { sdk, verifyOne, verifyOneOrNone, verifyTruthy } from '../index.all'
 import {
   KnexMigrations,
@@ -12,7 +12,6 @@ import {
   TableOutputBasket,
   TableOutputTag,
   TableOutputTagMap,
-  TableOutputX,
   TableProvenTx,
   TableProvenTxReq,
   TableSettings,
@@ -26,10 +25,10 @@ import {
 
 import { Knex } from 'knex'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
-import { purgeData } from './methods/purgeData'
+import { DBType } from './StorageReader'
 import { listActions } from './methods/listActionsKnex'
 import { listOutputs } from './methods/listOutputsKnex'
-import { DBType } from './StorageReader'
+import { purgeData } from './methods/purgeData'
 import { reviewStatus } from './methods/reviewStatus'
 
 export interface StorageKnexOptions extends StorageProviderOptions {
@@ -77,7 +76,8 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   }
 
   dbTypeSubstring(source: string, fromOffset: number, forLength?: number) {
-    if (this.dbtype === 'MySQL') return `substring(${source} from ${fromOffset} for ${forLength!})`
+    if (this.dbtype === 'MySQL' || this.dbtype === 'PostgreSQL')
+      return `substring(${source} from ${fromOffset} for ${forLength!})`
     return `substr(${source}, ${fromOffset}, ${forLength})`
   }
 
@@ -95,7 +95,8 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
       let rs: { rawTx: Buffer | null }[] = await this.toDb(trx).raw(
         `select ${this.dbTypeSubstring('rawTx', offset! + 1, length)} as rawTx from proven_txs where txid = '${txid}'`
       )
-      if (this.dbtype === 'MySQL') rs = (rs as unknown as { rawTx: Buffer | null }[][])[0]
+      if (this.dbtype === 'MySQL' || this.dbtype === 'PostgreSQL')
+        rs = (rs as unknown as { rawTx: Buffer | null }[][])[0]
       const r = verifyOneOrNone(rs)
       if (r && r.rawTx) {
         rawTx = Array.from(r.rawTx)
@@ -103,7 +104,8 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
         let rs: { rawTx: Buffer | null }[] = await this.toDb(trx).raw(
           `select ${this.dbTypeSubstring('rawTx', offset! + 1, length)} as rawTx from proven_tx_reqs where txid = '${txid}' and status in ('unsent', 'nosend', 'sending', 'unmined', 'completed', 'unfail')`
         )
-        if (this.dbtype === 'MySQL') rs = (rs as unknown as { rawTx: Buffer | null }[][])[0]
+        if (this.dbtype === 'MySQL' || this.dbtype === 'PostgreSQL')
+          rs = (rs as unknown as { rawTx: Buffer | null }[][])[0]
         const r = verifyOneOrNone(rs)
         if (r && r.rawTx) {
           rawTx = Array.from(r.rawTx)
@@ -217,7 +219,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxId === 0) delete e.provenTxId
-    const [id] = await this.toDb(trx)<TableProvenTx>('proven_txs').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableProvenTx>('proven_txs').insert(e).returning('provenTxId')
+      id = result[0].provenTxId
+    } else {
+      const idArr = await this.toDb(trx)<TableProvenTx>('proven_txs').insert(e)
+      id = idArr[0]
+    }
+
     tx.provenTxId = id
     return tx.provenTxId
   }
@@ -225,7 +236,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxReqId === 0) delete e.provenTxReqId
-    const [id] = await this.toDb(trx)<TableProvenTxReq>('proven_tx_reqs').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableProvenTxReq>('proven_tx_reqs').insert(e).returning('provenTxReqId')
+      id = result[0].provenTxReqId
+    } else {
+      const idArr = await this.toDb(trx)<TableProvenTxReq>('proven_tx_reqs').insert(e)
+      id = idArr[0]
+    }
+
     tx.provenTxReqId = id
     return tx.provenTxReqId
   }
@@ -233,7 +253,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(user, trx)
     if (e.userId === 0) delete e.userId
-    const [id] = await this.toDb(trx)<TableUser>('users').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableUser>('users').insert(e).returning('userId')
+      id = result[0].userId
+    } else {
+      const idArr = await this.toDb(trx)<TableUser>('users').insert(e)
+      id = idArr[0]
+    }
+
     user.userId = id
     return user.userId
   }
@@ -249,7 +278,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     const fields = e.fields
     if (e.fields) delete e.fields
     if (e.certificateId === 0) delete e.certificateId
-    const [id] = await this.toDb(trx)<TableCertificate>('certificates').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableCertificate>('certificates').insert(e).returning('certificateId')
+      id = result[0].certificateId
+    } else {
+      const idArr = await this.toDb(trx)<TableCertificate>('certificates').insert(e)
+      id = idArr[0]
+    }
+
     certificate.certificateId = id
 
     if (fields) {
@@ -271,7 +309,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(basket, trx, undefined, ['isDeleted'])
     if (e.basketId === 0) delete e.basketId
-    const [id] = await this.toDb(trx)<TableOutputBasket>('output_baskets').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableOutputBasket>('output_baskets').insert(e).returning('basketId')
+      id = result[0].basketId
+    } else {
+      const idArr = await this.toDb(trx)<TableOutputBasket>('output_baskets').insert(e)
+      id = idArr[0]
+    }
+
     basket.basketId = id
     return basket.basketId
   }
@@ -279,7 +326,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.transactionId === 0) delete e.transactionId
-    const [id] = await this.toDb(trx)<TableTransaction>('transactions').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableTransaction>('transactions').insert(e).returning('transactionId')
+      id = result[0].transactionId
+    } else {
+      const idArr = await this.toDb(trx)<TableTransaction>('transactions').insert(e)
+      id = idArr[0]
+    }
+
     tx.transactionId = id
     return tx.transactionId
   }
@@ -287,7 +343,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(commission, trx)
     if (e.commissionId === 0) delete e.commissionId
-    const [id] = await this.toDb(trx)<TableCommission>('commissions').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableCommission>('commissions').insert(e).returning('commissionId')
+      id = result[0].commissionId
+    } else {
+      const idArr = await this.toDb(trx)<TableCommission>('commissions').insert(e)
+      id = idArr[0]
+    }
+
     commission.commissionId = id
     return commission.commissionId
   }
@@ -296,7 +361,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     try {
       const e = await this.validateEntityForInsert(output, trx)
       if (e.outputId === 0) delete e.outputId
-      const [id] = await this.toDb(trx)<TableOutput>('outputs').insert(e)
+
+      let id: number
+      if (this.dbtype === 'PostgreSQL') {
+        const result = await this.toDb(trx)<TableOutput>('outputs').insert(e).returning('outputId')
+        id = result[0].outputId
+      } else {
+        const idArr = await this.toDb(trx)<TableOutput>('outputs').insert(e)
+        id = idArr[0]
+      }
+
       output.outputId = id
       return output.outputId
     } catch (e) {
@@ -307,33 +381,68 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tag, trx, undefined, ['isDeleted'])
     if (e.outputTagId === 0) delete e.outputTagId
-    const [id] = await this.toDb(trx)<TableOutputTag>('output_tags').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableOutputTag>('output_tags').insert(e).returning('outputTagId')
+      id = result[0].outputTagId
+    } else {
+      const idArr = await this.toDb(trx)<TableOutputTag>('output_tags').insert(e)
+      id = idArr[0]
+    }
+
     tag.outputTagId = id
     return tag.outputTagId
   }
 
   override async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(tagMap, trx, undefined, ['isDeleted'])
-    const [id] = await this.toDb(trx)<TableOutputTagMap>('output_tags_map').insert(e)
+    if (this.dbtype === 'PostgreSQL') {
+      await this.toDb(trx)<TableOutputTagMap>('output_tags_map').insert(e)
+    } else {
+      const [id] = await this.toDb(trx)<TableOutputTagMap>('output_tags_map').insert(e)
+    }
   }
 
   override async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(label, trx, undefined, ['isDeleted'])
     if (e.txLabelId === 0) delete e.txLabelId
-    const [id] = await this.toDb(trx)<TableTxLabel>('tx_labels').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableTxLabel>('tx_labels').insert(e).returning('txLabelId')
+      id = result[0].txLabelId
+    } else {
+      const idArr = await this.toDb(trx)<TableTxLabel>('tx_labels').insert(e)
+      id = idArr[0]
+    }
+
     label.txLabelId = id
     return label.txLabelId
   }
 
   override async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(labelMap, trx, undefined, ['isDeleted'])
-    const [id] = await this.toDb(trx)<TableTxLabelMap>('tx_labels_map').insert(e)
+    if (this.dbtype === 'PostgreSQL') {
+      await this.toDb(trx)<TableTxLabelMap>('tx_labels_map').insert(e)
+    } else {
+      const [id] = await this.toDb(trx)<TableTxLabelMap>('tx_labels_map').insert(e)
+    }
   }
 
   override async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(event, trx)
     if (e.id === 0) delete e.id
-    const [id] = await this.toDb(trx)<TableMonitorEvent>('monitor_events').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableMonitorEvent>('monitor_events').insert(e).returning('id')
+      id = result[0].id
+    } else {
+      const idArr = await this.toDb(trx)<TableMonitorEvent>('monitor_events').insert(e)
+      id = idArr[0]
+    }
+
     event.id = id
     return event.id
   }
@@ -341,7 +450,16 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   override async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(syncState, trx, ['when'], ['init'])
     if (e.syncStateId === 0) delete e.syncStateId
-    const [id] = await this.toDb(trx)<TableSyncState>('sync_states').insert(e)
+
+    let id: number
+    if (this.dbtype === 'PostgreSQL') {
+      const result = await this.toDb(trx)<TableSyncState>('sync_states').insert(e).returning('syncStateId')
+      id = result[0].syncStateId
+    } else {
+      const idArr = await this.toDb(trx)<TableSyncState>('sync_states').insert(e)
+      id = idArr[0]
+    }
+
     syncState.syncStateId = id
     return syncState.syncStateId
   }
@@ -726,7 +844,13 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   async getCount<T extends object>(q: Knex.QueryBuilder<T, T[]>): Promise<number> {
     q.count()
     const r = await q
-    return r[0]['count(*)']
+    // Handling different database count result formats
+    if (r[0] && 'count(*)' in r[0]) {
+      return r[0]['count(*)']
+    } else if (r[0] && 'count' in r[0]) {
+      return Number(r[0]['count'])
+    }
+    return 0
   }
 
   override async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> {
@@ -976,7 +1100,10 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     const status: sdk.TransactionStatus[] = ['completed', 'unproven']
     if (!excludeSending) status.push('sending')
     const statusText = status.map(s => `'${s}'`).join(',')
-    const txStatusCondition = `(SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`
+    const txStatusCondition =
+      this.dbtype === 'PostgreSQL'
+        ? `(SELECT status FROM transactions WHERE outputs."transactionId" = transactions."transactionId") in (${statusText})`
+        : `(SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`
     let q = this.knex<TableOutput>('outputs').where({ userId, spendable: true, basketId }).whereRaw(txStatusCondition)
     const count = await this.getCount(q)
     return count
@@ -1000,7 +1127,10 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     const statusText = status.map(s => `'${s}'`).join(',')
 
     const r: TableOutput | undefined = await this.knex.transaction(async trx => {
-      const txStatusCondition = `AND (SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`
+      const txStatusCondition =
+        this.dbtype === 'PostgreSQL'
+          ? `AND (SELECT status FROM transactions WHERE outputs."transactionId" = transactions."transactionId") in (${statusText})`
+          : `AND (SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`
 
       let outputId: number | undefined
       const setOutputId = async (rawQuery: string): Promise<void> => {

@@ -19,40 +19,40 @@ import {
   WalletCertificate,
   WalletInterface
 } from '@bsv/sdk'
-import path from 'path'
 import { promises as fsp } from 'fs'
+import path from 'path'
 import {
   asArray,
+  Monitor,
   randomBytesBase64,
   randomBytesHex,
+  ScriptTemplateBRC29,
   sdk,
-  StorageProvider,
-  StorageKnex,
-  StorageSyncReader,
-  verifyTruthy,
-  Wallet,
-  Monitor,
   Services,
-  WalletStorageManager,
-  verifyOne,
+  Setup,
   StorageClient,
-  TableOutputBasket,
-  TableOutput,
-  TableMonitorEvent,
-  TableProvenTxReq,
-  TableProvenTx,
-  TableCommission,
-  TableTransaction,
-  TableTxLabelMap,
-  TableTxLabel,
-  TableUser,
-  TableSyncState,
+  StorageKnex,
+  StorageProvider,
+  StorageSyncReader,
   TableCertificate,
   TableCertificateField,
-  TableOutputTagMap,
+  TableCommission,
+  TableMonitorEvent,
+  TableOutput,
+  TableOutputBasket,
   TableOutputTag,
-  ScriptTemplateBRC29,
-  Setup
+  TableOutputTagMap,
+  TableProvenTx,
+  TableProvenTxReq,
+  TableSyncState,
+  TableTransaction,
+  TableTxLabel,
+  TableTxLabelMap,
+  TableUser,
+  verifyOne,
+  verifyTruthy,
+  Wallet,
+  WalletStorageManager
 } from '../../src/index.all'
 
 import { Knex, knex as makeKnex } from 'knex'
@@ -92,6 +92,7 @@ export interface TuEnv extends TuEnvFlags {
    */
   testFilePath?: string
   cloudMySQLConnection?: string
+  postgresConnection?: string
 }
 
 export abstract class TestUtilsWalletStorage {
@@ -143,6 +144,8 @@ export abstract class TestUtilsWalletStorage {
     const testFilePath = chain === 'main' ? process.env.TEST_MAIN_FILEPATH : process.env.TEST_TEST_FILEPATH
     const cloudMySQLConnection =
       chain === 'main' ? process.env.MAIN_CLOUD_MYSQL_CONNECTION : process.env.TEST_CLOUD_MYSQL_CONNECTION
+    const postgresConnection =
+      chain === 'main' ? process.env.MAIN_POSTGRES_CONNECTION : process.env.TEST_POSTGRES_CONNECTION
     const DEV_KEYS = process.env.DEV_KEYS || '{}'
     const taalApiKey = (chain === 'main' ? process.env.MAIN_TAAL_API_KEY : process.env.TEST_TAAL_API_KEY) || ''
     const bitailsApiKey = (chain === 'main' ? process.env.MAIN_BITAILS_API_KEY : process.env.TEST_BITAILS_API_KEY) || ''
@@ -159,7 +162,8 @@ export abstract class TestUtilsWalletStorage {
       filePath,
       testIdentityKey,
       testFilePath,
-      cloudMySQLConnection
+      cloudMySQLConnection,
+      postgresConnection
     }
   }
 
@@ -598,6 +602,20 @@ export abstract class TestUtilsWalletStorage {
     return knex
   }
 
+  static createLocalPostgreSQL(database: string): Knex {
+    const localPostgresConnection = process.env.POSTGRES_CONNECTION || ''
+    const connection = JSON.parse(localPostgresConnection || '{}')
+    connection['database'] = database
+    const config: Knex.Config = {
+      client: 'pg',
+      connection,
+      useNullAsDefault: true,
+      pool: { min: 0, max: 7, idleTimeoutMillis: 15000 }
+    }
+    const knex = makeKnex(config)
+    return knex
+  }
+
   static async createMySQLTestWallet(args: {
     databaseName: string
     chain?: sdk.Chain
@@ -632,6 +650,43 @@ export abstract class TestUtilsWalletStorage {
       ...args,
       dropAll: true,
       knex: _tu.createLocalMySQL(args.databaseName)
+    })
+  }
+
+  static async createPostgreSQLTestWallet(args: {
+    databaseName: string
+    chain?: sdk.Chain
+    rootKeyHex?: string
+    dropAll?: boolean
+  }): Promise<TestWalletNoSetup> {
+    return await this.createKnexTestWallet({
+      ...args,
+      knex: _tu.createLocalPostgreSQL(args.databaseName)
+    })
+  }
+
+  static async createPostgreSQLTestSetup1Wallet(args: {
+    databaseName: string
+    chain?: sdk.Chain
+    rootKeyHex?: string
+  }): Promise<TestWallet<TestSetup1>> {
+    return await this.createKnexTestSetup1Wallet({
+      ...args,
+      dropAll: true,
+      knex: _tu.createLocalPostgreSQL(args.databaseName)
+    })
+  }
+
+  static async createPostgreSQLTestSetup2Wallet(args: {
+    databaseName: string
+    mockData: MockData
+    chain?: sdk.Chain
+    rootKeyHex?: string
+  }): Promise<TestWallet<TestSetup2>> {
+    return await this.createKnexTestSetup2Wallet({
+      ...args,
+      dropAll: true,
+      knex: _tu.createLocalPostgreSQL(args.databaseName)
     })
   }
 
@@ -1326,6 +1381,7 @@ export abstract class TestUtilsWalletStorage {
   }
 
   static async createTestSetup1(storage: StorageProvider, u1IdentityKey?: string): Promise<TestSetup1> {
+    console.log(`Creating test setup 1: `)
     const u1 = await _tu.insertTestUser(storage, u1IdentityKey)
     const u1basket1 = await _tu.insertTestOutputBasket(storage, u1)
     const u1basket2 = await _tu.insertTestOutputBasket(storage, u1)

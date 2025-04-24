@@ -32,6 +32,18 @@ describe('find tests', () => {
       )
     }
 
+    // Add PostgreSQL testing if configured
+    if (process.env.POSTGRES_CONNECTION) {
+      const knexPostgreSQL = _tu.createLocalPostgreSQL('storagefindtest')
+      storages.push(
+        new StorageKnex({
+          ...StorageKnex.defaultOptions(),
+          chain,
+          knex: knexPostgreSQL
+        })
+      )
+    }
+
     for (const storage of storages) {
       await storage.dropAllData()
       await storage.migrate('find tests', '1'.repeat(64))

@@ -121,35 +121,78 @@ export class KnexMigrations implements MigrationSource<string> {
           knex
         })
         const settings = await storage.makeAvailable()
-        await knex.raw(`update users set activeStorage = '${settings.storageIdentityKey}' where activeStorage is NULL`)
-        await knex.schema.alterTable('users', table => {
-          table.string('activeStorage').notNullable().alter()
-        })
+        const dbtype = await KnexMigrations.dbtype(knex)
+
+        if (dbtype === 'PostgreSQL') {
+          await knex.raw(
+            `update public.users set "activeStorage" = '${settings.storageIdentityKey}' where "activeStorage" is NULL`
+          )
+          await knex.raw(`ALTER TABLE public.users ALTER COLUMN "activeStorage" SET NOT NULL`)
+        } else if (dbtype === 'MySQL') {
+          await knex.raw(
+            `update public.users set activeStorage = '${settings.storageIdentityKey}' where activeStorage is NULL`
+          )
+          await knex.schema.withSchema('public').alterTable('users', table => {
+            table.string('activeStorage').notNullable().alter()
+          })
+        } else {
+          // SQLite
+          await knex.raw(
+            `update users set activeStorage = '${settings.storageIdentityKey}' where activeStorage is NULL`
+          )
+          await knex.schema.alterTable('users', table => {
+            table.string('activeStorage').notNullable().alter()
+          })
+        }
       },
       async down(knex) {
-        await knex.schema.alterTable('users', table => {
-          table.string('activeStorage').nullable().alter()
-        })
+        const dbtype = await KnexMigrations.dbtype(knex)
+        if (dbtype === 'PostgreSQL') {
+          await knex.raw(`ALTER TABLE public.users ALTER COLUMN "activeStorage" DROP NOT NULL`)
+        } else if (dbtype === 'MySQL') {
+          await knex.schema.withSchema('public').alterTable('users', table => {
+            table.string('activeStorage').nullable().alter()
+          })
+        } else {
+          // SQLite
+          await knex.schema.alterTable('users', table => {
+            table.string('activeStorage').nullable().alter()
+          })
+        }
       }
     }
 
     migrations['2025-01-21-001 add activeStorage to users'] = {
       async up(knex) {
-        await knex.schema.alterTable('users', table => {
-          table.string('activeStorage', 130).nullable().defaultTo(null)
-        })
+        const dbtype = await KnexMigrations.dbtype(knex)
+        if (dbtype === 'PostgreSQL') {
+          await knex.raw(`ALTER TABLE public.users ADD COLUMN "activeStorage" VARCHAR(130) NULL DEFAULT NULL`)
+        } else if (dbtype === 'MySQL') {
+          await knex.schema.withSchema('public').alterTable('users', table => {
+            table.string('activeStorage', 130).nullable().defaultTo(null)
+          })
+        } else {
+          // SQLite does not support schemas
+          await knex.schema.alterTable('users', table => {
+            table.string('activeStorage', 130).nullable().defaultTo(null)
+          })
+        }
       },
       async down(knex) {
-        await knex.schema.alterTable('users', table => {
-          table.dropColumn('activeStorage')
-        })
+        const dbtype = await KnexMigrations.dbtype(knex)
+        if (dbtype === 'PostgreSQL') {
+          await knex.raw(`ALTER TABLE public.users DROP COLUMN "activeStorage"`)
+        } else {
+          await knex.schema.alterTable('users', table => {
+            table.dropColumn('activeStorage')
+          })
+        }
       }
     }
 
     migrations['2024-12-26-001 initial migration'] = {
       async up(knex) {
         const dbtype = await KnexMigrations.dbtype(knex)
-
         await knex.schema.createTable('proven_txs', table => {
           addTimeStamps(knex, table, dbtype)
           table.increments('provenTxId').notNullable()
@@ -347,6 +390,14 @@ export class KnexMigrations implements MigrationSource<string> {
           await knex.raw('ALTER TABLE transactions MODIFY COLUMN rawTx LONGBLOB')
           await knex.raw('ALTER TABLE transactions MODIFY COLUMN inputBEEF LONGBLOB')
           await knex.raw('ALTER TABLE outputs MODIFY COLUMN lockingScript LONGBLOB')
+        } else if (dbtype === 'PostgreSQL') {
+          // PostgreSQL uses bytea type for binary data, which doesn't need size constraints
+          await knex.raw('ALTER TABLE proven_tx_reqs ALTER COLUMN "rawTx" TYPE bytea')
+          await knex.raw('ALTER TABLE proven_tx_reqs ALTER COLUMN "inputBEEF" TYPE bytea')
+          await knex.raw('ALTER TABLE proven_txs ALTER COLUMN "rawTx" TYPE bytea')
+          await knex.raw('ALTER TABLE transactions ALTER COLUMN "rawTx" TYPE bytea')
+          await knex.raw('ALTER TABLE transactions ALTER COLUMN "inputBEEF" TYPE bytea')
+          await knex.raw('ALTER TABLE outputs ALTER COLUMN "lockingScript" TYPE bytea')
         } else {
           await knex.schema.alterTable('proven_tx_reqs', table => {
             table.binary('rawTx', 10000000).alter()
@@ -400,6 +451,18 @@ export class KnexMigrations implements MigrationSource<string> {
    */
   static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
     try {
+      // First try PostgreSQL check
+      try {
+        const pgResult = await knex.raw('SELECT version()')
+        const versionStr = pgResult.rows?.[0]?.version || ''
+        if (versionStr.toLowerCase().includes('postgresql')) {
+          return 'PostgreSQL'
+        }
+      } catch {
+        // Not PostgreSQL, continue with other checks
+      }
+
+      // Then try MySQL check
       const q = `SELECT 
     CASE 
         WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'

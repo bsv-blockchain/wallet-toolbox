@@ -77,6 +77,7 @@ MY_MAIN_IDENTITY2 = '${mainIdentityKey2}'
 MAIN_TAAL_API_KEY='mainnet_9596de07e92300c6287e4393594ae39c'
 TEST_TAAL_API_KEY='testnet_0e6cf72133b43ea2d7861da2a38684e3'
 MYSQL_CONNECTION='{"port":3306,"host":"127.0.0.1","user":"root","password":"your_password","database":"your_database", "timezone": "Z"}'
+POSTGRES_CONNECTION='{"port":5432,"host":"127.0.0.1","user":"postgres","password":"your_password","database":"your_database"}'
 DEV_KEYS = '{
     "${testIdentityKey1}": "${testPrivKey1.toString()}",
     "${testIdentityKey2}": "${testPrivKey2.toString()}",
@@ -108,6 +109,7 @@ DEV_KEYS = '{
     const filePath = chain === 'main' ? process.env.MY_MAIN_FILEPATH : process.env.MY_TEST_FILEPATH
     const DEV_KEYS = process.env.DEV_KEYS || '{}'
     const mySQLConnection = process.env.MYSQL_CONNECTION || '{}'
+    const postgresConnection = process.env.POSTGRES_CONNECTION || '{}'
     const taalApiKey = verifyTruthy(
       chain === 'main' ? process.env.MAIN_TAAL_API_KEY : process.env.TEST_TAAL_API_KEY,
       `.env value for '${chain.toUpperCase()}_TAAL_API_KEY' is required.`
@@ -123,7 +125,8 @@ DEV_KEYS = '{
       filePath,
       taalApiKey,
       devKeys: JSON.parse(DEV_KEYS) as Record<string, string>,
-      mySQLConnection
+      mySQLConnection,
+      postgresConnection
     }
   }
 
@@ -420,6 +423,24 @@ DEV_KEYS = '{
   /**
    * @publicbody
    */
+  static createPostgreSQLKnex(connection: string, database?: string): Knex {
+    const c = JSON.parse(connection) as Knex.PgConnectionConfig
+    if (database) {
+      c.database = database
+    }
+    const config: Knex.Config = {
+      client: 'pg',
+      connection: c,
+      useNullAsDefault: true,
+      pool: { min: 0, max: 7, idleTimeoutMillis: 15000 }
+    }
+    const knex = makeKnex(config)
+    return knex
+  }
+
+  /**
+   * @publicbody
+   */
   static async createWalletMySQL(args: SetupWalletMySQLArgs): Promise<SetupWalletKnex> {
     return await this.createWalletKnex({
       ...args,
@@ -434,6 +455,16 @@ DEV_KEYS = '{
     return await this.createWalletKnex({
       ...args,
       knex: Setup.createSQLiteKnex(args.filePath)
+    })
+  }
+
+  /**
+   * @publicbody
+   */
+  static async createWalletPostgreSQL(args: SetupWalletPostgreSQLArgs): Promise<SetupWalletKnex> {
+    return await this.createWalletKnex({
+      ...args,
+      knex: Setup.createPostgreSQLKnex(args.env.postgresConnection, args.databaseName)
     })
   }
 }
@@ -500,6 +531,13 @@ export interface SetupWalletSQLiteArgs extends SetupWalletArgs {
 /**
  *
  */
+export interface SetupWalletPostgreSQLArgs extends SetupWalletArgs {
+  databaseName: string
+}
+
+/**
+ *
+ */
 export interface SetupWalletKnex extends SetupWallet {
   activeStorage: StorageKnex
   userId: number
@@ -551,6 +589,11 @@ export interface SetupEnv {
    * Must be valid to make use of MySQL `Setup` class support.
    */
   mySQLConnection: string
+  /**
+   * A PostgreSQL connection string including user and password properties.
+   * Must be valid to make use of PostgreSQL `Setup` class support.
+   */
+  postgresConnection: string
 }
 
 /**
