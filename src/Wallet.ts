@@ -639,14 +639,14 @@ export class Wallet implements WalletInterface, ProtoWallet {
     if (this.returnTxidOnly) return beef
     const onlyTxids = beef.txs.filter(btx => btx.isTxidOnly).map(btx => btx.txid)
     for (const txid of onlyTxids) {
-      if (knownTxids && knownTxids.indexOf(txid) >= 0) continue;
+      if (knownTxids && knownTxids.indexOf(txid) >= 0) continue
       const btx = beef.findTxid(txid)
       const tx = this.beef.findAtomicTransaction(txid)
       if (!tx) throw new sdk.WERR_INTERNAL(`unable to merge txid ${txid} into beef`)
       beef.mergeTransaction(tx)
     }
     for (const btx of beef.txs) {
-      if (knownTxids && knownTxids.indexOf(btx.txid) >= 0) continue;
+      if (knownTxids && knownTxids.indexOf(btx.txid) >= 0) continue
       if (btx.isTxidOnly) throw new sdk.WERR_INTERNAL(`remaining txidOnly ${btx.txid} is not known`)
     }
     return beef

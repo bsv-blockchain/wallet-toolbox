@@ -8902,8 +8902,8 @@ export class Wallet implements WalletInterface, ProtoWallet {
     async proveCertificate(args: ProveCertificateArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<ProveCertificateResult> 
     async discoverByIdentityKey(args: DiscoverByIdentityKeyArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<DiscoverCertificatesResult> 
     async discoverByAttributes(args: DiscoverByAttributesArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<DiscoverCertificatesResult> 
-    verifyReturnedTxidOnly(beef: Beef): Beef 
-    verifyReturnedTxidOnlyAtomicBEEF(beef: AtomicBEEF): AtomicBEEF 
+    verifyReturnedTxidOnly(beef: Beef, knownTxids?: string[]): Beef 
+    verifyReturnedTxidOnlyAtomicBEEF(beef: AtomicBEEF, knownTxids?: string[]): AtomicBEEF 
     verifyReturnedTxidOnlyBEEF(beef: BEEF): BEEF 
     async createAction(args: CreateActionArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<CreateActionResult> 
     async signAction(args: SignActionArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<SignActionResult> 
