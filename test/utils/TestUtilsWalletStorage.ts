@@ -1381,7 +1381,6 @@ export abstract class TestUtilsWalletStorage {
   }
 
   static async createTestSetup1(storage: StorageProvider, u1IdentityKey?: string): Promise<TestSetup1> {
-    console.log(`Creating test setup 1: `)
     const u1 = await _tu.insertTestUser(storage, u1IdentityKey)
     const u1basket1 = await _tu.insertTestOutputBasket(storage, u1)
     const u1basket2 = await _tu.insertTestOutputBasket(storage, u1)

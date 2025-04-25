@@ -1,6 +1,6 @@
-import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
 import { sdk, StorageProvider } from '../../src/index.client'
 import { StorageKnex } from '../../src/storage/StorageKnex'
+import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
 
 describe('find tests', () => {
   jest.setTimeout(99999999)
@@ -33,7 +33,7 @@ describe('find tests', () => {
     }
 
     // Add PostgreSQL testing if configured
-    if (process.env.POSTGRES_CONNECTION) {
+    if (!process.env.NOPOSTGRES) {
       const knexPostgreSQL = _tu.createLocalPostgreSQL('storagefindtest')
       storages.push(
         new StorageKnex({

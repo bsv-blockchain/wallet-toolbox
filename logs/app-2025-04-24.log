@@ -1,0 +1,88 @@
+[2025-04-24 13:40:56] INFO: In setupMigrations
+[2025-04-24 13:40:56] INFO: In setupMigrations
+[2025-04-24 13:40:56] INFO: In setupMigrations
+[2025-04-24 13:40:56] INFO: In getMigrations
+[2025-04-24 13:40:56] INFO: In getMigrations
+[2025-04-24 13:40:56] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: postgres extended tests - 1111111111111111111111111111111111111111111111111111111111111111
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: postgres tests - 1111111111111111111111111111111111111111111111111111111111111111
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: {
+  "migrationSource": {
+    "chain": "test",
+    "storageName": "postgres extended tests",
+    "storageIdentityKey": "1111111111111111111111111111111111111111111111111111111111111111",
+    "maxOutputScriptLength": 1024,
+    "migrations": {
+      "2025-03-03-001 descriptions to 2000": {},
+      "2025-03-01-001 reset req history": {},
+      "2025-02-28-001 derivations to 200": {},
+      "2025-02-22-001 nonNULL activeStorage": {},
+      "2025-01-21-001 add activeStorage to users": {},
+      "2024-12-26-001 initial migration": {}
+    }
+  }
+}
+[2025-04-24 13:40:57] INFO: {
+  "migrationSource": {
+    "chain": "test",
+    "storageName": "postgres tests",
+    "storageIdentityKey": "1111111111111111111111111111111111111111111111111111111111111111",
+    "maxOutputScriptLength": 1024,
+    "migrations": {
+      "2025-03-03-001 descriptions to 2000": {},
+      "2025-03-01-001 reset req history": {},
+      "2025-02-28-001 derivations to 200": {},
+      "2025-02-22-001 nonNULL activeStorage": {},
+      "2025-01-21-001 add activeStorage to users": {},
+      "2024-12-26-001 initial migration": {}
+    }
+  }
+}
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: postgres_wallet_setup_test - 5be11f13b5ed2eb818fb9f137805d7ce2977911063a96d0614a553b77af7f24dcf
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: {
+  "migrationSource": {
+    "chain": "test",
+    "storageName": "postgres_wallet_setup_test",
+    "storageIdentityKey": "5be11f13b5ed2eb818fb9f137805d7ce2977911063a96d0614a553b77af7f24dcf",
+    "maxOutputScriptLength": 1024,
+    "migrations": {
+      "2025-03-03-001 descriptions to 2000": {},
+      "2025-03-01-001 reset req history": {},
+      "2025-02-28-001 derivations to 200": {},
+      "2025-02-22-001 nonNULL activeStorage": {},
+      "2025-01-21-001 add activeStorage to users": {},
+      "2024-12-26-001 initial migration": {}
+    }
+  }
+}
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: In getMigrations
+[2025-04-24 13:40:57] INFO: postgres_wallet_binary_test - 81cc478932ea466662c9651f90c060306355368814cf77d268a4d5e6ce282071b5
+[2025-04-24 13:40:57] INFO: In setupMigrations
+[2025-04-24 13:40:57] INFO: {
+  "migrationSource": {
+    "chain": "test",
+    "storageName": "postgres_wallet_binary_test",
+    "storageIdentityKey": "81cc478932ea466662c9651f90c060306355368814cf77d268a4d5e6ce282071b5",
+    "maxOutputScriptLength": 1024,
+    "migrations": {
+      "2025-03-03-001 descriptions to 2000": {},
+      "2025-03-01-001 reset req history": {},
+      "2025-02-28-001 derivations to 200": {},
+      "2025-02-22-001 nonNULL activeStorage": {},
+      "2025-01-21-001 add activeStorage to users": {},
+      "2024-12-26-001 initial migration": {}
+    }
+  }
+}
+[2025-04-24 13:40:57] INFO: In getMigrations

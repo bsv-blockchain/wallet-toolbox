@@ -5,7 +5,7 @@ import { StorageKnex } from '../../src/storage/StorageKnex'
 import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
 
 const postgresConnection = process.env.POSTGRES_CONNECTION || ''
-const shouldRunTests = !!process.env.RUNPOSTGRES_TESTS && !!postgresConnection
+const shouldRunTests = !process.env.NOPOSTGRES && !!postgresConnection
 
 // Conditionally define the test suite
 const describeOrSkip = shouldRunTests ? describe : describe.skip
