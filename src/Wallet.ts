@@ -635,26 +635,28 @@ export class Wallet implements WalletInterface, ProtoWallet {
     return transformVerifiableCertificatesWithTrust(trustSettings, results)
   }
 
-  verifyReturnedTxidOnly(beef: Beef): Beef {
+  verifyReturnedTxidOnly(beef: Beef, knownTxids?: string[]): Beef {
     if (this.returnTxidOnly) return beef
     const onlyTxids = beef.txs.filter(btx => btx.isTxidOnly).map(btx => btx.txid)
     for (const txid of onlyTxids) {
+      if (knownTxids && knownTxids.indexOf(txid) >= 0) continue;
       const btx = beef.findTxid(txid)
       const tx = this.beef.findAtomicTransaction(txid)
-      if (!tx) throw new sdk.WERR_INTERNAL()
+      if (!tx) throw new sdk.WERR_INTERNAL(`unable to merge txid ${txid} into beef`)
       beef.mergeTransaction(tx)
     }
     for (const btx of beef.txs) {
-      if (btx.isTxidOnly) throw new sdk.WERR_INTERNAL()
+      if (knownTxids && knownTxids.indexOf(btx.txid) >= 0) continue;
+      if (btx.isTxidOnly) throw new sdk.WERR_INTERNAL(`remaining txidOnly ${btx.txid} is not known`)
     }
     return beef
   }
 
-  verifyReturnedTxidOnlyAtomicBEEF(beef: AtomicBEEF): AtomicBEEF {
+  verifyReturnedTxidOnlyAtomicBEEF(beef: AtomicBEEF, knownTxids?: string[]): AtomicBEEF {
     if (this.returnTxidOnly) return beef
     const b = Beef.fromBinary(beef)
     if (!b.atomicTxid) throw new sdk.WERR_INTERNAL()
-    return this.verifyReturnedTxidOnly(b).toBinaryAtomic(b.atomicTxid!)
+    return this.verifyReturnedTxidOnly(b, knownTxids).toBinaryAtomic(b.atomicTxid!)
   }
 
   verifyReturnedTxidOnlyBEEF(beef: BEEF): BEEF {
@@ -694,7 +696,7 @@ export class Wallet implements WalletInterface, ProtoWallet {
       this.beef.mergeBeefFromParty(this.storageParty, r.tx)
     }
 
-    if (r.tx) r.tx = this.verifyReturnedTxidOnlyAtomicBEEF(r.tx)
+    if (r.tx) r.tx = this.verifyReturnedTxidOnlyAtomicBEEF(r.tx, args.options?.knownTxids)
 
     if (!vargs.isDelayed) throwIfAnyUnsuccessfulCreateActions(r)
 
@@ -713,7 +715,8 @@ export class Wallet implements WalletInterface, ProtoWallet {
 
     if (!vargs.isDelayed) throwIfAnyUnsuccessfulSignActions(r)
 
-    if (r.tx) r.tx = this.verifyReturnedTxidOnlyAtomicBEEF(r.tx)
+    const prior = this.pendingSignActions[args.reference]
+    if (r.tx) r.tx = this.verifyReturnedTxidOnlyAtomicBEEF(r.tx, prior.args.options?.knownTxids)
 
     return r
   }

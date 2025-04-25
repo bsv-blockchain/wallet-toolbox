@@ -362,19 +362,35 @@ export class OverlayUMPTokenInteractor implements UMPTokenInteractor {
     ]
 
     // 4) Build the partial transaction via createAction.
-    const createResult = await wallet.createAction(
-      {
-        description: oldTokenToConsume ? 'Renew UMP token (consume old, create new)' : 'Create new UMP token',
-        inputs,
-        outputs,
-        inputBEEF: inputToken?.beef,
-        options: {
-          randomizeOutputs: false,
-          acceptDelayedBroadcast: false
-        }
-      },
-      adminOriginator
-    )
+    let createResult
+    try {
+      createResult = await wallet.createAction(
+        {
+          description: oldTokenToConsume ? 'Renew UMP token (consume old, create new)' : 'Create new UMP token',
+          inputs,
+          outputs,
+          inputBEEF: inputToken?.beef,
+          options: {
+            randomizeOutputs: false,
+            acceptDelayedBroadcast: false
+          }
+        },
+        adminOriginator
+      )
+    } catch (e) {
+      console.error('Error with UMP token update. Attempting a last-ditch effort to get a new one', e)
+      createResult = await wallet.createAction(
+        {
+          description: 'Recover UMP token',
+          outputs,
+          options: {
+            randomizeOutputs: false,
+            acceptDelayedBroadcast: false
+          }
+        },
+        adminOriginator
+      )
+    }
 
     // If the transaction is fully processed by the wallet
     if (!createResult.signableTransaction) {

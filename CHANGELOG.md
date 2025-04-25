@@ -3,6 +3,12 @@
 This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox v1.3.4, 2025-04-24
+
+### Add StorageIdb
+
+Adds support for `indexedDB` based wallet storage via the new `StorageIdb` `StorageProvider` class and a new `SetupClient` class.
+
 ## wallet-toolbox v1.3.0, 2025-04-23
 
 ### Change in Handling of New Outputs NOT Assigned to a Basket
