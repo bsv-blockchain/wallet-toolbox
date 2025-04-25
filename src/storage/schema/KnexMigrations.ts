@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Knex } from 'knex'
 import { sdk, StorageKnex } from '../../index.all'
-import FileLogger from '../../utility/fileLogger'
 import { DBType } from '../StorageReader'
-
-const logger = new FileLogger({
-  logDir: './logs',
-  logToConsole: false
-})
 
 interface Migration {
   up: (knex: Knex) => Promise<void>
@@ -39,7 +33,6 @@ export class KnexMigrations implements MigrationSource<string> {
   }
 
   async getMigrations(): Promise<string[]> {
-    logger.info('In getMigrations')
     return Object.keys(this.migrations).sort()
   }
   getMigrationName(migration: string) {
@@ -66,10 +59,7 @@ export class KnexMigrations implements MigrationSource<string> {
     maxOutputScriptLength: number
   ): Record<string, Migration> {
     const migrations: Record<string, Migration> = {}
-    logger.info('In setupMigrations')
     const addTimeStamps = (knex: Knex<any, any[]>, table: Knex.CreateTableBuilder, dbtype: DBType) => {
-      logger.info(`dbtype: ${dbtype}`)
-
       if (dbtype === 'MySQL') {
         table.timestamp('created_at', { precision: 3 }).defaultTo(knex.fn.now(3)).notNullable()
         table.timestamp('updated_at', { precision: 3 }).defaultTo(knex.fn.now(3)).notNullable()
