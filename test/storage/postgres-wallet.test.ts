@@ -22,8 +22,8 @@ describeOrSkip('PostgreSQL wallet setup tests', () => {
 
   // Clean up databases before each test
   beforeEach(async () => {
-    // Clean up the postgres_wallet_setup_test database
-    let knex = Setup.createPostgreSQLKnex(postgresConnection, 'postgres_wallet_setup_test')
+    // Clean up the wallet_storage_test database
+    let knex = Setup.createPostgreSQLKnex(postgresConnection, 'wallet_storage_test')
     try {
       // Drop all tables to ensure clean state
       const storage = new StorageKnex({
@@ -38,8 +38,8 @@ describeOrSkip('PostgreSQL wallet setup tests', () => {
       await knex.destroy()
     }
 
-    // Clean up the postgres_wallet_binary_test database
-    knex = Setup.createPostgreSQLKnex(postgresConnection, 'postgres_wallet_binary_test')
+    // Clean up the wallet_storage_test database
+    knex = Setup.createPostgreSQLKnex(postgresConnection, 'wallet_storage_test')
     try {
       const storage = new StorageKnex({
         ...StorageKnex.defaultOptions(),
@@ -58,7 +58,7 @@ describeOrSkip('PostgreSQL wallet setup tests', () => {
     let wallet
     try {
       // Test the createWalletPostgreSQL function
-      const dbName = `postgres_wallet_setup_test`
+      const dbName = `wallet_storage_test`
 
       // Create a compatible env object for Setup.createWalletPostgreSQL
       const walletEnv = {
@@ -123,7 +123,7 @@ describeOrSkip('PostgreSQL wallet setup tests', () => {
     let wallet
     try {
       // Generate unique database name to avoid collisions
-      const dbName = `postgres_wallet_binary_test`
+      const dbName = `wallet_storage_test`
 
       // Create a compatible env object for Setup.createWalletPostgreSQL
       const walletEnv = {
