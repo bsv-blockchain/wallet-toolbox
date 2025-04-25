@@ -44,10 +44,12 @@ describe('operations.man tests', () => {
       let r = await storage.listOutputs(auth, vargs)
       if (r.totalOutputs > 0) {
         const total: number = r.outputs.reduce((s, o) => (s += o.satoshis), 0)
-        log += `userId ${userId}: ${r.totalOutputs} utxos updated, total ${total}, ${user.identityKey}\n`
+        let l = `userId ${userId}: ${r.totalOutputs} utxos updated, total ${total}, ${user.identityKey}\n`
         for (const o of r.outputs) {
-          log += `  ${o.outpoint} ${o.satoshis} now ${o.spendable ? 'spendable' : 'spent'}\n`
+          l += `  ${o.outpoint} ${o.satoshis} now ${o.spendable ? 'spendable' : 'spent'}\n`
         }
+        console.log(l)
+        log += l
         withInvalid[userId] = { user, outputs: r.outputs, total }
       }
     }
@@ -120,7 +122,7 @@ describe('operations.man tests', () => {
 
   test('2 review and unfail false invalids', async () => {
     const { env, storage, services } = await createMainReviewSetup()
-    let offset = 600
+    let offset = 700
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
