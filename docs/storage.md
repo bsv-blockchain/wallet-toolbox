@@ -2495,6 +2495,15 @@ export class KnexMigrations implements MigrationSource<string> {
     setupMigrations(chain: string, storageName: string, storageIdentityKey: string, maxOutputScriptLength: number): Record<string, Migration> 
     static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
         try {
+            try {
+                const pgResult = await knex.raw("SELECT version()");
+                const versionStr = pgResult.rows?.[0]?.version || "";
+                if (versionStr.toLowerCase().includes("postgresql")) {
+                    return "PostgreSQL";
+                }
+            }
+            catch {
+            }
             const q = `SELECT 
     CASE 
         WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
@@ -3605,7 +3614,9 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
             status.push("sending");
         const statusText = status.map(s => `'${s}'`).join(",");
         const r: TableOutput | undefined = await this.knex.transaction(async (trx) => {
-            const txStatusCondition = `AND (SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`;
+            const txStatusCondition = this.dbtype === "PostgreSQL"
+                ? `AND (SELECT status FROM transactions WHERE outputs."transactionId" = transactions."transactionId") in (${statusText})`
+                : `AND (SELECT status FROM transactions WHERE outputs.transactionId = transactions.transactionId) in (${statusText})`;
             let outputId: number | undefined;
             const setOutputId = async (rawQuery: string): Promise<void> => {
                 let oidr = await trx.raw(rawQuery);
@@ -5049,7 +5060,11 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Type: DBType
 
 ```ts
+<<<<<<< HEAD
 export type DBType = "SQLite" | "MySQL" | "IndexedDB"
+=======
+export type DBType = "SQLite" | "MySQL" | "PostgreSQL"
+>>>>>>> f2b8dd5 (updated docs)
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
