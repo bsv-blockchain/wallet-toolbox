@@ -88,6 +88,22 @@ export interface WalletStorage {
 
   relinquishCertificate(args: RelinquishCertificateArgs): Promise<number>
   relinquishOutput(args: RelinquishOutputArgs): Promise<number>
+
+  getStores() : WalletStorageInfo[]
+}
+
+/**
+ * Snapshot of the current state of a storage provider configured for an `WalletStorageManager`.
+ */
+export interface WalletStorageInfo {
+    isActive: boolean;
+    isEnabled: boolean;
+    isBackup: boolean;
+    isConflicting: boolean;
+    userId: number;
+    storageIdentityKey: string;
+    storageName: string;
+    storageClass: string;
 }
 
 /**

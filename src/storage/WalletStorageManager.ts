@@ -703,4 +703,45 @@ export class WalletStorageManager implements sdk.WalletStorage {
 
     return log
   }
+
+  getStores() : sdk.WalletStorageInfo[] {
+    const stores: sdk.WalletStorageInfo[] = []
+    if (this._active) {
+      stores.push({
+        isActive: true,
+        isEnabled: this.isActiveEnabled,
+        isBackup: false,
+        isConflicting: false,
+        userId: this._active.user!.userId,
+        storageIdentityKey: this._active.settings!.storageIdentityKey,
+        storageName: this._active.settings!.storageName,
+        storageClass: this._active.storage.constructor.name
+      })
+    }
+    for (const store of this._conflictingActives || []) {
+      stores.push({
+        isActive: true,
+        isEnabled: false,
+        isBackup: false,
+        isConflicting: true,
+        userId: store.user!.userId,
+        storageIdentityKey: store.settings!.storageIdentityKey,
+        storageName: store.settings!.storageName,
+        storageClass: store.storage.constructor.name
+      })
+    }
+    for (const store of this._backups || []) {
+      stores.push({
+        isActive: false,
+        isEnabled: false,
+        isBackup: true,
+        isConflicting: false,
+        userId: store.user!.userId,
+        storageIdentityKey: store.settings!.storageIdentityKey,
+        storageName: store.settings!.storageName,
+        storageClass: store.storage.constructor.name
+      })
+    }
+    return stores
+  }
 }
