@@ -3217,12 +3217,14 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 ##### Class: StorageIdb
 
+This class implements the `StorageProvider` interface using IndexedDB,
+via the promises wrapper package `idb`.
+
 ```ts
 export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
     dbName: string;
     db?: IDBPDatabase<StorageIdbSchema>;
     constructor(options: StorageIdbOptions) 
-    override adminStats(adminIdentityKey: string): Promise<StorageAdminStats> 
     async migrate(storageName: string, storageIdentityKey: string): Promise<string> 
     async verifyDB(storageName?: string, storageIdentityKey?: string): Promise<IDBPDatabase<StorageIdbSchema>> 
     toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
@@ -3354,6 +3356,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
     async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
     async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> 
+    async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> 
 }
 ```
 
@@ -3798,14 +3801,14 @@ select
             txUnfailWeek,
             txUnfailMonth,
             txUnfailTotal,
-            satoshisDefaultDay,
-            satoshisDefaultWeek,
-            satoshisDefaultMonth,
-            satoshisDefaultTotal,
-            satoshisOtherDay,
-            satoshisOtherWeek,
-            satoshisOtherMonth,
-            satoshisOtherTotal,
+            satoshisDefaultDay: Number(satoshisDefaultDay),
+            satoshisDefaultWeek: Number(satoshisDefaultWeek),
+            satoshisDefaultMonth: Number(satoshisDefaultMonth),
+            satoshisDefaultTotal: Number(satoshisDefaultTotal),
+            satoshisOtherDay: Number(satoshisOtherDay),
+            satoshisOtherWeek: Number(satoshisOtherWeek),
+            satoshisOtherMonth: Number(satoshisOtherMonth),
+            satoshisOtherTotal: Number(satoshisOtherTotal),
             basketsDay,
             basketsWeek,
             basketsMonth,
@@ -4393,10 +4396,11 @@ export class WalletStorageManager implements sdk.WalletStorage {
     }> 
     async updateBackups(activeSync?: sdk.WalletStorageSync): Promise<string> 
     async setActive(storageIdentityKey: string): Promise<string> 
+    getStores(): sdk.WalletStorageInfo[] 
 }
 ```
 
-See also: [AuthId](./client.md#interface-authid), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvider](./storage.md#class-storageprovider), [TableCertificate](./storage.md#interface-tablecertificate), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableSettings](./storage.md#interface-tablesettings), [TableUser](./storage.md#interface-tableuser), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorage](./client.md#interface-walletstorage), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [WalletStorageReader](./client.md#interface-walletstoragereader), [WalletStorageSync](./client.md#interface-walletstoragesync), [WalletStorageSyncReader](./client.md#interface-walletstoragesyncreader), [WalletStorageWriter](./client.md#interface-walletstoragewriter), [createAction](./storage.md#function-createaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction)
+See also: [AuthId](./client.md#interface-authid), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvider](./storage.md#class-storageprovider), [TableCertificate](./storage.md#interface-tablecertificate), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableSettings](./storage.md#interface-tablesettings), [TableUser](./storage.md#interface-tableuser), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorage](./client.md#interface-walletstorage), [WalletStorageInfo](./client.md#interface-walletstorageinfo), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [WalletStorageReader](./client.md#interface-walletstoragereader), [WalletStorageSync](./client.md#interface-walletstoragesync), [WalletStorageSyncReader](./client.md#interface-walletstoragesyncreader), [WalletStorageWriter](./client.md#interface-walletstoragewriter), [createAction](./storage.md#function-createaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction)
 
 ###### Property _active
 

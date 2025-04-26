@@ -1,5 +1,7 @@
 export * as sdk from './sdk/index'
 export * from './utility/index.client'
+export * from './SetupClient'
+export * from './SetupWallet'
 export * from './signer/WalletSigner'
 export * from './WalletPermissionsManager'
 export * from './CWIStyleWalletManager'

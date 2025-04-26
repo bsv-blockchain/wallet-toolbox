@@ -25,9 +25,9 @@ describe('storage adminStats tests', () => {
     await storage.makeAvailable()
 
     setup = await _tu.createTestWalletWithStorageClient({
-       chain: 'main',
-       rootKeyHex: env.devKeys[env.identityKey]
-      })
+      chain: 'main',
+      rootKeyHex: env.devKeys[env.identityKey]
+    })
   })
   afterAll(async () => {
     await storage.destroy()
@@ -41,9 +41,9 @@ describe('storage adminStats tests', () => {
   })
 
   test('1 adminStats StorageServer via RPC', async () => {
-
     const authFetch = new AuthFetch(setup.wallet)
-    const endpointUrl = setup.chain === 'main' ? 'https://storage.babbage.systems' : 'https://staging-storage.babbage.systems'
+    const endpointUrl =
+      setup.chain === 'main' ? 'https://storage.babbage.systems' : 'https://staging-storage.babbage.systems'
 
     const id = nextId++
     const body = {
@@ -72,9 +72,9 @@ describe('storage adminStats tests', () => {
     if (json.error) {
       const { code, message, data } = json.error
       const err = new Error(`RPC Error: ${message}`)
-        // You could attach more info here if you like:
-        ; (err as any).code = code
-        ; (err as any).data = data
+      // You could attach more info here if you like:
+      ;(err as any).code = code
+      ;(err as any).data = data
       throw err
     }
 

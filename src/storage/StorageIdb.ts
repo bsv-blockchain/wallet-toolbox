@@ -33,6 +33,10 @@ import { purgeDataIdb } from './methods/purgeDataIdb'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
+/**
+ * This class implements the `StorageProvider` interface using IndexedDB,
+ * via the promises wrapper package `idb`.
+ */
 export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
   dbName: string
   db?: IDBPDatabase<StorageIdbSchema>
@@ -40,10 +44,6 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   constructor(options: StorageIdbOptions) {
     super(options)
     this.dbName = `wallet-toolbox-${this.chain}net`
-  }
-
-  override adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
-    throw new Error('Method not implemented.')
   }
 
   /**
@@ -2298,5 +2298,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const rawTx = await this.getRawTxOfKnownValidTransaction(t.txid, undefined, undefined, trx)
     if (!rawTx) return
     t.rawTx = rawTx
+  }
+
+  async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
+    throw new Error('Method intentionally not implemented for personal storage.')
   }
 }
