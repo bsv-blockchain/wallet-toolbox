@@ -11,8 +11,8 @@ import {
   SignActionOptions,
   SignActionResult
 } from '@bsv/sdk'
-import { EntityProvenTxReq, ScriptTemplateBRC29, sdk, StorageKnex, verifyOne, verifyTruthy, wait } from '../../src'
-import { _tu, logger, TestWalletNoSetup } from './TestUtilsWalletStorage'
+import { EntityProvenTxReq, ScriptTemplateBRC29, sdk, Services, Setup, StorageKnex, verifyOne, verifyTruthy, wait } from '../../src'
+import { _tu, logger, TestWalletNoSetup, TuEnv } from './TestUtilsWalletStorage'
 import { validateCreateActionArgs, ValidCreateActionArgs } from '../../src/sdk'
 import { setDisableDoubleSpendCheckForTest } from '../../src/storage/methods/createAction'
 
@@ -328,4 +328,26 @@ export async function doubleSpendOldChange(
   }
   const sar = await setup.wallet.signAction(signArgs)
   return sar
+}
+
+export async function createMainReviewSetup(): Promise<{
+  env: TuEnv
+  storage: StorageKnex
+  services: Services
+}> {
+  const env = _tu.getEnv('main')
+  const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
+  const storage = new StorageKnex({
+    chain: env.chain,
+    knex: knex,
+    commissionSatoshis: 0,
+    commissionPubKeyHex: undefined,
+    feeModel: { model: 'sat/kb', value: 1 }
+  })
+  const servicesOptions = Services.createDefaultOptions(env.chain)
+  if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
+  const services = new Services(servicesOptions)
+  storage.setServices(services)
+  await storage.makeAvailable()
+  return { env, storage, services }
 }
