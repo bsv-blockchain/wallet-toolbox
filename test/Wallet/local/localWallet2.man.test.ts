@@ -217,14 +217,12 @@ describe('localWallet2 tests', () => {
   test.skip('9 received payment from wif and outpoint', async () => {
     const setup = await createSetup(chain, options)
     console.log(`active store ${setup.wallet.storage.getActiveStore()}`)
-    if (!setup.wallet.storage.isActiveEnabled)
-      throw new Error('Active storage is not enabled.')
+    if (!setup.wallet.storage.isActiveEnabled) throw new Error('Active storage is not enabled.')
 
     const pk = PrivateKey.fromWif('L4ZRWA...Nw4Brt8rvJLRZegPF2oiBKJaxUgr4e')
     const outpoint = { txid: '5e2965a50618425af21bebddb9aa60c3e12f64c8e1eb44b6589273455a9760e9', vout: 0 }
     const address = pk.toAddress()
     console.log(`address: ${address.toString()}`)
-
 
     const inputBEEF = await setup.activeStorage.getBeefForTransaction(outpoint.txid, { ignoreStorage: true })
     const btx = inputBEEF.findTxid(outpoint.txid)
@@ -276,5 +274,4 @@ ${beef.toLogString()}
     }
     await setup.wallet.destroy()
   })
-
 })

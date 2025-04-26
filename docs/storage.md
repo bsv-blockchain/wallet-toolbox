@@ -3217,12 +3217,14 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 ##### Class: StorageIdb
 
+This class implements the `StorageProvider` interface using IndexedDB,
+via the promises wrapper package `idb`.
+
 ```ts
 export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
     dbName: string;
     db?: IDBPDatabase<StorageIdbSchema>;
     constructor(options: StorageIdbOptions) 
-    override adminStats(adminIdentityKey: string): Promise<StorageAdminStats> 
     async migrate(storageName: string, storageIdentityKey: string): Promise<string> 
     async verifyDB(storageName?: string, storageIdentityKey?: string): Promise<IDBPDatabase<StorageIdbSchema>> 
     toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
@@ -3354,6 +3356,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
     async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
     async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> 
+    async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> 
 }
 ```
 
