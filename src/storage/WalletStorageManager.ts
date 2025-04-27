@@ -22,6 +22,7 @@ import {
 } from '../storage/schema/tables'
 import { wait } from '../utility/utilityHelpers'
 import { StorageProvider } from './StorageProvider'
+import { StorageClient } from './remoting/StorageClient'
 
 class ManagedStorage {
   isAvailable: boolean
@@ -704,6 +705,12 @@ export class WalletStorageManager implements sdk.WalletStorage {
     return log
   }
 
+  getStoreEndpointURL(store: ManagedStorage): string | undefined {
+    if (store.storage.constructor.name === 'StorageClient')
+      return (store.storage as StorageClient).endpointUrl
+    return undefined
+  }
+
   getStores(): sdk.WalletStorageInfo[] {
     const stores: sdk.WalletStorageInfo[] = []
     if (this._active) {
@@ -715,7 +722,8 @@ export class WalletStorageManager implements sdk.WalletStorage {
         userId: this._active.user!.userId,
         storageIdentityKey: this._active.settings!.storageIdentityKey,
         storageName: this._active.settings!.storageName,
-        storageClass: this._active.storage.constructor.name
+        storageClass: this._active.storage.constructor.name,
+        endpointURL: this.getStoreEndpointURL(this._active) 
       })
     }
     for (const store of this._conflictingActives || []) {
@@ -727,7 +735,8 @@ export class WalletStorageManager implements sdk.WalletStorage {
         userId: store.user!.userId,
         storageIdentityKey: store.settings!.storageIdentityKey,
         storageName: store.settings!.storageName,
-        storageClass: store.storage.constructor.name
+        storageClass: store.storage.constructor.name,
+        endpointURL: this.getStoreEndpointURL(store) 
       })
     }
     for (const store of this._backups || []) {
@@ -739,7 +748,8 @@ export class WalletStorageManager implements sdk.WalletStorage {
         userId: store.user!.userId,
         storageIdentityKey: store.settings!.storageIdentityKey,
         storageName: store.settings!.storageName,
-        storageClass: store.storage.constructor.name
+        storageClass: store.storage.constructor.name,
+        endpointURL: this.getStoreEndpointURL(store) 
       })
     }
     return stores

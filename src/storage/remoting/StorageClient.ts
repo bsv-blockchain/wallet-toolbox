@@ -38,7 +38,7 @@ import {
  * For details of the API implemented, follow the "See also" link for the `WalletStorageProvider` interface.
  */
 export class StorageClient implements sdk.WalletStorageProvider {
-  private readonly endpointUrl: string
+  readonly endpointUrl: string
   private readonly authClient: AuthFetch
   private nextId = 1
 

@@ -2195,7 +2195,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       const val = entity[key]
       if (val === null) {
         entity[key] = undefined
-      } else if (Buffer.isBuffer(val) || val instanceof Uint8Array) {
+      } else if (val instanceof Uint8Array) {
         entity[key] = Array.from(val)
       }
     }
@@ -2241,10 +2241,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     for (const key of Object.keys(v)) {
       const val = v[key]
-      if (Array.isArray(val) && (val.length === 0 || typeof val[0] === 'number')) {
-        v[key] = Buffer.from(val)
-      } else if (val === undefined) {
-        v[key] = null
+      if (val === null) {
+        v[key] = undefined
       }
     }
     this.isDirty = true
@@ -2279,10 +2277,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     for (const key of Object.keys(v)) {
       const val = v[key]
-      if (Array.isArray(val) && (val.length === 0 || typeof val[0] === 'number')) {
-        v[key] = Buffer.from(val)
-      } else if (val === undefined) {
-        v[key] = null
+      if (val === null) {
+        v[key] = undefined
       }
     }
     this.isDirty = true

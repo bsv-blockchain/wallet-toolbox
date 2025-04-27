@@ -104,6 +104,7 @@ export interface WalletStorageInfo {
   storageIdentityKey: string
   storageName: string
   storageClass: string
+  endpointURL?: string
 }
 
 /**
