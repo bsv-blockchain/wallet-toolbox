@@ -2223,7 +2223,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     booleanFields?: string[]
   ): Partial<T> {
     if (!this.dbtype) throw new sdk.WERR_INTERNAL('must call verifyReadyForDatabaseAccess first')
-    const v: any = update
+    const v: any = { ...update }
     if (v.created_at) v.created_at = this.validateEntityDate(v.created_at)
     if (v.updated_at) v.updated_at = this.validateEntityDate(v.updated_at)
     if (!v.created_at) delete v.created_at

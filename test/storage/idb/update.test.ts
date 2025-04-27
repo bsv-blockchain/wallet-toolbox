@@ -207,14 +207,13 @@ describe('update tests', () => {
               expect(actualValue).toBe(value)
               continue
             }
-            if (typeof actualValue === 'object' && actualValue?.type === 'Buffer') {
-              const actualArray = actualValue.data || actualValue
-              const expectedArray =
-                Buffer.isBuffer(value) || Array.isArray(value) ? Array.from(value as ArrayLike<number>) : value
+            if (typeof actualValue === 'object' && Array.isArray(actualValue)) {
+              const actualArray = actualValue
+              const expectedArray = value
               expect(actualArray).toStrictEqual(expectedArray)
               continue
             }
-            expect(JSON.stringify({ type: 'Buffer', data: actualValue })).toStrictEqual(JSON.stringify(value))
+            expect(JSON.stringify(actualValue)).toStrictEqual(JSON.stringify(value))
           }
         } catch (error: any) {
           console.error(
@@ -556,8 +555,8 @@ describe('update tests', () => {
               expect(normalizedActual).toBe(normalizedExpected)
               continue
             }
-            if (Buffer.isBuffer(actualValue) || Array.isArray(actualValue)) {
-              expect(JSON.stringify({ type: 'Buffer', data: actualValue })).toStrictEqual(JSON.stringify(value))
+            if (Array.isArray(actualValue)) {
+              expect(actualValue).toStrictEqual(value)
               continue
             }
             expect(actualValue).toBe(value)
@@ -638,8 +637,8 @@ describe('update tests', () => {
               expect(normalizedActual).toBe(normalizedExpected)
               continue
             }
-            if (Buffer.isBuffer(actualValue) || Array.isArray(actualValue)) {
-              expect(JSON.stringify({ type: 'Buffer', data: actualValue })).toStrictEqual(JSON.stringify(value))
+            if (Array.isArray(actualValue)) {
+              expect(actualValue).toStrictEqual(value)
               continue
             }
             expect(actualValue).toBe(value)
