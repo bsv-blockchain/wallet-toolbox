@@ -1,3 +1,6 @@
+import { PrivateKey } from '@bsv/sdk'
+import { Setup } from '../../Setup'
+import { SetupClient } from '../../SetupClient'
 import { StorageIdb } from '../StorageIdb'
 import { StorageProvider, StorageProviderOptions } from '../StorageProvider'
 import 'fake-indexeddb/auto'
@@ -11,5 +14,22 @@ describe('StorageIdb tests', () => {
     const r = await storage.migrate('storageIdbTest', `42`.repeat(32))
     const db = storage.db!
     expect(db).toBeTruthy()
+  })
+
+  test('1', async () => {
+    if (Setup.noEnv('test')) return
+    const env = Setup.getEnv('test')
+    const wallet = await SetupClient.createWalletClientNoEnv({
+      chain: env.chain,
+      rootKeyHex: env.devKeys[env.identityKey]
+    })
+    const stores = wallet.storage.getStores()
+    const options = StorageIdb.createStorageBaseOptions(wallet.chain)
+    const store = new StorageIdb(options)
+    await store.migrate(store.dbName, PrivateKey.fromRandom().toHex())
+    await store.makeAvailable()
+    await wallet.storage.addWalletStorageProvider(store)
+    await wallet.storage.setActive(stores[0].storageIdentityKey, (s) => { console.log(s); return s })
+    await wallet.storage.updateBackups(undefined, (s) => { console.log(s); return s })
   })
 })

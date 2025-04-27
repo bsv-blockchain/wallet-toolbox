@@ -672,9 +672,9 @@ export class WalletStorageManager implements sdk.WalletStorage {
           )
           log += sfr.log
         }
-        log += 'PROPAGATE MERGED ACTIVE STATE TO NON-ACTIVES\n'
+        log += progLog('PROPAGATE MERGED ACTIVE STATE TO NON-ACTIVES\n')
       } else {
-        log += 'BACKUP CURRENT ACTIVE STATE THEN SET NEW ACTIVE\n'
+        log += progLog('BACKUP CURRENT ACTIVE STATE THEN SET NEW ACTIVE\n')
       }
 
       // If there were conflicting actives,
@@ -696,7 +696,9 @@ export class WalletStorageManager implements sdk.WalletStorage {
           const stwr = await this.syncToWriter(
             { identityKey, userId: store.user!.userId, isActive: false },
             store.storage,
-            backupSource.storage
+            backupSource.storage,
+            undefined,
+            progLog
           )
           log += stwr.log
         }
