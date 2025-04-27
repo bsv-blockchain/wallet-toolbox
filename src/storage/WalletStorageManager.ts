@@ -706,8 +706,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   }
 
   getStoreEndpointURL(store: ManagedStorage): string | undefined {
-    if (store.storage.constructor.name === 'StorageClient')
-      return (store.storage as StorageClient).endpointUrl
+    if (store.storage.constructor.name === 'StorageClient') return (store.storage as StorageClient).endpointUrl
     return undefined
   }
 
@@ -723,7 +722,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
         storageIdentityKey: this._active.settings!.storageIdentityKey,
         storageName: this._active.settings!.storageName,
         storageClass: this._active.storage.constructor.name,
-        endpointURL: this.getStoreEndpointURL(this._active) 
+        endpointURL: this.getStoreEndpointURL(this._active)
       })
     }
     for (const store of this._conflictingActives || []) {
@@ -736,7 +735,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
         storageIdentityKey: store.settings!.storageIdentityKey,
         storageName: store.settings!.storageName,
         storageClass: store.storage.constructor.name,
-        endpointURL: this.getStoreEndpointURL(store) 
+        endpointURL: this.getStoreEndpointURL(store)
       })
     }
     for (const store of this._backups || []) {
@@ -749,7 +748,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
         storageIdentityKey: store.settings!.storageIdentityKey,
         storageName: store.settings!.storageName,
         storageClass: store.storage.constructor.name,
-        endpointURL: this.getStoreEndpointURL(store) 
+        endpointURL: this.getStoreEndpointURL(store)
       })
     }
     return stores

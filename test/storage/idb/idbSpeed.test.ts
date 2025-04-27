@@ -30,5 +30,7 @@ describe('idbSpeed tests', () => {
       log += `${key},${value.count},${value.totalMsecs},${value.totalMsecs / value.count}\n`
     }
     logger(log)
+
+    await setup.wallet.destroy()
   })
 })

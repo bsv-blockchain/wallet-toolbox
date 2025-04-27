@@ -5354,6 +5354,7 @@ export interface WalletStorageInfo {
     storageIdentityKey: string;
     storageName: string;
     storageClass: string;
+    endpointURL?: string;
 }
 ```
 
@@ -7959,6 +7960,7 @@ For details of the API implemented, follow the "See also" link for the `WalletSt
 
 ```ts
 export class StorageClient implements sdk.WalletStorageProvider {
+    readonly endpointUrl: string;
     public settings?: TableSettings;
     constructor(wallet: WalletInterface, endpointUrl: string) 
     isStorageProvider(): boolean 
@@ -10921,6 +10923,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
     }> 
     async updateBackups(activeSync?: sdk.WalletStorageSync): Promise<string> 
     async setActive(storageIdentityKey: string): Promise<string> 
+    getStoreEndpointURL(store: ManagedStorage): string | undefined 
     getStores(): sdk.WalletStorageInfo[] 
 }
 ```
