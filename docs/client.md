@@ -10917,13 +10917,13 @@ export class WalletStorageManager implements sdk.WalletStorage {
         updates: number;
         log: string;
     }> 
-    async syncToWriter(auth: sdk.AuthId, writer: sdk.WalletStorageProvider, activeSync?: sdk.WalletStorageSync, log: string = ""): Promise<{
+    async syncToWriter(auth: sdk.AuthId, writer: sdk.WalletStorageProvider, activeSync?: sdk.WalletStorageSync, log: string = "", progLog?: (s: string) => string): Promise<{
         inserts: number;
         updates: number;
         log: string;
     }> 
-    async updateBackups(activeSync?: sdk.WalletStorageSync): Promise<string> 
-    async setActive(storageIdentityKey: string): Promise<string> 
+    async updateBackups(activeSync?: sdk.WalletStorageSync, progLog?: (s: string) => string): Promise<string> 
+    async setActive(storageIdentityKey: string, progLog?: (s: string) => string): Promise<string> 
     getStoreEndpointURL(store: ManagedStorage): string | undefined 
     getStores(): sdk.WalletStorageInfo[] 
 }
@@ -11093,7 +11093,7 @@ Updates backups and switches to new active storage provider from among current b
 Also resolves conflicting actives.
 
 ```ts
-async setActive(storageIdentityKey: string): Promise<string> 
+async setActive(storageIdentityKey: string, progLog?: (s: string) => string): Promise<string> 
 ```
 
 Argument Details

@@ -564,8 +564,10 @@ export class WalletStorageManager implements sdk.WalletStorage {
     auth: sdk.AuthId,
     writer: sdk.WalletStorageProvider,
     activeSync?: sdk.WalletStorageSync,
-    log: string = ''
+    log: string = '',
+    progLog?: (s: string) => string
   ): Promise<{ inserts: number; updates: number; log: string }> {
+    progLog ||= s => s
     const identityKey = auth.identityKey
 
     const writerSettings = await writer.makeAvailable()
@@ -577,7 +579,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
       const reader = sync
       const readerSettings = reader.getSettings()
 
-      log += `syncToWriter from ${readerSettings.storageName} to ${writerSettings.storageName}\n`
+      log += progLog(`syncToWriter from ${readerSettings.storageName} to ${writerSettings.storageName}\n`)
 
       let i = -1
       for (;;) {
@@ -589,22 +591,23 @@ export class WalletStorageManager implements sdk.WalletStorage {
         const r = await writer.processSyncChunk(args, chunk)
         inserts += r.inserts
         updates += r.updates
-        log += `chunk ${i} inserted ${r.inserts} updated ${r.updates} ${r.maxUpdated_at}\n`
+        log += progLog(`chunk ${i} inserted ${r.inserts} updated ${r.updates} ${r.maxUpdated_at}\n`)
         if (r.done) break
       }
-      log += `syncToWriter complete: ${inserts} inserts, ${updates} updates\n`
+      log += progLog(`syncToWriter complete: ${inserts} inserts, ${updates} updates\n`)
       return log
     }, activeSync)
 
     return { inserts, updates, log }
   }
 
-  async updateBackups(activeSync?: sdk.WalletStorageSync): Promise<string> {
+  async updateBackups(activeSync?: sdk.WalletStorageSync, progLog?: (s: string) => string): Promise<string> {
+    progLog ||= s => s
     const auth = await this.getAuth(true)
     return await this.runAsSync(async sync => {
-      let log = `BACKUP CURRENT ACTIVE TO ${this._backups!.length} STORES\n`
+      let log = progLog(`BACKUP CURRENT ACTIVE TO ${this._backups!.length} STORES\n`)
       for (const backup of this._backups!) {
-        const stwr = await this.syncToWriter(auth, backup.storage, sync)
+        const stwr = await this.syncToWriter(auth, backup.storage, sync, undefined, progLog)
         log += stwr.log
       }
       return log
@@ -618,7 +621,8 @@ export class WalletStorageManager implements sdk.WalletStorage {
    *
    * @param storageIdentityKey of current backup storage provider that is to become the new active provider.
    */
-  async setActive(storageIdentityKey: string): Promise<string> {
+  async setActive(storageIdentityKey: string, progLog?: (s: string) => string): Promise<string> {
+    progLog ||= s => s
     if (!this.isAvailable()) await this.makeAvailable()
 
     // Confirm a valid storageIdentityKey: must match one of the _stores.
@@ -632,13 +636,13 @@ export class WalletStorageManager implements sdk.WalletStorage {
     const identityKey = (await this.getAuth()).identityKey
     const newActive = this._stores[newActiveIndex]
 
-    let log = `setActive to ${newActive.settings!.storageName}`
+    let log = progLog(`setActive to ${newActive.settings!.storageName}`)
 
     if (storageIdentityKey === this.getActiveStore() && this.isActiveEnabled)
       /** Setting the current active as the new active is a permitted no-op. */
-      return log + ` unchanged\n`
+      return log + progLog(` unchanged\n`)
 
-    log += '\n'
+    log += progLog('\n')
 
     log += await this.runAsSync(async sync => {
       let log = ''
@@ -658,11 +662,13 @@ export class WalletStorageManager implements sdk.WalletStorage {
 
         // Merge state from conflicting actives into `newActive`.
         for (const conflict of this._conflictingActives) {
-          log += 'MERGING STATE FROM CONFLICTING ACTIVES:\n'
+          log += progLog('MERGING STATE FROM CONFLICTING ACTIVES:\n')
           const sfr = await this.syncToWriter(
             { identityKey, userId: newActive.user!.userId, isActive: false },
             newActive.storage,
-            conflict.storage
+            conflict.storage,
+            undefined,
+            progLog
           )
           log += sfr.log
         }
