@@ -507,7 +507,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
       const val = entity[key]
       if (val === null) {
         entity[key] = undefined
-      } else if (Buffer.isBuffer(val)) {
+      } else if (val instanceof Uint8Array) {
         entity[key] = Array.from(val)
       }
     }
