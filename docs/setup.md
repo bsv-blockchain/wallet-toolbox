@@ -15,31 +15,16 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 #### Interfaces
 
-<<<<<<< HEAD
 | | |
 | --- | --- |
-| [KeyPairAddress](#interface-keypairaddress) | [SetupWalletClientArgs](#interface-setupwalletclientargs) |
-| [SetupClientWalletArgs](#interface-setupclientwalletargs) | [SetupWalletIdb](#interface-setupwalletidb) |
-| [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) |
-| [SetupEnv](#interface-setupenv) | [SetupWalletKnex](#interface-setupwalletknex) |
-| [SetupWallet](#interface-setupwallet) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
-| [SetupWalletArgs](#interface-setupwalletargs) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
+| [KeyPairAddress](#interface-keypairaddress) | [SetupWalletIdb](#interface-setupwalletidb) |
+| [SetupClientWalletArgs](#interface-setupclientwalletargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) |
+| [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [SetupWalletKnex](#interface-setupwalletknex) |
+| [SetupEnv](#interface-setupenv) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
+| [SetupWallet](#interface-setupwallet) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
+| [SetupWalletArgs](#interface-setupwalletargs) | [SetupWalletPostgreSQLArgs](#interface-setupwalletpostgresqlargs) |
 | [SetupWalletClient](#interface-setupwalletclient) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) |
-=======
-| |
-| --- |
-| [KeyPairAddress](#interface-keypairaddress) |
-| [SetupEnv](#interface-setupenv) |
-| [SetupWallet](#interface-setupwallet) |
-| [SetupWalletArgs](#interface-setupwalletargs) |
-| [SetupWalletClient](#interface-setupwalletclient) |
-| [SetupWalletClientArgs](#interface-setupwalletclientargs) |
-| [SetupWalletKnex](#interface-setupwalletknex) |
-| [SetupWalletKnexArgs](#interface-setupwalletknexargs) |
-| [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) |
-| [SetupWalletPostgreSQLArgs](#interface-setupwalletpostgresqlargs) |
-| [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) |
->>>>>>> f2b8dd5 (updated docs)
+| [SetupWalletClientArgs](#interface-setupwalletclientargs) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

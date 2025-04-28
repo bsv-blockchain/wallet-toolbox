@@ -12930,11 +12930,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Type: DBType
 
 ```ts
-<<<<<<< HEAD
-export type DBType = "SQLite" | "MySQL" | "IndexedDB"
-=======
-export type DBType = "SQLite" | "MySQL" | "PostgreSQL"
->>>>>>> f2b8dd5 (updated docs)
+export type DBType = "SQLite" | "MySQL" | "IndexedDB" | "PostgreSQL"
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
