@@ -124,12 +124,14 @@ export async function listOutputs(
   const noTags = tagIds.length === 0
   const includeSpent = specOp && specOp.includeSpent ? specOp.includeSpent : false
 
-  const txStatusOk = dsk.dbtype === 'PostgreSQL'
-    ? `(select status as tstatus from transactions where transactions."transactionId" = outputs."transactionId") in ('completed', 'unproven', 'nosend')`
-    : `(select status as tstatus from transactions where transactions.transactionId = outputs.transactionId) in ('completed', 'unproven', 'nosend')`
-  const txStatusOkCteq = dsk.dbtype === 'PostgreSQL'
-    ? `(select status as tstatus from transactions where transactions."transactionId" = o."transactionId") in ('completed', 'unproven', 'nosend')`
-    : `(select status as tstatus from transactions where transactions.transactionId = o.transactionId) in ('completed', 'unproven', 'nosend')`
+  const txStatusOk =
+    dsk.dbtype === 'PostgreSQL'
+      ? `(select status as tstatus from transactions where transactions."transactionId" = outputs."transactionId") in ('completed', 'unproven', 'nosend')`
+      : `(select status as tstatus from transactions where transactions.transactionId = outputs.transactionId) in ('completed', 'unproven', 'nosend')`
+  const txStatusOkCteq =
+    dsk.dbtype === 'PostgreSQL'
+      ? `(select status as tstatus from transactions where transactions."transactionId" = o."transactionId") in ('completed', 'unproven', 'nosend')`
+      : `(select status as tstatus from transactions where transactions.transactionId = o.transactionId) in ('completed', 'unproven', 'nosend')`
 
   const makeWithTagsQueries = () => {
     let cteqOptions = ''
