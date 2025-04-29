@@ -3,27 +3,30 @@ import { Setup } from '../../src/Setup'
 import { StorageKnex } from '../../src/storage/StorageKnex'
 import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
 
-const postgresConnection = process.env.POSTGRES_CONNECTION || ''
-const shouldRunTests = !process.env.NOPOSTGRES && !!postgresConnection
-
-// Conditionally define the test suite
-const describeOrSkip = shouldRunTests ? describe : describe.skip
+const env = _tu.getEnv('main')
 
 /**
  * This test file is similar to all the existing tests (count.test.ts, find.test.ts, etc)
  * but runs a selection of tests on PostgreSQL to verify complete compatibility
  */
-describeOrSkip('PostgreSQL extended storage tests', () => {
+describe('PostgreSQL extended storage tests', () => {
   jest.setTimeout(99999999)
 
-  const storage: StorageProvider[] = []
   const chain: sdk.Chain = 'test'
-  const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
   const env = _tu.getEnv(chain)
+  const postgresConnection = env.postgresConnection || ''
+  const shouldRunTests = env.runPostgres && postgresConnection
 
+  const storage: StorageProvider[] = []
+  const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
+
+  test('00 skipped', () => {})
   // Skip the entire test suite if PostgreSQL connection isn't configured
+  if (!shouldRunTests) return
+
 
   beforeAll(async () => {
+    if (!shouldRunTests) return
     // Clean up any existing data before running tests
     try {
       const cleanupKnex = Setup.createPostgreSQLKnex(postgresConnection, 'wallet_storage_test_extended')
@@ -57,6 +60,7 @@ describeOrSkip('PostgreSQL extended storage tests', () => {
   })
 
   afterAll(async () => {
+    if (!shouldRunTests) return
     for (const s of storage) {
       await s.destroy()
     }

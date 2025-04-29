@@ -4,21 +4,22 @@ import { KnexMigrations } from '../../src/storage/schema/KnexMigrations'
 import { StorageKnex } from '../../src/storage/StorageKnex'
 import { _tu, TestSetup1 } from '../utils/TestUtilsWalletStorage'
 
-const postgresConnection = process.env.POSTGRES_CONNECTION || ''
-const shouldRunTests = !process.env.NOPOSTGRES && !!postgresConnection
-
-// Conditionally define the test suite
-const describeOrSkip = shouldRunTests ? describe : describe.skip
-
-describeOrSkip('PostgreSQL storage tests', () => {
+describe('PostgreSQL storage tests', () => {
   jest.setTimeout(99999999)
 
-  const storage: StorageProvider[] = []
   const chain: sdk.Chain = 'test'
-  const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
   const env = _tu.getEnv(chain)
+  const postgresConnection = env.postgresConnection || ''
+  const shouldRunTests = env.runPostgres && postgresConnection
+
+  const storage: StorageProvider[] = []
+  const setups: { setup: TestSetup1; storage: StorageProvider }[] = []
+
+  test('00 skipped', () => {})
+  if (!shouldRunTests) return
 
   beforeAll(async () => {
+    if (!shouldRunTests) return
     // Clean up any existing data before running tests
     try {
       const cleanupKnex = Setup.createPostgreSQLKnex(postgresConnection, 'postgres_storage_test')
@@ -52,6 +53,7 @@ describeOrSkip('PostgreSQL storage tests', () => {
   })
 
   afterAll(async () => {
+    if (!shouldRunTests) return
     for (const s of storage) {
       await s.destroy()
     }

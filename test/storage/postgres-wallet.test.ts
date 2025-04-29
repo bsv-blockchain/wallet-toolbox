@@ -3,25 +3,26 @@ import { Setup } from '../../src/Setup'
 import { StorageKnex } from '../../src/storage/StorageKnex'
 import { _tu } from '../utils/TestUtilsWalletStorage'
 
-const postgresConnection = process.env.POSTGRES_CONNECTION || ''
-const shouldRunTests = !process.env.NOPOSTGRES && !!postgresConnection
-
-// Conditionally define the test suite
-const describeOrSkip = shouldRunTests ? describe : describe.skip
-
 /**
  * This test file verifies the wallet setup functions for PostgreSQL
  */
-describeOrSkip('PostgreSQL wallet setup tests', () => {
+describe('PostgreSQL wallet setup tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'
   const env = _tu.getEnv(chain)
+  const postgresConnection = env.postgresConnection || ''
+  const shouldRunTests = env.runPostgres && postgresConnection
+
+  test('00 skipped', () => {})
+  if (!shouldRunTests) return
 
   // Skip the entire test suite if PostgreSQL connection isn't configured
 
   // Clean up databases before each test
   beforeEach(async () => {
+    if (!shouldRunTests) return
+
     // Clean up the wallet_storage_test database
     let knex = Setup.createPostgreSQLKnex(postgresConnection, 'wallet_storage_test')
     try {
