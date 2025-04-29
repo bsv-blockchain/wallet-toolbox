@@ -155,6 +155,19 @@ export interface WalletServices {
    * @param txOrLockTime either a bitcoin locktime value or hex, binary, un-encoded Transaction
    */
   nLockTimeIsFinal(txOrLockTime: string | number[] | BsvTransaction | number): Promise<boolean>
+
+  /**
+   * Constructs a `Beef` for the given `txid` using only external data retrieval services.
+   *
+   * In most cases, the `getBeefForTransaction` method of the `StorageProvider` class should be
+   * used instead to avoid redundantly retrieving data.
+   *
+   * @throws errors if txid does not correspond to a valid transaction as determined by the
+   * configured services.
+   *
+   * @param txid
+   */
+  getBeefForTxid(txid: string): Promise<Beef>
 }
 
 export type ScriptHashFormat = 'hashLE' | 'hashBE' | 'script'

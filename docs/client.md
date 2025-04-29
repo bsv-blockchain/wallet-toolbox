@@ -4990,10 +4990,11 @@ export interface WalletServices {
     getScriptHashHistory(hash: string, useNext?: boolean): Promise<GetScriptHashHistoryResult>;
     hashToHeader(hash: string): Promise<BlockHeader>;
     nLockTimeIsFinal(txOrLockTime: string | number[] | BsvTransaction | number): Promise<boolean>;
+    getBeefForTxid(txid: string): Promise<Beef>;
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [TableOutput](./storage.md#interface-tableoutput)
+See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [TableOutput](./storage.md#interface-tableoutput), [getBeefForTxid](./services.md#function-getbeeffortxid)
 
 ###### Property chain
 
@@ -5003,6 +5004,22 @@ The chain being serviced.
 chain: Chain
 ```
 See also: [Chain](./client.md#type-chain)
+
+###### Method getBeefForTxid
+
+Constructs a `Beef` for the given `txid` using only external data retrieval services.
+
+In most cases, the `getBeefForTransaction` method of the `StorageProvider` class should be
+used instead to avoid redundantly retrieving data.
+
+```ts
+getBeefForTxid(txid: string): Promise<Beef>
+```
+
+Throws
+
+errors if txid does not correspond to a valid transaction as determined by the
+configured services.
 
 ###### Method getBsvExchangeRate
 
@@ -7433,10 +7450,11 @@ export class Services implements sdk.WalletServices {
     targetCurrencies = ["USD", "GBP", "EUR"];
     async updateFiatExchangeRates(rates?: sdk.FiatExchangeRates, updateMsecs?: number): Promise<sdk.FiatExchangeRates> 
     async nLockTimeIsFinal(tx: string | number[] | BsvTransaction | number): Promise<boolean> 
+    async getBeefForTxid(txid: string): Promise<Beef> 
 }
 ```
 
-See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain)
+See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain), [getBeefForTxid](./services.md#function-getbeeffortxid)
 
 ###### Method hashOutputScript
 
@@ -11208,30 +11226,31 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [acquireDirectCertificate](#function-acquiredirectcertificate) | [listCertificates](#function-listcertificates) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
-| [arcDefaultUrl](#function-arcdefaulturl) | [listOutputsIdb](#function-listoutputsidb) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
-| [arraysEqual](#function-arraysequal) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
-| [asArray](#function-asarray) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [makeChangeLock](#function-makechangelock) | [validateInteger](#function-validateinteger) |
-| [asBsvSdkScript](#function-asbsvsdkscript) | [maxDate](#function-maxdate) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
-| [asBsvSdkTx](#function-asbsvsdktx) | [offsetPubKey](#function-offsetpubkey) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
-| [asString](#function-asstring) | [optionalArraysEqual](#function-optionalarraysequal) | [validateListActionsArgs](#function-validatelistactionsargs) |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
-| [buildSignableTransaction](#function-buildsignabletransaction) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
+| [acquireDirectCertificate](#function-acquiredirectcertificate) | [listActionsIdb](#function-listactionsidb) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
+| [arcDefaultUrl](#function-arcdefaulturl) | [listCertificates](#function-listcertificates) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
+| [arraysEqual](#function-arraysequal) | [listOutputsIdb](#function-listoutputsidb) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
+| [asArray](#function-asarray) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
+| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [asBsvSdkScript](#function-asbsvsdkscript) | [makeChangeLock](#function-makechangelock) | [validateInteger](#function-validateinteger) |
+| [asBsvSdkTx](#function-asbsvsdktx) | [maxDate](#function-maxdate) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
+| [asString](#function-asstring) | [offsetPubKey](#function-offsetpubkey) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [optionalArraysEqual](#function-optionalarraysequal) | [validateListActionsArgs](#function-validatelistactionsargs) |
+| [buildSignableTransaction](#function-buildsignabletransaction) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
+| [completeSignedTransaction](#function-completesignedtransaction) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
 | [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOptionalInteger](#function-validateoptionalinteger) |
-| [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
-| [convertProofToMerklePath](#function-convertprooftomerklepath) | [proveCertificate](#function-provecertificate) | [validateOriginator](#function-validateoriginator) |
+| [convertProofToMerklePath](#function-convertprooftomerklepath) | [processAction](#function-processaction) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
+| [createAction](#function-createaction) | [proveCertificate](#function-provecertificate) | [validateOriginator](#function-validateoriginator) |
 | [createAction](#function-createaction) | [purgeDataIdb](#function-purgedataidb) | [validateOutpointString](#function-validateoutpointstring) |
-| [createAction](#function-createaction) | [randomBytes](#function-randombytes) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytesBase64](#function-randombytesbase64) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [randomBytesHex](#function-randombyteshex) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
-| [createSyncMap](#function-createsyncmap) | [reviewStatusIdb](#function-reviewstatusidb) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
-| [doubleSha256BE](#function-doublesha256be) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateSatoshis](#function-validatesatoshis) |
-| [doubleSha256HashLE](#function-doublesha256hashle) | [sha256Hash](#function-sha256hash) | [validateScriptHash](#function-validatescripthash) |
-| [generateChangeSdk](#function-generatechangesdk) | [signAction](#function-signaction) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
-| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [stampLog](#function-stamplog) | [validateSignActionArgs](#function-validatesignactionargs) |
-| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLogFormat](#function-stamplogformat) | [validateSignActionOptions](#function-validatesignactionoptions) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytes](#function-randombytes) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [randomBytesBase64](#function-randombytesbase64) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
+| [createSyncMap](#function-createsyncmap) | [randomBytesHex](#function-randombyteshex) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
+| [doubleSha256BE](#function-doublesha256be) | [reviewStatusIdb](#function-reviewstatusidb) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
+| [doubleSha256HashLE](#function-doublesha256hashle) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateSatoshis](#function-validatesatoshis) |
+| [generateChangeSdk](#function-generatechangesdk) | [sha256Hash](#function-sha256hash) | [validateScriptHash](#function-validatescripthash) |
+| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [signAction](#function-signaction) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
+| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLog](#function-stamplog) | [validateSignActionArgs](#function-validatesignactionargs) |
+| [getBeefForTxid](#function-getbeeffortxid) | [stampLogFormat](#function-stamplogformat) | [validateSignActionOptions](#function-validatesignactionoptions) |
 | [getExchangeRatesIo](#function-getexchangeratesio) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
 | [getIdentityKey](#function-getidentitykey) | [toWalletNetwork](#function-towalletnetwork) | [validateStringLength](#function-validatestringlength) |
 | [getProofs](#function-getproofs) | [transactionInputSize](#function-transactioninputsize) | [validateWalletPayment](#function-validatewalletpayment) |
@@ -11246,7 +11265,6 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) | [verifyTruthy](#function-verifytruthy) |
 | [isLive](#function-islive) | [validateCreateActionArgs](#function-validatecreateactionargs) | [wait](#function-wait) |
 | [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionInput](#function-validatecreateactioninput) |  |
-| [listActionsIdb](#function-listactionsidb) | [validateCreateActionOptions](#function-validatecreateactionoptions) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -11612,6 +11630,17 @@ Argument Details
   + the chain on which txid exists.
 + **txid**
   + the transaction hash for which an envelope is requested.
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: getBeefForTxid
+
+```ts
+export async function getBeefForTxid(services: Services, txid: string): Promise<Beef> 
+```
+
+See also: [Services](./services.md#class-services)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

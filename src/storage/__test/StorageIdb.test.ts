@@ -29,7 +29,14 @@ describe('StorageIdb tests', () => {
     await store.migrate(store.dbName, PrivateKey.fromRandom().toHex())
     await store.makeAvailable()
     await wallet.storage.addWalletStorageProvider(store)
-    await wallet.storage.setActive(stores[0].storageIdentityKey, (s) => { console.log(s); return s })
-    await wallet.storage.updateBackups(undefined, (s) => { console.log(s); return s })
+    await wallet.storage.setActive(stores[0].storageIdentityKey, s => {
+      console.log(s)
+      return s
+    })
+    await wallet.storage.updateBackups(undefined, s => {
+      console.log(s)
+      return s
+    })
+    await wallet.destroy()
   })
 })
