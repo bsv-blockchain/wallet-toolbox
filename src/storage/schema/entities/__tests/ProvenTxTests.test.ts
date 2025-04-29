@@ -134,7 +134,9 @@ describe('ProvenTx class method tests', () => {
         height: height,
         hash: blockHash
       }),
-      nLockTimeIsFinal: async () => true
+      nLockTimeIsFinal: async () => true,
+
+      getBeefForTxid: async () => new bsv.Beef()
     }
 
     // Call the method under test

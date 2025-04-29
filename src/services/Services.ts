@@ -7,6 +7,7 @@ import { WhatsOnChain } from './providers/WhatsOnChain'
 import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './providers/echangeRates'
 import { ARC } from './providers/ARC'
 import { Bitails } from './providers/Bitails'
+import { getBeefForTxid } from './providers/getBeefForTxid'
 
 export class Services implements sdk.WalletServices {
   static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
@@ -403,6 +404,11 @@ export class Services implements sdk.WalletServices {
 
     const height = await this.getHeight()
     return nLockTime < height
+  }
+
+  async getBeefForTxid(txid: string): Promise<Beef> {
+    const beef = await getBeefForTxid(this, txid)
+    return beef
   }
 }
 

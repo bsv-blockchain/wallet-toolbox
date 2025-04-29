@@ -37,5 +37,6 @@ describe('StorageIdb tests', () => {
       console.log(s)
       return s
     })
+    await wallet.destroy()
   })
 })
