@@ -44,7 +44,7 @@ import {
   TableTxLabelMap,
   TableUser,
   Services,
-  StorageAdminStats,
+  StorageAdminStats
 } from '../../index.client'
 import { StorageProvider } from '../../storage/StorageProvider'
 
