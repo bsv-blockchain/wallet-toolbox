@@ -33,7 +33,7 @@ describe('find tests', () => {
     }
 
     // Add PostgreSQL testing if configured
-    if (!process.env.NOPOSTGRES) {
+    if (env.runPostgres) {
       const knexPostgreSQL = _tu.createLocalPostgreSQL('storagefindtest')
       storages.push(
         new StorageKnex({

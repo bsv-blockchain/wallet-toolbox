@@ -67,6 +67,7 @@ const localMySqlConnection = process.env.MYSQL_CONNECTION || ''
 export interface TuEnvFlags {
   chain: sdk.Chain
   runMySQL: boolean
+  runPostgres: boolean
   runSlowTests: boolean
   logTests: boolean
 }
@@ -125,10 +126,12 @@ export abstract class TestUtilsWalletStorage {
   static getEnvFlags(chain: sdk.Chain): TuEnvFlags {
     const logTests = !!process.env.LOGTESTS
     const runMySQL = !!process.env.RUNMYSQL
+    const runPostgres = !!process.env.RUNPOSTGRES
     const runSlowTests = !!process.env.RUNSLOWTESTS
     return {
       chain,
       runMySQL,
+      runPostgres,
       runSlowTests,
       logTests
     }
