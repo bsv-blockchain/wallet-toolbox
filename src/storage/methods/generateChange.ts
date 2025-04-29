@@ -259,6 +259,7 @@ export async function generateChangeSdk(
      * Trigger an account funding event if we don't have enough to cover this transaction.
      */
     if (feeExcess() < 0) {
+      await releaseAllocatedChangeInputs()
       throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), -feeExcessNow)
     }
 
@@ -266,6 +267,7 @@ export async function generateChangeSdk(
      * If needed, seek funding to avoid overspending on fees without a change output to recapture it.
      */
     if (r.changeOutputs.length === 0 && feeExcessNow > 0) {
+      await releaseAllocatedChangeInputs()
       throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), params.changeFirstSatoshis)
     }
 
