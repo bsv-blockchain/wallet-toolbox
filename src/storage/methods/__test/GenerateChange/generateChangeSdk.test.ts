@@ -887,9 +887,40 @@ describe('generateChange tests', () => {
       { satoshis: 1034, outputId: 18492 }
     ]
   }
+  const d14: TestCase = {
+    p: {
+      fixedInputs: [],
+      fixedOutputs: [
+        { satoshis: 3, lockingScriptLength: 141 },
+      ],
+      feeModel: { model: 'sat/kb', value: 2 },
+      changeInitialSatoshis: 1000,
+      changeFirstSatoshis: 285,
+      changeLockingScriptLength: 25,
+      changeUnlockingScriptLength: 107,
+      targetNetCount: 22
+    },
+    availableChange: [
+      { satoshis: 995, outputId: 16190 },
+      { satoshis: 1000, outputId: 18487 },
+      { satoshis: 1000, outputId: 18488 },
+      { satoshis: 1000, outputId: 18489 },
+      { satoshis: 1000, outputId: 18490 },
+      { satoshis: 1000, outputId: 18491 },
+      { satoshis: 1000, outputId: 18492 },
+      { satoshis: 1000, outputId: 18493 },
+      { satoshis: 1000, outputId: 18494 },
+      { satoshis: 1000, outputId: 18495 },
+      { satoshis: 100, outputId: 18496 },
+    ]
+  }
 
-  test('8 paramsText d5 d6 d7 d8 d9 d10 d11 d12 d13', async () => {
-    for (const { n, d, er } of [
+  const test8Cases = [
+      {
+        n: 14,
+        d: d14,
+        er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":18495,"spendable":false}],"changeOutputs":[{"satoshis":996,"lockingScriptLength":25}],"size":342,"fee":1,"satsPerKb":2}'
+      },
       {
         n: 13,
         d: d13,
@@ -935,7 +966,10 @@ describe('generateChange tests', () => {
         d: d5,
         er: '{"allocatedChangeInputs":[],"changeOutputs":[{"satoshis":799,"lockingScriptLength":25}],"size":191,"fee":1,"satsPerKb":2}'
       }
-    ]) {
+    ]
+
+  test('8 paramsText d5 d6 d7 d8 d9 d10 d11 d12 d13 d14', async () => {
+    for (const { n, d, er } of test8Cases) {
       const params: GenerateChangeSdkParams = { ...d.p }
       const availableChange: GenerateChangeSdkChangeInput[] = [...d.availableChange]
 

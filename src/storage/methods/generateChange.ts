@@ -236,6 +236,17 @@ export async function generateChangeSdk(
         if (feeExcess() < 0)
           // Not enough available funding even if no change outputs
           break
+        // At this point we have a funded transaction, but there may be change outputs that are each costing as change input,
+        // resulting in pointless churn of change outputs.
+        // And remove change inputs that funded only a single change output (along with that output)...
+        const changeInputs = [...r.allocatedChangeInputs]
+        while (changeInputs.length > 1 && r.changeOutputs.length > 1) {
+          const lastOutput = r.changeOutputs.slice(-1)[0]
+          const i = changeInputs.findIndex(ci => ci.satoshis <= lastOutput.satoshis)
+          if (i < 0) break
+          r.changeOutputs.pop()
+          changeInputs.splice(i, 1)
+        }
         // and try again...
       }
     }
