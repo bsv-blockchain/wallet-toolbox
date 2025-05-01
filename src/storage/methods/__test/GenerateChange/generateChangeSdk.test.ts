@@ -174,7 +174,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":688,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":80,"satsPerKb":2}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":689,"lockingScriptLength":25}],"size":39476,"fee":79,"satsPerKb":2}'
     )
     expectTransactionSize(params, r)
   })
@@ -195,7 +195,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":569,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":199,"satsPerKb":5}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":570,"lockingScriptLength":25}],"size":39476,"fee":198,"satsPerKb":5}'
     )
     expectTransactionSize(params, r)
   })
@@ -216,7 +216,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":728,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":40,"satsPerKb":1}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":728,"lockingScriptLength":25}],"size":39476,"fee":40,"satsPerKb":1}'
     )
     expectTransactionSize(params, r)
   })
