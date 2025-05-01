@@ -1,5 +1,15 @@
-import { WalletOutput } from '@bsv/sdk'
-import { sdk, Services, Setup, StorageKnex, TableOutput, TableUser, verifyOne, verifyOneOrNone } from '../../../src'
+import { Transaction, WalletOutput } from '@bsv/sdk'
+import {
+  sdk,
+  Services,
+  Setup,
+  StorageKnex,
+  TableOutput,
+  TableTransaction,
+  TableUser,
+  verifyOne,
+  verifyOneOrNone
+} from '../../../src'
 import { _tu, TuEnv } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs } from '../../../src/sdk'
 import { LocalWalletTestOptions } from '../../utils/localWalletMethods'
@@ -194,6 +204,29 @@ describe('operations.man tests', () => {
      */
     await storage.destroy()
   })
+  test('9 review recent transaction change use', async () => {
+    const { env, storage, services } = await createMainReviewSetup()
+    const countTxs = await storage.countTransactions({
+      partial: { userId: 311 },
+      status: ['completed', 'unproven', 'failed']
+    })
+    const txs = await storage.findTransactions({
+      partial: { userId: 311 },
+      status: ['unproven', 'completed', 'failed'],
+      paged: { limit: 100, offset: Math.max(0, countTxs - 100) }
+    })
+    for (const tx of txs) {
+      const ls = await toLogString(tx, storage)
+      console.log(ls)
+    }
+    const countReqs = await storage.countProvenTxReqs({ partial: {}, status: ['completed', 'unmined'] })
+    const reqs = await storage.findProvenTxReqs({
+      partial: {},
+      status: ['unmined', 'completed'],
+      paged: { limit: 100, offset: countReqs - 100 }
+    })
+    await storage.destroy()
+  })
 })
 
 async function createMainReviewSetup(): Promise<{
@@ -216,4 +249,34 @@ async function createMainReviewSetup(): Promise<{
   storage.setServices(services)
   await storage.makeAvailable()
   return { env, storage, services }
+}
+
+async function toLogString(tx: TableTransaction, storage: StorageKnex): Promise<string> {
+  const rawTx = await storage.getRawTxOfKnownValidTransaction(tx.txid)
+  const btx = Transaction.fromBinary(rawTx!)
+  let log = `tx ${tx.txid} ${tx.status} s:${tx.satoshis} uid:${tx.userId} tid:${tx.transactionId}\n`
+  for (let i = 0; i < Math.max(btx.inputs.length, btx.outputs.length); i++) {
+    let ilog: string = ''
+    let olog: string = ''
+    if (i < btx.inputs.length) {
+      const input = btx.inputs[i]
+      ilog = `${logTxid(input.sourceTXID!)}.${input.sourceOutputIndex}`
+    }
+    if (i < btx.outputs.length) {
+      const output = btx.outputs[i]
+      olog = `${ar('' + output.satoshis, 9)} ${output.lockingScript.toHex().length / 2}`
+    }
+    log += `${ar('' + i, 5)} ${al(ilog, 20)} ${olog}\n`
+  }
+  return log
+
+  function logTxid(txid: string): string {
+    return `${txid.slice(0, 6)}..${txid.slice(-6)}`
+  }
+  function al(v: string | number, w: number): string {
+    return v.toString().padEnd(w)
+  }
+  function ar(v: string | number, w: number): string {
+    return v.toString().padStart(w)
+  }
 }
