@@ -1,4 +1,4 @@
-import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol, Base64String } from '@bsv/sdk'
+import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol, Base64String, PubKeyHex } from '@bsv/sdk'
 import { validateCreateActionArgs } from './sdk'
 
 ////// TODO: ADD SUPPORT FOR ADMIN COUNTERPARTIES BASED ON WALLET STORAGE
@@ -1484,23 +1484,23 @@ export class WalletPermissionsManager implements WalletInterface {
   }): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.protocol
     const tags: string[] = []
-    
+
     if (originator) {
       tags.push(`originator ${originator}`)
     }
-    
+
     if (privileged !== undefined) {
       tags.push(`privileged ${!!privileged}`)
     }
-    
+
     if (protocolName) {
       tags.push(`protocolName ${protocolName}`)
     }
-    
+
     if (protocolSecurityLevel !== undefined) {
       tags.push(`protocolSecurityLevel ${protocolSecurityLevel}`)
     }
-    
+
     if (counterparty) {
       tags.push(`counterparty ${counterparty}`)
     }
@@ -1579,11 +1579,11 @@ export class WalletPermissionsManager implements WalletInterface {
   public async listBasketAccess(params: { originator?: string, basket?: string }): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.basket
     const tags: string[] = []
-    
+
     if (params.originator) {
       tags.push(`originator ${params.originator}`)
     }
-    
+
     if (params.basket) {
       tags.push(`basket ${params.basket}`)
     }
@@ -1701,13 +1701,36 @@ export class WalletPermissionsManager implements WalletInterface {
   }
 
   /**
-   * Lists certificate permission tokens (DCAP) for a given originator (or all).
+   * Lists certificate permission tokens (DCAP) with optional filters.
+   * @param originator Optional originator domain to filter by
+   * @param privileged Optional boolean to filter by privileged status
+   * @param certType Optional certificate type to filter by
+   * @param verifier Optional verifier to filter by
+   * @returns Array of permission tokens that match the filter criteria
    */
-  public async listCertificateAccess(params: { originator?: string }): Promise<PermissionToken[]> {
+  public async listCertificateAccess(params: {
+    originator?: string,
+    privileged?: boolean,
+    certType?: Base64String,
+    verifier?: PubKeyHex
+  }): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.certificate
     const tags: string[] = []
+
     if (params.originator) {
       tags.push(`originator ${params.originator}`)
+    }
+
+    if (params.privileged !== undefined) {
+      tags.push(`privileged ${!!params.privileged}`)
+    }
+
+    if (params.certType) {
+      tags.push(`type ${params.certType}`)
+    }
+
+    if (params.verifier) {
+      tags.push(`verifier ${params.verifier}`)
     }
     const result = await this.underlying.listOutputs(
       {
