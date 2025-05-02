@@ -10412,9 +10412,13 @@ export class WalletPermissionsManager implements WalletInterface {
         usageType: "apply" | "list";
     }): Promise<boolean> 
     public async querySpentSince(token: PermissionToken): Promise<number> 
-    public async listProtocolPermissions({ originator }: {
+    public async listProtocolPermissions({ originator, privileged, protocolName, protocolSecurityLevel, counterparty }: {
         originator?: string;
-    }): Promise<PermissionToken[]> 
+        privileged?: boolean;
+        protocolName?: string;
+        protocolSecurityLevel?: number;
+        counterparty?: string;
+    } = {}): Promise<PermissionToken[]> 
     public async hasProtocolPermission(params: {
         originator: string;
         privileged: boolean;
@@ -10423,7 +10427,8 @@ export class WalletPermissionsManager implements WalletInterface {
     }): Promise<boolean> 
     public async listBasketAccess(params: {
         originator?: string;
-    }): Promise<PermissionToken[]> 
+        basket?: string;
+    } = {}): Promise<PermissionToken[]> 
     public async hasBasketAccess(params: {
         originator: string;
         basket: string;
@@ -10437,7 +10442,10 @@ export class WalletPermissionsManager implements WalletInterface {
     }): Promise<boolean> 
     public async listCertificateAccess(params: {
         originator?: string;
-    }): Promise<PermissionToken[]> 
+        privileged?: boolean;
+        certType?: Base64String;
+        verifier?: PubKeyHex;
+    } = {}): Promise<PermissionToken[]> 
     public async hasCertificateAccess(params: {
         originator: string;
         privileged: boolean;
@@ -10691,37 +10699,87 @@ public async hasSpendingAuthorization(params: {
 
 ###### Method listBasketAccess
 
-Lists basket permission tokens (DBAP) for a given originator (or for all if not specified).
+Lists basket permission tokens (DBAP) for a given originator or basket (or for all if not specified).
 
 ```ts
 public async listBasketAccess(params: {
     originator?: string;
-}): Promise<PermissionToken[]> 
+    basket?: string;
+} = {}): Promise<PermissionToken[]> 
 ```
 See also: [PermissionToken](./client.md#interface-permissiontoken)
 
+Returns
+
+Array of permission tokens that match the filter criteria
+
+Argument Details
+
++ **params.originator**
+  + Optional originator to filter by
++ **params.basket**
+  + Optional basket name to filter by
+
 ###### Method listCertificateAccess
 
-Lists certificate permission tokens (DCAP) for a given originator (or all).
+Lists certificate permission tokens (DCAP) with optional filters.
 
 ```ts
 public async listCertificateAccess(params: {
     originator?: string;
-}): Promise<PermissionToken[]> 
+    privileged?: boolean;
+    certType?: Base64String;
+    verifier?: PubKeyHex;
+} = {}): Promise<PermissionToken[]> 
 ```
 See also: [PermissionToken](./client.md#interface-permissiontoken)
+
+Returns
+
+Array of permission tokens that match the filter criteria
+
+Argument Details
+
++ **originator**
+  + Optional originator domain to filter by
++ **privileged**
+  + Optional boolean to filter by privileged status
++ **certType**
+  + Optional certificate type to filter by
++ **verifier**
+  + Optional verifier to filter by
 
 ###### Method listProtocolPermissions
 
-Lists all protocol permission tokens (DPACP) for a given originator or for all if originator is undefined.
-This is a convenience method for UI or debug.
+Lists all protocol permission tokens (DPACP) with optional filters.
 
 ```ts
-public async listProtocolPermissions({ originator }: {
+public async listProtocolPermissions({ originator, privileged, protocolName, protocolSecurityLevel, counterparty }: {
     originator?: string;
-}): Promise<PermissionToken[]> 
+    privileged?: boolean;
+    protocolName?: string;
+    protocolSecurityLevel?: number;
+    counterparty?: string;
+} = {}): Promise<PermissionToken[]> 
 ```
 See also: [PermissionToken](./client.md#interface-permissiontoken)
+
+Returns
+
+Array of permission tokens that match the filter criteria
+
+Argument Details
+
++ **originator**
+  + Optional originator domain to filter by
++ **privileged**
+  + Optional boolean to filter by privileged status
++ **protocolName**
+  + Optional protocol name to filter by
++ **protocolSecurityLevel**
+  + Optional protocol security level to filter by
++ **counterparty**
+  + Optional counterparty to filter by
 
 ###### Method listSpendingAuthorizations
 
