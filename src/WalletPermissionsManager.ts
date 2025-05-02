@@ -1534,13 +1534,21 @@ export class WalletPermissionsManager implements WalletInterface {
   }
 
   /**
-   * Lists basket permission tokens (DBAP) for a given originator (or for all if not specified).
+   * Lists basket permission tokens (DBAP) for a given originator or basket (or for all if not specified).
+   * @param params.originator Optional originator to filter by
+   * @param params.basket Optional basket name to filter by
+   * @returns Array of permission tokens that match the filter criteria
    */
-  public async listBasketAccess(params: { originator?: string }): Promise<PermissionToken[]> {
+  public async listBasketAccess(params: { originator?: string, basket?: string }): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.basket
     const tags: string[] = []
+    
     if (params.originator) {
       tags.push(`originator ${params.originator}`)
+    }
+    
+    if (params.basket) {
+      tags.push(`basket ${params.basket}`)
     }
     const result = await this.underlying.listOutputs(
       {
