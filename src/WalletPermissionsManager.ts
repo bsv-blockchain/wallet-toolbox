@@ -1481,7 +1481,7 @@ export class WalletPermissionsManager implements WalletInterface {
     protocolName?: string
     protocolSecurityLevel?: number
     counterparty?: string
-  }): Promise<PermissionToken[]> {
+  } = {}): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.protocol
     const tags: string[] = []
 
@@ -1576,7 +1576,7 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param params.basket Optional basket name to filter by
    * @returns Array of permission tokens that match the filter criteria
    */
-  public async listBasketAccess(params: { originator?: string, basket?: string }): Promise<PermissionToken[]> {
+  public async listBasketAccess(params: { originator?: string, basket?: string } = {}): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.basket
     const tags: string[] = []
 
@@ -1713,7 +1713,7 @@ export class WalletPermissionsManager implements WalletInterface {
     privileged?: boolean,
     certType?: Base64String,
     verifier?: PubKeyHex
-  }): Promise<PermissionToken[]> {
+  } = {}): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.certificate
     const tags: string[] = []
 
