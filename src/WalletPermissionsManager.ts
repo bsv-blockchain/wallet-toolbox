@@ -1461,12 +1461,49 @@ export class WalletPermissionsManager implements WalletInterface {
    * --------------------------------------------------------------------- */
 
   /**
-   * Lists all protocol permission tokens (DPACP) for a given originator or for all if originator is undefined.
-   * This is a convenience method for UI or debug.
+   * Lists all protocol permission tokens (DPACP) with optional filters.
+   * @param originator Optional originator domain to filter by
+   * @param privileged Optional boolean to filter by privileged status
+   * @param protocolName Optional protocol name to filter by
+   * @param protocolSecurityLevel Optional protocol security level to filter by
+   * @param counterparty Optional counterparty to filter by
+   * @returns Array of permission tokens that match the filter criteria
    */
-  public async listProtocolPermissions({ originator }: { originator?: string }): Promise<PermissionToken[]> {
+  public async listProtocolPermissions({
+    originator,
+    privileged,
+    protocolName,
+    protocolSecurityLevel,
+    counterparty
+  }: {
+    originator?: string
+    privileged?: boolean
+    protocolName?: string
+    protocolSecurityLevel?: number
+    counterparty?: string
+  }): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.protocol
-    const tags: string[] = originator ? [`originator ${originator}`] : []
+    const tags: string[] = []
+    
+    if (originator) {
+      tags.push(`originator ${originator}`)
+    }
+    
+    if (privileged !== undefined) {
+      tags.push(`privileged ${!!privileged}`)
+    }
+    
+    if (protocolName) {
+      tags.push(`protocolName ${protocolName}`)
+    }
+    
+    if (protocolSecurityLevel !== undefined) {
+      tags.push(`protocolSecurityLevel ${protocolSecurityLevel}`)
+    }
+    
+    if (counterparty) {
+      tags.push(`counterparty ${counterparty}`)
+    }
     const result = await this.underlying.listOutputs(
       {
         basket: basketName,
