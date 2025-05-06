@@ -10,7 +10,7 @@
  *  - Delete user
  */
 import { AuthMethodInteractor } from './auth-method-interactors/AuthMethodInteractor'
-import crypto from 'crypto'
+import { PrivateKey } from '@bsv/sdk'
 
 export class WABClient {
   constructor(private serverUrl: string) {}
@@ -27,7 +27,7 @@ export class WABClient {
    * Generate a random 256-bit presentation key as a hex string (client side).
    */
   public generateRandomPresentationKey(): string {
-    return crypto.randomBytes(32).toString('hex')
+    return PrivateKey.fromRandom().toHex()
   }
 
   /**
