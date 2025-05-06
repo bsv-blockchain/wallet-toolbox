@@ -1,0 +1,25 @@
+{
+  "name": "@bsv/wallet-toolbox-mobile",
+  "version": "1.3.20",
+  "description": "Client only Wallet Storage",
+  "main": "./out/src/index.mobile.js",
+  "types": "./out/src/index.mobile.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-sv/wallet-toolbox.git"
+  },
+  "author": "Tone Engel",
+  "license": "SEE LICENSE IN license.md",
+  "keywords": [
+    "bsv",
+    "wallet",
+    "BRC100"
+  ],
+  "bugs": {
+    "url": "https://github.com/bitcoin-sv/wallet-toolbox/issues"
+  },
+  "homepage": "https://github.com/bitcoin-sv/wallet-toolbox#readme",
+  "dependencies": {
+    "@bsv/sdk": "^1.4.22"
+  }
+}
