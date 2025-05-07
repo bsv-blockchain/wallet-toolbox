@@ -23,13 +23,9 @@ import {
   TableProvenTxReq,
   TableProvenTxReqDynamics,
   TableTransaction,
-  TableTxLabel,
+  TableTxLabel
 } from './schema/tables'
-import {
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy } from '../utility/utilityHelpers'
+import { verifyId, verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
 import * as sdk from '../sdk/index'
 import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
 import { getBeefForTransaction } from './methods/getBeefForTransaction'
