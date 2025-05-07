@@ -20,7 +20,7 @@ import {
   TableSettings,
   TableSyncState,
   TableUser
-} from '../../index.client'
+} from '../../index.mobile'
 
 /**
  * `StorageClient` implements the `WalletStorageProvider` interface which allows it to

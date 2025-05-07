@@ -1,4 +1,13 @@
-import { WalletInterface, Utils, PushDrop, LockingScript, Transaction, WalletProtocol, Base64String, PubKeyHex } from '@bsv/sdk'
+import {
+  WalletInterface,
+  Utils,
+  PushDrop,
+  LockingScript,
+  Transaction,
+  WalletProtocol,
+  Base64String,
+  PubKeyHex
+} from '@bsv/sdk'
 import { validateCreateActionArgs } from './sdk'
 
 ////// TODO: ADD SUPPORT FOR ADMIN COUNTERPARTIES BASED ON WALLET STORAGE
@@ -1576,7 +1585,7 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param params.basket Optional basket name to filter by
    * @returns Array of permission tokens that match the filter criteria
    */
-  public async listBasketAccess(params: { originator?: string, basket?: string } = {}): Promise<PermissionToken[]> {
+  public async listBasketAccess(params: { originator?: string; basket?: string } = {}): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.basket
     const tags: string[] = []
 
@@ -1708,12 +1717,14 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param verifier Optional verifier to filter by
    * @returns Array of permission tokens that match the filter criteria
    */
-  public async listCertificateAccess(params: {
-    originator?: string,
-    privileged?: boolean,
-    certType?: Base64String,
-    verifier?: PubKeyHex
-  } = {}): Promise<PermissionToken[]> {
+  public async listCertificateAccess(
+    params: {
+      originator?: string
+      privileged?: boolean
+      certType?: Base64String
+      verifier?: PubKeyHex
+    } = {}
+  ): Promise<PermissionToken[]> {
     const basketName = BASKET_MAP.certificate
     const tags: string[] = []
 

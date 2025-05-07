@@ -14,9 +14,6 @@ import {
   AbortActionArgs
 } from '@bsv/sdk'
 import {
-  asArray,
-  asString,
-  sdk,
   TableCertificateX,
   TableMonitorEvent,
   TableOutput,
@@ -26,12 +23,11 @@ import {
   TableProvenTxReq,
   TableProvenTxReqDynamics,
   TableTransaction,
-  TableTxLabel,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy
-} from '../index.client'
+  TableTxLabel
+} from './schema/tables'
+import { verifyId, verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
+import * as sdk from '../sdk/index'
+import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
 import { getBeefForTransaction } from './methods/getBeefForTransaction'
 import { GetReqsAndBeefDetail, GetReqsAndBeefResult, processAction } from './methods/processAction'
 import { attemptToPostReqsToNetwork, PostReqsToNetworkResult } from './methods/attemptToPostReqsToNetwork'
