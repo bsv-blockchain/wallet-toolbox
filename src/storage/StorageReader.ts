@@ -1,6 +1,4 @@
 import {
-  sdk,
-  TableCertificate,
   TableCertificateField,
   TableCertificateX,
   TableCommission,
@@ -16,11 +14,10 @@ import {
   TableTransaction,
   TableTxLabel,
   TableTxLabelMap,
-  TableUser,
-  validateSecondsSinceEpoch,
-  verifyOneOrNone,
-  verifyTruthy
-} from '../index.client'
+  TableUser
+} from './schema/tables'
+import * as sdk from '../sdk/index'
+import { validateSecondsSinceEpoch, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
 import { getSyncChunk } from './methods/getSyncChunk'
 
 /**

@@ -1,7 +1,6 @@
-import { ListActionsResult, ListOutputsResult, Transaction } from '@bsv/sdk'
+import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import { sdk, verifyOne, verifyOneOrNone, verifyTruthy } from '../index.all'
 import {
-  KnexMigrations,
   outputColumnsWithoutLockingScript,
   TableCertificate,
   TableCertificateField,
@@ -12,7 +11,6 @@ import {
   TableOutputBasket,
   TableOutputTag,
   TableOutputTagMap,
-  TableOutputX,
   TableProvenTx,
   TableProvenTxReq,
   TableSettings,
@@ -22,8 +20,8 @@ import {
   TableTxLabelMap,
   TableUser,
   transactionColumnsWithoutRawTx
-} from './index.all'
-
+} from './schema/tables'
+import { KnexMigrations } from './schema/KnexMigrations'
 import { Knex } from 'knex'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { purgeData } from './methods/purgeData'
@@ -797,7 +795,10 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     for (let i = 0; i < count; i++) {
       try {
         const r = await this.knex.migrate.down(config)
-        expect(r).toBeTruthy()
+        if (!r) {
+          console.error(`Migration returned falsy result await this.knex.migrate.down(config)`)
+          break
+        }
       } catch (eu: unknown) {
         break
       }

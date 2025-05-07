@@ -1,6 +1,4 @@
 import {
-  randomBytesBase64,
-  sdk,
   TableCertificate,
   TableCertificateField,
   TableCommission,
@@ -15,12 +13,10 @@ import {
   TableTransaction,
   TableTxLabel,
   TableTxLabelMap,
-  TableUser,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy
-} from '../index.client'
+  TableUser
+} from './schema/tables'
+import { randomBytesBase64, verifyOneOrNone, verifyId, verifyOne } from '../utility/utilityHelpers'
+import * as sdk from '../sdk/index'
 import { createSyncMap } from './schema/entities'
 import { StorageReader, StorageReaderOptions } from './StorageReader'
 

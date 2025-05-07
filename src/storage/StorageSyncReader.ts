@@ -1,22 +1,5 @@
-import {
-  sdk,
-  TableCertificate,
-  TableCertificateField,
-  TableCertificateX,
-  TableCommission,
-  TableOutput,
-  TableOutputBasket,
-  TableOutputTag,
-  TableOutputTagMap,
-  TableProvenTx,
-  TableProvenTxReq,
-  TableSettings,
-  TableSyncState,
-  TableTransaction,
-  TableTxLabel,
-  TableTxLabelMap,
-  TableUser
-} from '../index.client'
+import * as sdk from '../sdk/index'
+import { TableSettings } from '../storage/schema/tables/TableSettings'
 import { StorageReader } from './StorageReader'
 
 /**
