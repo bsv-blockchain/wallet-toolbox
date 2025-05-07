@@ -37,3 +37,4 @@ test.db
 backup_*.sqlite
 backup-*.sqlite
 
+node_modules

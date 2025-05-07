@@ -9,6 +9,9 @@
         },
         {
             "path": "tsconfig.client.json"
+        },
+        {
+            "path": "tsconfig.mobile.json"
         }
     ]
 }
