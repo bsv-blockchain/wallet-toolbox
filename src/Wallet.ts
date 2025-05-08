@@ -721,6 +721,22 @@ export class Wallet implements WalletInterface, ProtoWallet {
     return r
   }
 
+  async internalizeAction(
+    args: InternalizeActionArgs,
+    originator?: OriginatorDomainNameStringUnder250Bytes
+  ): Promise<InternalizeActionResult> {
+    sdk.validateOriginator(originator)
+    const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateInternalizeActionArgs)
+
+    if (vargs.labels.indexOf(specOpThrowReviewActions) >= 0) throwDummyReviewActions()
+
+    const r = await internalizeAction(this, auth, args)
+
+    throwIfUnsuccessfulInternalizeAction(r)
+
+    return r
+  }
+
   async abortAction(
     args: AbortActionArgs,
     originator?: OriginatorDomainNameStringUnder250Bytes
@@ -729,16 +745,6 @@ export class Wallet implements WalletInterface, ProtoWallet {
 
     const { auth } = this.validateAuthAndArgs(args, sdk.validateAbortActionArgs)
     const r = await this.storage.abortAction(args)
-    return r
-  }
-
-  async internalizeAction(
-    args: InternalizeActionArgs,
-    originator?: OriginatorDomainNameStringUnder250Bytes
-  ): Promise<InternalizeActionResult> {
-    sdk.validateOriginator(originator)
-    const { auth, vargs } = this.validateAuthAndArgs(args, sdk.validateInternalizeActionArgs)
-    const r = await internalizeAction(this, auth, args)
     return r
   }
 
@@ -998,6 +1004,17 @@ function throwIfAnyUnsuccessfulSignActions(r: SignActionResultX) {
   if (!ndrs || !swrs || swrs.every(r => r.status === 'unproven')) return
 
   throw new sdk.WERR_REVIEW_ACTIONS(ndrs, swrs, r.txid, r.tx)
+}
+
+
+
+function throwIfUnsuccessfulInternalizeAction(r: sdk.StorageInternalizeActionResult) {
+  const ndrs = r.notDelayedResults
+  const swrs = r.sendWithResults
+
+  if (!ndrs || !swrs || swrs.every(r => r.status === 'unproven')) return
+
+  throw new sdk.WERR_REVIEW_ACTIONS(ndrs, swrs, r.txid)
 }
 
 /**

@@ -155,7 +155,7 @@ export interface WalletStorageWriter extends WalletStorageReader {
   abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult>
   createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult>
   processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults>
-  internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult>
+  internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult>
 
   insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number>
 
@@ -267,6 +267,20 @@ export interface StorageProcessActionArgs {
   log?: string
 }
 
+export interface StorageInternalizeActionResult extends InternalizeActionResult {
+  /** true if internalizing outputs on an existing storage transaction */
+  isMerge: boolean
+  /** txid of transaction being internalized */
+  txid: string
+  /** net change in change balance for user due to this internalization */
+  satoshis: number
+
+  /** valid iff not isMerge and txid was unknown to storage and non-delayed broadcast was not success */
+  sendWithResults?: SendWithResult[]
+  /** valid iff not isMerge and txid was unknown to storage and non-delayed broadcast was not success */
+  notDelayedResults?: ReviewActionResult[]
+}
+
 /**
  * Indicates status of a new Action following a `createAction` or `signAction` in immediate mode:
  * When `acceptDelayedBroadcast` is falses.
@@ -333,6 +347,7 @@ export interface PurgeResults {
 export interface StorageProvenOrReq {
   proven?: TableProvenTx
   req?: TableProvenTxReq
+  isNew?: boolean
 }
 
 /**

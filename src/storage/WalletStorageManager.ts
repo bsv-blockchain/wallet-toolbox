@@ -438,7 +438,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
       return await writer.createAction(auth, vargs)
     })
   }
-  async internalizeAction(args: InternalizeActionArgs): Promise<InternalizeActionResult> {
+  async internalizeAction(args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
     sdk.validateInternalizeActionArgs(args)
     return await this.runAsWriter(async writer => {
       const auth = await this.getAuth(true)

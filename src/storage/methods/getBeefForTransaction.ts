@@ -71,7 +71,15 @@ async function mergeBeefForTransactionRecurse(
 
   if (!options.ignoreStorage) {
     // if we can use storage, ask storage if it has the txid
-    const knownBeef = await storage.getValidBeefForTxid(txid, beef, options.trustSelf, options.knownTxids)
+    const requiredLevels = options.minProofLevel === undefined ? undefined : options.minProofLevel + recursionDepth
+    const knownBeef = await storage.getValidBeefForTxid(
+      txid,
+      beef,
+      options.trustSelf,
+      options.knownTxids,
+      undefined,
+      requiredLevels
+    )
     if (knownBeef) return knownBeef
   }
 
@@ -82,7 +90,7 @@ async function mergeBeefForTransactionRecurse(
   // to find it and if it has a proof, remember it.
   const r = await getProvenOrRawTxFromServices(storage, txid, options)
 
-  if (r.proven && options.minProofLevel && options.minProofLevel > recursionDepth) {
+  if (r.proven && options.minProofLevel !== undefined && options.minProofLevel > recursionDepth) {
     // ignore proof at this recursion depth
     r.proven = undefined
   }
