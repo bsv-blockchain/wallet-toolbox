@@ -5,15 +5,13 @@ import {
   WalletPayment,
   BasketInsertion,
   InternalizeActionArgs,
-  InternalizeActionResult,
   TransactionOutput,
-  Beef
+  Beef,
 } from '@bsv/sdk'
 import {
   EntityProvenTxReq,
   randomBytesBase64,
   sdk,
-  stampLog,
   StorageProvider,
   TableOutput,
   TableOutputBasket,
@@ -22,15 +20,7 @@ import {
   verifyOne,
   verifyOneOrNone
 } from '../../index.client'
-
-export interface StorageInternalizeActionResult extends InternalizeActionResult {
-  /** true if internalizing outputs on an existing storage transaction */
-  isMerge: boolean
-  /** txid of transaction being internalized */
-  txid: string
-  /** net change in change balance for user due to this internalization */
-  satoshis: number
-}
+import { shareReqsWithWorld } from './processAction'
 
 /**
  * Internalize Action allows a wallet to take ownership of outputs in a pre-existing transaction.
@@ -62,7 +52,7 @@ export async function internalizeAction(
   storage: StorageProvider,
   auth: sdk.AuthId,
   args: InternalizeActionArgs
-): Promise<InternalizeActionResult> {
+): Promise<sdk.StorageInternalizeActionResult> {
   const ctx = new InternalizeActionContext(storage, auth, args)
   await ctx.asyncSetup()
 
@@ -94,7 +84,7 @@ interface WalletPaymentX extends WalletPayment {
 
 class InternalizeActionContext {
   /** result to be returned */
-  r: StorageInternalizeActionResult
+  r: sdk.StorageInternalizeActionResult
   /** the parsed input AtomicBEEF */
   ab: Beef
   /** the incoming transaction extracted from AtomicBEEF */
@@ -356,10 +346,28 @@ class InternalizeActionContext {
     // transaction record for user is new, but the txid may not be new to storage
     // make sure storage pursues getting a proof for it.
     const newReq = EntityProvenTxReq.fromTxid(this.txid, this.tx.toBinary(), this.args.tx)
-    newReq.status = 'unmined'
+    // this status is only relevant if the transaction is new to storage.
+    newReq.status = 'unprocessed'
+    // this history and notify will be merged into an existing req if it exists.
     newReq.addHistoryNote({ what: 'internalizeAction', userId: this.userId })
     newReq.addNotifyTransactionId(transactionId)
     const pr = await this.storage.getProvenOrReq(this.txid, newReq.toApi())
+
+    if (pr.isNew) {
+      // This storage doesn't know about this txid yet.
+
+      // TODO Can we immediately prove this txid?
+
+      // Attempt to broadcast it to the network, throwing an error if it fails.
+
+      const { swr, ndr } = await shareReqsWithWorld(this.storage, this.userId, [this.txid], false)
+      if (ndr![0].status !== 'success') {
+        this.r.sendWithResults = swr
+        this.r.notDelayedResults = ndr
+        // abort the internalize action, WERR_REVIEW_ACTIONS exception will be thrown
+        return
+      }
+    }
 
     await this.addLabels(transactionId)
 
@@ -486,3 +494,4 @@ class InternalizeActionContext {
     basket.eo = txOut
   }
 }
+

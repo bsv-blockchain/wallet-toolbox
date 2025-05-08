@@ -195,8 +195,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Original wallet `internalizeAction` arguments.
    * @returns `internalizeAction` results
    */
-  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult> {
-    return this.rpcCall<InternalizeActionResult>('internalizeAction', [auth, args])
+  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
+    return this.rpcCall<sdk.StorageInternalizeActionResult>('internalizeAction', [auth, args])
   }
 
   /**

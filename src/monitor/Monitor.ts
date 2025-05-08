@@ -133,8 +133,7 @@ export class Monitor {
     this._tasks.push(new TaskCheckNoSends(this))
     this._tasks.push(new TaskFailAbandoned(this, 8 * this.oneMinute))
     this._tasks.push(new TaskUnFail(this))
-    // No purging until invalid transactions are really invalid...
-    //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
+    this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
   }
 
@@ -150,8 +149,7 @@ export class Monitor {
     this._tasks.push(new TaskCheckNoSends(this))
     this._tasks.push(new TaskFailAbandoned(this, 8 * this.oneMinute))
     this._tasks.push(new TaskUnFail(this))
-    // No purging until invalid transactions are really invalid...
-    //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
+    this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * this.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
   }
 

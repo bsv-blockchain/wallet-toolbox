@@ -1,2 +1,2 @@
 export * from './ChaintracksServiceClient'
-export * from './BlockHeaderApi'
+export * from './Api/BlockHeaderApi'

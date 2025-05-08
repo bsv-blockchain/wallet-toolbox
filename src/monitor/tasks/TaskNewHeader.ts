@@ -1,4 +1,4 @@
-import { BlockHeader } from '../../services/chaintracker/chaintracks/BlockHeaderApi'
+import { BlockHeader } from '../../services/chaintracker/chaintracks/Api/BlockHeaderApi'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 

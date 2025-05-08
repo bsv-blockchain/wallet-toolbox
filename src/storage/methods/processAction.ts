@@ -108,7 +108,7 @@ export interface PostBeefResultForTxidApi {
  * @param txids
  * @param isDelayed
  */
-async function shareReqsWithWorld(
+export async function shareReqsWithWorld(
   storage: StorageProvider,
   userId: number,
   txids: string[],
@@ -154,7 +154,10 @@ async function shareReqsWithWorld(
   // If isDelayed, this (or a different beef) will have to be rebuilt at the time of sending.
   if (readyToSendReqs.length > 0) {
     const beefIsValid = await r.beef.verify(await storage.getServices().getChainTracker())
-    if (!beefIsValid) throw new sdk.WERR_INTERNAL(`merged Beef failed validation.`)
+    if (!beefIsValid) {
+      console.log(`VERIFY FALSE BEEF: ${r.beef.toLogString()}`)
+      throw new sdk.WERR_INTERNAL(`merged Beef failed validation.`)
+    }
   }
 
   // Set req batch property for the reqs being sent

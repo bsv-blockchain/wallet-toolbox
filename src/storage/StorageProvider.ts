@@ -14,6 +14,9 @@ import {
   AbortActionArgs
 } from '@bsv/sdk'
 import {
+  asArray,
+  asString,
+  sdk,
   TableCertificateX,
   TableMonitorEvent,
   TableOutput,
@@ -23,11 +26,12 @@ import {
   TableProvenTxReq,
   TableProvenTxReqDynamics,
   TableTransaction,
-  TableTxLabel
-} from './schema/tables'
-import { verifyId, verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
-import * as sdk from '../sdk/index'
-import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
+  TableTxLabel,
+  verifyId,
+  verifyOne,
+  verifyOneOrNone,
+  verifyTruthy
+} from '../index.client'
 import { getBeefForTransaction } from './methods/getBeefForTransaction'
 import { GetReqsAndBeefDetail, GetReqsAndBeefResult, processAction } from './methods/processAction'
 import { attemptToPostReqsToNetwork, PostReqsToNetworkResult } from './methods/attemptToPostReqsToNetwork'
@@ -166,7 +170,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return r
   }
 
-  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult> {
+  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
     return await internalizeAction(this, auth, args)
   }
 
@@ -409,9 +413,10 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     mergeToBeef?: Beef,
     trustSelf?: TrustSelf,
     knownTxids?: string[],
-    trx?: sdk.TrxToken
+    trx?: sdk.TrxToken,
+    requiredLevels?: number
   ): Promise<Beef> {
-    const beef = await this.getValidBeefForTxid(txid, mergeToBeef, trustSelf, knownTxids, trx)
+    const beef = await this.getValidBeefForTxid(txid, mergeToBeef, trustSelf, knownTxids, trx, requiredLevels)
     if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `${txid} is not known to storage.`)
     return beef
   }
@@ -421,43 +426,50 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     mergeToBeef?: Beef,
     trustSelf?: TrustSelf,
     knownTxids?: string[],
-    trx?: sdk.TrxToken
+    trx?: sdk.TrxToken,
+    requiredLevels?: number
   ): Promise<Beef | undefined> {
     const beef = mergeToBeef || new Beef()
 
     const r = await this.getProvenOrRawTx(txid, trx)
     if (r.proven) {
-      if (trustSelf === 'known') beef.mergeTxidOnly(txid)
-      else {
-        beef.mergeRawTx(r.proven.rawTx)
-        const mp = new EntityProvenTx(r.proven).getMerklePath()
-        beef.mergeBump(mp)
-        return beef
-      }
-    }
-
-    if (r.rawTx && r.inputBEEF) {
-      if (trustSelf === 'known') beef.mergeTxidOnly(txid)
-      else {
-        beef.mergeRawTx(r.rawTx)
-        beef.mergeBeef(r.inputBEEF)
-        const tx = Transaction.fromBinary(r.rawTx)
-        for (const input of tx.inputs) {
-          const btx = beef.findTxid(input.sourceTXID!)
-          if (!btx) {
-            if (knownTxids && knownTxids.indexOf(input.sourceTXID!) > -1) beef.mergeTxidOnly(input.sourceTXID!)
-            else await this.getValidBeefForKnownTxid(input.sourceTXID!, beef, trustSelf, knownTxids, trx)
-          }
+      if (requiredLevels) {
+        r.rawTx = r.proven.rawTx
+      } else {
+        if (trustSelf === 'known') beef.mergeTxidOnly(txid)
+        else {
+          beef.mergeRawTx(r.proven.rawTx)
+          const mp = new EntityProvenTx(r.proven).getMerklePath()
+          beef.mergeBump(mp)
+          return beef
         }
-        return beef
       }
     }
 
-    return undefined
+    if (!r.rawTx) return undefined
+
+    if (trustSelf === 'known') {
+      beef.mergeTxidOnly(txid)
+    } else {
+      beef.mergeRawTx(r.rawTx)
+      if (r.inputBEEF) beef.mergeBeef(r.inputBEEF)
+      const tx = Transaction.fromBinary(r.rawTx)
+      if (requiredLevels) requiredLevels--
+      for (const input of tx.inputs) {
+        const btx = beef.findTxid(input.sourceTXID!)
+        if (!btx) {
+          if (!requiredLevels && knownTxids && knownTxids.indexOf(input.sourceTXID!) > -1)
+            beef.mergeTxidOnly(input.sourceTXID!)
+          else await this.getValidBeefForKnownTxid(input.sourceTXID!, beef, trustSelf, knownTxids, trx, requiredLevels)
+        }
+      }
+    }
+    return beef
   }
 
   async getBeefForTransaction(txid: string, options: sdk.StorageGetBeefOptions): Promise<Beef> {
-    return await getBeefForTransaction(this, txid, options)
+    const beef = await getBeefForTransaction(this, txid, options)
+    return beef
   }
 
   async findMonitorEventById(id: number, trx?: sdk.TrxToken): Promise<TableMonitorEvent | undefined> {

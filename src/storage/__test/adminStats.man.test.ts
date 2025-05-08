@@ -4,6 +4,7 @@ import { Setup } from '../../Setup'
 import { StorageKnex } from '../StorageKnex'
 import { AuthFetch, WalletInterface } from '@bsv/sdk'
 import { StorageAdminStats, StorageClient } from '../index.client'
+import { Format } from '../../utility/Format'
 
 describe('storage adminStats tests', () => {
   jest.setTimeout(99999999)
@@ -36,6 +37,7 @@ describe('storage adminStats tests', () => {
 
   test('0 adminStats StorageKnex', async () => {
     const r = await storage.adminStats(env.identityKey)
+    console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
     expect(r.usersTotal).toBeGreaterThan(0)
   })

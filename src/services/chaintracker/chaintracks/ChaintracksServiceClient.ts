@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { asString, sdk } from '../../../index.client'
 
-import { BaseBlockHeader, BlockHeader, isBaseBlockHeader } from './BlockHeaderApi'
+import { BaseBlockHeader, BlockHeader, isBaseBlockHeader } from './Api/BlockHeaderApi'
 
 interface FetchStatus<T> {
   status: 'success' | 'error'
