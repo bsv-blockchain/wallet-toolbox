@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "rootDir": ".", // Include both src and test directories
-    "outDir": "./out",
+    "outDir": "./mobile/out",
     "target": "es2018",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -14,12 +14,10 @@
     "noImplicitAny": false,
     "declaration": true,
     "declarationMap": true,
-    "composite": true,
     "noImplicitOverride": true
   },
-  "include": [
-    "src/**/*",
-    "test/**/*"
+  "files": [
+    "src/index.mobile.ts"
   ],
   "exclude": [
     "node_modules",

@@ -64,3 +64,8 @@ jobs:
       working-directory: client
       env:
         NODE_AUTH_TOKEN: ${{ secrets.BSV_NPM_TOKEN }}
+    - name: Publish mobile to NPM (expected to fail if version was not bumped manually)
+      run: npm publish --provenance --access public
+      working-directory: mobile
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.BSV_NPM_TOKEN }}

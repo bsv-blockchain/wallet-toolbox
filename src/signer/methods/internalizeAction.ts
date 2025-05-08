@@ -39,7 +39,7 @@ export async function internalizeAction(
   wallet: Wallet,
   auth: sdk.AuthId,
   args: InternalizeActionArgs
-): Promise<InternalizeActionResult> {
+): Promise<sdk.StorageInternalizeActionResult> {
   const vargs = sdk.validateInternalizeActionArgs(args)
 
   const { ab, tx, txid } = await validateAtomicBeef()
@@ -60,7 +60,7 @@ export async function internalizeAction(
     }
   }
 
-  const r: InternalizeActionResult = await wallet.storage.internalizeAction(args)
+  const r: sdk.StorageInternalizeActionResult = await wallet.storage.internalizeAction(args)
 
   return r
 

@@ -163,6 +163,29 @@ export abstract class TestUtilsWalletStorage {
     }
   }
 
+  static async createMainReviewSetup(): Promise<{
+    env: TuEnv
+    storage: StorageKnex
+    services: Services
+  }> {
+    const env = _tu.getEnv('main')
+    if (!env.cloudMySQLConnection) throw new sdk.WERR_INVALID_PARAMETER('env.cloundMySQLConnection', 'valid')
+    const knex = Setup.createMySQLKnex(env.cloudMySQLConnection)
+    const storage = new StorageKnex({
+      chain: env.chain,
+      knex: knex,
+      commissionSatoshis: 0,
+      commissionPubKeyHex: undefined,
+      feeModel: { model: 'sat/kb', value: 1 }
+    })
+    const servicesOptions = Services.createDefaultOptions(env.chain)
+    if (env.whatsonchainApiKey) servicesOptions.whatsOnChainApiKey = env.whatsonchainApiKey
+    const services = new Services(servicesOptions)
+    storage.setServices(services)
+    await storage.makeAvailable()
+    return { env, storage, services }
+  }
+
   static async createNoSendP2PKHTestOutpoint(
     address: string,
     satoshis: number,

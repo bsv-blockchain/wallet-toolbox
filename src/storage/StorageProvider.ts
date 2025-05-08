@@ -170,7 +170,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return r
   }
 
-  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<InternalizeActionResult> {
+  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
     return await internalizeAction(this, auth, args)
   }
 

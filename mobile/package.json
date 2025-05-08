@@ -1,9 +1,9 @@
 {
-  "name": "@bsv/wallet-toolbox-client",
+  "name": "@bsv/wallet-toolbox-mobile",
   "version": "1.3.24",
   "description": "Client only Wallet Storage",
-  "main": "./out/src/index.client.js",
-  "types": "./out/src/index.client.d.ts",
+  "main": "./out/src/index.mobile.js",
+  "types": "./out/src/index.mobile.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bitcoin-sv/wallet-toolbox.git"
@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/bitcoin-sv/wallet-toolbox#readme",
   "dependencies": {
-    "@bsv/sdk": "^1.4.22",
-    "idb": "^8.0.2"
+    "@bsv/sdk": "^1.4.22"
   }
 }

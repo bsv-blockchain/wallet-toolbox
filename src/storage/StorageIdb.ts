@@ -1,7 +1,6 @@
 import { deleteDB, IDBPCursorWithValue, IDBPDatabase, IDBPTransaction, openDB } from 'idb'
 import { ListActionsResult, ListOutputsResult } from '@bsv/sdk'
 import {
-  sdk,
   TableCertificate,
   TableCertificateField,
   TableCertificateX,
@@ -18,10 +17,10 @@ import {
   TableTransaction,
   TableTxLabel,
   TableTxLabelMap,
-  TableUser,
-  verifyOne,
-  verifyOneOrNone
-} from '../index.client'
+  TableUser
+} from './schema/tables'
+import * as sdk from '../sdk/index'
+import { verifyOne, verifyOneOrNone } from '../utility/utilityHelpers'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
