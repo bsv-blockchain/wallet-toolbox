@@ -6,7 +6,7 @@ import {
   BasketInsertion,
   InternalizeActionArgs,
   TransactionOutput,
-  Beef,
+  Beef
 } from '@bsv/sdk'
 import {
   EntityProvenTxReq,
@@ -494,4 +494,3 @@ class InternalizeActionContext {
     basket.eo = txOut
   }
 }
-

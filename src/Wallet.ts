@@ -1006,8 +1006,6 @@ function throwIfAnyUnsuccessfulSignActions(r: SignActionResultX) {
   throw new sdk.WERR_REVIEW_ACTIONS(ndrs, swrs, r.txid, r.tx)
 }
 
-
-
 function throwIfUnsuccessfulInternalizeAction(r: sdk.StorageInternalizeActionResult) {
   const ndrs = r.notDelayedResults
   const swrs = r.sendWithResults

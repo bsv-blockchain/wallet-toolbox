@@ -1,11 +1,5 @@
 import { WalletOutput } from '@bsv/sdk'
-import {
-  sdk,
-  TableOutput,
-  TableUser,
-  verifyOne,
-  verifyOneOrNone
-} from '../../../src'
+import { sdk, TableOutput, TableUser, verifyOne, verifyOneOrNone } from '../../../src'
 import { _tu } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs } from '../../../src/sdk'
 import { LocalWalletTestOptions } from '../../utils/localWalletMethods'
@@ -180,5 +174,4 @@ describe('operations.man tests', () => {
     })
     await storage.destroy()
   })
-
 })

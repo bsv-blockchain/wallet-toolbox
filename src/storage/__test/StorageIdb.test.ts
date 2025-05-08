@@ -17,7 +17,7 @@ describe('StorageIdb tests', () => {
   })
 
   test('1', async () => {
-    // TODO: THIS TEST PASSES WHEN Describe is run alone, but fails to exit cleanly when run with `npm run test` 
+    // TODO: THIS TEST PASSES WHEN Describe is run alone, but fails to exit cleanly when run with `npm run test`
     if (Setup.noEnv('test')) return
     const env = Setup.getEnv('test')
     const wallet = await SetupClient.createWalletClientNoEnv({
