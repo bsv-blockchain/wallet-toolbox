@@ -174,7 +174,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":688,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":80,"satsPerKb":2}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":689,"lockingScriptLength":25}],"size":39476,"fee":79,"satsPerKb":2}'
     )
     expectTransactionSize(params, r)
   })
@@ -195,7 +195,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":569,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":199,"satsPerKb":5}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":570,"lockingScriptLength":25}],"size":39476,"fee":198,"satsPerKb":5}'
     )
     expectTransactionSize(params, r)
   })
@@ -216,7 +216,7 @@ describe('generateChange tests', () => {
 
     const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
     expect(JSON.stringify(r)).toBe(
-      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false},{"satoshis":1000,"outputId":15013,"spendable":false}],"changeOutputs":[{"satoshis":728,"lockingScriptLength":25},{"satoshis":1000,"lockingScriptLength":25}],"size":39658,"fee":40,"satsPerKb":1}'
+      '{"allocatedChangeInputs":[{"satoshis":1004,"outputId":15011,"spendable":false},{"satoshis":1000,"outputId":15017,"spendable":false}],"changeOutputs":[{"satoshis":728,"lockingScriptLength":25}],"size":39476,"fee":40,"satsPerKb":1}'
     )
     expectTransactionSize(params, r)
   })
@@ -887,55 +887,87 @@ describe('generateChange tests', () => {
       { satoshis: 1034, outputId: 18492 }
     ]
   }
+  const d14: TestCase = {
+    p: {
+      fixedInputs: [],
+      fixedOutputs: [{ satoshis: 3, lockingScriptLength: 141 }],
+      feeModel: { model: 'sat/kb', value: 2 },
+      changeInitialSatoshis: 1000,
+      changeFirstSatoshis: 285,
+      changeLockingScriptLength: 25,
+      changeUnlockingScriptLength: 107,
+      targetNetCount: 22
+    },
+    availableChange: [
+      { satoshis: 995, outputId: 16190 },
+      { satoshis: 1000, outputId: 18487 },
+      { satoshis: 1000, outputId: 18488 },
+      { satoshis: 1000, outputId: 18489 },
+      { satoshis: 1000, outputId: 18490 },
+      { satoshis: 1000, outputId: 18491 },
+      { satoshis: 1000, outputId: 18492 },
+      { satoshis: 1000, outputId: 18493 },
+      { satoshis: 1000, outputId: 18494 },
+      { satoshis: 1000, outputId: 18495 },
+      { satoshis: 100, outputId: 18496 }
+    ]
+  }
 
-  test('8 paramsText d5 d6 d7 d8 d9 d10 d11 d12 d13', async () => {
-    for (const { n, d, er } of [
-      {
-        n: 13,
-        d: d13,
-        er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":18489,"spendable":false}],"changeOutputs":[{"satoshis":497,"lockingScriptLength":25}],"size":429,"fee":1,"satsPerKb":2}'
-      },
-      {
-        n: 12,
-        d: d12,
-        er: '{"allocatedChangeInputs":[{"satoshis":14030,"outputId":21194,"spendable":false}],"changeOutputs":[{"satoshis":13800,"lockingScriptLength":25}],"size":260,"fee":29,"satsPerKb":110}'
-      },
-      {
-        n: 11,
-        d: d11,
-        er: '{"allocatedChangeInputs":[{"satoshis":285,"outputId":21319,"spendable":false},{"satoshis":1000,"outputId":21309,"spendable":false}],"changeOutputs":[{"satoshis":1039,"lockingScriptLength":25}],"size":408,"fee":45,"satsPerKb":110}'
-      },
-      {
-        n: 10,
-        d: d10,
-        er: '{"allocatedChangeInputs":[{"satoshis":14030,"outputId":21194,"spendable":false}],"changeOutputs":[{"satoshis":13800,"lockingScriptLength":25}],"size":260,"fee":29,"satsPerKb":110}'
-      },
-      {
-        n: 9,
-        d: d9,
-        er: '{"allocatedChangeInputs":[{"satoshis":4571,"outputId":15626,"spendable":false}],"changeOutputs":[{"satoshis":3368,"lockingScriptLength":25}],"size":1373,"fee":3,"satsPerKb":2}'
-      },
-      {
-        n: 8,
-        d: d8,
-        er: '{"allocatedChangeInputs":[{"satoshis":1817,"outputId":15658,"spendable":false}],"changeOutputs":[{"satoshis":52,"lockingScriptLength":25}],"size":260,"fee":1,"satsPerKb":2}'
-      },
-      {
-        n: 7,
-        d: d7,
-        er: '{"allocatedChangeInputs":[{"satoshis":1817,"outputId":15658,"spendable":false}],"changeOutputs":[{"satoshis":46,"lockingScriptLength":25}],"size":260,"fee":1,"satsPerKb":2}'
-      },
-      {
-        n: 6,
-        d: d6,
-        er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":16346,"spendable":false}],"changeOutputs":[{"satoshis":298,"lockingScriptLength":25}],"size":673,"fee":2,"satsPerKb":2}'
-      },
-      {
-        n: 5,
-        d: d5,
-        er: '{"allocatedChangeInputs":[],"changeOutputs":[{"satoshis":799,"lockingScriptLength":25}],"size":191,"fee":1,"satsPerKb":2}'
-      }
-    ]) {
+  const test8Cases = [
+    {
+      n: 14,
+      d: d14,
+      er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":18495,"spendable":false}],"changeOutputs":[{"satoshis":996,"lockingScriptLength":25}],"size":342,"fee":1,"satsPerKb":2}'
+    },
+    {
+      n: 13,
+      d: d13,
+      er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":18489,"spendable":false}],"changeOutputs":[{"satoshis":497,"lockingScriptLength":25}],"size":429,"fee":1,"satsPerKb":2}'
+    },
+    {
+      n: 12,
+      d: d12,
+      er: '{"allocatedChangeInputs":[{"satoshis":14030,"outputId":21194,"spendable":false}],"changeOutputs":[{"satoshis":13800,"lockingScriptLength":25}],"size":260,"fee":29,"satsPerKb":110}'
+    },
+    {
+      n: 11,
+      d: d11,
+      er: '{"allocatedChangeInputs":[{"satoshis":285,"outputId":21319,"spendable":false},{"satoshis":1000,"outputId":21309,"spendable":false}],"changeOutputs":[{"satoshis":1039,"lockingScriptLength":25}],"size":408,"fee":45,"satsPerKb":110}'
+    },
+    {
+      n: 10,
+      d: d10,
+      er: '{"allocatedChangeInputs":[{"satoshis":14030,"outputId":21194,"spendable":false}],"changeOutputs":[{"satoshis":13800,"lockingScriptLength":25}],"size":260,"fee":29,"satsPerKb":110}'
+    },
+    {
+      n: 9,
+      d: d9,
+      er: '{"allocatedChangeInputs":[{"satoshis":4571,"outputId":15626,"spendable":false}],"changeOutputs":[{"satoshis":3368,"lockingScriptLength":25}],"size":1373,"fee":3,"satsPerKb":2}'
+    },
+    {
+      n: 8,
+      d: d8,
+      er: '{"allocatedChangeInputs":[{"satoshis":1817,"outputId":15658,"spendable":false}],"changeOutputs":[{"satoshis":52,"lockingScriptLength":25}],"size":260,"fee":1,"satsPerKb":2}'
+    },
+    {
+      n: 7,
+      d: d7,
+      er: '{"allocatedChangeInputs":[{"satoshis":1817,"outputId":15658,"spendable":false}],"changeOutputs":[{"satoshis":46,"lockingScriptLength":25}],"size":260,"fee":1,"satsPerKb":2}'
+    },
+    {
+      n: 6,
+      d: d6,
+      er: '{"allocatedChangeInputs":[{"satoshis":1000,"outputId":16346,"spendable":false}],"changeOutputs":[{"satoshis":298,"lockingScriptLength":25}],"size":673,"fee":2,"satsPerKb":2}'
+    },
+    {
+      n: 5,
+      d: d5,
+      er: '{"allocatedChangeInputs":[],"changeOutputs":[{"satoshis":799,"lockingScriptLength":25}],"size":191,"fee":1,"satsPerKb":2}'
+    }
+  ]
+
+  test('8 paramsText d5 d6 d7 d8 d9 d10 d11 d12 d13 d14', async () => {
+    for (const { n, d, er } of test8Cases) {
       const params: GenerateChangeSdkParams = { ...d.p }
       const availableChange: GenerateChangeSdkChangeInput[] = [...d.availableChange]
 

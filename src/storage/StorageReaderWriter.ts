@@ -168,8 +168,8 @@ export abstract class StorageReaderWriter extends StorageReader {
           basketId: 0,
           userId: user.userId,
           name: 'default',
-          numberOfDesiredUTXOs: 32,
-          minimumDesiredUTXOValue: 1000,
+          numberOfDesiredUTXOs: 144,
+          minimumDesiredUTXOValue: 32,
           isDeleted: false
         })
         break

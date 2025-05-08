@@ -231,7 +231,7 @@ export function sha256Hash(data: number[]): number[] {
  * @returns double sha256 hash of data, byte 0 of hash first.
  * @publicbody
  */
-export function doubleSha256HashLE(data: number[]): number[] {
+export function doubleSha256LE(data: number[]): number[] {
   const first = new Hash.SHA256().update(data).digest()
   const second = new Hash.SHA256().update(first).digest()
   return second
@@ -244,5 +244,5 @@ export function doubleSha256HashLE(data: number[]): number[] {
  * @publicbody
  */
 export function doubleSha256BE(data: number[]): number[] {
-  return doubleSha256HashLE(data).reverse()
+  return doubleSha256LE(data).reverse()
 }

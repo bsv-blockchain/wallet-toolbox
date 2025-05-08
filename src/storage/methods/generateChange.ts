@@ -1,4 +1,5 @@
 import { sdk, validateStorageFeeModel } from '../../index.client'
+import { transactionSize } from './utils'
 
 /**
  * An output of this satoshis amount will be adjusted to the largest fundable amount.
@@ -236,6 +237,17 @@ export async function generateChangeSdk(
         if (feeExcess() < 0)
           // Not enough available funding even if no change outputs
           break
+        // At this point we have a funded transaction, but there may be change outputs that are each costing as change input,
+        // resulting in pointless churn of change outputs.
+        // And remove change inputs that funded only a single change output (along with that output)...
+        const changeInputs = [...r.allocatedChangeInputs]
+        while (changeInputs.length > 1 && r.changeOutputs.length > 1) {
+          const lastOutput = r.changeOutputs.slice(-1)[0]
+          const i = changeInputs.findIndex(ci => ci.satoshis <= lastOutput.satoshis)
+          if (i < 0) break
+          r.changeOutputs.pop()
+          changeInputs.splice(i, 1)
+        }
         // and try again...
       }
     }
@@ -259,6 +271,7 @@ export async function generateChangeSdk(
      * Trigger an account funding event if we don't have enough to cover this transaction.
      */
     if (feeExcess() < 0) {
+      await releaseAllocatedChangeInputs()
       throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), -feeExcessNow)
     }
 
@@ -266,6 +279,7 @@ export async function generateChangeSdk(
      * If needed, seek funding to avoid overspending on fees without a change output to recapture it.
      */
     if (r.changeOutputs.length === 0 && feeExcessNow > 0) {
+      await releaseAllocatedChangeInputs()
       throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), params.changeFirstSatoshis)
     }
 
@@ -531,58 +545,4 @@ export function generateChangeSdkMakeStorage(availableChange: GenerateChangeSdkC
   }
 
   return { allocateChangeInput, releaseChangeInput, getLog }
-}
-
-/**
- * Returns the byte size required to encode number as Bitcoin VarUint
- * @publicbody
- */
-export function varUintSize(val: number): 1 | 3 | 5 | 9 {
-  if (val < 0) throw new sdk.WERR_INVALID_PARAMETER('varUint', 'non-negative')
-  return val <= 0xfc ? 1 : val <= 0xffff ? 3 : val <= 0xffffffff ? 5 : 9
-}
-
-/**
- * @param scriptSize byte length of input script
- * @returns serialized byte length a transaction input
- */
-export function transactionInputSize(scriptSize: number): number {
-  return (
-    32 + // txid
-    4 + // vout
-    varUintSize(scriptSize) + // script length, this is already in bytes
-    scriptSize + // script
-    4
-  ) // sequence number
-}
-
-/**
- * @param scriptSize byte length of output script
- * @returns serialized byte length a transaction output
- */
-export function transactionOutputSize(scriptSize: number): number {
-  return (
-    varUintSize(scriptSize) + // output script length, from script encoded as hex string
-    scriptSize + // output script
-    8
-  ) // output amount (satoshis)
-}
-
-/**
- * Compute the serialized binary transaction size in bytes
- * given the number of inputs and outputs,
- * and the size of each script.
- * @param inputs array of input script lengths, in bytes
- * @param outputs array of output script lengths, in bytes
- * @returns total transaction size in bytes
- */
-export function transactionSize(inputs: number[], outputs: number[]): number {
-  return (
-    4 + // Version
-    varUintSize(inputs.length) + // Number of inputs
-    inputs.reduce((a, e) => a + transactionInputSize(e), 0) + // all inputs
-    varUintSize(outputs.length) + // Number of outputs
-    outputs.reduce((a, e) => a + transactionOutputSize(e), 0) + // all outputs
-    4
-  ) // lock time
 }
