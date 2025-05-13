@@ -1,9 +1,10 @@
-import { WalletOutput } from '@bsv/sdk'
+import { MerklePath, WalletOutput } from '@bsv/sdk'
 import { sdk, TableOutput, TableUser, verifyOne, verifyOneOrNone } from '../../../src'
 import { _tu } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange, ValidListOutputsArgs } from '../../../src/sdk'
 import { LocalWalletTestOptions } from '../../utils/localWalletMethods'
 import { Format } from '../../../src/utility/Format'
+import { asString } from '../../../src/utility/utilityHelpers.noBuffer'
 
 describe('operations.man tests', () => {
   jest.setTimeout(99999999)
@@ -101,6 +102,51 @@ describe('operations.man tests', () => {
     await storage.destroy()
   })
 
+  test.skip('3 review proven_txs', async () => {
+    const { env, storage, services } = await _tu.createMainReviewSetup()
+    let offset = 0
+    const limit = 100
+    let allUnfails: number[] = []
+    //for (const provenTxId of  [3064, 3065, 11268, 11269, 11270, 11271] ) {
+    for (let height = 895000; height < 895026; height++) {
+      let log = ''
+      const unfails: number[] = []
+      const txs = await storage.findProvenTxs({ partial: { height }, paged: { limit, offset } })
+      for (const tx of txs) {
+        const gmpr = await services.getMerklePath(tx.txid)
+        if (gmpr && gmpr.header && gmpr.merklePath) {
+          const mp = gmpr.merklePath
+          const h = gmpr.header
+          const mr = mp.computeRoot(tx.txid)
+          const index = mp.path[0].find(leaf => leaf.hash === tx.txid)?.offset!
+
+          const mp2 = MerklePath.fromBinary(tx.merklePath)
+          const mr2 = mp2.computeRoot()
+
+          if (h.height !== mp.blockHeight || h.merkleRoot !== mr) {
+            console.log(`Merkle root mismatch for ${tx.txid} ${h.merkleRoot} != ${mr}`)
+          } else {
+            if (tx.merkleRoot !== mr || tx.height !== mp.blockHeight || tx.blockHash !== h.hash || tx.index !== index || mp2.blockHeight !== tx.height || mr2 !== tx.merkleRoot || asString(tx.merklePath) !== asString(mp.toBinary())) {
+              debugger;
+              await storage.updateProvenTx(tx.provenTxId, {
+                merklePath: mp.toBinary(),
+                merkleRoot: mr,
+                height: mp.blockHeight,
+                blockHash: h.hash,
+                index
+              })
+              log += `updated ${tx.provenTxId}\n`
+            }
+          }
+        }
+      }
+      //console.log(`${offset} ${log}`)
+      //if (txs.length < limit) break
+      //offset += txs.length
+    }
+    await storage.destroy()
+  })
+
   test.skip('10 re-internalize failed WUI exports', async () => {
     const { env, storage, services } = await _tu.createMainReviewSetup()
     // From this user
@@ -174,4 +220,23 @@ describe('operations.man tests', () => {
     })
     await storage.destroy()
   })
+
+  test.skip('12 check storage merged BEEF', async () => {
+    const userId = 127
+    const txid = 'efba8b92a22c3308f432b292b5ec7efb3869ecd50c62cb3ddfb83871bc7be194'
+    const vout = 1
+    const { env, storage, services } = await _tu.createMainReviewSetup()
+
+    const ptx = verifyOne(await storage.findProvenTxs({ partial: { txid } }))
+
+    const mp = MerklePath.fromBinary(ptx.merklePath)
+    expect(mp.blockHeight).toBe(ptx.height)
+
+    const txids = ['24b19a5179c1f146e825643df4c6dc2ba21674828c20fc2948e105cb1ca91eae']
+
+    const r = await storage.getReqsAndBeefToShareWithWorld(txids, [])
+
+    await storage.destroy()
+  })
+
 })
