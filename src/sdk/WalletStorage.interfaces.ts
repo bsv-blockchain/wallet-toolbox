@@ -189,6 +189,10 @@ export interface FindSincePagedArgs {
   since?: Date
   paged?: Paged
   trx?: TrxToken
+  /**
+   * Support for isDescending is implemented in StorageKnex for basic table find methods,
+   * excluding certificate_fields table, map tables, and settings (singleton row table).
+   */
   isDescending?: boolean
 }
 
