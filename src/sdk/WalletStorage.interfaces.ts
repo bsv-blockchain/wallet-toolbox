@@ -189,6 +189,7 @@ export interface FindSincePagedArgs {
   since?: Date
   paged?: Paged
   trx?: TrxToken
+  isDescending?: boolean
 }
 
 export interface FindForUserSincePagedArgs extends FindSincePagedArgs {
