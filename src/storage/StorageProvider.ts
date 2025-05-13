@@ -417,7 +417,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     requiredLevels?: number
   ): Promise<Beef> {
     const beef = await this.getValidBeefForTxid(txid, mergeToBeef, trustSelf, knownTxids, trx, requiredLevels)
-    if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `${txid} is not known to storage.`)
+    if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `known to storage. ${txid} is not known.`)
     return beef
   }
 
