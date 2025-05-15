@@ -56,7 +56,7 @@ describe('operations.man tests', () => {
       let log = ''
       const unfails: number[] = []
       debugger;
-      const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset }, isDescending: true })
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset }, orderDescending: true })
       for (const req of reqs) {
         const gsr = await services.getStatusForTxids([req.txid])
         if (gsr.results[0].status !== 'unknown') {
@@ -83,7 +83,7 @@ describe('operations.man tests', () => {
     for (;;) {
       let log = ''
       const unfails: number[] = []
-      const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset }, isDescending: true })
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset }, orderDescending: true })
       for (const req of reqs) {
         if (!req.txid || !req.rawTx) continue
         const gsr = await services.getStatusForTxids([req.txid])
@@ -245,7 +245,7 @@ describe('operations.man tests', () => {
     
     const txids = ['2df7b5059112a42fc40adb54ee36244cee0dd216c35ad6c4b6ef4631c14a0e83'] //, '9fb38fc87c6ff39f5c7321a4c689db535c024498ed20031434485c981dd7a182', '3fb6b02e1d001dded1daee3f59dcd684489b96a35a9dfb5082b4119a31689966', '72ea8d84a4c54dbca292f4a79a5ff08cb9917fc3127c1dcff0628aeba8b40823', '0564a515566bc43c1396becf12bbf2d82d821ae7b6e0ef404eedfa090d4877c2', '3b93e4327a50a7f4a421af9fbdec0206b3b7ba5252bc5a0142d0d64aa34c2e73', 'd4b0c3d820696afad43b43e095f3b8c3df52385bb4aeddff0212e0a472dd8e4e']
     const userId = 111
-    const txs = await storage.findTransactions({ partial: { userId }, status: ['completed', 'unproven', 'failed'], isDescending: true, paged: { limit: 50 } })
+    const txs = await storage.findTransactions({ partial: { userId }, status: ['completed', 'unproven', 'failed'], orderDescending: true, paged: { limit: 50 } })
     const allTxids = txs.map(tx => tx.txid!)
     debugger;
     const reqs = await storage.findProvenTxReqs({ partial: {}, txids: allTxids })

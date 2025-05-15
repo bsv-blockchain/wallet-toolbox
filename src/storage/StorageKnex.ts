@@ -488,7 +488,7 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     let q = this.toDb(args.trx)<T>(table)
     if (args.partial && Object.keys(args.partial).length > 0) q.where(args.partial)
     if (args.since) q.where('updated_at', '>=', this.validateDateForWhere(args.since))
-    if (args.isDescending) {
+    if (args.orderDescending) {
       let sortColumn = ''
       switch (table) {
         case 'certificates': sortColumn = 'certificateId'; break
