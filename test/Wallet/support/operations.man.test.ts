@@ -49,13 +49,14 @@ describe('operations.man tests', () => {
 
   test('1 review and unfail false doubleSpends', async () => {
     const { env, storage, services } = await _tu.createMainReviewSetup()
-    let offset = 2700
+    let offset = 0
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
       let log = ''
       const unfails: number[] = []
-      const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset } })
+      debugger;
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset }, isDescending: true })
       for (const req of reqs) {
         const gsr = await services.getStatusForTxids([req.txid])
         if (gsr.results[0].status !== 'unknown') {
@@ -76,13 +77,13 @@ describe('operations.man tests', () => {
 
   test('2 review and unfail false invalids', async () => {
     const { env, storage, services } = await _tu.createMainReviewSetup()
-    let offset = 800
+    let offset = 0
     const limit = 100
     let allUnfails: number[] = []
     for (;;) {
       let log = ''
       const unfails: number[] = []
-      const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset } })
+      const reqs = await storage.findProvenTxReqs({ partial: { status: 'invalid' }, paged: { limit, offset }, isDescending: true })
       for (const req of reqs) {
         if (!req.txid || !req.rawTx) continue
         const gsr = await services.getStatusForTxids([req.txid])
