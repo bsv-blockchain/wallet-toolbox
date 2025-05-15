@@ -575,7 +575,10 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
       )
     const q = this.setupQuery('proven_tx_reqs', args)
     if (args.status && args.status.length > 0) q.whereIn('status', args.status)
-    if (args.txids && args.txids.length > 0) q.whereIn('txid', args.txids)
+    if (args.txids) {
+      const txids = args.txids.filter(txid => txid !== undefined)
+      if (txids.length > 0) q.whereIn('txid', txids)
+    }
     return q
   }
   findProvenTxsQuery(args: sdk.FindProvenTxsArgs): Knex.QueryBuilder {
