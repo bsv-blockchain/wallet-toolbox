@@ -36,6 +36,7 @@ function defaultDeploymentId(): string {
  * Represents an ARC transaction broadcaster.
  */
 export class ARC {
+  readonly name: string
   readonly URL: string
   readonly apiKey: string | undefined
   readonly deploymentId: string
@@ -50,16 +51,17 @@ export class ARC {
    * @param {string} URL - The URL endpoint for the ARC API.
    * @param {ArcConfig} config - Configuration options for the ARC broadcaster.
    */
-  constructor(URL: string, config?: ArcConfig)
+  constructor(URL: string, config?: ArcConfig, name?: string)
   /**
    * Constructs an instance of the ARC broadcaster.
    *
    * @param {string} URL - The URL endpoint for the ARC API.
    * @param {string} apiKey - The API key used for authorization with the ARC API.
    */
-  constructor(URL: string, apiKey?: string)
+  constructor(URL: string, apiKey?: string, name?: string)
 
-  constructor(URL: string, config?: string | ArcConfig) {
+  constructor(URL: string, config?: string | ArcConfig, name?: string) {
+    this.name = name ?? 'ARC'
     this.URL = URL
     if (typeof config === 'string') {
       this.apiKey = config
@@ -143,7 +145,7 @@ export class ARC {
     }
 
     const url = `${this.URL}/v1/tx`
-    const nn = () => ({ name: 'ARCv1tx', when: new Date().toISOString() })
+    const nn = () => ({ name: this.name, when: new Date().toISOString() })
     const nne = () => ({ ...nn(), rawTx, txids: txids.join(','), url })
 
     try {
@@ -241,13 +243,13 @@ export class ARC {
    */
   async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> {
     const r: sdk.PostBeefResult = {
-      name: 'ARC',
+      name: this.name,
       status: 'success',
       txidResults: [],
       notes: []
     }
 
-    const nn = () => ({ name: 'ARCpostBeef', when: new Date().toISOString() })
+    const nn = () => ({ name: this.name, when: new Date().toISOString() })
 
     if (beef.version === BEEF_V2 && beef.txs.every(btx => !btx.isTxidOnly)) {
       beef.version = BEEF_V1
