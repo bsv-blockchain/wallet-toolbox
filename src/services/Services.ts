@@ -39,7 +39,7 @@ export class Services implements sdk.WalletServices {
 
     this.arcTaal = new ARC(this.options.arcUrl, this.options.arcConfig, 'arcTaal')
     if (this.options.arcGorillaPoolUrl) {
-      this.arcGorillaPool = new ARC(this.options.arcGorillaPoolUrl, this.options.arcGorillaPoolConfig, 'arcGorillaPool')
+      //this.arcGorillaPool = new ARC(this.options.arcGorillaPoolUrl, this.options.arcGorillaPoolConfig, 'arcGorillaPool')
     }
 
     this.bitails = new Bitails(this.chain)
