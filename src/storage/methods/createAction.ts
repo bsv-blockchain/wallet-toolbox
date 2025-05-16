@@ -18,8 +18,6 @@ import {
   randomBytesBase64,
   sdk,
   sha256Hash,
-  stampLog,
-  stampLogFormat,
   StorageProvider,
   TableOutput,
   TableOutputBasket,
@@ -552,7 +550,8 @@ async function validateRequiredInputs(
     ...input,
     vin,
     satoshis: -1,
-    lockingScript: new Script()
+    lockingScript: new Script(),
+    output: undefined
   }))
 
   const trustSelf = vargs.options.trustSelf === 'known'
