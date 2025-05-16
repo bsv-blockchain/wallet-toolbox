@@ -347,7 +347,7 @@ class InternalizeActionContext {
     // make sure storage pursues getting a proof for it.
     const newReq = EntityProvenTxReq.fromTxid(this.txid, this.tx.toBinary(), this.args.tx)
     // this status is only relevant if the transaction is new to storage.
-    newReq.status = 'unprocessed'
+    newReq.status = 'unsent'
     // this history and notify will be merged into an existing req if it exists.
     newReq.addHistoryNote({ what: 'internalizeAction', userId: this.userId })
     newReq.addNotifyTransactionId(transactionId)
@@ -357,6 +357,7 @@ class InternalizeActionContext {
       // This storage doesn't know about this txid yet.
 
       // TODO Can we immediately prove this txid?
+      // TODO Do full validation on the transaction?
 
       // Attempt to broadcast it to the network, throwing an error if it fails.
 
