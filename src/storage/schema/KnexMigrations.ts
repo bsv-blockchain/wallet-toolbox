@@ -70,6 +70,19 @@ export class KnexMigrations implements MigrationSource<string> {
       }
     }
 
+    migrations['2025-05-13-001 add monitor events event index'] = {
+      async up(knex) {
+        await knex.schema.alterTable('monitor_events', table => {
+          table.index('event')
+        })
+      },
+      async down(knex) {
+        await knex.schema.alterTable('monitor_events', table => {
+          table.dropIndex('event')
+        })
+      }
+    }
+
     migrations['2025-03-03-001 descriptions to 2000'] = {
       async up(knex) {
         await knex.schema.alterTable('transactions', table => {

@@ -200,6 +200,8 @@ export interface WalletServicesOptions {
   chaintracks?: ChaintracksServiceClient
   arcUrl: string
   arcConfig: ArcConfig
+  arcGorillaPoolUrl?: string
+  arcGorillaPoolConfig?: ArcConfig
 }
 
 export interface GetStatusForTxidsResult {

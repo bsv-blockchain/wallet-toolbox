@@ -13,6 +13,7 @@ import { TaskFailAbandoned } from './tasks/TaskFailAbandoned'
 import { TaskCheckForProofs } from './tasks/TaskCheckForProofs'
 import { TaskClock } from './tasks/TaskClock'
 import { TaskNewHeader } from './tasks/TaskNewHeader'
+import { TaskServiceCallHistory } from './tasks/TaskServiceCallHistory'
 
 import { TaskSendWaiting } from './tasks/TaskSendWaiting'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
@@ -110,6 +111,7 @@ export class Monitor {
   addAllTasksToOther(): void {
     this._otherTasks.push(new TaskClock(this))
     this._otherTasks.push(new TaskNewHeader(this))
+    this._otherTasks.push(new TaskServiceCallHistory(this))
     this._otherTasks.push(new TaskPurge(this, this.defaultPurgeParams))
     this._otherTasks.push(new TaskReviewStatus(this))
     this._otherTasks.push(new TaskSendWaiting(this))
@@ -128,6 +130,7 @@ export class Monitor {
   addDefaultTasks(): void {
     this._tasks.push(new TaskClock(this))
     this._tasks.push(new TaskNewHeader(this))
+    this._tasks.push(new TaskServiceCallHistory(this))
     this._tasks.push(new TaskSendWaiting(this, 8 * this.oneSecond, 7 * this.oneSecond)) // Check every 8 seconds but must be 7 seconds old
     this._tasks.push(new TaskCheckForProofs(this, 2 * this.oneHour)) // Every two hours if no block found
     this._tasks.push(new TaskCheckNoSends(this))
@@ -144,6 +147,7 @@ export class Monitor {
   addMultiUserTasks(): void {
     this._tasks.push(new TaskClock(this))
     this._tasks.push(new TaskNewHeader(this))
+    this._tasks.push(new TaskServiceCallHistory(this))
     this._tasks.push(new TaskSendWaiting(this, 8 * this.oneSecond, 7 * this.oneSecond)) // Check every 8 seconds but must be 7 seconds old
     this._tasks.push(new TaskCheckForProofs(this, 2 * this.oneHour)) // Every two hours if no block found
     this._tasks.push(new TaskCheckNoSends(this))

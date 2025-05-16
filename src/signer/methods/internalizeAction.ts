@@ -89,24 +89,14 @@ export async function internalizeAction(
     // TODO: Add support for known txids...
 
     const txValid = await ab.verify(await wallet.getServices().getChainTracker(), false)
-    if (!txValid || !ab.atomicTxid) throw new sdk.WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
+    if (!txValid || !ab.atomicTxid) {
+      console.log(`internalizeAction beef is invalid: ${ab.toLogString()}`)
+      throw new sdk.WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
+    }
     const txid = ab.atomicTxid
     const btx = ab.findTxid(txid)
     if (!btx) throw new sdk.WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF with newest txid of ${txid}`)
     const tx = btx.tx!
-
-    /*
-    for (const i of tx.inputs) {
-      if (!i.sourceTXID)
-        throw new sdk.WERR_INTERNAL('beef Transactions must have sourceTXIDs')
-      if (!i.sourceTransaction) {
-        const btx = ab.findTxid(i.sourceTXID)
-        if (!btx)
-          throw new sdk.WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF and contain input transaction with txid ${i.sourceTXID}`);
-        i.sourceTransaction = btx.tx
-      }
-    }
-    */
 
     return { ab, tx, txid }
   }

@@ -189,7 +189,11 @@ export interface FindSincePagedArgs {
   since?: Date
   paged?: Paged
   trx?: TrxToken
-  isDescending?: boolean
+  /**
+   * Support for orderDescending is implemented in StorageKnex for basic table find methods,
+   * excluding certificate_fields table, map tables, and settings (singleton row table).
+   */
+  orderDescending?: boolean
 }
 
 export interface FindForUserSincePagedArgs extends FindSincePagedArgs {
