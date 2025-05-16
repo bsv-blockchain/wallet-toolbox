@@ -83,6 +83,18 @@ export class Services implements sdk.WalletServices {
       .add({ name: 'exchangeratesapi', service: updateExchangeratesapi })
   }
 
+  getServicesCallHistory(reset?: boolean) {
+    return {
+      version: 1,
+      getMerklePath: this.getMerklePathServices.getServiceCallHistory(reset),
+      getRawTx: this.getRawTxServices.getServiceCallHistory(reset),
+      postBeef: this.postBeefServices.getServiceCallHistory(reset),
+      getUtxoStatus: this.getUtxoStatusServices.getServiceCallHistory(reset),
+      getStatusForTxids: this.getStatusForTxidsServices.getServiceCallHistory(reset),
+      getScriptHashHistory: this.getScriptHashHistoryServices.getServiceCallHistory(reset)
+    }
+  }
+
   async getChainTracker(): Promise<ChainTracker> {
     if (!this.options.chaintracks)
       throw new sdk.WERR_INVALID_PARAMETER('options.chaintracks', `valid to enable 'getChainTracker' service.`)
