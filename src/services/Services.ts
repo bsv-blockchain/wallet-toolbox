@@ -1,6 +1,6 @@
 import { Transaction as BsvTransaction, Beef, ChainTracker, Utils } from '@bsv/sdk'
 import { asArray, asString, doubleSha256BE, sdk, sha256Hash, TableOutput, wait } from '../index.client'
-import { ServiceCall, ServiceCollection } from './ServiceCollection'
+import { ServiceCollection } from './ServiceCollection'
 import { createDefaultWalletServicesOptions } from './createDefaultWalletServicesOptions'
 import { ChaintracksChainTracker } from './chaintracker'
 import { WhatsOnChain } from './providers/WhatsOnChain'
@@ -8,6 +8,7 @@ import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './pr
 import { ARC } from './providers/ARC'
 import { Bitails } from './providers/Bitails'
 import { getBeefForTxid } from './providers/getBeefForTxid'
+import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
 
 export class Services implements sdk.WalletServices {
   static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
@@ -45,15 +46,15 @@ export class Services implements sdk.WalletServices {
     this.bitails = new Bitails(this.chain)
 
     //prettier-ignore
-    this.getMerklePathServices = new ServiceCollection<sdk.GetMerklePathService>()
+    this.getMerklePathServices = new ServiceCollection<sdk.GetMerklePathService>('getMerklePath')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getMerklePath.bind(this.whatsonchain) })
       .add({ name: 'Bitails', service: this.bitails.getMerklePath.bind(this.bitails) })
 
     //prettier-ignore
-    this.getRawTxServices = new ServiceCollection<sdk.GetRawTxService>()
+    this.getRawTxServices = new ServiceCollection<sdk.GetRawTxService>('getRawTx')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getRawTxResult.bind(this.whatsonchain) })
 
-    this.postBeefServices = new ServiceCollection<sdk.PostBeefService>()
+    this.postBeefServices = new ServiceCollection<sdk.PostBeefService>('postBeef')
     if (this.arcGorillaPool) {
       //prettier-ignore
       this.postBeefServices.add({ name: 'GorillaPool', service: this.arcGorillaPool.postBeef.bind(this.arcGorillaPool) })
@@ -66,32 +67,33 @@ export class Services implements sdk.WalletServices {
       ;
 
     //prettier-ignore
-    this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>()
+    this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>('getUtxoStatus')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getUtxoStatus.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>()
+    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>('getStatusForTxids')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getStatusForTxids.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>()
+    this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>('getScriptHashHistory')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getScriptHashHistory.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.updateFiatExchangeRateServices = new ServiceCollection<sdk.UpdateFiatExchangeRateService>()
+    this.updateFiatExchangeRateServices = new ServiceCollection<sdk.UpdateFiatExchangeRateService>('updateFiatExchangeRate')
       .add({ name: 'ChaintracksService', service: updateChaintracksFiatExchangeRates })
       .add({ name: 'exchangeratesapi', service: updateExchangeratesapi })
   }
 
-  getServicesCallHistory(reset?: boolean) {
+  getServicesCallHistory(reset?: boolean) : ServicesCallHistory {
     return {
-      version: 1,
+      version: 2,
       getMerklePath: this.getMerklePathServices.getServiceCallHistory(reset),
       getRawTx: this.getRawTxServices.getServiceCallHistory(reset),
       postBeef: this.postBeefServices.getServiceCallHistory(reset),
       getUtxoStatus: this.getUtxoStatusServices.getServiceCallHistory(reset),
       getStatusForTxids: this.getStatusForTxidsServices.getServiceCallHistory(reset),
-      getScriptHashHistory: this.getScriptHashHistoryServices.getServiceCallHistory(reset)
+      getScriptHashHistory: this.getScriptHashHistoryServices.getServiceCallHistory(reset),
+      updateFiatExchangeRates: this.updateFiatExchangeRateServices.getServiceCallHistory(reset)
     }
   }
 
@@ -319,6 +321,8 @@ export class Services implements sdk.WalletServices {
 
         if (r.error)
           services.addServiceCallError(stc, r.error)
+        else if (!r.rawTx)
+          services.addServiceCallSuccess(stc, `not found`)
         else
           services.addServiceCallFailure(stc)
 

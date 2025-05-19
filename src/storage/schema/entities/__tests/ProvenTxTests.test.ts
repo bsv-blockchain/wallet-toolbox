@@ -136,7 +136,18 @@ describe('ProvenTx class method tests', () => {
       }),
       nLockTimeIsFinal: async () => true,
 
-      getBeefForTxid: async () => new bsv.Beef()
+      getBeefForTxid: async () => new bsv.Beef(),
+
+      getServicesCallHistory: () => ({
+        version: 1,
+        getMerklePath: { serviceName: '', historyByProvider: {} },
+        getRawTx: { serviceName: '', historyByProvider: {} },
+        postBeef: { serviceName: '', historyByProvider: {} },
+        getStatusForTxids: { serviceName: '', historyByProvider: {} },
+        getUtxoStatus: { serviceName: '', historyByProvider: {} },
+        getScriptHashHistory: { serviceName: '', historyByProvider: {} },
+        updateFiatExchangeRates: { serviceName: '', historyByProvider: {} }
+      })
     }
 
     // Call the method under test

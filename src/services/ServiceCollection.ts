@@ -1,13 +1,20 @@
 import { WalletError } from "../sdk/WalletError";
+import { ProviderCallHistory, ServiceCallHistory } from "../sdk/WalletServices.interfaces";
+
+const MAX_RESET_COUNTS = 32
+const MAX_CALL_HISTORY = 32
 
 export class ServiceCollection<T> {
-  since: Date
   services: { name: string; service: T }[]
   _index: number
 
-  _callHistory: Record<string, ServiceCallHistory> = {}
+  /**
+   * Start of currentCounts interval. Initially instance construction time.
+   */
+  readonly since: Date
+  _historyByProvider: Record<string, ProviderCallHistory> = {}
 
-  constructor(services?: { name: string; service: T }[]) {
+  constructor(public serviceName: string, services?: { name: string; service: T }[]) {
     this.services = services || []
     this._index = 0
     this.since = new Date()
@@ -34,8 +41,8 @@ export class ServiceCollection<T> {
     const i = this._index
     const name = this.services[i].name
     const service = this.services[i].service
-    const call = { name, when: new Date(), durationMsecs: 0, success: false, result: undefined, error: undefined }
-    return { name, service, call }
+    const call = { name, when: new Date(), msecs: 0, success: false, result: undefined, error: undefined }
+    return { serviceName: this.serviceName, providerName: name, service, call }
   }
 
   get allServicesToCall(): ServiceToCall<T>[] {
@@ -68,19 +75,33 @@ export class ServiceCollection<T> {
   }
 
   clone(): ServiceCollection<T> {
-    return new ServiceCollection([...this.services])
+    return new ServiceCollection(this.serviceName, [...this.services])
   }
 
-  _addServiceCall(name: string, call: ServiceCall): ServiceCallHistory {
-    let h = this._callHistory[name]
+  _addServiceCall(providerName: string, call: ServiceCall): ProviderCallHistory {
+    const now = new Date()
+    let h = this._historyByProvider[providerName]
     if (!h) {
-      h = { name, calls: [], count: 0, countError: 0, countFailure: 0, countSuccess: 0, since: this.since }
-      this._callHistory[name] = h
+      h = {
+        serviceName: this.serviceName,
+        providerName: providerName,
+        calls: [],
+        totalCounts: { success: 0, failure: 0, error: 0, since: this.since, until: now },
+        resetCounts: [{ success: 0, failure: 0, error: 0, since: this.since, until: now }]
+      }
+      this._historyByProvider[providerName] = h
     }
-    h.calls.push(call)
-    h.count++
-    h.calls = h.calls.slice(-32)
+    h.calls.unshift(call)
+    h.calls = h.calls.slice(0,MAX_CALL_HISTORY)
+    h.totalCounts.until = now
+    h.resetCounts[0].until = now
     return h
+  }
+
+  getDuration(since: Date | string): number {
+    const now = new Date()
+    if (typeof since === 'string') since = new Date(since)
+    return now.getTime() - since.getTime()
   }
 
   addServiceCallSuccess(stc: ServiceToCall<T>, result?: string): void {
@@ -88,8 +109,10 @@ export class ServiceCollection<T> {
     call.success = true
     call.result = result
     call.error = undefined
-    call.durationMsecs = new Date().getTime() - call.when.getTime()
-    this._addServiceCall(this.name, call).countSuccess++
+    call.msecs = this.getDuration(call.when)
+    const h = this._addServiceCall(stc.providerName, call)
+    h.totalCounts.success++
+    h.resetCounts[0].success++
   }
 
   addServiceCallFailure(stc: ServiceToCall<T>, result?: string): void {
@@ -97,8 +120,10 @@ export class ServiceCollection<T> {
     call.success = false
     call.result = result
     call.error = undefined
-    call.durationMsecs = new Date().getTime() - call.when.getTime()
-    this._addServiceCall(this.name, call).countFailure++
+    call.msecs = this.getDuration(call.when)
+    const h = this._addServiceCall(this.name, call)
+    h.totalCounts.failure++
+    h.resetCounts[0].failure++
   }
 
   addServiceCallError(stc: ServiceToCall<T>, error: WalletError): void {
@@ -106,66 +131,101 @@ export class ServiceCollection<T> {
     call.success = false
     call.result = undefined
     call.error = error
-    call.durationMsecs = new Date().getTime() - call.when.getTime()
-    this._addServiceCall(this.name, call).countError++
+    call.msecs = this.getDuration(call.when)
+    const h = this._addServiceCall(this.name, call)
+    h.totalCounts.failure++
+    h.totalCounts.error++
+    h.resetCounts[0].failure++
+    h.resetCounts[0].error++
   }
 
   /**
    * @returns A copy of current service call history
    */
-  getServiceCallHistory(reset?: boolean): Record<string, ServiceCallHistory> {
-    const histories: Record<string, ServiceCallHistory> = {}
-    for (const name of Object.keys(this._callHistory)) {
-      const h = this._callHistory[name]
-      histories[name] = {
-        name: h.name,
-        count: h.count,
-        countError: h.countError,
-        countFailure: h.countFailure,
-        countSuccess: h.countSuccess,
-        since: h.since,
+  getServiceCallHistory(reset?: boolean): ServiceCallHistory {
+    const now = new Date()
+    const history: ServiceCallHistory = { serviceName: this.serviceName, historyByProvider: {} }
+    for (const name of Object.keys(this._historyByProvider)) {
+      const h = this._historyByProvider[name]
+      const c: ProviderCallHistory = {
+        serviceName: h.serviceName,
+        providerName: h.providerName,
         calls: h.calls.map(c => ({
-          name: c.name,
-          when: c.when,
-          durationMsecs: c.durationMsecs,
+          when: dateToString(c.when),
+          msecs: c.msecs,
           success: c.success,
           result: c.result,
           error: c.error ? { message: c.error.message, code: c.error.code } : undefined
-        }))
+        })),
+        totalCounts: {
+          success: h.totalCounts.success,
+          failure: h.totalCounts.failure,
+          error: h.totalCounts.error,
+          since: dateToString(h.totalCounts.since),
+          until: dateToString(h.totalCounts.until)
+        },
+        resetCounts: []
       }
+      for (let i = 0; i < h.resetCounts.length; i++) {
+        const r = h.resetCounts[i]
+        c.resetCounts.push({
+          success: r.success,
+          failure: r.failure,
+          error: r.error,
+          since: dateToString(r.since),
+          until: dateToString(r.until)
+        })
+      }
+      history.historyByProvider[name] = c
       if (reset) {
-        h.count = 0
-        h.countError = 0
-        h.countFailure = 0
-        h.countSuccess = 0
-        h.since = new Date()
+        // Make sure intervals are continuous.
+        h.resetCounts[0].until = now
+        // insert a new resetCounts interval
+        h.resetCounts.unshift({
+          success: 0,
+          failure: 0,
+          error: 0,
+          // start of new interval
+          since: now,
+          // end of new interval, gets bumped with each new call added
+          until: now
+        })
+        // limit history to most recent intervals
+        h.resetCounts = h.resetCounts.slice(0, MAX_CALL_HISTORY)
       }
     }
-    return histories
+    return history
+
+    function dateToString(d: Date | string): string {
+      return typeof d === 'string' ? d : d.toISOString()
+    }
   }
 }
 
 export interface ServiceCall {
-  name: string
-  when: Date
-  durationMsecs: number
+  /**
+   * string value must be Date's toISOString format.
+   */
+  when: Date | string
+  msecs: number
+  /**
+   * true iff service provider successfully processed the request
+   * false iff service provider failed to process the request which includes thrown errors.
+   */
   success: boolean
+  /**
+   * Simple text summary of result. e.g. `not a valid utxo` or `valid utxo`
+   */
   result?: string
+  /**
+   * Error code and message iff success is false and a exception was thrown.
+   */
   error?: { message: string, code: string }
 }
 
-export interface ServiceCallHistory {
-  name: string
-  calls: ServiceCall[]
-  count: number
-  countSuccess: number
-  countFailure: number
-  countError: number
-  since: Date
-}
-
 export interface ServiceToCall<T> {
-  name: string
+  providerName: string
+  serviceName: string
   service: T
   call: ServiceCall
 }
