@@ -35,7 +35,7 @@ describe('localWallet tests', () => {
     await setup.monitor.runOnce()
     await setup.services.getRawTx('0000e416dfaf14c04899ccad2bf76a67c1d5598fece25cf4dcb7a076012b7d8d')
     await setup.services.getRawTx('0000ced61e2491be55061ce6577e0c59b909922ba92d5cc1cd754b10d721ab0e')
-    logger(await setup.monitor.runTask('ServiceCallHistory'))
+    logger(await setup.monitor.runTask('MonitorCallHistory'))
     await setup.wallet.destroy()
   })
 

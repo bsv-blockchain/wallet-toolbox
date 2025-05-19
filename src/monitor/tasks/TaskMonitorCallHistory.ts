@@ -2,14 +2,14 @@ import { TableMonitorEvent } from '../../storage/index.client'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
-export class TaskServiceCallHistory extends WalletMonitorTask {
-  static taskName = 'ServiceCallHistory'
+export class TaskMonitorCallHistory extends WalletMonitorTask {
+  static taskName = 'MonitorCallHistory'
 
   constructor(
     monitor: Monitor,
     public triggerMsecs = monitor.oneMinute * 12
   ) {
-    super(monitor, TaskServiceCallHistory.taskName)
+    super(monitor, TaskMonitorCallHistory.taskName)
   }
 
   trigger(nowMsecsSinceEpoch: number): { run: boolean } {

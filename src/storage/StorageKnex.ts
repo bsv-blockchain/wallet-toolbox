@@ -1159,6 +1159,13 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     const monitorEvent = verifyOneOrNone(await this.findMonitorEvents({ partial: { event: 'ServiceCallHistory'}, orderDescending: true, paged: { limit: 1 } }))
     const monitorStats: ServicesCallHistory | undefined = monitorEvent ? JSON.parse(monitorEvent.details!) : undefined
     const servicesStats = this.getServices().getServicesCallHistory(true)
+    await this.insertMonitorEvent({
+      event: 'ServicesCallHistory',
+      details: JSON.stringify(servicesStats),
+      created_at: new Date(),
+      updated_at: new Date(),
+      id: 0
+    })
 
     const one_day_ago = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const one_week_ago = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
