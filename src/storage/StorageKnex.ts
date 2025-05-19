@@ -1156,7 +1156,7 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   async adminStats(adminIdentityKey: string): Promise<AdminStatsResult> {
     if (this.dbtype !== 'MySQL') throw new sdk.WERR_NOT_IMPLEMENTED('adminStats, only MySQL is supported')
 
-    const monitorEvent = verifyOneOrNone(await this.findMonitorEvents({ partial: { event: 'ServiceCallHistory'}, orderDescending: true, paged: { limit: 1 } }))
+    const monitorEvent = verifyOneOrNone(await this.findMonitorEvents({ partial: { event: 'MonitorCallHistory'}, orderDescending: true, paged: { limit: 1 } }))
     const monitorStats: ServicesCallHistory | undefined = monitorEvent ? JSON.parse(monitorEvent.details!) : undefined
     const servicesStats = this.getServices().getServicesCallHistory(true)
     await this.insertMonitorEvent({
