@@ -630,6 +630,7 @@ export class ServiceCollection<T> {
     remove(name: string): void 
     get name() 
     get service() 
+    getServiceToCall(i: number): ServiceToCall<T> 
     get serviceToCall(): ServiceToCall<T> 
     get allServicesToCall(): ServiceToCall<T>[] 
     get allServices() 
@@ -703,6 +704,7 @@ export class Services implements sdk.WalletServices {
     async isUtxo(output: TableOutput): Promise<boolean> 
     async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<sdk.GetUtxoStatusResult> 
     async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> 
+    postBeefMode: "PromiseAll" | "UntilSuccess" = "UntilSuccess";
     async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> 
     async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> 
     async invokeChaintracksWithRetry<R>(method: () => Promise<R>): Promise<R> 

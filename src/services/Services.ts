@@ -274,22 +274,25 @@ export class Services implements sdk.WalletServices {
     const services = this.postBeefServices
     const stcs = services.allServicesToCall
     switch (this.postBeefMode) {
-      case 'UntilSuccess': {
-        for (const stc of stcs) {
-          const r = await callService(stc)
-          rs.push(r)
-          if (r.status === 'success')
-            break;
-        }
-      } break;
-      case 'PromiseAll': {
-        rs = await Promise.all(
-          stcs.map(async stc => {
+      case 'UntilSuccess':
+        {
+          for (const stc of stcs) {
             const r = await callService(stc)
-            return r
-          })
-        )
-      } break;
+            rs.push(r)
+            if (r.status === 'success') break
+          }
+        }
+        break
+      case 'PromiseAll':
+        {
+          rs = await Promise.all(
+            stcs.map(async stc => {
+              const r = await callService(stc)
+              return r
+            })
+          )
+        }
+        break
     }
     return rs
 

@@ -7717,6 +7717,7 @@ export class ServiceCollection<T> {
     remove(name: string): void 
     get name() 
     get service() 
+    getServiceToCall(i: number): ServiceToCall<T> 
     get serviceToCall(): ServiceToCall<T> 
     get allServicesToCall(): ServiceToCall<T>[] 
     get allServices() 
@@ -7790,6 +7791,7 @@ export class Services implements sdk.WalletServices {
     async isUtxo(output: TableOutput): Promise<boolean> 
     async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<sdk.GetUtxoStatusResult> 
     async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> 
+    postBeefMode: "PromiseAll" | "UntilSuccess" = "UntilSuccess";
     async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> 
     async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> 
     async invokeChaintracksWithRetry<R>(method: () => Promise<R>): Promise<R> 
@@ -13352,7 +13354,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: verifyUnlockScripts
 
 ```ts
-export function verifyUnlockScripts(txid: string, beef: Beef, memoryLimit?: number): void 
+export function verifyUnlockScripts(txid: string, beef: Beef): void 
 ```
 
 Argument Details
@@ -13361,8 +13363,6 @@ Argument Details
   + The TXID of a transaction in the beef for which all unlocking scripts must be valid.
 + **beef**
   + Must contain transactions for txid and all its inputs.
-+ **memoryLimit**
-  + Optional limit on memory usage for the script validation.
 
 Throws
 

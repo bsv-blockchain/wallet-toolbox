@@ -104,9 +104,9 @@ export function verifyUnlockScripts(txid: string, beef: Beef): void {
     })
 
     try {
-    const spendValid = spend.validate()
+      const spendValid = spend.validate()
 
-    if (!spendValid) throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid`)
+      if (!spendValid) throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid`)
     } catch (eu: unknown) {
       const e = WalletError.fromUnknown(eu)
       throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid. ${e.message}`)
