@@ -55,7 +55,6 @@ describe('operations.man tests', () => {
     for (;;) {
       let log = ''
       const unfails: number[] = []
-      debugger;
       const reqs = await storage.findProvenTxReqs({ partial: { status: 'doubleSpend' }, paged: { limit, offset }, orderDescending: true })
       for (const req of reqs) {
         const gsr = await services.getStatusForTxids([req.txid])
