@@ -1,6 +1,7 @@
-import { SignActionResult, SignActionSpend, Transaction } from "@bsv/sdk"
+import { Beef, SignActionResult, SignActionSpend, Spend, Transaction } from "@bsv/sdk"
 import { PendingSignAction, Wallet } from "../../Wallet"
 import { asBsvSdkScript, ScriptTemplateBRC29, sdk } from "../../index.client"
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from "../../sdk"
 
 export async function completeSignedTransaction(
   prior: PendingSignAction,
@@ -33,7 +34,7 @@ export async function completeSignedTransaction(
   }
 
   /////////////////////
-  // Insert SABPPP unlock templates for storage signed inputs
+  // Insert SABPPP unlock templates for wallet signed inputs
   /////////////////////
   for (const pdi of prior.pdi) {
     const sabppp = new ScriptTemplateBRC29({
@@ -52,9 +53,55 @@ export async function completeSignedTransaction(
   }
 
   /////////////////////
-  // Sign storage signed inputs making transaction fully valid.
+  // Sign wallet signed inputs making transaction fully valid.
   /////////////////////
   await prior.tx.sign()
 
   return prior.tx
+}
+
+/**
+ * @param txid The TXID of a transaction in the beef for which all unlocking scripts must be valid.
+ * @param beef Must contain transactions for txid and all its inputs.
+ * @param memoryLimit Optional limit on memory usage for the script validation.
+ * @throws WERR_INVALID_PARAMETER if any unlocking script is invalid, if sourceTXID is invalid, if beef doesn't contain required transactions. 
+ */
+export function verifyUnlockScripts(
+  txid: string,
+  beef: Beef,
+  memoryLimit?: number
+) : void {
+
+  const tx = beef.findTxid(txid)?.tx
+  if (!tx) throw new WERR_INVALID_PARAMETER(`txid`, `contained in beef, txid ${txid}`);
+
+  for (let i = 0; i < tx.inputs.length; i++) {
+    const input = tx.inputs[i]
+    if (!input.sourceTXID) throw new WERR_INVALID_PARAMETER(`inputs[${i}].sourceTXID`, `valid`)
+    if (!input.unlockingScript) throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockingScript`, `valid`)
+    input.sourceTransaction = beef.findTxid(input.sourceTXID)?.tx
+    if (!input.sourceTransaction) throw new WERR_INVALID_PARAMETER(`inputs[${i}].sourceTXID`, `contained in beef`)
+    const sourceOutput = input.sourceTransaction.outputs[input.sourceOutputIndex]
+
+    const otherInputs = tx.inputs.filter((_, idx) => idx !== i)
+
+    const spend = new Spend({
+      sourceTXID: input.sourceTXID,
+      sourceOutputIndex: input.sourceOutputIndex,
+      lockingScript: sourceOutput.lockingScript,
+      sourceSatoshis: sourceOutput.satoshis ?? 0,
+      transactionVersion: tx.version,
+      otherInputs,
+      unlockingScript: input.unlockingScript,
+      inputSequence: input.sequence ?? 0,
+      inputIndex: i,
+      outputs: tx.outputs,
+      lockTime: tx.lockTime,
+      memoryLimit
+    })
+    const spendValid = spend.validate()
+
+    if (!spendValid) 
+      throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid`)
+  }
 }
