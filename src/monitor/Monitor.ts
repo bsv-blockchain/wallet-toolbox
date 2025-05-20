@@ -221,7 +221,7 @@ export class Monitor {
           if (this.storage.getActive().isStorageProvider()) {
             const log = await ttr.runTask()
             if (log && log.length > 0) {
-              console.log(`Task${ttr.name} ${log}`)
+              console.log(`Task${ttr.name} ${log.slice(0,80)}`)
               await this.logEvent(ttr.name, log)
             }
           }

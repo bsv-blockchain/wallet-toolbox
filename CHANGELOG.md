@@ -3,6 +3,10 @@
 This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 1.3.29
+
+- add verifyUnlockScripts to both createAction and signAction flows
+  
 ## wallet-toolbox 1.3.28
 
 - adminStats now includes monitorStats and servicesStats of type ServicesCallHistory (wallet-toolbox/src/sdk/WalletServices.interfaces.ts)
