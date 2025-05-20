@@ -31,6 +31,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [BlockHeader](#interface-blockheader) |
 | [ExchangeRatesIoApi](#interface-exchangeratesioapi) |
 | [LiveBlockHeader](#interface-liveblockheader) |
+| [ServiceCall](#interface-servicecall) |
+| [ServiceToCall](#interface-servicetocall) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -346,6 +348,76 @@ previousHeaderId: number | null
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: ServiceCall
+
+```ts
+export interface ServiceCall {
+    when: Date | string;
+    msecs: number;
+    success: boolean;
+    result?: string;
+    error?: {
+        message: string;
+        code: string;
+    };
+}
+```
+
+###### Property error
+
+Error code and message iff success is false and a exception was thrown.
+
+```ts
+error?: {
+    message: string;
+    code: string;
+}
+```
+
+###### Property result
+
+Simple text summary of result. e.g. `not a valid utxo` or `valid utxo`
+
+```ts
+result?: string
+```
+
+###### Property success
+
+true iff service provider successfully processed the request
+false iff service provider failed to process the request which includes thrown errors.
+
+```ts
+success: boolean
+```
+
+###### Property when
+
+string value must be Date's toISOString format.
+
+```ts
+when: Date | string
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: ServiceToCall
+
+```ts
+export interface ServiceToCall<T> {
+    providerName: string;
+    serviceName: string;
+    service: T;
+    call: ServiceCall;
+}
+```
+
+See also: [ServiceCall](./services.md#interface-servicecall)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 #### Classes
 
 | |
@@ -367,15 +439,16 @@ Represents an ARC transaction broadcaster.
 
 ```ts
 export class ARC {
+    readonly name: string;
     readonly URL: string;
     readonly apiKey: string | undefined;
     readonly deploymentId: string;
     readonly callbackUrl: string | undefined;
     readonly callbackToken: string | undefined;
     readonly headers: Record<string, string> | undefined;
-    constructor(URL: string, config?: ArcConfig);
-    constructor(URL: string, apiKey?: string);
-    constructor(URL: string, config?: string | ArcConfig) 
+    constructor(URL: string, config?: ArcConfig, name?: string);
+    constructor(URL: string, apiKey?: string, name?: string);
+    constructor(URL: string, config?: string | ArcConfig, name?: string) 
     async postRawTx(rawTx: HexString, txids?: string[]): Promise<sdk.PostTxResultForTxid> 
     async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
     async getTxData(txid: string): Promise<ArcMinerGetTxData> 
@@ -389,7 +462,7 @@ See also: [ArcConfig](./services.md#interface-arcconfig), [ArcMinerGetTxData](./
 Constructs an instance of the ARC broadcaster.
 
 ```ts
-constructor(URL: string, config?: ArcConfig)
+constructor(URL: string, config?: ArcConfig, name?: string)
 ```
 See also: [ArcConfig](./services.md#interface-arcconfig)
 
@@ -405,7 +478,7 @@ Argument Details
 Constructs an instance of the ARC broadcaster.
 
 ```ts
-constructor(URL: string, apiKey?: string)
+constructor(URL: string, apiKey?: string, name?: string)
 ```
 
 Argument Details
@@ -544,7 +617,9 @@ export class ServiceCollection<T> {
         service: T;
     }[];
     _index: number;
-    constructor(services?: {
+    readonly since: Date;
+    _historyByProvider: Record<string, ProviderCallHistory> = {};
+    constructor(public serviceName: string, services?: {
         name: string;
         service: T;
     }[]) 
@@ -555,14 +630,43 @@ export class ServiceCollection<T> {
     remove(name: string): void 
     get name() 
     get service() 
+    get serviceToCall(): ServiceToCall<T> 
+    get allServicesToCall(): ServiceToCall<T>[] 
     get allServices() 
     get count() 
     get index() 
     reset() 
     next(): number 
     clone(): ServiceCollection<T> 
+    _addServiceCall(providerName: string, call: ServiceCall): ProviderCallHistory 
+    getDuration(since: Date | string): number 
+    addServiceCallSuccess(stc: ServiceToCall<T>, result?: string): void 
+    addServiceCallFailure(stc: ServiceToCall<T>, result?: string): void 
+    addServiceCallError(stc: ServiceToCall<T>, error: WalletError): void 
+    getServiceCallHistory(reset?: boolean): ServiceCallHistory 
 }
 ```
+
+See also: [ProviderCallHistory](./client.md#interface-providercallhistory), [ServiceCall](./services.md#interface-servicecall), [ServiceCallHistory](./client.md#interface-servicecallhistory), [ServiceToCall](./services.md#interface-servicetocall), [WalletError](./client.md#class-walleterror)
+
+###### Property since
+
+Start of currentCounts interval. Initially instance construction time.
+
+```ts
+readonly since: Date
+```
+
+###### Method getServiceCallHistory
+
+```ts
+getServiceCallHistory(reset?: boolean): ServiceCallHistory 
+```
+See also: [ServiceCallHistory](./client.md#interface-servicecallhistory)
+
+Returns
+
+A copy of current service call history
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -574,7 +678,8 @@ export class Services implements sdk.WalletServices {
     static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions 
     options: sdk.WalletServicesOptions;
     whatsonchain: WhatsOnChain;
-    arc: ARC;
+    arcTaal: ARC;
+    arcGorillaPool?: ARC;
     bitails: Bitails;
     getMerklePathServices: ServiceCollection<sdk.GetMerklePathService>;
     getRawTxServices: ServiceCollection<sdk.GetRawTxService>;
@@ -585,6 +690,7 @@ export class Services implements sdk.WalletServices {
     updateFiatExchangeRateServices: ServiceCollection<sdk.UpdateFiatExchangeRateService>;
     chain: sdk.Chain;
     constructor(optionsOrChain: sdk.Chain | sdk.WalletServicesOptions) 
+    getServicesCallHistory(reset?: boolean): ServicesCallHistory 
     async getChainTracker(): Promise<ChainTracker> 
     async getBsvExchangeRate(): Promise<number> 
     async getFiatExchangeRate(currency: "USD" | "GBP" | "EUR", base?: "USD" | "GBP" | "EUR"): Promise<number> 
@@ -597,7 +703,6 @@ export class Services implements sdk.WalletServices {
     async isUtxo(output: TableOutput): Promise<boolean> 
     async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<sdk.GetUtxoStatusResult> 
     async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> 
-    postBeefCount = 0;
     async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> 
     async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> 
     async invokeChaintracksWithRetry<R>(method: () => Promise<R>): Promise<R> 
@@ -612,7 +717,7 @@ export class Services implements sdk.WalletServices {
 }
 ```
 
-See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain), [getBeefForTxid](./services.md#function-getbeeffortxid)
+See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [ServicesCallHistory](./client.md#type-servicescallhistory), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain), [getBeefForTxid](./services.md#function-getbeeffortxid)
 
 ###### Method hashOutputScript
 
@@ -734,20 +839,15 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 #### Functions
 
-| |
-| --- |
-| [arcDefaultUrl](#function-arcdefaulturl) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) |
-| [getBeefForTxid](#function-getbeeffortxid) |
-| [getExchangeRatesIo](#function-getexchangeratesio) |
-| [isBaseBlockHeader](#function-isbaseblockheader) |
-| [isBlockHeader](#function-isblockheader) |
-| [isLive](#function-islive) |
-| [isLiveBlockHeader](#function-isliveblockheader) |
-| [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) |
-| [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) |
-| [updateExchangeratesapi](#function-updateexchangeratesapi) |
-| [validateScriptHash](#function-validatescripthash) |
+| | |
+| --- | --- |
+| [arcDefaultUrl](#function-arcdefaulturl) | [isLive](#function-islive) |
+| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [isLiveBlockHeader](#function-isliveblockheader) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) |
+| [getBeefForTxid](#function-getbeeffortxid) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) |
+| [getExchangeRatesIo](#function-getexchangeratesio) | [updateExchangeratesapi](#function-updateexchangeratesapi) |
+| [isBaseBlockHeader](#function-isbaseblockheader) | [validateScriptHash](#function-validatescripthash) |
+| [isBlockHeader](#function-isblockheader) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -757,6 +857,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export function arcDefaultUrl(chain: sdk.Chain): string 
+```
+
+See also: [Chain](./client.md#type-chain)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: arcGorillaPoolUrl
+
+```ts
+export function arcGorillaPoolUrl(chain: sdk.Chain): string | undefined 
 ```
 
 See also: [Chain](./client.md#type-chain)

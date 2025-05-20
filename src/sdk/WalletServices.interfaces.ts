@@ -173,7 +173,7 @@ export interface WalletServices {
    * @param reset if true, ends current interval and starts a new one.
    * @returns a history of service calls made to the configured services.
    */
-  getServicesCallHistory(reset?: boolean) : ServicesCallHistory
+  getServicesCallHistory(reset?: boolean): ServicesCallHistory
 }
 
 export type ScriptHashFormat = 'hashLE' | 'hashBE' | 'script'
@@ -539,7 +539,7 @@ export interface ServiceCall {
   /**
    * Error code and message iff success is false and a exception was thrown.
    */
-  error?: { message: string, code: string }
+  error?: { message: string; code: string }
 }
 
 /**

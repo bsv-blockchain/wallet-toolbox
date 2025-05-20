@@ -84,7 +84,7 @@ export class Services implements sdk.WalletServices {
       .add({ name: 'exchangeratesapi', service: updateExchangeratesapi })
   }
 
-  getServicesCallHistory(reset?: boolean) : ServicesCallHistory {
+  getServicesCallHistory(reset?: boolean): ServicesCallHistory {
     return {
       version: 2,
       getMerklePath: this.getMerklePathServices.getServiceCallHistory(reset),
@@ -155,10 +155,8 @@ export class Services implements sdk.WalletServices {
           r0 = r
           break
         } else {
-          if (r.error)
-            services.addServiceCallError(stc, r.error)
-          else
-            services.addServiceCallFailure(stc)
+          if (r.error) services.addServiceCallError(stc, r.error)
+          else services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
         const e = sdk.WalletError.fromUnknown(eu)
@@ -217,10 +215,8 @@ export class Services implements sdk.WalletServices {
             r0 = r
             break
           } else {
-            if (r.error)
-              services.addServiceCallError(stc, r.error)
-            else
-              services.addServiceCallFailure(stc)
+            if (r.error) services.addServiceCallError(stc, r.error)
+            else services.addServiceCallFailure(stc)
           }
         } catch (eu: unknown) {
           const e = sdk.WalletError.fromUnknown(eu)
@@ -253,10 +249,8 @@ export class Services implements sdk.WalletServices {
           r0 = r
           break
         } else {
-          if (r.error)
-            services.addServiceCallError(stc, r.error)
-          else
-            services.addServiceCallFailure(stc)
+          if (r.error) services.addServiceCallError(stc, r.error)
+          else services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
         const e = sdk.WalletError.fromUnknown(eu)
@@ -319,17 +313,13 @@ export class Services implements sdk.WalletServices {
           r.rawTx = undefined
         }
 
-        if (r.error)
-          services.addServiceCallError(stc, r.error)
-        else if (!r.rawTx)
-          services.addServiceCallSuccess(stc, `not found`)
-        else
-          services.addServiceCallFailure(stc)
+        if (r.error) services.addServiceCallError(stc, r.error)
+        else if (!r.rawTx) services.addServiceCallSuccess(stc, `not found`)
+        else services.addServiceCallFailure(stc)
 
         if (r.error && !r0.error && !r0.rawTx)
           // If we have an error and didn't before...
           r0.error = r.error
-
       } catch (eu: unknown) {
         const e = sdk.WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
@@ -401,11 +391,9 @@ export class Services implements sdk.WalletServices {
           services.addServiceCallSuccess(stc)
           break
         }
-        
-        if (r.error)
-          services.addServiceCallError(stc, r.error)
-        else
-          services.addServiceCallFailure(stc)
+
+        if (r.error) services.addServiceCallError(stc, r.error)
+        else services.addServiceCallFailure(stc)
 
         if (r.error && !r0.error) {
           // If we have an error and didn't before...

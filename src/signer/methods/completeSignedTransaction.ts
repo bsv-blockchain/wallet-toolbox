@@ -1,7 +1,7 @@
-import { Beef, SignActionResult, SignActionSpend, Spend, Transaction } from "@bsv/sdk"
-import { PendingSignAction, Wallet } from "../../Wallet"
-import { asBsvSdkScript, ScriptTemplateBRC29, sdk } from "../../index.client"
-import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from "../../sdk"
+import { Beef, SignActionResult, SignActionSpend, Spend, Transaction } from '@bsv/sdk'
+import { PendingSignAction, Wallet } from '../../Wallet'
+import { asBsvSdkScript, ScriptTemplateBRC29, sdk } from '../../index.client'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk'
 
 export async function completeSignedTransaction(
   prior: PendingSignAction,
@@ -64,16 +64,11 @@ export async function completeSignedTransaction(
  * @param txid The TXID of a transaction in the beef for which all unlocking scripts must be valid.
  * @param beef Must contain transactions for txid and all its inputs.
  * @param memoryLimit Optional limit on memory usage for the script validation.
- * @throws WERR_INVALID_PARAMETER if any unlocking script is invalid, if sourceTXID is invalid, if beef doesn't contain required transactions. 
+ * @throws WERR_INVALID_PARAMETER if any unlocking script is invalid, if sourceTXID is invalid, if beef doesn't contain required transactions.
  */
-export function verifyUnlockScripts(
-  txid: string,
-  beef: Beef,
-  memoryLimit?: number
-) : void {
-
+export function verifyUnlockScripts(txid: string, beef: Beef, memoryLimit?: number): void {
   const tx = beef.findTxid(txid)?.tx
-  if (!tx) throw new WERR_INVALID_PARAMETER(`txid`, `contained in beef, txid ${txid}`);
+  if (!tx) throw new WERR_INVALID_PARAMETER(`txid`, `contained in beef, txid ${txid}`)
 
   for (let i = 0; i < tx.inputs.length; i++) {
     const input = tx.inputs[i]
@@ -101,7 +96,6 @@ export function verifyUnlockScripts(
     })
     const spendValid = spend.validate()
 
-    if (!spendValid) 
-      throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid`)
+    if (!spendValid) throw new WERR_INVALID_PARAMETER(`inputs[${i}].unlockScript`, `valid`)
   }
 }

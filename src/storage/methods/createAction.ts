@@ -603,7 +603,10 @@ async function validateRequiredInputs(
     const output = verifyOneOrNone(await storage.findOutputs({ partial: { userId, txid, vout } }))
     if (output) {
       if (output.change) {
-        throw new sdk.WERR_INVALID_PARAMETER(`inputs[${input.vin}]`, 'an unmanaged input. Change outputs are managed by your wallet.')
+        throw new sdk.WERR_INVALID_PARAMETER(
+          `inputs[${input.vin}]`,
+          'an unmanaged input. Change outputs are managed by your wallet.'
+        )
       }
       input.output = output
       if (!Array.isArray(output.lockingScript) || !Number.isInteger(output.satoshis))

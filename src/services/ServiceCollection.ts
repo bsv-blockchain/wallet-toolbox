@@ -1,5 +1,5 @@
-import { WalletError } from "../sdk/WalletError";
-import { ProviderCallHistory, ServiceCallHistory } from "../sdk/WalletServices.interfaces";
+import { WalletError } from '../sdk/WalletError'
+import { ProviderCallHistory, ServiceCallHistory } from '../sdk/WalletServices.interfaces'
 
 const MAX_RESET_COUNTS = 32
 const MAX_CALL_HISTORY = 32
@@ -14,7 +14,10 @@ export class ServiceCollection<T> {
   readonly since: Date
   _historyByProvider: Record<string, ProviderCallHistory> = {}
 
-  constructor(public serviceName: string, services?: { name: string; service: T }[]) {
+  constructor(
+    public serviceName: string,
+    services?: { name: string; service: T }[]
+  ) {
     this.services = services || []
     this._index = 0
     this.since = new Date()
@@ -92,7 +95,7 @@ export class ServiceCollection<T> {
       this._historyByProvider[providerName] = h
     }
     h.calls.unshift(call)
-    h.calls = h.calls.slice(0,MAX_CALL_HISTORY)
+    h.calls = h.calls.slice(0, MAX_CALL_HISTORY)
     h.totalCounts.until = now
     h.resetCounts[0].until = now
     return h
@@ -220,7 +223,7 @@ export interface ServiceCall {
   /**
    * Error code and message iff success is false and a exception was thrown.
    */
-  error?: { message: string, code: string }
+  error?: { message: string; code: string }
 }
 
 export interface ServiceToCall<T> {

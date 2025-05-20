@@ -8,14 +8,7 @@ import {
   TXIDHexString
 } from '@bsv/sdk'
 import { Script, Transaction } from '@bsv/sdk'
-import {
-  makeAtomicBeef,
-  PendingSignAction,
-  ScriptTemplateBRC29,
-  sdk,
-  verifyTruthy,
-  Wallet
-} from '../../index.client'
+import { makeAtomicBeef, PendingSignAction, ScriptTemplateBRC29, sdk, verifyTruthy, Wallet } from '../../index.client'
 import { buildSignableTransaction } from './buildSignableTransaction'
 import { ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
 import { completeSignedTransaction, verifyUnlockScripts } from './completeSignedTransaction'

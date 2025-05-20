@@ -492,19 +492,44 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     if (args.orderDescending) {
       let sortColumn = ''
       switch (table) {
-        case 'certificates': sortColumn = 'certificateId'; break
-        case 'commissions': sortColumn = 'commissionId'; break
-        case 'output_baskets': sortColumn = 'basketId'; break
-        case 'outputs': sortColumn = 'outputId'; break
-        case 'output_tags': sortColumn = 'outputTagId'; break
-        case 'proven_tx_reqs': sortColumn = 'provenTxReqId'; break
-        case 'proven_txs': sortColumn = 'provenTxId'; break
-        case 'sync_states': sortColumn = 'syncStateId'; break
-        case 'transactions': sortColumn = 'transactionId'; break
-        case 'tx_labels': sortColumn = 'txLabelId'; break
-        case 'users': sortColumn = 'userId'; break
-        case 'monitor_events': sortColumn = 'id'; break
-        default: break;
+        case 'certificates':
+          sortColumn = 'certificateId'
+          break
+        case 'commissions':
+          sortColumn = 'commissionId'
+          break
+        case 'output_baskets':
+          sortColumn = 'basketId'
+          break
+        case 'outputs':
+          sortColumn = 'outputId'
+          break
+        case 'output_tags':
+          sortColumn = 'outputTagId'
+          break
+        case 'proven_tx_reqs':
+          sortColumn = 'provenTxReqId'
+          break
+        case 'proven_txs':
+          sortColumn = 'provenTxId'
+          break
+        case 'sync_states':
+          sortColumn = 'syncStateId'
+          break
+        case 'transactions':
+          sortColumn = 'transactionId'
+          break
+        case 'tx_labels':
+          sortColumn = 'txLabelId'
+          break
+        case 'users':
+          sortColumn = 'userId'
+          break
+        case 'monitor_events':
+          sortColumn = 'id'
+          break
+        default:
+          break
       }
       if (sortColumn !== '') {
         q.orderBy(sortColumn, 'desc')
@@ -1156,7 +1181,13 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
   async adminStats(adminIdentityKey: string): Promise<AdminStatsResult> {
     if (this.dbtype !== 'MySQL') throw new sdk.WERR_NOT_IMPLEMENTED('adminStats, only MySQL is supported')
 
-    const monitorEvent = verifyOneOrNone(await this.findMonitorEvents({ partial: { event: 'MonitorCallHistory'}, orderDescending: true, paged: { limit: 1 } }))
+    const monitorEvent = verifyOneOrNone(
+      await this.findMonitorEvents({
+        partial: { event: 'MonitorCallHistory' },
+        orderDescending: true,
+        paged: { limit: 1 }
+      })
+    )
     const monitorStats: ServicesCallHistory | undefined = monitorEvent ? JSON.parse(monitorEvent.details!) : undefined
     const servicesStats = this.getServices().getServicesCallHistory(true)
     await this.insertMonitorEvent({

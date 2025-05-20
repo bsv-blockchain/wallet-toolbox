@@ -7,10 +7,7 @@ export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.Wallet
     chain === 'main'
       ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
       : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
-  const gorillaPoolApiKey =
-    chain === 'main'
-      ? ''
-      : ''
+  const gorillaPoolApiKey = chain === 'main' ? '' : ''
 
   const o: sdk.WalletServicesOptions = {
     chain,

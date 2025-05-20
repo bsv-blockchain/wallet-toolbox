@@ -1,11 +1,4 @@
-import {
-  AtomicBEEF,
-  Beef,
-  SendWithResult,
-  SignActionArgs,
-  SignActionResult,
-  TXIDHexString
-} from '@bsv/sdk'
+import { AtomicBEEF, Beef, SendWithResult, SignActionArgs, SignActionResult, TXIDHexString } from '@bsv/sdk'
 import { sdk, Wallet } from '../../index.client'
 import { processAction } from './createAction'
 import { ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
