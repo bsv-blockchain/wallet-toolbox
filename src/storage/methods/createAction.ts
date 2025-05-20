@@ -18,8 +18,6 @@ import {
   randomBytesBase64,
   sdk,
   sha256Hash,
-  stampLog,
-  stampLogFormat,
   StorageProvider,
   TableOutput,
   TableOutputBasket,
@@ -552,7 +550,8 @@ async function validateRequiredInputs(
     ...input,
     vin,
     satoshis: -1,
-    lockingScript: new Script()
+    lockingScript: new Script(),
+    output: undefined
   }))
 
   const trustSelf = vargs.options.trustSelf === 'known'
@@ -603,6 +602,12 @@ async function validateRequiredInputs(
     const { txid, vout } = input.outpoint
     const output = verifyOneOrNone(await storage.findOutputs({ partial: { userId, txid, vout } }))
     if (output) {
+      if (output.change) {
+        throw new sdk.WERR_INVALID_PARAMETER(
+          `inputs[${input.vin}]`,
+          'an unmanaged input. Change outputs are managed by your wallet.'
+        )
+      }
       input.output = output
       if (!Array.isArray(output.lockingScript) || !Number.isInteger(output.satoshis))
         throw new sdk.WERR_INVALID_PARAMETER(`${txid}.${vout}`, 'output with valid lockingScript and satoshis')

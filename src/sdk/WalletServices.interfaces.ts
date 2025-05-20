@@ -168,6 +168,12 @@ export interface WalletServices {
    * @param txid
    */
   getBeefForTxid(txid: string): Promise<Beef>
+
+  /**
+   * @param reset if true, ends current interval and starts a new one.
+   * @returns a history of service calls made to the configured services.
+   */
+  getServicesCallHistory(reset?: boolean): ServicesCallHistory
 }
 
 export type ScriptHashFormat = 'hashLE' | 'hashBE' | 'script'
@@ -200,6 +206,8 @@ export interface WalletServicesOptions {
   chaintracks?: ChaintracksServiceClient
   arcUrl: string
   arcConfig: ArcConfig
+  arcGorillaPoolUrl?: string
+  arcGorillaPoolConfig?: ArcConfig
 }
 
 export interface GetStatusForTxidsResult {
@@ -495,3 +503,100 @@ export type UpdateFiatExchangeRateService = (
   targetCurrencies: string[],
   options: WalletServicesOptions
 ) => Promise<FiatExchangeRates>
+
+/**
+ * Type for the service call history returned by Services.getServicesCallHistory.
+ */
+export type ServicesCallHistory = {
+  version: number
+  getMerklePath: ServiceCallHistory
+  getRawTx: ServiceCallHistory
+  postBeef: ServiceCallHistory
+  getUtxoStatus: ServiceCallHistory
+  getStatusForTxids: ServiceCallHistory
+  getScriptHashHistory: ServiceCallHistory
+  updateFiatExchangeRates: ServiceCallHistory
+}
+
+/**
+ * Minimum data tracked for each service call.
+ */
+export interface ServiceCall {
+  /**
+   * string value must be Date's toISOString format.
+   */
+  when: Date | string
+  msecs: number
+  /**
+   * true iff service provider successfully processed the request
+   * false iff service provider failed to process the request which includes thrown errors.
+   */
+  success: boolean
+  /**
+   * Simple text summary of result. e.g. `not a valid utxo` or `valid utxo`
+   */
+  result?: string
+  /**
+   * Error code and message iff success is false and a exception was thrown.
+   */
+  error?: { message: string; code: string }
+}
+
+/**
+ * Counts of service calls over a time interval.
+ */
+export interface ServiceCallHistoryCounts {
+  /**
+   * count of calls returning success true.
+   */
+  success: number
+  /**
+   * count of calls returning success false.
+   */
+  failure: number
+  /**
+   * of failures (success false), count of calls with valid error code and message.
+   */
+  error: number
+  /**
+   * Counts are of calls over interval `since` to `until`.
+   * string value must be Date's toISOString format.
+   */
+  since: Date | string
+  /**
+   * Counts are of calls over interval `since` to `until`.
+   * string value must be Date's toISOString format.
+   */
+  until: Date | string
+}
+
+/**
+ * History of service calls for a single service, single provider.
+ */
+export interface ProviderCallHistory {
+  providerName: string
+  serviceName: string
+  /**
+   * Most recent service calls.
+   * Array length is limited by Services configuration.
+   */
+  calls: ServiceCall[]
+  /**
+   * Counts since creation of Services instance.
+   */
+  totalCounts: ServiceCallHistoryCounts
+  /**
+   * Entry [0] is always the current interval being extended by new calls.
+   * when `getServiceCallHistory` with `reset` true is called, a new interval with zero counts is added to the start of array.
+   * Array length is limited by Services configuration.
+   */
+  resetCounts: ServiceCallHistoryCounts[]
+}
+
+/**
+ * History of service calls for a single service, all providers.
+ */
+export interface ServiceCallHistory {
+  serviceName: string
+  historyByProvider: Record<string, ProviderCallHistory>
+}

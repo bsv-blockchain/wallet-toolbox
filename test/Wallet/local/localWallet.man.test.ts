@@ -1,12 +1,12 @@
 import { EntitySyncState, sdk } from '../../../src'
-import { _tu } from '../../utils/TestUtilsWalletStorage'
+import { _tu, logger } from '../../utils/TestUtilsWalletStorage'
 import { specOpInvalidChange } from '../../../src/sdk'
 import { createOneSatTestOutput, createSetup, LocalWalletTestOptions } from '../../utils/localWalletMethods'
 
 const chain: sdk.Chain = 'test'
 
 const options: LocalWalletTestOptions = {
-  setActiveClient: true,
+  setActiveClient: false,
   useMySQLConnectionForClient: true,
   useTestIdentityKey: true,
   useIdentityKey2: false
@@ -23,6 +23,19 @@ describe('localWallet tests', () => {
     const key = await setup.wallet.getPublicKey({ identityKey: true })
     expect(key.publicKey.toString()).toBe(setup.identityKey)
     await setup.monitor.runOnce()
+    await setup.wallet.destroy()
+  })
+
+  test('0a monitor runOnce call history', async () => {
+    const setup = await createSetup(chain, options)
+    const key = await setup.wallet.getPublicKey({ identityKey: true })
+    expect(key.publicKey.toString()).toBe(setup.identityKey)
+    await setup.services.getRawTx('6dd8e416dfaf14c04899ccad2bf76a67c1d5598fece25cf4dcb7a076012b7d8d')
+    await setup.services.getRawTx('ac9cced61e2491be55061ce6577e0c59b909922ba92d5cc1cd754b10d721ab0e')
+    await setup.monitor.runOnce()
+    await setup.services.getRawTx('0000e416dfaf14c04899ccad2bf76a67c1d5598fece25cf4dcb7a076012b7d8d')
+    await setup.services.getRawTx('0000ced61e2491be55061ce6577e0c59b909922ba92d5cc1cd754b10d721ab0e')
+    logger(await setup.monitor.runTask('MonitorCallHistory'))
     await setup.wallet.destroy()
   })
 
@@ -55,21 +68,6 @@ describe('localWallet tests', () => {
     console.log(`ACTIVE STORAGE: ${setup.storage.getActiveStoreName()}`)
     const clientBalance = await setup.wallet.balance()
     expect(localBalance).toBe(clientBalance)
-    await setup.wallet.destroy()
-  })
-
-  test('4 review change utxos', async () => {
-    const setup = await createSetup(chain, options)
-    const lor = await setup.wallet.listOutputs({
-      basket: specOpInvalidChange
-    })
-    if (lor.totalOutputs > 0) {
-      debugger
-      const lor = await setup.wallet.listOutputs({
-        basket: specOpInvalidChange,
-        tags: ['release']
-      })
-    }
     await setup.wallet.destroy()
   })
 

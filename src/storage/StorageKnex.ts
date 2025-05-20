@@ -23,12 +23,13 @@ import {
 } from './schema/tables'
 import { KnexMigrations } from './schema/KnexMigrations'
 import { Knex } from 'knex'
-import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
+import { AdminStatsResult, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { purgeData } from './methods/purgeData'
 import { listActions } from './methods/listActionsKnex'
 import { listOutputs } from './methods/listOutputsKnex'
 import { DBType } from './StorageReader'
 import { reviewStatus } from './methods/reviewStatus'
+import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
 
 export interface StorageKnexOptions extends StorageProviderOptions {
   /**
@@ -488,6 +489,52 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     let q = this.toDb(args.trx)<T>(table)
     if (args.partial && Object.keys(args.partial).length > 0) q.where(args.partial)
     if (args.since) q.where('updated_at', '>=', this.validateDateForWhere(args.since))
+    if (args.orderDescending) {
+      let sortColumn = ''
+      switch (table) {
+        case 'certificates':
+          sortColumn = 'certificateId'
+          break
+        case 'commissions':
+          sortColumn = 'commissionId'
+          break
+        case 'output_baskets':
+          sortColumn = 'basketId'
+          break
+        case 'outputs':
+          sortColumn = 'outputId'
+          break
+        case 'output_tags':
+          sortColumn = 'outputTagId'
+          break
+        case 'proven_tx_reqs':
+          sortColumn = 'provenTxReqId'
+          break
+        case 'proven_txs':
+          sortColumn = 'provenTxId'
+          break
+        case 'sync_states':
+          sortColumn = 'syncStateId'
+          break
+        case 'transactions':
+          sortColumn = 'transactionId'
+          break
+        case 'tx_labels':
+          sortColumn = 'txLabelId'
+          break
+        case 'users':
+          sortColumn = 'userId'
+          break
+        case 'monitor_events':
+          sortColumn = 'id'
+          break
+        default:
+          break
+      }
+      if (sortColumn !== '') {
+        q.orderBy(sortColumn, 'desc')
+      }
+    }
     if (args.paged) {
       q.limit(args.paged.limit)
       q.offset(args.paged.offset || 0)
@@ -554,7 +601,10 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
       )
     const q = this.setupQuery('proven_tx_reqs', args)
     if (args.status && args.status.length > 0) q.whereIn('status', args.status)
-    if (args.txids && args.txids.length > 0) q.whereIn('txid', args.txids)
+    if (args.txids) {
+      const txids = args.txids.filter(txid => txid !== undefined)
+      if (txids.length > 0) q.whereIn('txid', txids)
+    }
     return q
   }
   findProvenTxsQuery(args: sdk.FindProvenTxsArgs): Knex.QueryBuilder {
@@ -1128,8 +1178,25 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
     return entities
   }
 
-  async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> {
+  async adminStats(adminIdentityKey: string): Promise<AdminStatsResult> {
     if (this.dbtype !== 'MySQL') throw new sdk.WERR_NOT_IMPLEMENTED('adminStats, only MySQL is supported')
+
+    const monitorEvent = verifyOneOrNone(
+      await this.findMonitorEvents({
+        partial: { event: 'MonitorCallHistory' },
+        orderDescending: true,
+        paged: { limit: 1 }
+      })
+    )
+    const monitorStats: ServicesCallHistory | undefined = monitorEvent ? JSON.parse(monitorEvent.details!) : undefined
+    const servicesStats = this.getServices().getServicesCallHistory(true)
+    await this.insertMonitorEvent({
+      event: 'ServicesCallHistory',
+      details: JSON.stringify(servicesStats),
+      created_at: new Date(),
+      updated_at: new Date(),
+      id: 0
+    })
 
     const one_day_ago = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const one_week_ago = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -1271,7 +1338,9 @@ select
     (select count(*) from output_tags where created_at > '${one_month_ago}') as tagsMonth,
 	  (select count(*) from output_tags) as tagsTotal
       `)
-    const r: StorageAdminStats = {
+    const r: AdminStatsResult = {
+      monitorStats,
+      servicesStats,
       requestedBy: adminIdentityKey,
       when: new Date().toISOString(),
       usersDay,

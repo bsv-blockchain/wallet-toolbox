@@ -5,22 +5,13 @@ import {
   OutpointString,
   SendWithResult,
   SignableTransaction,
-  SignActionResult,
-  SignActionSpend,
   TXIDHexString
 } from '@bsv/sdk'
 import { Script, Transaction } from '@bsv/sdk'
-import {
-  asBsvSdkScript,
-  makeAtomicBeef,
-  PendingSignAction,
-  ScriptTemplateBRC29,
-  sdk,
-  verifyTruthy,
-  Wallet
-} from '../../index.client'
+import { makeAtomicBeef, PendingSignAction, ScriptTemplateBRC29, sdk, verifyTruthy, Wallet } from '../../index.client'
 import { buildSignableTransaction } from './buildSignableTransaction'
 import { ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
+import { completeSignedTransaction, verifyUnlockScripts } from './completeSignedTransaction'
 
 export interface CreateActionResultX extends CreateActionResult {
   txid?: TXIDHexString
@@ -50,8 +41,14 @@ export async function createAction(
     prior.tx = await completeSignedTransaction(prior, {}, wallet)
 
     r.txid = prior.tx.id('hex')
+    const beef = new Beef()
+    if (prior.dcr.inputBeef) beef.mergeBeef(prior.dcr.inputBeef)
+    beef.mergeTransaction(prior.tx)
+
+    verifyUnlockScripts(r.txid, beef)
+
     r.noSendChange = prior.dcr.noSendChangeOutputVouts?.map(vout => `${r.txid}.${vout}`)
-    if (!vargs.options.returnTXIDOnly) r.tx = makeAtomicBeef(prior.tx, prior.dcr.inputBeef!)
+    if (!vargs.options.returnTXIDOnly) r.tx = beef.toBinaryAtomic(r.txid)
   }
 
   const { sendWithResults, notDelayedResults } = await processAction(prior, wallet, auth, vargs)
@@ -131,62 +128,6 @@ export function makeChangeLock(
   return lockingScript
 }
 
-export async function completeSignedTransaction(
-  prior: PendingSignAction,
-  spends: Record<number, SignActionSpend>,
-  wallet: Wallet
-): Promise<Transaction> {
-  /////////////////////
-  // Insert the user provided unlocking scripts from "spends" arg
-  /////////////////////
-  for (const [key, spend] of Object.entries(spends)) {
-    const vin = Number(key)
-    const createInput = prior.args.inputs[vin]
-    const input = prior.tx.inputs[vin]
-    if (!createInput || !input || createInput.unlockingScript || !Number.isInteger(createInput.unlockingScriptLength))
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'args',
-        `spend does not correspond to prior input with valid unlockingScriptLength.`
-      )
-    if (spend.unlockingScript.length / 2 > createInput.unlockingScriptLength!)
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'args',
-        `spend unlockingScript length ${spend.unlockingScript.length} exceeds expected length ${createInput.unlockingScriptLength}`
-      )
-    input.unlockingScript = asBsvSdkScript(spend.unlockingScript)
-    if (spend.sequenceNumber !== undefined) input.sequence = spend.sequenceNumber
-  }
-
-  const results = {
-    sdk: <SignActionResult>{}
-  }
-
-  /////////////////////
-  // Insert SABPPP unlock templates for storage signed inputs
-  /////////////////////
-  for (const pdi of prior.pdi) {
-    const sabppp = new ScriptTemplateBRC29({
-      derivationPrefix: pdi.derivationPrefix,
-      derivationSuffix: pdi.derivationSuffix,
-      keyDeriver: wallet.keyDeriver
-    })
-    const keys = wallet.getClientChangeKeyPair()
-    const lockerPrivKey = keys.privateKey
-    const unlockerPubKey = pdi.unlockerPubKey || keys.publicKey
-    const sourceSatoshis = pdi.sourceSatoshis
-    const lockingScript = asBsvSdkScript(pdi.lockingScript)
-    const unlockTemplate = sabppp.unlock(lockerPrivKey, unlockerPubKey, sourceSatoshis, lockingScript)
-    const input = prior.tx.inputs[pdi.vin]
-    input.unlockingScriptTemplate = unlockTemplate
-  }
-
-  /////////////////////
-  // Sign storage signed inputs making transaction fully valid.
-  /////////////////////
-  await prior.tx.sign()
-
-  return prior.tx
-}
 function removeUnlockScripts(args: sdk.ValidCreateActionArgs) {
   let storageArgs = args
   if (!storageArgs.inputs.every(i => i.unlockingScript === undefined)) {

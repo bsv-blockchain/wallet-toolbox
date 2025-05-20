@@ -40,6 +40,7 @@ import { createAction } from './methods/createAction'
 import { internalizeAction } from './methods/internalizeAction'
 import { StorageReaderWriter, StorageReaderWriterOptions } from './StorageReaderWriter'
 import { EntityProvenTx, EntityProvenTxReq, EntitySyncState, EntityTransaction } from './schema/entities'
+import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
 
 export abstract class StorageProvider extends StorageReaderWriter implements sdk.WalletStorageProvider {
   isDirty = false
@@ -106,7 +107,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
   abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>
   abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>
 
-  abstract adminStats(adminIdentityKey: string): Promise<StorageAdminStats>
+  abstract adminStats(adminIdentityKey: string): Promise<AdminStatsResult>
 
   override isStorageProvider(): boolean {
     return true
@@ -417,7 +418,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     requiredLevels?: number
   ): Promise<Beef> {
     const beef = await this.getValidBeefForTxid(txid, mergeToBeef, trustSelf, knownTxids, trx, requiredLevels)
-    if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `${txid} is not known to storage.`)
+    if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `known to storage. ${txid} is not known.`)
     return beef
   }
 
@@ -772,4 +773,9 @@ export interface StorageAdminStats {
   tagsWeek: number
   tagsMonth: number
   tagsTotal: number
+}
+
+export interface AdminStatsResult extends StorageAdminStats {
+  servicesStats?: ServicesCallHistory
+  monitorStats?: ServicesCallHistory
 }

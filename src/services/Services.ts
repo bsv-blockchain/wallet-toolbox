@@ -1,6 +1,6 @@
 import { Transaction as BsvTransaction, Beef, ChainTracker, Utils } from '@bsv/sdk'
 import { asArray, asString, doubleSha256BE, sdk, sha256Hash, TableOutput, wait } from '../index.client'
-import { ServiceCollection } from './ServiceCollection'
+import { ServiceCollection, ServiceToCall } from './ServiceCollection'
 import { createDefaultWalletServicesOptions } from './createDefaultWalletServicesOptions'
 import { ChaintracksChainTracker } from './chaintracker'
 import { WhatsOnChain } from './providers/WhatsOnChain'
@@ -8,6 +8,7 @@ import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './pr
 import { ARC } from './providers/ARC'
 import { Bitails } from './providers/Bitails'
 import { getBeefForTxid } from './providers/getBeefForTxid'
+import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
 
 export class Services implements sdk.WalletServices {
   static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
@@ -16,7 +17,8 @@ export class Services implements sdk.WalletServices {
 
   options: sdk.WalletServicesOptions
   whatsonchain: WhatsOnChain
-  arc: ARC
+  arcTaal: ARC
+  arcGorillaPool?: ARC
   bitails: Bitails
 
   getMerklePathServices: ServiceCollection<sdk.GetMerklePathService>
@@ -36,41 +38,63 @@ export class Services implements sdk.WalletServices {
 
     this.whatsonchain = new WhatsOnChain(this.chain, { apiKey: this.options.whatsOnChainApiKey }, this)
 
-    this.arc = new ARC(this.options.arcUrl, this.options.arcConfig)
+    this.arcTaal = new ARC(this.options.arcUrl, this.options.arcConfig, 'arcTaal')
+    if (this.options.arcGorillaPoolUrl) {
+      this.arcGorillaPool = new ARC(this.options.arcGorillaPoolUrl, this.options.arcGorillaPoolConfig, 'arcGorillaPool')
+    }
 
     this.bitails = new Bitails(this.chain)
 
     //prettier-ignore
-    this.getMerklePathServices = new ServiceCollection<sdk.GetMerklePathService>()
+    this.getMerklePathServices = new ServiceCollection<sdk.GetMerklePathService>('getMerklePath')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getMerklePath.bind(this.whatsonchain) })
       .add({ name: 'Bitails', service: this.bitails.getMerklePath.bind(this.bitails) })
 
     //prettier-ignore
-    this.getRawTxServices = new ServiceCollection<sdk.GetRawTxService>()
+    this.getRawTxServices = new ServiceCollection<sdk.GetRawTxService>('getRawTx')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getRawTxResult.bind(this.whatsonchain) })
 
+    this.postBeefServices = new ServiceCollection<sdk.PostBeefService>('postBeef')
+    if (this.arcGorillaPool) {
+      //prettier-ignore
+      this.postBeefServices.add({ name: 'GorillaPoolArcBeef', service: this.arcGorillaPool.postBeef.bind(this.arcGorillaPool) })
+    }
     //prettier-ignore
-    this.postBeefServices = new ServiceCollection<sdk.PostBeefService>()
-      .add({ name: 'TaalArcBeef', service: this.arc.postBeef.bind(this.arc) })
-      .add({ name: 'WhatsOnChain', service: this.whatsonchain.postBeef.bind(this.whatsonchain) })
+    this.postBeefServices
+      .add({ name: 'TaalArcBeef', service: this.arcTaal.postBeef.bind(this.arcTaal) })
       .add({ name: 'Bitails', service: this.bitails.postBeef.bind(this.bitails) })
+      .add({ name: 'WhatsOnChain', service: this.whatsonchain.postBeef.bind(this.whatsonchain) })
+      ;
 
     //prettier-ignore
-    this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>()
+    this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>('getUtxoStatus')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getUtxoStatus.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>()
+    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>('getStatusForTxids')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getStatusForTxids.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>()
+    this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>('getScriptHashHistory')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getScriptHashHistory.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.updateFiatExchangeRateServices = new ServiceCollection<sdk.UpdateFiatExchangeRateService>()
+    this.updateFiatExchangeRateServices = new ServiceCollection<sdk.UpdateFiatExchangeRateService>('updateFiatExchangeRate')
       .add({ name: 'ChaintracksService', service: updateChaintracksFiatExchangeRates })
       .add({ name: 'exchangeratesapi', service: updateExchangeratesapi })
+  }
+
+  getServicesCallHistory(reset?: boolean): ServicesCallHistory {
+    return {
+      version: 2,
+      getMerklePath: this.getMerklePathServices.getServiceCallHistory(reset),
+      getRawTx: this.getRawTxServices.getServiceCallHistory(reset),
+      postBeef: this.postBeefServices.getServiceCallHistory(reset),
+      getUtxoStatus: this.getUtxoStatusServices.getServiceCallHistory(reset),
+      getStatusForTxids: this.getStatusForTxidsServices.getServiceCallHistory(reset),
+      getScriptHashHistory: this.getScriptHashHistoryServices.getServiceCallHistory(reset),
+      updateFiatExchangeRates: this.updateFiatExchangeRateServices.getServiceCallHistory(reset)
+    }
   }
 
   async getChainTracker(): Promise<ChainTracker> {
@@ -123,11 +147,20 @@ export class Services implements sdk.WalletServices {
     }
 
     for (let tries = 0; tries < services.count; tries++) {
-      const service = services.service
-      const r = await service(txids)
-      if (r.status === 'success') {
-        r0 = r
-        break
+      const stc = services.serviceToCall
+      try {
+        const r = await stc.service(txids)
+        if (r.status === 'success') {
+          services.addServiceCallSuccess(stc)
+          r0 = r
+          break
+        } else {
+          if (r.error) services.addServiceCallError(stc, r.error)
+          else services.addServiceCallFailure(stc)
+        }
+      } catch (eu: unknown) {
+        const e = sdk.WalletError.fromUnknown(eu)
+        services.addServiceCallError(stc, e)
       }
       services.next()
     }
@@ -174,11 +207,20 @@ export class Services implements sdk.WalletServices {
 
     for (let retry = 0; retry < 2; retry++) {
       for (let tries = 0; tries < services.count; tries++) {
-        const service = services.service
-        const r = await service(output, outputFormat, outpoint)
-        if (r.status === 'success') {
-          r0 = r
-          break
+        const stc = services.serviceToCall
+        try {
+          const r = await stc.service(output, outputFormat, outpoint)
+          if (r.status === 'success') {
+            services.addServiceCallSuccess(stc)
+            r0 = r
+            break
+          } else {
+            if (r.error) services.addServiceCallError(stc, r.error)
+            else services.addServiceCallFailure(stc)
+          }
+        } catch (eu: unknown) {
+          const e = sdk.WalletError.fromUnknown(eu)
+          services.addServiceCallError(stc, e)
         }
         services.next()
       }
@@ -200,18 +242,26 @@ export class Services implements sdk.WalletServices {
     }
 
     for (let tries = 0; tries < services.count; tries++) {
-      const service = services.service
-      const r = await service(hash)
-      if (r.status === 'success') {
-        r0 = r
-        break
+      const stc = services.serviceToCall
+      try {
+        const r = await stc.service(hash)
+        if (r.status === 'success') {
+          r0 = r
+          break
+        } else {
+          if (r.error) services.addServiceCallError(stc, r.error)
+          else services.addServiceCallFailure(stc)
+        }
+      } catch (eu: unknown) {
+        const e = sdk.WalletError.fromUnknown(eu)
+        services.addServiceCallError(stc, e)
       }
       services.next()
     }
     return r0
   }
 
-  postBeefCount = 0
+  postBeefMode: 'PromiseAll' | 'UntilSuccess' = 'UntilSuccess'
 
   /**
    *
@@ -220,47 +270,84 @@ export class Services implements sdk.WalletServices {
    * @returns
    */
   async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> {
-    this.postBeefCount++
-    const services = [...this.postBeefServices.allServices]
-    for (let i = this.postBeefCount % services.length; i > 0; i--) {
-      // roll the array of services so the providers aren't always called in the same order.
-      services.unshift(services.pop()!)
+    let rs: sdk.PostBeefResult[] = []
+    const services = this.postBeefServices
+    const stcs = services.allServicesToCall
+    switch (this.postBeefMode) {
+      case 'UntilSuccess':
+        {
+          for (const stc of stcs) {
+            const r = await callService(stc)
+            rs.push(r)
+            if (r.status === 'success') break
+          }
+        }
+        break
+      case 'PromiseAll':
+        {
+          rs = await Promise.all(
+            stcs.map(async stc => {
+              const r = await callService(stc)
+              return r
+            })
+          )
+        }
+        break
     }
-    let rs = await Promise.all(
-      services.map(async service => {
-        const r = await service(beef, txids)
-        return r
-      })
-    )
     return rs
+
+    async function callService(stc: ServiceToCall<sdk.PostBeefService>) {
+      const r = await stc.service(beef, txids)
+      if (r.status === 'success') {
+        services.addServiceCallSuccess(stc)
+      } else {
+        if (r.error) {
+          services.addServiceCallError(stc, r.error)
+        } else {
+          services.addServiceCallFailure(stc)
+        }
+      }
+      return r
+    }
   }
 
   async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> {
-    if (useNext) this.getRawTxServices.next()
+    const services = this.getRawTxServices
+    if (useNext) services.next()
 
     const r0: sdk.GetRawTxResult = { txid }
 
-    for (let tries = 0; tries < this.getRawTxServices.count; tries++) {
-      const service = this.getRawTxServices.service
-      const r = await service(txid, this.chain)
-      if (r.rawTx) {
-        const hash = asString(doubleSha256BE(r.rawTx!))
-        // Confirm transaction hash matches txid
-        if (hash === asString(txid)) {
-          // If we have a match, call it done.
-          r0.rawTx = r.rawTx
-          r0.name = r.name
-          r0.error = undefined
-          break
+    for (let tries = 0; tries < services.count; tries++) {
+      const stc = services.serviceToCall
+      try {
+        const r = await stc.service(txid, this.chain)
+        if (r.rawTx) {
+          const hash = asString(doubleSha256BE(r.rawTx!))
+          // Confirm transaction hash matches txid
+          if (hash === asString(txid)) {
+            // If we have a match, call it done.
+            r0.rawTx = r.rawTx
+            r0.name = r.name
+            r0.error = undefined
+            services.addServiceCallSuccess(stc)
+            break
+          }
+          r.error = new sdk.WERR_INTERNAL(`computed txid ${hash} doesn't match requested value ${txid}`)
+          r.rawTx = undefined
         }
-        r.error = new sdk.WERR_INTERNAL(`computed txid ${hash} doesn't match requested value ${txid}`)
-        r.rawTx = undefined
-      }
-      if (r.error && !r0.error && !r0.rawTx)
-        // If we have an error and didn't before...
-        r0.error = r.error
 
-      this.getRawTxServices.next()
+        if (r.error) services.addServiceCallError(stc, r.error)
+        else if (!r.rawTx) services.addServiceCallSuccess(stc, `not found`)
+        else services.addServiceCallFailure(stc)
+
+        if (r.error && !r0.error && !r0.rawTx)
+          // If we have an error and didn't before...
+          r0.error = r.error
+      } catch (eu: unknown) {
+        const e = sdk.WalletError.fromUnknown(eu)
+        services.addServiceCallError(stc, e)
+      }
+      services.next()
     }
     return r0
   }
@@ -307,28 +394,39 @@ export class Services implements sdk.WalletServices {
   }
 
   async getMerklePath(txid: string, useNext?: boolean): Promise<sdk.GetMerklePathResult> {
-    if (useNext) this.getMerklePathServices.next()
+    const services = this.getMerklePathServices
+    if (useNext) services.next()
 
     const r0: sdk.GetMerklePathResult = { notes: [] }
 
-    for (let tries = 0; tries < this.getMerklePathServices.count; tries++) {
-      const service = this.getMerklePathServices.service
-      const r = await service(txid, this)
-      if (r.notes) r0.notes!.push(...r.notes)
-      if (!r0.name) r0.name = r.name
-      if (r.merklePath) {
-        // If we have a proof, call it done.
-        r0.merklePath = r.merklePath
-        r0.header = r.header
-        r0.name = r.name
-        r0.error = undefined
-        break
-      } else if (r.error && !r0.error) {
-        // If we have an error and didn't before...
-        r0.error = r.error
-      }
+    for (let tries = 0; tries < services.count; tries++) {
+      const stc = services.serviceToCall
+      try {
+        const r = await stc.service(txid, this)
+        if (r.notes) r0.notes!.push(...r.notes)
+        if (!r0.name) r0.name = r.name
+        if (r.merklePath) {
+          // If we have a proof, call it done.
+          r0.merklePath = r.merklePath
+          r0.header = r.header
+          r0.name = r.name
+          r0.error = undefined
+          services.addServiceCallSuccess(stc)
+          break
+        }
 
-      this.getMerklePathServices.next()
+        if (r.error) services.addServiceCallError(stc, r.error)
+        else services.addServiceCallFailure(stc)
+
+        if (r.error && !r0.error) {
+          // If we have an error and didn't before...
+          r0.error = r.error
+        }
+      } catch (eu: unknown) {
+        const e = sdk.WalletError.fromUnknown(eu)
+        services.addServiceCallError(stc, e)
+      }
+      services.next()
     }
     return r0
   }
@@ -350,16 +448,19 @@ export class Services implements sdk.WalletServices {
     let r0: sdk.FiatExchangeRates | undefined
 
     for (let tries = 0; tries < services.count; tries++) {
-      const service = services.service
+      const stc = services.serviceToCall
       try {
-        const r = await service(this.targetCurrencies, this.options)
+        const r = await stc.service(this.targetCurrencies, this.options)
         if (this.targetCurrencies.every(c => typeof r.rates[c] === 'number')) {
+          services.addServiceCallSuccess(stc)
           r0 = r
           break
+        } else {
+          services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
         const e = sdk.WalletError.fromUnknown(eu)
-        console.error(`updateFiatExchangeRates servcice name ${service.name} error ${e.message}`)
+        services.addServiceCallError(stc, e)
       }
       services.next()
     }

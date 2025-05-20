@@ -121,13 +121,13 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | |
 | --- | --- |
-| [Monitor](#class-monitor) | [TaskPurge](#class-taskpurge) |
-| [MonitorDaemon](#class-monitordaemon) | [TaskReviewStatus](#class-taskreviewstatus) |
-| [TaskCheckForProofs](#class-taskcheckforproofs) | [TaskSendWaiting](#class-tasksendwaiting) |
-| [TaskCheckNoSends](#class-taskchecknosends) | [TaskSyncWhenIdle](#class-tasksyncwhenidle) |
-| [TaskClock](#class-taskclock) | [TaskUnFail](#class-taskunfail) |
-| [TaskFailAbandoned](#class-taskfailabandoned) | [WalletMonitorTask](#class-walletmonitortask) |
-| [TaskNewHeader](#class-tasknewheader) |  |
+| [Monitor](#class-monitor) | [TaskNewHeader](#class-tasknewheader) |
+| [MonitorDaemon](#class-monitordaemon) | [TaskPurge](#class-taskpurge) |
+| [TaskCheckForProofs](#class-taskcheckforproofs) | [TaskReviewStatus](#class-taskreviewstatus) |
+| [TaskCheckNoSends](#class-taskchecknosends) | [TaskSendWaiting](#class-tasksendwaiting) |
+| [TaskClock](#class-taskclock) | [TaskSyncWhenIdle](#class-tasksyncwhenidle) |
+| [TaskFailAbandoned](#class-taskfailabandoned) | [TaskUnFail](#class-taskunfail) |
+| [TaskMonitorCallHistory](#class-taskmonitorcallhistory) | [WalletMonitorTask](#class-walletmonitortask) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -404,6 +404,24 @@ outputs are not spendable.
 export class TaskFailAbandoned extends WalletMonitorTask {
     static taskName = "FailAbandoned";
     constructor(monitor: Monitor, public triggerMsecs = 1000 * 60 * 5) 
+    trigger(nowMsecsSinceEpoch: number): {
+        run: boolean;
+    } 
+    async runTask(): Promise<string> 
+}
+```
+
+See also: [Monitor](./monitor.md#class-monitor), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: TaskMonitorCallHistory
+
+```ts
+export class TaskMonitorCallHistory extends WalletMonitorTask {
+    static taskName = "MonitorCallHistory";
+    constructor(monitor: Monitor, public triggerMsecs = monitor.oneMinute * 12) 
     trigger(nowMsecsSinceEpoch: number): {
         run: boolean;
     } 
