@@ -188,6 +188,7 @@ describe('createAction2 nosend transactions', () => {
         labels: ['spending transaction test'],
         description: 'Explicit check on returned change',
         options: {
+          knownTxids: [fundingResult.txid!],
           noSend: true,
           randomizeOutputs: false,
           noSendChange: []
