@@ -1,6 +1,6 @@
 import { Transaction as BsvTransaction, Beef, ChainTracker, Utils } from '@bsv/sdk'
 import { asArray, asString, doubleSha256BE, sdk, sha256Hash, TableOutput, wait } from '../index.client'
-import { ServiceCollection } from './ServiceCollection'
+import { ServiceCollection, ServiceToCall } from './ServiceCollection'
 import { createDefaultWalletServicesOptions } from './createDefaultWalletServicesOptions'
 import { ChaintracksChainTracker } from './chaintracker'
 import { WhatsOnChain } from './providers/WhatsOnChain'
@@ -40,7 +40,7 @@ export class Services implements sdk.WalletServices {
 
     this.arcTaal = new ARC(this.options.arcUrl, this.options.arcConfig, 'arcTaal')
     if (this.options.arcGorillaPoolUrl) {
-      //this.arcGorillaPool = new ARC(this.options.arcGorillaPoolUrl, this.options.arcGorillaPoolConfig, 'arcGorillaPool')
+      this.arcGorillaPool = new ARC(this.options.arcGorillaPoolUrl, this.options.arcGorillaPoolConfig, 'arcGorillaPool')
     }
 
     this.bitails = new Bitails(this.chain)
@@ -57,13 +57,13 @@ export class Services implements sdk.WalletServices {
     this.postBeefServices = new ServiceCollection<sdk.PostBeefService>('postBeef')
     if (this.arcGorillaPool) {
       //prettier-ignore
-      this.postBeefServices.add({ name: 'GorillaPool', service: this.arcGorillaPool.postBeef.bind(this.arcGorillaPool) })
+      this.postBeefServices.add({ name: 'GorillaPoolArcBeef', service: this.arcGorillaPool.postBeef.bind(this.arcGorillaPool) })
     }
     //prettier-ignore
     this.postBeefServices
       .add({ name: 'TaalArcBeef', service: this.arcTaal.postBeef.bind(this.arcTaal) })
-      .add({ name: 'WhatsOnChain', service: this.whatsonchain.postBeef.bind(this.whatsonchain) })
       .add({ name: 'Bitails', service: this.bitails.postBeef.bind(this.bitails) })
+      .add({ name: 'WhatsOnChain', service: this.whatsonchain.postBeef.bind(this.whatsonchain) })
       ;
 
     //prettier-ignore
@@ -261,6 +261,8 @@ export class Services implements sdk.WalletServices {
     return r0
   }
 
+  postBeefMode: 'PromiseAll' | 'UntilSuccess' = 'UntilSuccess'
+
   /**
    *
    * @param beef
@@ -268,24 +270,42 @@ export class Services implements sdk.WalletServices {
    * @returns
    */
   async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> {
+    let rs: sdk.PostBeefResult[] = []
     const services = this.postBeefServices
     const stcs = services.allServicesToCall
-    let rs = await Promise.all(
-      stcs.map(async stc => {
-        const r = await stc.service(beef, txids)
-        if (r.status === 'success') {
-          services.addServiceCallSuccess(stc)
-        } else {
-          if (r.error) {
-            services.addServiceCallError(stc, r.error)
-          } else {
-            services.addServiceCallFailure(stc)
-          }
+    switch (this.postBeefMode) {
+      case 'UntilSuccess': {
+        for (const stc of stcs) {
+          const r = await callService(stc)
+          rs.push(r)
+          if (r.status === 'success')
+            break;
         }
-        return r
-      })
-    )
+      } break;
+      case 'PromiseAll': {
+        rs = await Promise.all(
+          stcs.map(async stc => {
+            const r = await callService(stc)
+            return r
+          })
+        )
+      } break;
+    }
     return rs
+
+    async function callService(stc: ServiceToCall<sdk.PostBeefService>) {
+      const r = await stc.service(beef, txids)
+      if (r.status === 'success') {
+        services.addServiceCallSuccess(stc)
+      } else {
+        if (r.error) {
+          services.addServiceCallError(stc, r.error)
+        } else {
+          services.addServiceCallFailure(stc)
+        }
+      }
+      return r
+    }
   }
 
   async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> {

@@ -40,19 +40,21 @@ export class ServiceCollection<T> {
     return this.services[this._index].service
   }
 
-  get serviceToCall(): ServiceToCall<T> {
-    const i = this._index
+  getServiceToCall(i: number): ServiceToCall<T> {
     const name = this.services[i].name
     const service = this.services[i].service
     const call = { name, when: new Date(), msecs: 0, success: false, result: undefined, error: undefined }
     return { serviceName: this.serviceName, providerName: name, service, call }
   }
 
+  get serviceToCall(): ServiceToCall<T> {
+    return this.getServiceToCall(this._index)
+  }
+
   get allServicesToCall(): ServiceToCall<T>[] {
     const all: ServiceToCall<T>[] = []
     for (let i = 0; i < this.services.length; i++) {
-      all.push(this.serviceToCall)
-      this.next()
+      all.push(this.getServiceToCall(i))
     }
     return all
   }
