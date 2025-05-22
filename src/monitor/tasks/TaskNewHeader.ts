@@ -17,6 +17,23 @@ export class TaskNewHeader extends WalletMonitorTask {
     return await this.monitor.chaintracks.findChainTipHeader()
   }
 
+  /**
+   * TODO: This is a temporary incomplete solution for which a full chaintracker
+   * with new header and reorg event notification is required.
+   * 
+   * New header events drive retrieving merklePaths for newly mined transactions.
+   * This implementation performs this function.
+   * 
+   * Reorg events are needed to know when previously retrieved mekrlePaths need to be
+   * updated in the proven_txs table (and ideally notifications delivered to users).
+   * Note that in-general, a reorg only shifts where in the block a transaction is mined,
+   * and sometimes which block. In the case of coinbase transactions, a transaction may
+   * also fail after a reorg.
+   */
+  override async asyncSetup(): Promise<void> {
+      
+  }
+
   trigger(nowMsecsSinceEpoch: number): { run: boolean } {
     const run = true
     return { run }
