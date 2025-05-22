@@ -36,10 +36,12 @@ describe('storage adminStats tests', () => {
   })
 
   test('0 adminStats StorageKnex', async () => {
+    const { env, storage } = await _tu.createMainReviewSetup()
     const r = await storage.adminStats(env.identityKey)
     console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
     expect(r.usersTotal).toBeGreaterThan(0)
+    await storage.destroy()
   })
 
   test('1 adminStats StorageServer via RPC', async () => {
@@ -86,46 +88,3 @@ describe('storage adminStats tests', () => {
   })
 })
 
-function toLogStringAdminStats(s: StorageAdminStats): string {
-  let log = `StorageAdminStats: ${s.when} ${s.requestedBy}\n`
-  log += `  ${al('', 13)} ${ar('Day', 15)} ${ar('Month', 15)} ${ar('Total', 15)}\n`
-  log += dmt('users', s.usersDay, s.usersMonth, s.usersTotal)
-  log += dmt('change sats', sa(s.satoshisDefaultDay), sa(s.satoshisDefaultMonth), sa(s.satoshisDefaultTotal))
-  log += dmt('other sats', sa(s.satoshisOtherDay), sa(s.satoshisOtherMonth), sa(s.satoshisOtherTotal))
-  log += dmt('labels', s.labelsDay, s.labelsMonth, s.labelsTotal)
-  log += dmt('tags', s.tagsDay, s.tagsMonth, s.tagsTotal)
-  log += dmt('baskets', s.basketsDay, s.basketsMonth, s.basketsTotal)
-  log += dmt('transactions', s.transactionsDay, s.transactionsMonth, s.transactionsTotal)
-  log += dmt('  completed', s.txCompletedDay, s.txCompletedMonth, s.txCompletedTotal)
-  log += dmt('  failed', s.txFailedDay, s.txFailedMonth, s.txFailedTotal)
-  log += dmt('  nosend', s.txNosendDay, s.txNosendMonth, s.txNosendTotal)
-  log += dmt('  unproven', s.txUnprovenDay, s.txUnprovenMonth, s.txUnprovenTotal)
-  log += dmt('  sending', s.txSendingDay, s.txSendingMonth, s.txSendingTotal)
-  log += dmt('  unprocessed', s.txUnprocessedDay, s.txUnprocessedMonth, s.txUnprocessedTotal)
-  log += dmt('  unsigned', s.txUnsignedDay, s.txUnsignedMonth, s.txUnsignedTotal)
-  log += dmt('  nonfinal', s.txNonfinalDay, s.txNonfinalMonth, s.txNonfinalTotal)
-  log += dmt('  unfail', s.txUnfailDay, s.txUnfailMonth, s.txUnfailTotal)
-
-  return log
-
-  function sa(s: number): string {
-    let v = s.toString().split('')
-    if (v.length > 2) v.splice(-2, 0, '_')
-    if (v.length > 6) v.splice(-6, 0, '_')
-    if (v.length > 10) v.splice(-10, 0, '.')
-    if (v.length > 14) v.splice(-14, 0, '_')
-    if (v.length > 18) v.splice(-18, 0, '_')
-    return v.join('')
-  }
-
-  function dmt(l: string, d: number | string, m: number | string, t: number | string): string {
-    return `  ${al(l, 13)} ${ar(d, 15)} ${ar(m, 15)} ${ar(t, 15)}\n`
-  }
-
-  function al(v: string | number, w: number): string {
-    return v.toString().padEnd(w)
-  }
-  function ar(v: string | number, w: number): string {
-    return v.toString().padStart(w)
-  }
-}
