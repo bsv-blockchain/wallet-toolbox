@@ -1,6 +1,6 @@
 {
   "name": "@bsv/wallet-toolbox-mobile",
-  "version": "1.3.30",
+  "version": "1.3.31",
   "description": "Client only Wallet Storage",
   "main": "./out/src/index.mobile.js",
   "types": "./out/src/index.mobile.d.ts",
