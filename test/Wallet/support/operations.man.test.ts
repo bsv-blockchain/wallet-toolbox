@@ -52,6 +52,7 @@ describe('operations.man tests', () => {
     let offset = 0
     const limit = 100
     let allUnfails: number[] = []
+    let reviewed = 0
     for (;;) {
       let log = ''
       const unfails: number[] = []
@@ -66,8 +67,9 @@ describe('operations.man tests', () => {
           log += `unfail ${req.provenTxReqId} ${req.txid}\n`
           unfails.push(req.provenTxReqId)
         }
+        reviewed++
       }
-      console.log(`DoubleSpends OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
+      console.log(`DoubleSpends OFFSET: ${offset} ${reviewed} ${unfails.length} unfails\n${log}`)
       allUnfails = allUnfails.concat(unfails)
       if (reqs.length < limit) break
       offset += reqs.length
@@ -83,6 +85,7 @@ describe('operations.man tests', () => {
     let offset = 0
     const limit = 100
     let allUnfails: number[] = []
+    let reviewed = 0
     for (;;) {
       let log = ''
       const unfails: number[] = []
@@ -98,8 +101,9 @@ describe('operations.man tests', () => {
           log += `unfail ${req.provenTxReqId} ${req.txid}\n`
           unfails.push(req.provenTxReqId)
         }
+        reviewed++
       }
-      console.log(`Failed OFFSET: ${offset} ${unfails.length} unfails\n${log}`)
+      console.log(`Failed OFFSET: ${offset} ${reviewed} ${unfails.length} unfails\n${log}`)
       allUnfails = allUnfails.concat(unfails)
       if (reqs.length < limit) break
       offset += reqs.length
