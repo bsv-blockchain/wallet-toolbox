@@ -324,6 +324,12 @@ export class WalletPermissionsManager implements WalletInterface {
     }
   > = new Map()
 
+  /** Cache recently confirmed permissions to avoid repeated lookups. */
+  private permissionCache: Map<string, { expiry: number; cachedAt: number }> = new Map()
+
+  /** How long a cached permission remains valid (5 minutes). */
+  private static readonly CACHE_TTL_MS = 5 * 60 * 1000
+
   /**
    * Configuration that determines whether to skip or apply various checks and encryption.
    */
@@ -480,6 +486,11 @@ export class WalletPermissionsManager implements WalletInterface {
         )
       }
     }
+
+    // Update the cache regardless of ephemeral status
+    const expiry = params.expiry || Math.floor(Date.now() / 1000) + 3600 * 24 * 30
+    const key = this.buildRequestKey(matching.request)
+    this.cachePermission(key, expiry)
   }
 
   /**
@@ -562,6 +573,17 @@ export class WalletPermissionsManager implements WalletInterface {
       privileged = false
     }
 
+    const cacheKey = this.buildRequestKey({
+      type: 'protocol',
+      originator,
+      privileged,
+      protocolID,
+      counterparty
+    })
+    if (this.isPermissionCached(cacheKey)) {
+      return true
+    }
+
     // 4) Attempt to find a valid token in the internal basket
     const token = await this.findProtocolToken(
       originator,
@@ -573,6 +595,7 @@ export class WalletPermissionsManager implements WalletInterface {
     if (token) {
       if (!this.isTokenExpired(token.expiry)) {
         // valid and unexpired
+        this.cachePermission(cacheKey, token.expiry)
         return true
       } else {
         // has a token but expired => request renewal if allowed
@@ -595,7 +618,7 @@ export class WalletPermissionsManager implements WalletInterface {
       if (!seekPermission) {
         throw new Error(`No protocol permission token found (seekPermission=false).`)
       }
-      return await this.requestPermissionFlow({
+      const granted = await this.requestPermissionFlow({
         type: 'protocol',
         originator,
         privileged,
@@ -604,6 +627,11 @@ export class WalletPermissionsManager implements WalletInterface {
         reason,
         renewal: false
       })
+      if (granted) {
+        // Unknown expiry until grantPermission() is called; cache for now with TTL only
+        this.cachePermission(cacheKey, 0)
+      }
+      return granted
     }
   }
 
@@ -631,9 +659,14 @@ export class WalletPermissionsManager implements WalletInterface {
     if (usageType === 'insertion' && !this.config.seekBasketInsertionPermissions) return true
     if (usageType === 'removal' && !this.config.seekBasketRemovalPermissions) return true
     if (usageType === 'listing' && !this.config.seekBasketListingPermissions) return true
+    const cacheKey = this.buildRequestKey({ type: 'basket', originator, basket })
+    if (this.isPermissionCached(cacheKey)) {
+      return true
+    }
     const token = await this.findBasketToken(originator, basket, true)
     if (token) {
       if (!this.isTokenExpired(token.expiry)) {
+        this.cachePermission(cacheKey, token.expiry)
         return true
       } else {
         if (!seekPermission) {
@@ -653,13 +686,17 @@ export class WalletPermissionsManager implements WalletInterface {
       if (!seekPermission) {
         throw new Error(`No basket permission found, and no user consent allowed (seekPermission=false).`)
       }
-      return await this.requestPermissionFlow({
+      const granted = await this.requestPermissionFlow({
         type: 'basket',
         originator,
         basket,
         reason,
         renewal: false
       })
+      if (granted) {
+        this.cachePermission(cacheKey, 0)
+      }
+      return granted
     }
   }
 
@@ -693,6 +730,15 @@ export class WalletPermissionsManager implements WalletInterface {
     if (!this.config.differentiatePrivilegedOperations) {
       privileged = false
     }
+    const cacheKey = this.buildRequestKey({
+      type: 'certificate',
+      originator,
+      privileged,
+      certificate: { verifier, certType, fields }
+    })
+    if (this.isPermissionCached(cacheKey)) {
+      return true
+    }
     const token = await this.findCertificateToken(
       originator,
       privileged,
@@ -703,6 +749,7 @@ export class WalletPermissionsManager implements WalletInterface {
     )
     if (token) {
       if (!this.isTokenExpired(token.expiry)) {
+        this.cachePermission(cacheKey, token.expiry)
         return true
       } else {
         if (!seekPermission) {
@@ -722,7 +769,7 @@ export class WalletPermissionsManager implements WalletInterface {
       if (!seekPermission) {
         throw new Error(`No certificate permission found (seekPermission=false).`)
       }
-      return await this.requestPermissionFlow({
+      const granted = await this.requestPermissionFlow({
         type: 'certificate',
         originator,
         privileged,
@@ -730,6 +777,10 @@ export class WalletPermissionsManager implements WalletInterface {
         reason,
         renewal: false
       })
+      if (granted) {
+        this.cachePermission(cacheKey, 0)
+      }
+      return granted
     }
   }
 
@@ -759,11 +810,16 @@ export class WalletPermissionsManager implements WalletInterface {
       // We skip spending permission entirely
       return true
     }
+    const cacheKey = this.buildRequestKey({ type: 'spending', originator })
+    if (this.isPermissionCached(cacheKey)) {
+      return true
+    }
     const token = await this.findSpendingToken(originator)
     if (token?.authorizedAmount) {
       // Check how much has been spent so far
       const spentSoFar = await this.querySpentSince(token)
       if (spentSoFar + satoshis <= token.authorizedAmount) {
+        this.cachePermission(cacheKey, token.expiry)
         return true
       } else {
         // Renew if possible
@@ -772,7 +828,7 @@ export class WalletPermissionsManager implements WalletInterface {
             `Spending authorization insufficient for ${satoshis}, no user consent (seekPermission=false).`
           )
         }
-        return await this.requestPermissionFlow({
+        const granted = await this.requestPermissionFlow({
           type: 'spending',
           originator,
           spending: { satoshis, lineItems },
@@ -780,19 +836,27 @@ export class WalletPermissionsManager implements WalletInterface {
           renewal: true,
           previousToken: token
         })
+        if (granted) {
+          this.cachePermission(cacheKey, 0)
+        }
+        return granted
       }
     } else {
       // no token
       if (!seekPermission) {
         throw new Error(`No spending authorization found, (seekPermission=false).`)
       }
-      return await this.requestPermissionFlow({
+      const granted = await this.requestPermissionFlow({
         type: 'spending',
         originator,
         spending: { satoshis, lineItems },
         reason,
         renewal: false
       })
+      if (granted) {
+        this.cachePermission(cacheKey, 0)
+      }
+      return granted
     }
   }
 
@@ -828,8 +892,13 @@ export class WalletPermissionsManager implements WalletInterface {
       return true
     }
 
+    const cacheKey = this.buildRequestKey({ type: 'protocol', originator, privileged: false, protocolID: [1, `action label ${label}`], counterparty: 'self' })
+    if (this.isPermissionCached(cacheKey)) {
+      return true
+    }
+
     // 3) Let ensureProtocolPermission handle the rest.
-    return await this.ensureProtocolPermission({
+    const granted = await this.ensureProtocolPermission({
       originator,
       privileged: false,
       protocolID: [1, `action label ${label}`],
@@ -838,6 +907,10 @@ export class WalletPermissionsManager implements WalletInterface {
       seekPermission,
       usageType: 'generic'
     })
+    if (granted) {
+      this.cachePermission(cacheKey, 0)
+    }
+    return granted
   }
 
   /**
@@ -2523,6 +2596,29 @@ export class WalletPermissionsManager implements WalletInterface {
     if (basket.startsWith('admin')) return true
     if (basket.startsWith('p ')) return true
     return false
+  }
+
+  /**
+   * Returns true if we have a cached record that the permission identified by
+   * `key` is valid and unexpired.
+   */
+  private isPermissionCached(key: string): boolean {
+    const entry = this.permissionCache.get(key)
+    if (!entry) return false
+    if (Date.now() - entry.cachedAt > WalletPermissionsManager.CACHE_TTL_MS) {
+      this.permissionCache.delete(key)
+      return false
+    }
+    if (this.isTokenExpired(entry.expiry)) {
+      this.permissionCache.delete(key)
+      return false
+    }
+    return true
+  }
+
+  /** Caches the fact that the permission for `key` is valid until `expiry`. */
+  private cachePermission(key: string, expiry: number): void {
+    this.permissionCache.set(key, { expiry, cachedAt: Date.now() })
   }
 
   /**
