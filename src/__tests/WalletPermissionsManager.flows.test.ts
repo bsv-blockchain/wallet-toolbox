@@ -295,6 +295,9 @@ describe('WalletPermissionsManager - Permission Request Flow & Active Requests',
       // Because ephemeral=true, we do NOT create an on-chain token
       expect(createTokenSpy).not.toHaveBeenCalled()
 
+      // Clear cache to actually run again
+      ;(manager as any).permissionCache = new Map()
+
       // 2) Immediately call ensureProtocolPermission again for the same resource
       // Because ephemeral usage didn't store a token, it should re-prompt.
       const pCall2 = manager.ensureProtocolPermission({
