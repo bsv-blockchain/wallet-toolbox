@@ -892,7 +892,13 @@ export class WalletPermissionsManager implements WalletInterface {
       return true
     }
 
-    const cacheKey = this.buildRequestKey({ type: 'protocol', originator, privileged: false, protocolID: [1, `action label ${label}`], counterparty: 'self' })
+    const cacheKey = this.buildRequestKey({
+      type: 'protocol',
+      originator,
+      privileged: false,
+      protocolID: [1, `action label ${label}`],
+      counterparty: 'self'
+    })
     if (this.isPermissionCached(cacheKey)) {
       return true
     }
