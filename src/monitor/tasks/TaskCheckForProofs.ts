@@ -50,6 +50,11 @@ export class TaskCheckForProofs extends WalletMonitorTask {
     const countsAsAttempt = TaskCheckForProofs.checkNow
     TaskCheckForProofs.checkNow = false
 
+    const maxAcceptableHeight = this.monitor.lastNewHeader?.height
+    if (maxAcceptableHeight === undefined) {
+      return log
+    }
+
     const limit = 100
     let offset = 0
     for (;;) {
@@ -60,7 +65,7 @@ export class TaskCheckForProofs extends WalletMonitorTask {
       })
       if (reqs.length === 0) break
       log += `${reqs.length} reqs with status 'callback', 'unmined', 'sending', 'unknown', or 'unconfirmed'\n`
-      const r = await getProofs(this, reqs, 2, countsAsAttempt)
+      const r = await getProofs(this, reqs, 2, countsAsAttempt, false, maxAcceptableHeight)
       log += `${r.log}\n`
       //console.log(log);
       if (reqs.length < limit) break
@@ -90,7 +95,8 @@ export async function getProofs(
   reqs: TableProvenTxReq[],
   indent = 0,
   countsAsAttempt = false,
-  ignoreStatus = false
+  ignoreStatus = false,
+  maxAcceptableHeight: number
 ): Promise<{
   proven: TableProvenTxReq[]
   invalid: TableProvenTxReq[]
@@ -179,6 +185,11 @@ export async function getProofs(
     // one more time.
     //
     r = await task.monitor.services.getMerklePath(req.txid)
+    if (r.header && r.header.height > maxAcceptableHeight) {
+      // Ignore proofs from bleeding edge of new blocks as these are the most often re-orged.
+      log += ` ignoring possible proof from very new block at height ${r.header.height} ${r.header.hash}\n`
+      continue
+    }
     ptx = await EntityProvenTx.fromReq(req, r, countsAsAttempt && req.status !== 'nosend')
 
     if (ptx) {

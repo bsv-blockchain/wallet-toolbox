@@ -2,9 +2,29 @@ import { BlockHeader } from '../../services/chaintracker/chaintracks/Api/BlockHe
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
+/**
+ * This task polls for new block headers performing two essential functions:
+ * 1. The arrival of a new block is the right time to check for proofs for recently broadcast transactions.
+ * 2. The height of the block is used to limit which proofs are accepted with the aim of avoiding re-orged proofs.
+ * 
+ * The most common new block orphan is one which is almost immediately orphaned.
+ * Waiting a minute before pursuing proof requests avoids almost all the re-org work that could be done.
+ * Thus this task queues new headers for one cycle.
+ * If a new header arrives during that cycle, it replaces the queued header and delays again.
+ * Only when there is an elapsed cycle without a new header does proof solicitation get triggered,
+ * with that header height as the limit for which proofs are accepted.
+ */
 export class TaskNewHeader extends WalletMonitorTask {
   static taskName = 'NewHeader'
+  /**
+   * This is always the most recent chain tip header returned from the chaintracker.
+   */
   header?: BlockHeader
+  /**
+   * Tracks the value of `header` except that it is set to undefined
+   * when a cycle without a new header occurs and `processNewBlockHeader` is called.
+   */
+  queuedHeader?: BlockHeader
 
   constructor(
     monitor: Monitor,
@@ -38,7 +58,13 @@ export class TaskNewHeader extends WalletMonitorTask {
     } else {
       isNew = false
     }
-    if (isNew) this.monitor.processNewBlockHeader(this.header)
+    if (isNew) {
+      this.queuedHeader = this.header
+    } else if (this.queuedHeader) {
+      // Only process new block header if it has remained the chain tip for a full cycle
+      this.monitor.processNewBlockHeader(this.queuedHeader)
+      this.queuedHeader = undefined
+    }
     return log
   }
 }
