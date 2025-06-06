@@ -5,6 +5,10 @@ attention to changes that materially alter behavior or extend functionality.
 
 ## wallet-toolbox 1.4.3
 
+-- update monitor logging
+
+## wallet-toolbox 1.4.2
+
 -- update monitor TaskNewHeader, TaskCheckForProofs to ignore bleeding edge new blocks and proofs.
 
 ## wallet-toolbox 1.4.1
