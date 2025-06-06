@@ -62,6 +62,7 @@ export class TaskNewHeader extends WalletMonitorTask {
       this.queuedHeader = this.header
     } else if (this.queuedHeader) {
       // Only process new block header if it has remained the chain tip for a full cycle
+      log = `process header: ${this.header.height} ${this.header.hash}`
       this.monitor.processNewBlockHeader(this.queuedHeader)
       this.queuedHeader = undefined
     }
