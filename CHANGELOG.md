@@ -3,6 +3,14 @@
 This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 1.4.3
+
+-- update monitor TaskNewHeader, TaskCheckForProofs to ignore bleeding edge new blocks and proofs.
+
+## wallet-toolbox 1.4.1
+
+-- update to bsv/sdk 1.6.0 with reworked bignum and memory / performance improvements.
+
 ## wallet-toolbox 1.3.32
 
 -- add permissions caching (5 minutes)
