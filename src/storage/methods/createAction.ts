@@ -636,6 +636,30 @@ async function validateRequiredInputs(
   return { beef, storageBeef, xinputs }
 }
 
+async function verifyBeefFixOrhpans(beef: Beef, storage: StorageProvider): Promise<boolean> {
+  const r = beef.verifyValid()
+  if (!r.valid) {
+    // Beef is structurally invalid.
+    return false
+  }
+  const heights = Object.keys(r.roots)
+  const services = storage.getServices()
+  const chainTracker = await services.getChainTracker()
+  let rootsAreValid = true
+  for (const height of heights) {
+    const isValid = await chainTracker.isValidRootForHeight(
+      r.roots[height],
+      Number(height)
+    )
+    if (isValid) continue;
+    // The original block may have been orphaned, check for a new proof.
+    const mp = beef.bumps.find(b => b.blockHeight === Number(height))
+    //const p = await services.getMerklePath()
+  }
+  return false
+
+}
+
 async function validateNoSendChange(
   storage: StorageProvider,
   userId: number,
