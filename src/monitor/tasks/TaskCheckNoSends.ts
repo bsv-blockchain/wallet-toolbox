@@ -52,7 +52,6 @@ export class TaskCheckNoSends extends WalletMonitorTask {
       return log
     }
 
-
     const limit = 100
     let offset = 0
     for (;;) {
