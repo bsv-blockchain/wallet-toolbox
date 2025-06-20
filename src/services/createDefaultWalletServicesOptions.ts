@@ -1,5 +1,7 @@
 import { randomBytesHex, sdk } from '../index.client'
 import { ChaintracksServiceClient } from './chaintracker'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
   const deploymentId = `wallet-toolbox-${randomBytesHex(16)}`
@@ -38,12 +40,16 @@ export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.Wallet
     arcUrl: arcDefaultUrl(chain),
     arcConfig: {
       apiKey: taalApiKey,
-      deploymentId
+      deploymentId,
+      callbackUrl: process.env?.ARC_CALLBACK_URL,
+      callbackToken: process.env?.ARC_CALLBACK_TOKEN
     },
     arcGorillaPoolUrl: arcGorillaPoolUrl(chain),
     arcGorillaPoolConfig: {
       apiKey: gorillaPoolApiKey,
-      deploymentId
+      deploymentId,
+      callbackUrl: process.env?.ARC_CALLBACK_URL,
+      callbackToken: process.env?.ARC_CALLBACK_TOKEN
     }
   }
   return o
