@@ -109,6 +109,4 @@ export class BHServiceClient implements ChaintracksServiceClient {
   async addHeader(header: any): Promise<void> {
     return
   }
-
 }
-
