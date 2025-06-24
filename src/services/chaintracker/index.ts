@@ -1,3 +1,3 @@
 export * from './chaintracks'
 export * from './ChaintracksChainTracker'
-export * from './BhsChainTracker'
+export * from './BHServiceClient'
