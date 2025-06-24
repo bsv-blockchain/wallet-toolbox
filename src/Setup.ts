@@ -150,7 +150,7 @@ DEV_KEYS = '{
 
     // To rely on your own headers service, uncomment the following line, updating the url and apiKey to your own values.
     // serviceOptions.chaintracks = new BHServiceClient('main', { url: 'https://headers.spv.money', apiKey: 'fC42F069YJs30FaWBAgikfDFEfIW1j4q' })
-    
+
     const services = new Services(serviceOptions)
     const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services)
     const monitor = new Monitor(monopts)
