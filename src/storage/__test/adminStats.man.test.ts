@@ -36,6 +36,7 @@ describe('storage adminStats tests', () => {
   })
 
   test('0 adminStats StorageKnex', async () => {
+    storage.setServices(setup.services)
     const r = await storage.adminStats(env.identityKey)
     console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
