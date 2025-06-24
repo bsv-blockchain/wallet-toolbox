@@ -26,6 +26,8 @@ import {
 import { Knex, knex as makeKnex } from 'knex'
 
 import * as dotenv from 'dotenv'
+// To rely on your own headers service, uncomment the following line:
+// import { BHServiceClient } from './services/chaintracker'
 dotenv.config()
 
 /**
@@ -145,6 +147,10 @@ DEV_KEYS = '{
     if (storage.canMakeAvailable()) await storage.makeAvailable()
     const serviceOptions = Services.createDefaultOptions(chain)
     serviceOptions.taalApiKey = args.env.taalApiKey
+
+    // To rely on your own headers service, uncomment the following line, updating the url and apiKey to your own values.
+    // serviceOptions.chaintracks = new BHServiceClient('main', { url: 'https://headers.spv.money', apiKey: 'fC42F069YJs30FaWBAgikfDFEfIW1j4q' })
+    
     const services = new Services(serviceOptions)
     const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services)
     const monitor = new Monitor(monopts)
