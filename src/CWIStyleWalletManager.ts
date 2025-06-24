@@ -1870,7 +1870,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     while (!this.authenticated || !this.underlying) {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    return { authenticated: true }
+    return await this.underlying.waitForAuthentication({}, originator)
   }
 
   async getHeight(_: {}, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<GetHeightResult> {
