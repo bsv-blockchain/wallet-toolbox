@@ -9786,8 +9786,10 @@ export class TaskNewHeader extends WalletMonitorTask {
     static taskName = "NewHeader";
     header?: BlockHeader;
     queuedHeader?: BlockHeader;
+    queuedHeaderWhen?: Date;
     constructor(monitor: Monitor, public triggerMsecs = 1 * monitor.oneMinute) 
     async getHeader(): Promise<BlockHeader> 
+    override async asyncSetup(): Promise<void> 
     trigger(nowMsecsSinceEpoch: number): {
         run: boolean;
     } 
@@ -9815,6 +9817,24 @@ when a cycle without a new header occurs and `processNewBlockHeader` is called.
 queuedHeader?: BlockHeader
 ```
 See also: [BlockHeader](./services.md#interface-blockheader)
+
+###### Method asyncSetup
+
+TODO: This is a temporary incomplete solution for which a full chaintracker
+with new header and reorg event notification is required.
+
+New header events drive retrieving merklePaths for newly mined transactions.
+This implementation performs this function.
+
+Reorg events are needed to know when previously retrieved mekrlePaths need to be
+updated in the proven_txs table (and ideally notifications delivered to users).
+Note that in-general, a reorg only shifts where in the block a transaction is mined,
+and sometimes which block. In the case of coinbase transactions, a transaction may
+also fail after a reorg.
+
+```ts
+override async asyncSetup(): Promise<void> 
+```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

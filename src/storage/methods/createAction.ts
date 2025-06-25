@@ -647,17 +647,13 @@ async function verifyBeefFixOrhpans(beef: Beef, storage: StorageProvider): Promi
   const chainTracker = await services.getChainTracker()
   let rootsAreValid = true
   for (const height of heights) {
-    const isValid = await chainTracker.isValidRootForHeight(
-      r.roots[height],
-      Number(height)
-    )
-    if (isValid) continue;
+    const isValid = await chainTracker.isValidRootForHeight(r.roots[height], Number(height))
+    if (isValid) continue
     // The original block may have been orphaned, check for a new proof.
     const mp = beef.bumps.find(b => b.blockHeight === Number(height))
     //const p = await services.getMerklePath()
   }
   return false
-
 }
 
 async function validateNoSendChange(

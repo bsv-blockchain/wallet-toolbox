@@ -8,7 +8,9 @@ import { BulkFilesReader } from '../util/BulkFilesReader'
 describe('testing makeHashIndex', () => {
   jest.setTimeout(100000)
   test('HashIndex', async () => {
-    const bufferOfHeaders = asArray(await fs.readFile('./src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_0.headers'))
+    const bufferOfHeaders = asArray(
+      await fs.readFile('./src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_0.headers')
+    )
     const makeVal: IndexLevelMakeVal = (header, height) => ({ buffer: doubleSha256BE(header), height })
     const index = HashIndex.fromBufferOfHeaders(bufferOfHeaders, 0, makeVal)
     const height = await index.findHeight('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')

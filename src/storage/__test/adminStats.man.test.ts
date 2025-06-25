@@ -88,4 +88,3 @@ describe('storage adminStats tests', () => {
     expect(r.usersTotal).toBeGreaterThan(0)
   })
 })
-
