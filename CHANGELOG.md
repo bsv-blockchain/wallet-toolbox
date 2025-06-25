@@ -3,7 +3,7 @@
 This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
-## wallet-toolbox 1.4.6
+## wallet-toolbox 1.4.7
 
 -- update to bsv/sdk 1.6.5
 -- add BHSServiceClient which allows for leaning on BlockHeadersService for chain tracking.
