@@ -216,11 +216,15 @@ async function createNewInputs(
             `inputs[${i.vin}]`,
             `spendable output. output ${o.txid}:${o.vout} appears to have been spent.`
           )
-        await storage.updateOutput(o.outputId!, {
-          spendable: false,
-          spentBy: ctx.transactionId,
-          spendingDescription: i.inputDescription
-        }, trx)
+        await storage.updateOutput(
+          o.outputId!,
+          {
+            spendable: false,
+            spentBy: ctx.transactionId,
+            spendingDescription: i.inputDescription
+          },
+          trx
+        )
       })
     }
   }
