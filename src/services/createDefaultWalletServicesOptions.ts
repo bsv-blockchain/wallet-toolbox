@@ -1,11 +1,17 @@
 import { randomBytesHex, sdk } from '../index.client'
 import { ChaintracksServiceClient } from './chaintracker'
 
-export function createDefaultWalletServicesOptions(chain: sdk.Chain, arcCallbackUrl?: string, arcCallbackToken?: string, arcApiKey?: string): sdk.WalletServicesOptions {
+export function createDefaultWalletServicesOptions(
+  chain: sdk.Chain,
+  arcCallbackUrl?: string,
+  arcCallbackToken?: string,
+  arcApiKey?: string
+): sdk.WalletServicesOptions {
   const deploymentId = `wallet-toolbox-${randomBytesHex(16)}`
-  const taalApiKey = arcApiKey || chain === 'main'
-    ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
-    : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
+  const taalApiKey =
+    arcApiKey || chain === 'main'
+      ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
+      : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
 
   const o: sdk.WalletServicesOptions = {
     chain,

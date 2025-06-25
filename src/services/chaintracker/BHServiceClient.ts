@@ -92,11 +92,13 @@ export class BHServiceClient implements ChaintracksServiceClient {
   }
 
   async getHeaders(height: number, count: number): Promise<string> {
-    const response = await this.getJsonOrUndefined<BHSHeader[]>(`/api/v1/chain/header/byHeight?height=${height}&count=${count}`)
+    const response = await this.getJsonOrUndefined<BHSHeader[]>(
+      `/api/v1/chain/header/byHeight?height=${height}&count=${count}`
+    )
     if (!response) return ''
     if (response.length < count) throw new Error('Cannot retrieve enough headers')
     const headers = response.map(response => {
-      const header : BaseBlockHeader = {
+      const header: BaseBlockHeader = {
         version: response.version,
         previousHash: response.prevBlockHash,
         merkleRoot: response.merkleRoot,
@@ -106,7 +108,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
       }
       return serializeBlockHeader(header)
     })
-    return headers.reduce((str : string, arr: number[]) => str + Utils.toHex(arr), '')
+    return headers.reduce((str: string, arr: number[]) => str + Utils.toHex(arr), '')
   }
 
   async findChainWorkForBlockHash(hash: string): Promise<string | undefined> {
@@ -132,7 +134,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
     let e: Error | undefined = undefined
     for (let retry = 0; retry < 3; retry++) {
       try {
-        const r = await fetch(`${this.serviceUrl}${path}`, { headers: { 'Authorization': `Bearer ${this.apiKey}` } })
+        const r = await fetch(`${this.serviceUrl}${path}`, { headers: { Authorization: `Bearer ${this.apiKey}` } })
         if (r.status !== 200) throw new Error(JSON.stringify(r))
         const v = <T>await r.json()
         if (!v) return undefined
@@ -162,7 +164,6 @@ export class BHServiceClient implements ChaintracksServiceClient {
   async addHeader(header: any): Promise<void> {
     throw new Error('Not implemented')
   }
-
 
   async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<undefined> {
     throw new Error('Not implemented')
