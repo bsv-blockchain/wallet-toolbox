@@ -3,12 +3,31 @@ import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './cha
 import { sdk } from '../../index.client'
 import { BlockHeader } from './chaintracks'
 
+interface BHSHeader {
+  hash: string
+  version: number
+  prevBlockHash: string
+  merkleRoot: string
+  creationTimestamp: number
+  difficultyTarget: number
+  nonce: number
+  work: string
+}
+
+interface BHSHeaderState {
+  header: BHSHeader
+  state: string
+  chainWork: string
+  height: number
+}
+
 export class BHServiceClient implements ChaintracksServiceClient {
   bhs: BlockHeadersService
   cache: Record<number, string>
   chain: sdk.Chain
   serviceUrl: string
   options: ChaintracksServiceClientOptions
+  apiKey: string
 
   constructor(chain: sdk.Chain, url: string, apiKey: string) {
     this.bhs = new BlockHeadersService(url, { apiKey })
@@ -17,6 +36,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
     this.serviceUrl = url
     this.options = ChaintracksServiceClient.createChaintracksServiceClientOptions()
     this.options.useAuthrite = true
+    this.apiKey = apiKey
   }
 
   async currentHeight(): Promise<number> {
@@ -42,12 +62,37 @@ export class BHServiceClient implements ChaintracksServiceClient {
     return await this.bhs.currentHeight()
   }
 
-  async findHeaderForHeight(height: number): Promise<undefined> {
-    return undefined
+  async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> {
+    const response = await this.getJsonOrUndefined<BHSHeader[]>(`/api/v1/chain/header/byHeight?height=${height}`)
+    const header = response?.[0]
+    if (!header) return undefined
+    const formatted: BlockHeader = {
+      version: header.version,
+      previousHash: header.prevBlockHash,
+      merkleRoot: header.merkleRoot,
+      time: header.creationTimestamp,
+      bits: header.difficultyTarget,
+      nonce: header.nonce,
+      height,
+      hash: header.hash
+    }
+    return formatted
   }
 
-  async findHeaderForBlockHash(hash: string): Promise<undefined> {
-    return undefined
+  async findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined> {
+    const response = await this.getJsonOrUndefined<BHSHeaderState>(`/api/v1/chain/header/state/${hash}`)
+    if (!response?.header) return undefined
+    const formatted: BlockHeader = {
+      version: response.header.version,
+      previousHash: response.header.prevBlockHash,
+      merkleRoot: response.header.merkleRoot,
+      time: response.header.creationTimestamp,
+      bits: response.header.difficultyTarget,
+      nonce: response.header.nonce,
+      height: response.height,
+      hash: response.header.hash
+    }
+    return formatted
   }
 
   async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<undefined> {
@@ -95,7 +140,20 @@ export class BHServiceClient implements ChaintracksServiceClient {
   }
 
   async getJsonOrUndefined<T>(path: string): Promise<T | undefined> {
-    return undefined
+    let e: Error | undefined = undefined
+    for (let retry = 0; retry < 3; retry++) {
+      try {
+        const r = await fetch(`${this.serviceUrl}${path}`, { headers: { 'Authorization': `Bearer ${this.apiKey}` } })
+        if (r.status !== 200) throw new Error(JSON.stringify(r))
+        const v = <T>await r.json()
+        if (!v) return undefined
+        return v
+      } catch (eu: unknown) {
+        e = eu as Error
+      }
+      if (e && e.name !== 'ECONNRESET') break
+    }
+    if (e) throw e
   }
 
   async getJson<T>(path: string): Promise<T> {
