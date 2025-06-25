@@ -7,8 +7,8 @@ import { BulkIngestorBase } from './Base/BulkIngestorBase'
 
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util/BulkFilesReader'
 import { HeightRange } from './util/HeightRange'
-
-import { promises as fs } from 'fs'
+import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
+import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 
 const enableConsoleLog = false
 
@@ -27,6 +27,9 @@ export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
    * URL to CDN implementing the bulk ingestor CDN service protocol
    */
   cdnUrl: string | undefined
+
+  fs: ChaintracksFsApi
+  fetch: ChaintracksFetchApi
 }
 
 export class BulkIngestorCDN extends BulkIngestorBase {
@@ -38,9 +41,11 @@ export class BulkIngestorCDN extends BulkIngestorBase {
    * @param localCachePath defaults to './data/bulk_cdn_headers/'
    * @returns
    */
-  static createBulkIngestorCDNOptions(chain: Chain, localCachePath?: string): BulkIngestorCDNOptions {
+  static createBulkIngestorCDNOptions(chain: Chain, fs: ChaintracksFsApi, fetch: ChaintracksFetchApi, localCachePath?: string): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
       ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
+      fs,
+      fetch,
       localCachePath: localCachePath || './data/bulk_cdn_headers/',
       jsonResource: `${chain}Net.json`,
       cdnUrl: undefined
@@ -48,14 +53,18 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return options
   }
 
+  fs: ChaintracksFsApi
+  fetch: ChaintracksFetchApi
   jsonResource: string
   cdnUrl: string
 
   constructor(options: BulkIngestorCDNOptions) {
     super(options)
-    if (!options.jsonResource) throw new Error('The jsonResource options property is required.')
-    if (!options.cdnUrl) throw new Error('The cdnUrl options property is required.')
+    if (!options.jsonResource) throw new Error('The jsonResource options property is required.');
+    if (!options.cdnUrl) throw new Error('The cdnUrl options property is required.');
 
+    this.fetch = options.fetch
+    this.fs = options.fs
     this.jsonResource = options.jsonResource
     this.cdnUrl = options.cdnUrl
     this.httpClient = defaultHttpClient()
@@ -108,7 +117,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
           continue
         }
         if (enableConsoleLog) console.log('updated')
-        await fs.unlink(filePath(lf.fileName))
+        await this.fs.delete(filePath(lf.fileName))
       } else {
         if (enableConsoleLog) console.log('new')
       }
@@ -119,23 +128,11 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
         console.log(`${new Date().toISOString()} downloading ${url} expected size ${file.count * 80}`)
 
-        const downloadFile = await fs.open(path, 'w')
-        const fileStream = downloadFile.createWriteStream()
+        const data = await this.fetch.download(url)
+        await this.fs.writeFile(path, data)
 
-        const response: any = {} // await nodeFetch(url)
+        console.log(`${new Date().toISOString()} downloaded ${url} actual size    ${data.length}`)
 
-        if (!response.ok) throw new Error(response.statusText)
-
-        await new Promise<void>((resolve, reject) => {
-          response.body!.pipe(fileStream)
-          response.body!.on('error', reject)
-          //response.body.on("end", resolve);
-          fileStream.on('finish', resolve)
-        })
-
-        await downloadFile.close()
-
-        console.log(`${new Date().toISOString()} downloaded`)
       } catch (err) {
         console.log(JSON.stringify(err))
         throw err
@@ -148,7 +145,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     bulkFiles.jsonFilename = this.jsonFilename
 
     if (filesUpdated) {
-      await fs.writeFile(this.localCachePath + this.jsonFilename, JSON.stringify(bulkFiles), 'utf8')
+      await this.fs.writeFile(this.localCachePath + this.jsonFilename, JSON.stringify(bulkFiles))
     }
 
     return {

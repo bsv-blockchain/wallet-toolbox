@@ -3,23 +3,25 @@ import { BulkStorageBaseOptions } from './Api/BulkStorageApi'
 
 import { BulkStorageBase } from './Base/BulkStorageBase'
 
-import { promises as fs } from 'fs'
 import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { doubleSha256BE, doubleSha256LE } from '../../../utility/utilityHelpers'
 import { asArray, asBuffer } from '../../../utility/utilityHelpers.buffer'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
+import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
 export interface BulkStorageFileOptions extends BulkStorageBaseOptions {
   rootFolder: string | undefined
   filename: string | undefined
+  fs: ChaintracksFsApi
 }
 
 export class BulkStorageFile extends BulkStorageBase {
-  static createBulkStorageFileOptions(chain: Chain, rootFolder?: string): BulkStorageFileOptions {
+  static createBulkStorageFileOptions(chain: Chain, fs: ChaintracksFsApi, rootFolder?: string): BulkStorageFileOptions {
     const options: BulkStorageFileOptions = {
       ...BulkStorageBase.createBulkStorageBaseOptions(chain),
+      fs,
       rootFolder: rootFolder || './data/',
       filename: `${chain}Net_bulk_storage_file.headers`
     }
