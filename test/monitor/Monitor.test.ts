@@ -143,6 +143,17 @@ describe('Monitor tests', () => {
     for (const { activeStorage: storage, monitor } of ctxs) {
       if (!monitor) throw new sdk.WERR_INTERNAL('test requires setup with monitor')
 
+      monitor.lastNewHeader = {
+        height: 999999999,
+        hash: '',
+        time: 0,
+        version: 0,
+        previousHash: '',
+        merkleRoot: '',
+        bits: 0,
+        nonce: 0
+      }
+
       {
         for (const txid of expectedTxids) {
           // no matching ProvenTx exists.

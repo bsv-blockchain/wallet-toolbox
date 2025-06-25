@@ -36,7 +36,7 @@ describe('storage adminStats tests', () => {
   })
 
   test('0 adminStats StorageKnex', async () => {
-    const { env, storage } = await _tu.createMainReviewSetup()
+    storage.setServices(setup.services)
     const r = await storage.adminStats(env.identityKey)
     console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
@@ -83,6 +83,7 @@ describe('storage adminStats tests', () => {
     }
 
     const r = json.result as StorageAdminStats
+    console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
     expect(r.usersTotal).toBeGreaterThan(0)
   })

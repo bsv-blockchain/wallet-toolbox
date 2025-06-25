@@ -281,7 +281,7 @@ export class Monitor {
     const h = header
     this.lastNewHeader = h
     this.lastNewHeaderWhen = new Date()
-    console.log(`WalletMonitor notified of new block header ${h.height}`)
+    // console.log(`WalletMonitor notified of new block header ${h.height}`)
     // Nudge the proof checker to try again.
     TaskCheckForProofs.checkNow = true
   }

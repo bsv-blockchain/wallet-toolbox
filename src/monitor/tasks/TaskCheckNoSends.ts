@@ -47,6 +47,12 @@ export class TaskCheckNoSends extends WalletMonitorTask {
     const countsAsAttempt = TaskCheckNoSends.checkNow
     TaskCheckNoSends.checkNow = false
 
+    const maxAcceptableHeight = this.monitor.lastNewHeader?.height
+    if (maxAcceptableHeight === undefined) {
+      return log
+    }
+
+
     const limit = 100
     let offset = 0
     for (;;) {
@@ -57,7 +63,7 @@ export class TaskCheckNoSends extends WalletMonitorTask {
       })
       if (reqs.length === 0) break
       log += `${reqs.length} reqs with status 'nosend'\n`
-      const r = await getProofs(this, reqs, 2, countsAsAttempt)
+      const r = await getProofs(this, reqs, 2, countsAsAttempt, false, maxAcceptableHeight)
       log += `${r.log}\n`
       //console.log(log);
       if (reqs.length < limit) break
