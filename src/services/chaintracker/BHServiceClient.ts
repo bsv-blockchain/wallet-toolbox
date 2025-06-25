@@ -1,7 +1,8 @@
-import { BlockHeadersService } from '@bsv/sdk'
+import { BlockHeadersService, Utils } from '@bsv/sdk'
 import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './chaintracks/ChaintracksServiceClient'
 import { sdk } from '../../index.client'
-import { BlockHeader } from './chaintracks'
+import { BaseBlockHeader, BlockHeader } from './chaintracks'
+import { serializeBlockHeader } from './chaintracks/util/blockHeaderUtilities'
 
 interface BHSHeader {
   hash: string
@@ -53,11 +54,6 @@ export class BHServiceClient implements ChaintracksServiceClient {
     return isValid
   }
 
-  /*
-    Please note that all methods hereafter are included only to match the interface of ChaintracksServiceClient.
-    You can implement them if you need them by fetching api endpoints described in the BlockHeadersService documentation.
-  */
-
   async getPresentHeight(): Promise<number> {
     return await this.bhs.currentHeight()
   }
@@ -95,48 +91,41 @@ export class BHServiceClient implements ChaintracksServiceClient {
     return formatted
   }
 
-  async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<undefined> {
-    return undefined
-  }
-
   async getHeaders(height: number, count: number): Promise<string> {
-    return ''
-  }
-
-  async startListening(): Promise<void> {
-    return
-  }
-
-  async listening(): Promise<void> {
-    return
-  }
-
-  async isSynchronized(): Promise<boolean> {
-    return true
-  }
-
-  async getChain(): Promise<sdk.Chain> {
-    return this.chain
-  }
-
-  async isListening(): Promise<boolean> {
-    return true
-  }
-
-  async getChainTipHeader(): Promise<BlockHeader> {
-    return undefined as unknown as BlockHeader
-  }
-
-  async findChainTipHashHex(): Promise<string> {
-    return ''
+    const response = await this.getJsonOrUndefined<BHSHeader[]>(`/api/v1/chain/header/byHeight?height=${height}&count=${count}`)
+    if (!response) return ''
+    if (response.length < count) throw new Error('Cannot retrieve enough headers')
+    const headers = response.map(response => {
+      const header : BaseBlockHeader = {
+        version: response.version,
+        previousHash: response.prevBlockHash,
+        merkleRoot: response.merkleRoot,
+        time: response.creationTimestamp,
+        bits: response.difficultyTarget,
+        nonce: response.nonce
+      }
+      return serializeBlockHeader(header)
+    })
+    return headers.reduce((str : string, arr: number[]) => str + Utils.toHex(arr), '')
   }
 
   async findChainWorkForBlockHash(hash: string): Promise<string | undefined> {
-    return undefined
+    throw new Error('Not implemented')
   }
 
   async findChainTipHeader(): Promise<BlockHeader> {
-    return undefined as unknown as BlockHeader
+    const response = await this.getJson<BHSHeaderState>('/api/v1/chain/tip/longest')
+    const formatted: BlockHeader = {
+      version: response.header.version,
+      previousHash: response.header.prevBlockHash,
+      merkleRoot: response.header.merkleRoot,
+      time: response.header.creationTimestamp,
+      bits: response.header.difficultyTarget,
+      nonce: response.header.nonce,
+      height: response.height,
+      hash: response.header.hash
+    }
+    return formatted
   }
 
   async getJsonOrUndefined<T>(path: string): Promise<T | undefined> {
@@ -157,14 +146,53 @@ export class BHServiceClient implements ChaintracksServiceClient {
   }
 
   async getJson<T>(path: string): Promise<T> {
-    return {} as T
+    const r = await this.getJsonOrUndefined<T>(path)
+    if (r === undefined) throw new Error('Value was undefined. Requested object may not exist.')
+    return r
   }
 
+  /*
+    Please note that all methods hereafter are included only to match the interface of ChaintracksServiceClient.
+  */
+
   async postJsonVoid<T>(path: string, params: T): Promise<void> {
-    return
+    throw new Error('Not implemented')
   }
 
   async addHeader(header: any): Promise<void> {
-    return
+    throw new Error('Not implemented')
+  }
+
+
+  async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<undefined> {
+    throw new Error('Not implemented')
+  }
+
+  async startListening(): Promise<void> {
+    throw new Error('Not implemented')
+  }
+
+  async listening(): Promise<void> {
+    throw new Error('Not implemented')
+  }
+
+  async isSynchronized(): Promise<boolean> {
+    throw new Error('Not implemented')
+  }
+
+  async getChain(): Promise<sdk.Chain> {
+    return this.chain
+  }
+
+  async isListening(): Promise<boolean> {
+    throw new Error('Not implemented')
+  }
+
+  async getChainTipHeader(): Promise<BlockHeader> {
+    throw new Error('Not implemented')
+  }
+
+  async findChainTipHashHex(): Promise<string> {
+    throw new Error('Not implemented')
   }
 }
