@@ -6,7 +6,7 @@ import { WalletMonitorTask } from './WalletMonitorTask'
  * This task polls for new block headers performing two essential functions:
  * 1. The arrival of a new block is the right time to check for proofs for recently broadcast transactions.
  * 2. The height of the block is used to limit which proofs are accepted with the aim of avoiding re-orged proofs.
- * 
+ *
  * The most common new block orphan is one which is almost immediately orphaned.
  * Waiting a minute before pursuing proof requests avoids almost all the re-org work that could be done.
  * Thus this task queues new headers for one cycle.

@@ -436,10 +436,22 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 ##### Class: TaskNewHeader
 
+This task polls for new block headers performing two essential functions:
+1. The arrival of a new block is the right time to check for proofs for recently broadcast transactions.
+2. The height of the block is used to limit which proofs are accepted with the aim of avoiding re-orged proofs.
+
+The most common new block orphan is one which is almost immediately orphaned.
+Waiting a minute before pursuing proof requests avoids almost all the re-org work that could be done.
+Thus this task queues new headers for one cycle.
+If a new header arrives during that cycle, it replaces the queued header and delays again.
+Only when there is an elapsed cycle without a new header does proof solicitation get triggered,
+with that header height as the limit for which proofs are accepted.
+
 ```ts
 export class TaskNewHeader extends WalletMonitorTask {
     static taskName = "NewHeader";
     header?: BlockHeader;
+    queuedHeader?: BlockHeader;
     constructor(monitor: Monitor, public triggerMsecs = 1 * monitor.oneMinute) 
     async getHeader(): Promise<BlockHeader> 
     trigger(nowMsecsSinceEpoch: number): {
@@ -450,6 +462,25 @@ export class TaskNewHeader extends WalletMonitorTask {
 ```
 
 See also: [BlockHeader](./services.md#interface-blockheader), [Monitor](./monitor.md#class-monitor), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+
+###### Property header
+
+This is always the most recent chain tip header returned from the chaintracker.
+
+```ts
+header?: BlockHeader
+```
+See also: [BlockHeader](./services.md#interface-blockheader)
+
+###### Property queuedHeader
+
+Tracks the value of `header` except that it is set to undefined
+when a cycle without a new header occurs and `processNewBlockHeader` is called.
+
+```ts
+queuedHeader?: BlockHeader
+```
+See also: [BlockHeader](./services.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -705,7 +736,7 @@ depending on chaintracks succeeding on proof verification.
 Increments attempts if proofs where requested.
 
 ```ts
-export async function getProofs(task: WalletMonitorTask, reqs: TableProvenTxReq[], indent = 0, countsAsAttempt = false, ignoreStatus = false): Promise<{
+export async function getProofs(task: WalletMonitorTask, reqs: TableProvenTxReq[], indent = 0, countsAsAttempt = false, ignoreStatus = false, maxAcceptableHeight: number): Promise<{
     proven: TableProvenTxReq[];
     invalid: TableProvenTxReq[];
     log: string;

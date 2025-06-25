@@ -188,7 +188,7 @@ describe('WalletPermissionsManager - Initialization & Configuration', () => {
       'onSpendingAuthorizationRequested',
       jest.fn(x => {
         manager.grantPermission({ requestID: x.requestID, ephemeral: true })
-      })
+      }) as any
     )
 
     // Non-admin origin tries to createAction specifying a basket

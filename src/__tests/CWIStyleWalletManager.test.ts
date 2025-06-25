@@ -502,8 +502,8 @@ describe('CWIStyleWalletManager Tests', () => {
 
     test('waitForAuthentication() eventually resolves', async () => {
       // Already authenticated from beforeEach. So it should immediately return.
-      const result = await manager.waitForAuthentication({}, 'normal.com')
-      expect(result).toEqual({ authenticated: true })
+      await manager.waitForAuthentication({}, 'normal.com')
+      expect(mockUnderlyingWallet.waitForAuthentication).toHaveBeenCalledTimes(1)
     })
   })
   describe('Additional Tests for Password Retriever Callback, Privileged Key Expiry, and UMP Token Serialization', () => {
