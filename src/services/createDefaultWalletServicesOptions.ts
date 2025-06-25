@@ -1,13 +1,17 @@
 import { randomBytesHex, sdk } from '../index.client'
 import { ChaintracksServiceClient } from './chaintracker'
 
-export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
+export function createDefaultWalletServicesOptions(
+  chain: sdk.Chain,
+  arcCallbackUrl?: string,
+  arcCallbackToken?: string,
+  arcApiKey?: string
+): sdk.WalletServicesOptions {
   const deploymentId = `wallet-toolbox-${randomBytesHex(16)}`
   const taalApiKey =
-    chain === 'main'
+    arcApiKey || chain === 'main'
       ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
       : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
-  const gorillaPoolApiKey = chain === 'main' ? '' : ''
 
   const o: sdk.WalletServicesOptions = {
     chain,
@@ -37,13 +41,17 @@ export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.Wallet
     ),
     arcUrl: arcDefaultUrl(chain),
     arcConfig: {
-      apiKey: taalApiKey,
-      deploymentId
+      apiKey: arcApiKey ?? undefined,
+      deploymentId,
+      callbackUrl: arcCallbackUrl ?? undefined,
+      callbackToken: arcCallbackToken ?? undefined
     },
     arcGorillaPoolUrl: arcGorillaPoolUrl(chain),
     arcGorillaPoolConfig: {
-      apiKey: gorillaPoolApiKey,
-      deploymentId
+      apiKey: arcApiKey ?? undefined,
+      deploymentId,
+      callbackUrl: arcCallbackUrl ?? undefined,
+      callbackToken: arcCallbackToken ?? undefined
     }
   }
   return o
