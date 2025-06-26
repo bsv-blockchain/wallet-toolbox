@@ -11457,11 +11457,6 @@ export class WalletStorageManager implements sdk.WalletStorage {
     _conflictingActives?: ManagedStorage[];
     _authId: sdk.AuthId;
     _services?: sdk.WalletServices;
-    _readerCount: number = 0;
-    _writerCount: number = 0;
-    _isSingleWriter: boolean = true;
-    _syncLocked: boolean = false;
-    _storageProviderLocked: boolean = false;
     constructor(identityKey: string, active?: sdk.WalletStorageProvider, backups?: sdk.WalletStorageProvider[]) 
     isStorageProvider(): boolean 
     isAvailable(): boolean 
@@ -11478,10 +11473,6 @@ export class WalletStorageManager implements sdk.WalletStorage {
     getBackupStores(): string[] 
     getConflictingStores(): string[] 
     getAllStores(): string[] 
-    async getActiveForWriter(): Promise<sdk.WalletStorageWriter> 
-    async getActiveForReader(): Promise<sdk.WalletStorageReader> 
-    async getActiveForSync(): Promise<sdk.WalletStorageSync> 
-    async getActiveForStorageProvider(): Promise<StorageProvider> 
     async runAsWriter<R>(writer: (active: sdk.WalletStorageWriter) => Promise<R>): Promise<R> 
     async runAsReader<R>(reader: (active: sdk.WalletStorageReader) => Promise<R>): Promise<R> 
     async runAsSync<R>(sync: (active: sdk.WalletStorageSync) => Promise<R>, activeSync?: sdk.WalletStorageSync): Promise<R> 
@@ -11530,6 +11521,24 @@ export class WalletStorageManager implements sdk.WalletStorage {
 
 See also: [AuthId](./client.md#interface-authid), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [FindOutputsArgs](./client.md#interface-findoutputsargs), [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageInternalizeActionResult](./client.md#interface-storageinternalizeactionresult), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvider](./storage.md#class-storageprovider), [TableCertificate](./storage.md#interface-tablecertificate), [TableCertificateX](./storage.md#interface-tablecertificatex), [TableOutput](./storage.md#interface-tableoutput), [TableOutputBasket](./storage.md#interface-tableoutputbasket), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TableSettings](./storage.md#interface-tablesettings), [TableUser](./storage.md#interface-tableuser), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs), [ValidListActionsArgs](./client.md#interface-validlistactionsargs), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs), [WalletServices](./client.md#interface-walletservices), [WalletStorage](./client.md#interface-walletstorage), [WalletStorageInfo](./client.md#interface-walletstorageinfo), [WalletStorageProvider](./client.md#interface-walletstorageprovider), [WalletStorageReader](./client.md#interface-walletstoragereader), [WalletStorageSync](./client.md#interface-walletstoragesync), [WalletStorageSyncReader](./client.md#interface-walletstoragesyncreader), [WalletStorageWriter](./client.md#interface-walletstoragewriter), [createAction](./storage.md#function-createaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [processAction](./storage.md#function-processaction)
 
+###### Constructor
+
+Creates a new WalletStorageManager with the given identityKey and optional active and backup storage providers.
+
+```ts
+constructor(identityKey: string, active?: sdk.WalletStorageProvider, backups?: sdk.WalletStorageProvider[]) 
+```
+See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
+
+Argument Details
+
++ **identityKey**
+  + The identity key of the user for whom this wallet is being managed.
++ **active**
+  + An optional active storage provider. If not provided, no active storage will be set.
++ **backups**
+  + An optional array of backup storage providers. If not provided, no backups will be set.
+
 ###### Property _active
 
 The current active store which is only enabled if the store's user record activeStorage property matches its settings record storageIdentityKey property
@@ -11571,23 +11580,6 @@ True if makeAvailable has been run and access to managed stores (active) is allo
 _isAvailable: boolean = false
 ```
 
-###### Property _isSingleWriter
-
-if true, allow only a single writer to proceed at a time.
-queue the blocked requests so they get executed in order when released.
-
-```ts
-_isSingleWriter: boolean = true
-```
-
-###### Property _readerCount
-
-How many read access operations are pending
-
-```ts
-_readerCount: number = 0
-```
-
 ###### Property _services
 
 Configured services if any. If valid, shared with stores (which may ignore it).
@@ -11597,38 +11589,12 @@ _services?: sdk.WalletServices
 ```
 See also: [WalletServices](./client.md#interface-walletservices)
 
-###### Property _storageProviderLocked
-
-if true, allow no new reader or writers or sync to proceed.
-queue the blocked requests so they get executed in order when released.
-
-```ts
-_storageProviderLocked: boolean = false
-```
-
 ###### Property _stores
 
 All configured stores including current active, backups, and conflicting actives.
 
 ```ts
 _stores: ManagedStorage[] = []
-```
-
-###### Property _syncLocked
-
-if true, allow no new reader or writers to proceed.
-queue the blocked requests so they get executed in order when released.
-
-```ts
-_syncLocked: boolean = false
-```
-
-###### Property _writerCount
-
-How many write access operations are pending
-
-```ts
-_writerCount: number = 0
 ```
 
 ###### Method canMakeAvailable

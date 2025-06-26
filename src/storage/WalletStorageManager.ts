@@ -249,20 +249,20 @@ export class WalletStorageManager implements sdk.WalletStorage {
   private readonly syncLocks: Array<(value: void | PromiseLike<void>) => void> = []
   private readonly spLocks: Array<(value: void | PromiseLike<void>) => void> = []
 
-  private async getActiveLock(lockQueue: Array<(value: void | PromiseLike<void>) => void>, noWait?: boolean): Promise<void> {
+  private async getActiveLock(
+    lockQueue: Array<(value: void | PromiseLike<void>) => void>
+  ): Promise<void> {
     if (!this.isAvailable()) await this.makeAvailable()
 
     let resolveNewLock: () => void = () => {}
-    const newLock = new Promise<void>((resolve) => {
+    const newLock = new Promise<void>(resolve => {
       resolveNewLock = resolve
       lockQueue.push(resolve)
     })
     if (lockQueue.length === 1) {
       resolveNewLock()
     }
-    // noWait means there's no need to sequence the requests, just count them.
-    if (!noWait)
-      await newLock
+    await newLock
   }
 
   private releaseActiveLock(queue: Array<(value: void | PromiseLike<void>) => void>): void {
@@ -273,7 +273,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   }
 
   private async getActiveForReader(): Promise<sdk.WalletStorageReader> {
-    await this.getActiveLock(this.readerLocks, true)
+    await this.getActiveLock(this.readerLocks)
     return this.getActive()
   }
   private releaseActiveForReader(): void {
@@ -281,7 +281,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   }
 
   private async getActiveForWriter(): Promise<sdk.WalletStorageWriter> {
-    await this.getActiveLock(this.readerLocks, true)
+    await this.getActiveLock(this.readerLocks)
     await this.getActiveLock(this.writerLocks)
     return this.getActive()
   }
@@ -291,7 +291,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   }
 
   private async getActiveForSync(): Promise<sdk.WalletStorageSync> {
-    await this.getActiveLock(this.readerLocks, true)
+    await this.getActiveLock(this.readerLocks)
     await this.getActiveLock(this.writerLocks)
     await this.getActiveLock(this.syncLocks)
     return this.getActive()
@@ -303,7 +303,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   }
 
   private async getActiveForStorageProvider(): Promise<StorageProvider> {
-    await this.getActiveLock(this.readerLocks, true)
+    await this.getActiveLock(this.readerLocks)
     await this.getActiveLock(this.writerLocks)
     await this.getActiveLock(this.syncLocks)
     await this.getActiveLock(this.spLocks)
