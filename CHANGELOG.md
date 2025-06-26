@@ -3,27 +3,32 @@
 This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 1.4.10
+
+- when spending non-change outputs, atomically tests spendable before setting to spent.
+- change unbasketted new outputs to spendable
+
 ## wallet-toolbox 1.4.7
 
--- update to bsv/sdk 1.6.5
--- add BHSServiceClient which allows for leaning on BlockHeadersService for chain tracking.
--- add ARC callbackURL and callbackToken to createDefaultWalletServiceOptions
+- update to bsv/sdk 1.6.5
+- add BHSServiceClient which allows for leaning on BlockHeadersService for chain tracking.
+- add ARC callbackURL and callbackToken to createDefaultWalletServiceOptions
 
 ## wallet-toolbox 1.4.3
 
--- update monitor logging
+- update monitor logging
 
 ## wallet-toolbox 1.4.2
 
--- update monitor TaskNewHeader, TaskCheckForProofs to ignore bleeding edge new blocks and proofs.
+- update monitor TaskNewHeader, TaskCheckForProofs to ignore bleeding edge new blocks and proofs.
 
 ## wallet-toolbox 1.4.1
 
--- update to bsv/sdk 1.6.0 with reworked bignum and memory / performance improvements.
+- update to bsv/sdk 1.6.0 with reworked bignum and memory / performance improvements.
 
 ## wallet-toolbox 1.3.32
 
--- add permissions caching (5 minutes)
+- add permissions caching (5 minutes)
 
 ## wallet-toolbox 1.3.30
 
