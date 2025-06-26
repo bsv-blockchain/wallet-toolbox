@@ -209,10 +209,22 @@ async function createNewInputs(
     const o = i.output
     newInputs.push({ i, o })
     if (o) {
-      await storage.updateOutput(o.outputId!, {
-        spendable: false,
-        spentBy: ctx.transactionId,
-        spendingDescription: i.inputDescription
+      await storage.transaction(async trx => {
+        const o2 = verifyOne(await storage.findOutputs({ partial: { outputId: o.outputId }, trx }))
+        if (o2.spendable != true || o2.spentBy !== undefined)
+          throw new sdk.WERR_INVALID_PARAMETER(
+            `inputs[${i.vin}]`,
+            `spendable output. output ${o.txid}:${o.vout} appears to have been spent.`
+          )
+        await storage.updateOutput(
+          o.outputId!,
+          {
+            spendable: false,
+            spentBy: ctx.transactionId,
+            spendingDescription: i.inputDescription
+          },
+          trx
+        )
       })
     }
   }

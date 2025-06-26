@@ -227,7 +227,7 @@ describe('createAction2 nosend transactions', () => {
     1: sourceTXID:70afdc54187a1cdb8e35f7d00e5e111cbf5c43c4dc3f1da2cc44479133c75f9e.0 sats:4 desc:'Funding output' 
        lock:(48)76a914abcdef0123456789abcdef0123456789abcdef88ac unlock:(16)47304402207f2e9a seq:4294967295
   outputs: 2
-    0: sats:2 lock:(48)76a914abcdef0123456789abcdef0123456789abcdef88ac index:0 spendable:false desc:'First spending 
+    0: sats:2 lock:(48)76a914abcdef0123456789abcdef0123456789abcdef88ac index:0 spendable:true desc:'First spending 
        Output for check on change '
     1: sats:996 lock:(50)76a9145947e66cdd43c70fb1780116b79e6f7d96e30e0888ac index:1 spendable:true basket:'default'`)
     }
@@ -287,7 +287,7 @@ describe('createAction2 nosend transactions', () => {
        lock:(50)76a914ab2b66432503a3681fc5af1502207ca458c8752d88ac 
        unlock:(212)4730440220113a6f72035a6ddcd6930db7e3f3d5c70486f9aaefb095e6fa3557afa916ec37022054... seq:4294967295
   outputs: 2
-    0: sats:4 lock:(48)76a914abcdef0123456789abcdef0123456789abcdef88ac index:0 spendable:false desc:'returnTXIDOnly 
+    0: sats:4 lock:(48)76a914abcdef0123456789abcdef0123456789abcdef88ac index:0 spendable:true desc:'returnTXIDOnly 
        false test'
     1: sats:990 lock:(50)76a9145947e66cdd43c70fb1780116b79e6f7d96e30e0888ac index:1 spendable:true basket:'default'`)
     }
