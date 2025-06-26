@@ -249,11 +249,14 @@ export class WalletStorageManager implements sdk.WalletStorage {
   private readonly syncLocks: Array<(value: void | PromiseLike<void>) => void> = []
   private readonly spLocks: Array<(value: void | PromiseLike<void>) => void> = []
 
-  private async getActiveLock(lockQueue: Array<(value: void | PromiseLike<void>) => void>, noWait?: boolean): Promise<void> {
+  private async getActiveLock(
+    lockQueue: Array<(value: void | PromiseLike<void>) => void>,
+    noWait?: boolean
+  ): Promise<void> {
     if (!this.isAvailable()) await this.makeAvailable()
 
     let resolveNewLock: () => void = () => {}
-    const newLock = new Promise<void>((resolve) => {
+    const newLock = new Promise<void>(resolve => {
       resolveNewLock = resolve
       lockQueue.push(resolve)
     })
@@ -261,8 +264,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
       resolveNewLock()
     }
     // noWait means there's no need to sequence the requests, just count them.
-    if (!noWait)
-      await newLock
+    if (!noWait) await newLock
   }
 
   private releaseActiveLock(queue: Array<(value: void | PromiseLike<void>) => void>): void {
