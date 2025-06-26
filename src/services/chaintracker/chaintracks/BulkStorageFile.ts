@@ -9,7 +9,7 @@ import { BlockHeader } from './Api/BlockHeaderApi'
 import { doubleSha256BE, doubleSha256LE } from '../../../utility/utilityHelpers'
 import { asArray, asBuffer } from '../../../utility/utilityHelpers.buffer'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
-import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
+import { ChaintracksFsApi, ChaintracksWritableFileApi } from './Api/ChaintracksFsApi'
 
 export interface BulkStorageFileOptions extends BulkStorageBaseOptions {
   rootFolder: string | undefined
@@ -20,8 +20,7 @@ export interface BulkStorageFileOptions extends BulkStorageBaseOptions {
 export class BulkStorageFile extends BulkStorageBase {
   static createBulkStorageFileOptions(chain: Chain, fs: ChaintracksFsApi, rootFolder?: string): BulkStorageFileOptions {
     const options: BulkStorageFileOptions = {
-      ...BulkStorageBase.createBulkStorageBaseOptions(chain),
-      fs,
+      ...BulkStorageBase.createBulkStorageBaseOptions(chain, fs),
       rootFolder: rootFolder || './data/',
       filename: `${chain}Net_bulk_storage_file.headers`
     }
@@ -30,9 +29,8 @@ export class BulkStorageFile extends BulkStorageBase {
 
   rootFolder: string
   filename: string
-  file: fs.FileHandle | undefined
+  file?: ChaintracksWritableFileApi
   fileLength = 0
-  fileOpenForRead = false
 
   constructor(options: BulkStorageFileOptions) {
     super(options)
@@ -41,8 +39,6 @@ export class BulkStorageFile extends BulkStorageBase {
 
     this.rootFolder = options.rootFolder
     this.filename = options.filename
-
-    this.openFileForReading()
   }
 
   override async shutdown(): Promise<void> {
@@ -53,6 +49,13 @@ export class BulkStorageFile extends BulkStorageBase {
     }
   }
 
+  async makeAvailable(): Promise<void> {
+    if (this.file) return
+    this.file = await this.fs.openWritableFile(this.rootFolder + this.filename)
+    this.fileLength = await this.file.getLength()
+  }
+
+  /*
   openFileForReading() {
     this.fileOpenForRead = false
     fs.mkdir(this.rootFolder, { recursive: true }).then(() => {
@@ -72,32 +75,24 @@ export class BulkStorageFile extends BulkStorageBase {
       )
     })
   }
-
-  sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  async waitForOpen(): Promise<void> {
-    while (!this.fileOpenForRead) this.sleep(1000)
-  }
+  */
 
   async getMaxHeight(): Promise<number> {
-    await this.waitForOpen()
+    await this.makeAvailable()
     return this.fileLength / 80 - 1
   }
 
   async findHeaderForHeightOrUndefined(height: number): Promise<BlockHeader | undefined> {
+    await this.makeAvailable()
     const maxHeight = await this.getMaxHeight()
     if (!this.file) throw new Error('File should be open...')
     if (height < 0) throw new Error(`Invalid height ${height}.`)
     if (height > maxHeight) return undefined
 
     const position = height * 80
-    const buffer = Buffer.alloc(80)
-    await this.file.read(buffer, 0, 80, position)
-    const a = asArray(buffer)
+    const a = await this.file.read(80, position)
     const header: BlockHeader = {
-      ...deserializeBlockHeader(asArray(a)),
+      ...deserializeBlockHeader(a),
       height: height,
       hash: asString(doubleSha256BE(a))
     }
@@ -106,24 +101,24 @@ export class BulkStorageFile extends BulkStorageBase {
   }
 
   async appendHeaders(minHeight: number, count: number, newBulkHeaders: number[]): Promise<void> {
-    await this.waitForOpen()
+    await this.makeAvailable()
     if (!this.file) throw new Error('File should be open...')
     const maxHeight = await this.getMaxHeight()
     const previousHash = maxHeight < 0 ? '00'.repeat(32) : (await this.findHeaderForHeight(maxHeight)).hash
     if (minHeight !== maxHeight + 1)
       throw new Error(`block headers with minHeight ${minHeight} can't follow current maxHeight ${maxHeight}.`)
     validateBufferOfHeaders(newBulkHeaders, previousHash, 0, count)
-    await this.file.appendFile(asBuffer(newBulkHeaders))
+    await this.file.append(newBulkHeaders)
     this.fileLength += newBulkHeaders.length
     console.log(`bulk header count after append ${this.fileLength / 80}`)
   }
 
   async headersToBuffer(height: number, count: number): Promise<number[]> {
-    await this.waitForOpen()
+    await this.makeAvailable()
     if (!this.file) throw new Error('File should be open...')
     const position = height * 80
-    const buffer = Buffer.alloc(80 * count)
-    const result = await this.file.read(buffer, 0, buffer.length, position)
-    return asArray(result.buffer.subarray(0, result.bytesRead))
+    const length = 80 * count
+    const bytes = await this.file.read(length, position)
+    return bytes
   }
 }

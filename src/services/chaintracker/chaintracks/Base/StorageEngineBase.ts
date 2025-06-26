@@ -10,11 +10,11 @@ import { BulkIndexApi } from '../Api/BulkIndexApi'
 import { BulkStorageApi } from '../Api/BulkStorageApi'
 import { validateBufferOfHeaders } from '../util/blockHeaderUtilities'
 
-import { promises as fs } from 'fs'
 import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { Utils, Hash } from '@bsv/sdk'
 import { asBuffer } from '../../../../utility/utilityHelpers.buffer'
+import { ChaintracksFsApi, ChaintracksWritableFileApi } from '../Api/ChaintracksFsApi'
 
 /**
  * Support for block header hash to height index implementations
@@ -332,12 +332,17 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
     return Math.max(header1.height, header2.height) - ancestor.height
   }
 
-  async exportBulkHeadersToFiles({
-    rootFolder = './data/',
-    maxPerFile = 625000,
-    heightMin = 0,
-    heightMax = <null | number>null
+  async exportBulkHeadersToFiles(params: {
+    fs: ChaintracksFsApi,
+    rootFolder?: string,
+    maxPerFile?: number,
+    heightMin?: number,
+    heightMax?: number
   }): Promise<void> {
+
+    const { fs, rootFolder = './data/', maxPerFile = 625000 } = params
+    let { heightMin = 0, heightMax } = params
+
     try {
       const bulkAgeLimit = this.liveHeightThreshold
       const filenamePrefix = this.chain === 'main' ? 'mainNet' : this.chain === 'test' ? 'testNet' : 'stn'
@@ -346,14 +351,12 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
       if (!tip) return
 
       heightMin = Math.max(0, heightMin)
-      if (heightMax === null) heightMax = tip.height - bulkAgeLimit
+      if (heightMax === undefined) heightMax = tip.height - bulkAgeLimit
       heightMax = Math.max(heightMin, Math.min(heightMax, tip.height - bulkAgeLimit))
       let countRemaining = heightMax - heightMin + 1
 
       const jsonFilename = `${filenamePrefix}.json`
       const bulkHeaders: BulkHeaderFilesInfo = { files: [], rootFolder, jsonFilename }
-
-      await fs.mkdir(rootFolder, { recursive: true })
 
       const perFile = maxPerFile
 
@@ -375,18 +378,10 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
           fileHash: null
         }
 
-        let file = <null | fs.FileHandle>null
-
-        try {
-          // Try opening file for append, throw if it exists
-          file = await fs.open(filepath, 'ax')
-        } catch (uerr: unknown) {
-          if ((uerr as { code: string })?.code !== 'EEXIST') throw uerr
-        }
-
-        if (file === null) {
+        let file = await fs.openWritableFile(filepath)
+        if (0 < await file.getLength()) {
           // File exists...
-          const hfa = await BulkFilesReader.validateHeaderFile(rootFolder, hf)
+          const hfa = await BulkFilesReader.validateHeaderFile(fs, rootFolder, hf)
           if (hfa.count < hf.count) {
             // Existing file is incomplete, re-write it...
             // Delete existing file...

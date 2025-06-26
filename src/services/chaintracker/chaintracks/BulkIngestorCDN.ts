@@ -145,7 +145,8 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     bulkFiles.jsonFilename = this.jsonFilename
 
     if (filesUpdated) {
-      await this.fs.writeFile(this.localCachePath + this.jsonFilename, JSON.stringify(bulkFiles))
+      const bytes = Array.from(new TextEncoder().encode(JSON.stringify(bulkFiles)))
+      await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
     }
 
     return {

@@ -5,39 +5,25 @@ import { asArray, asBuffer, asString } from '../../../../utility/utilityHelpers.
 import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
 import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.
  * @param filepath Full filepath to file.
- * @param bufferSize Optional read buffer size to use. Defaults to 80,000 bytes.
+ * @param bufferSize Optional read buffer size to use. Defaults to 80,000 bytes. Currently ignored.
  * @returns `{hash, length}` where `hash` is base64 string form of file hash and `length` is file length in bytes.
  */
-/*
 export async function sha256HashOfBinaryFile(
+  fs: ChaintracksFsApi,
   filepath: string,
   bufferSize = 80000
 ): Promise<{ hash: string; length: number }> {
-  const file = await fs.open(filepath, 'r')
-  try {
-    let length = 0
-
     const sha256 = new Hash.SHA256()
-    const readBuf = Buffer.alloc(bufferSize)
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const rr = await file.read(readBuf, 0, readBuf.length)
-      if (!rr.bytesRead) break
-      length += rr.bytesRead
-      sha256.update(asArray(rr.buffer))
-    }
-
+    const bytes = await fs.readFile(filepath)
+    const length = bytes.length
+    sha256.update(bytes)
     return { hash: Utils.toBase64(sha256.digest()), length }
-  } finally {
-    await file.close()
-  }
 }
-*/
 
 /**
  * Validate headers contained in an array of bytes. The headers must be consecutive block headers, 80 bytes long,

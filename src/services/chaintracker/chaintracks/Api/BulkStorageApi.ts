@@ -3,6 +3,7 @@ import { Chain } from '../../../../sdk/types'
 import { BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { HeightRange } from '../util/HeightRange'
 import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksFsApi } from './ChaintracksFsApi'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface BulkStorageBaseOptions {
@@ -10,6 +11,7 @@ export interface BulkStorageBaseOptions {
    * The target chain: "main" or "test"
    */
   chain: Chain
+  fs: ChaintracksFsApi
 }
 
 /**

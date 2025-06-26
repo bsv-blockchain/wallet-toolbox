@@ -7,24 +7,27 @@ import { StorageEngineBase } from './StorageEngineBase'
 import { HeightRange } from '../util/HeightRange'
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 
-import { promises as fs } from 'fs'
 import { addWork, convertBitsToWork, deserializeBlockHeaders, genesisBuffer } from '../util/blockHeaderUtilities'
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { asBuffer } from '../../../../utility/utilityHelpers.buffer'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 
 export abstract class BulkStorageBase implements BulkStorageApi {
-  static createBulkStorageBaseOptions(chain: Chain): BulkStorageBaseOptions {
+  static createBulkStorageBaseOptions(chain: Chain, fs: ChaintracksFsApi): BulkStorageBaseOptions {
     const options: BulkStorageBaseOptions = {
-      chain
+      chain,
+      fs
     }
     return options
   }
 
   chain: Chain
+  fs: ChaintracksFsApi
 
   constructor(options: BulkStorageBaseOptions) {
     this.chain = options.chain
+    this.fs = options.fs
   }
 
   async shutdown(): Promise<void> {}
@@ -101,13 +104,14 @@ export abstract class BulkStorageBase implements BulkStorageApi {
         lastHash: null,
         fileHash: null
       }
-      const buffer = asBuffer(await this.headersToBuffer(height, count))
-      await fs.writeFile(`${rootFolder}${file.fileName}`, buffer)
-      file = await BulkFilesReader.validateHeaderFile(rootFolder, file)
+      const buffer = await this.headersToBuffer(height, count)
+      await this.fs.writeFile(`${rootFolder}${file.fileName}`, buffer)
+      file = await BulkFilesReader.validateHeaderFile(this.fs, rootFolder, file)
       if (!file.lastHash) throw new Error('Unexpected result.')
       prevHash = file.lastHash
       info.files.push(file)
     }
-    await fs.writeFile(`${rootFolder}${jsonFilename}`, JSON.stringify(info))
+    const bytes = Array.from(new TextEncoder().encode(JSON.stringify(info)))
+    await this.fs.writeFile(`${rootFolder}${jsonFilename}`, bytes)
   }
 }

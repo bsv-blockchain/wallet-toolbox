@@ -1,10 +1,10 @@
 import { HeightRange } from './HeightRange'
 import { deserializeBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
 
-import { promises as fs } from 'fs'
-import crypto from 'crypto'
 import { BaseBlockHeader } from '../Api/BlockHeaderApi'
 import { asArray } from '../../../../utility/utilityHelpers.buffer'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
+import { Hash, Utils } from '@bsv/sdk'
 
 /**
  * Descriptive information about a single bulk header file.
@@ -59,6 +59,7 @@ export interface BulkHeaderFilesInfo {
  * limited maximum size.
  */
 export class BulkFilesReader {
+  fs: ChaintracksFsApi
   rootFolder: string
   jsonFilename: string
   files: BulkHeaderFileInfo[]
@@ -66,7 +67,8 @@ export class BulkFilesReader {
   maxBufferSize = 400 * 80
   nextHeight: number | undefined
 
-  constructor(files: BulkHeaderFilesInfo, range?: HeightRange, maxBufferSize?: number) {
+  constructor(fs: ChaintracksFsApi, files: BulkHeaderFilesInfo, range?: HeightRange, maxBufferSize?: number) {
+    this.fs = fs
     this.rootFolder = files.rootFolder
     this.jsonFilename = files.jsonFilename
     this.files = files.files
@@ -117,11 +119,10 @@ export class BulkFilesReader {
   async readBufferForHeightOrUndefined(height: number): Promise<number[] | undefined> {
     const file = this.getFileForHeight(height)
     if (!file) return undefined
-    const f = await fs.open(this.rootFolder + file.fileName, 'r')
+    const f = await this.fs.openReadableFile(this.rootFolder + file.fileName)
     try {
-      const buffer = Buffer.alloc(80)
-      await f.read(buffer, 0, 80, (height - file.firstHeight) * 80)
-      return asArray(buffer)
+      const buffer = await f.read(80, (height - file.firstHeight) * 80)
+      return buffer
     } finally {
       await f.close()
     }
@@ -151,11 +152,10 @@ export class BulkFilesReader {
     if (fileRange.isEmpty) return undefined
     const position = (fileRange.minHeight - file.firstHeight) * 80
     const length = fileRange.length * 80
-    const f = await fs.open(this.rootFolder + file.fileName, 'r')
+    const f = await this.fs.openReadableFile(this.rootFolder + file.fileName)
     try {
-      const buffer = Buffer.alloc(length)
-      await f.read(buffer, 0, length, position)
-      return asArray(buffer)
+      const buffer = await f.read(length, position)
+      return buffer
     } finally {
       await f.close()
     }
@@ -199,18 +199,17 @@ export class BulkFilesReader {
 
   async validateFiles(): Promise<void> {
     for (const file of this.files) {
-      await BulkFilesReader.validateHeaderFile(this.rootFolder, file)
+      await BulkFilesReader.validateHeaderFile(this.fs, this.rootFolder, file)
     }
   }
 
-  static async writeEmptyJsonFile(rootFolder: string, jsonFilename: string): Promise<string> {
+  static async writeEmptyJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<string> {
     const json = JSON.stringify({ files: [], rootFolder })
-    await fs.writeFile(rootFolder + jsonFilename, json, 'utf8')
+    await fs.writeFile(rootFolder + jsonFilename, Utils.toArray(json, 'utf8'))
     return json
   }
 
-  static async readJsonFile(rootFolder: string, jsonFilename: string): Promise<BulkHeaderFilesInfo> {
-    await fs.mkdir(rootFolder, { recursive: true })
+  static async readJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<BulkHeaderFilesInfo> {
 
     const filePath = (file: string) => rootFolder + file
 
@@ -219,10 +218,9 @@ export class BulkFilesReader {
     let json: string
 
     try {
-      json = await fs.readFile(jsonPath, 'utf8')
+      json = Utils.toUTF8(await fs.readFile(jsonPath))
     } catch (uerr: unknown) {
-      if ((uerr as { code: string })?.code !== 'ENOENT') throw uerr
-      json = await this.writeEmptyJsonFile(rootFolder, jsonFilename)
+      json = await this.writeEmptyJsonFile(fs, rootFolder, jsonFilename)
     }
 
     const readerFiles = <BulkHeaderFilesInfo>JSON.parse(json)
@@ -238,9 +236,9 @@ export class BulkFilesReader {
    * @param range
    * @returns
    */
-  static async fromJsonFile(rootFolder: string, jsonFilename: string, range?: HeightRange): Promise<BulkFilesReader> {
-    const readerFiles = await this.readJsonFile(rootFolder, jsonFilename)
-    return new BulkFilesReader(readerFiles, range)
+  static async fromJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string, range?: HeightRange): Promise<BulkFilesReader> {
+    const readerFiles = await this.readJsonFile(fs, rootFolder, jsonFilename)
+    return new BulkFilesReader(fs, readerFiles, range)
   }
 
   /**
@@ -252,14 +250,14 @@ export class BulkFilesReader {
    * @param hf
    * @returns actual BulkHeaderFileInfo verified
    */
-  static async validateHeaderFile(rootFolder: string, hf: BulkHeaderFileInfo): Promise<BulkHeaderFileInfo> {
+  static async validateHeaderFile(fs: ChaintracksFsApi, rootFolder: string, hf: BulkHeaderFileInfo): Promise<BulkHeaderFileInfo> {
     const filename = rootFolder + hf.fileName
 
-    const file = await fs.open(filename, 'r')
+    const file = await fs.openReadableFile(filename)
     try {
-      const sha256 = crypto.createHash('sha256')
+      const sha256 = new Hash.SHA256()
       const bufferSize = 10000 * 80
-      const readBuf = Buffer.alloc(bufferSize)
+      let offset = 0
 
       let prevHash = hf.prevHash
 
@@ -269,14 +267,15 @@ export class BulkFilesReader {
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const rr = await file.read(readBuf, 0, readBuf.length)
-        if (!rr.bytesRead) break
-        if (rr.bytesRead % 80 !== 0)
-          throw { message: `File ${filename} file read returned ${rr.bytesRead} bytes which is not a multiple of 80.` }
-        const count = rr.bytesRead / 80
-        prevHash = validateBufferOfHeaders(asArray(readBuf), prevHash, 0, count)
+        const rr = await file.read(bufferSize, offset)
+        offset += rr.length
+        if (!rr.length) break
+        if (rr.length % 80 !== 0)
+          throw { message: `File ${filename} file read returned ${rr.length} bytes which is not a multiple of 80.` }
+        const count = rr.length / 80
+        prevHash = validateBufferOfHeaders(rr, prevHash, 0, count)
         fileCount += count
-        sha256.update(rr.buffer)
+        sha256.update(rr)
       }
 
       const lastHash = prevHash
@@ -285,7 +284,7 @@ export class BulkFilesReader {
 
       hfa.lastHash = lastHash
 
-      const fileHash = sha256.digest('base64')
+      const fileHash = Utils.toBase64(sha256.digest())
       if (hf.fileHash !== null && fileHash !== hf.fileHash)
         throw { message: `File ${filename} hash of ${fileHash} doesn't match expected hash of ${hf.fileHash}` }
 
