@@ -124,8 +124,8 @@ export async function listOutputs(
   const noTags = tagIds.length === 0
   const includeSpent = specOp && specOp.includeSpent ? specOp.includeSpent : false
 
-  const txStatusOk = `(select status as tstatus from transactions where transactions.transactionId = outputs.transactionId) in ('completed', 'unproven', 'nosend')`
-  const txStatusOkCteq = `(select status as tstatus from transactions where transactions.transactionId = o.transactionId) in ('completed', 'unproven', 'nosend')`
+  const txStatusOk = `(select status as tstatus from transactions where transactions.transactionId = outputs.transactionId) in ('completed', 'unproven', 'nosend', 'sending')`
+  const txStatusOkCteq = `(select status as tstatus from transactions where transactions.transactionId = o.transactionId) in ('completed', 'unproven', 'nosend', 'sending')`
 
   const makeWithTagsQueries = () => {
     let cteqOptions = ''

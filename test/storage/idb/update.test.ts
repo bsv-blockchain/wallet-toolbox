@@ -25,7 +25,7 @@ import 'fake-indexeddb/auto'
 
 setLogging(false)
 
-describe('update tests', () => {
+describe('idb update tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'
@@ -501,7 +501,7 @@ describe('update tests', () => {
   })
 
   test('7a updateTransactionStatus', async () => {
-    const { activeStorage: storage } = await _tu.createLegacyWalletSQLiteCopy('updateTransactionStatus6a')
+    const { activeStorage: storage } = await _tu.createLegacyWalletSQLiteCopy('updateTransactionStatus7a')
 
     let tx = verifyOne(
       await storage.findTransactions({

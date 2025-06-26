@@ -2,7 +2,7 @@ import { _tu, logger } from '../../../test/utils/TestUtilsWalletStorage'
 import { sdk, wait } from '../../index.client'
 import { ARC } from '../providers/ARC'
 import { Beef, BeefTx } from '@bsv/sdk'
-import { arcDefaultUrl, arcGorillaPoolUrl } from '../createDefaultWalletServicesOptions'
+import { arcGorillaPoolUrl } from '../createDefaultWalletServicesOptions'
 import { Setup } from '../../index.all'
 
 describe('ArcGorillaPool tests', () => {

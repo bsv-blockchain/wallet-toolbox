@@ -8,7 +8,7 @@ import { WalletMonitorTask } from './WalletMonitorTask'
  *
  * Looks for aged Transactions with provenTxId with status != 'completed', sets status to 'completed'.
  *
- * Looks for reqs with 'invalid' status that
+ * Looks for reqs with 'invalid' status that have corresonding transactions with status other than 'failed'.
  */
 export class TaskReviewStatus extends WalletMonitorTask {
   static taskName = 'ReviewStatus'

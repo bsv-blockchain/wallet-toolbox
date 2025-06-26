@@ -9874,7 +9874,7 @@ The `notified` property flags reqs that do not need to be checked.
 
 Looks for aged Transactions with provenTxId with status != 'completed', sets status to 'completed'.
 
-Looks for reqs with 'invalid' status that
+Looks for reqs with 'invalid' status that have corresonding transactions with status other than 'failed'.
 
 ```ts
 export class TaskReviewStatus extends WalletMonitorTask {
@@ -12072,7 +12072,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: createDefaultWalletServicesOptions
 
 ```ts
-export function createDefaultWalletServicesOptions(chain: sdk.Chain): sdk.WalletServicesOptions 
+export function createDefaultWalletServicesOptions(chain: sdk.Chain, arcCallbackUrl?: string, arcCallbackToken?: string, arcApiKey?: string): sdk.WalletServicesOptions 
 ```
 
 See also: [Chain](./client.md#type-chain), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
