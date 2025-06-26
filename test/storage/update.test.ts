@@ -21,7 +21,7 @@ import {
 
 setLogging(false)
 
-describe('idb update tests', () => {
+describe('update tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'

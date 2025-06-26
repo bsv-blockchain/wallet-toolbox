@@ -1,8 +1,6 @@
 import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
 
-import { promises as fs } from 'fs'
-
 import { asArray, asBuffer, asString } from '../../../../utility/utilityHelpers.buffer'
 import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
 import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
@@ -14,6 +12,7 @@ import { Chain } from '../../../../sdk/types'
  * @param bufferSize Optional read buffer size to use. Defaults to 80,000 bytes.
  * @returns `{hash, length}` where `hash` is base64 string form of file hash and `length` is file length in bytes.
  */
+/*
 export async function sha256HashOfBinaryFile(
   filepath: string,
   bufferSize = 80000
@@ -38,6 +37,7 @@ export async function sha256HashOfBinaryFile(
     await file.close()
   }
 }
+*/
 
 /**
  * Validate headers contained in an array of bytes. The headers must be consecutive block headers, 80 bytes long,

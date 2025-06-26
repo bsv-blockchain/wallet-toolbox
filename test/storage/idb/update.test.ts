@@ -25,7 +25,7 @@ import 'fake-indexeddb/auto'
 
 setLogging(false)
 
-describe('update tests', () => {
+describe('idb update tests', () => {
   jest.setTimeout(99999999)
 
   const chain: sdk.Chain = 'test'
