@@ -51,4 +51,44 @@ describe('LocalKVStore tests', () => {
       expect(value).toBe('value4')
     }
   })
+
+  test('4 promise test', async () => {
+    let resolveNewLock: () => void = () => {}
+    const newLock = new Promise<void>((resolve) => {
+      resolveNewLock = resolve
+    })
+    const t = Date.now()
+    setTimeout(() => {
+      resolveNewLock()
+    }, 1000)
+    await newLock
+    const elapsed = Date.now() - t
+    logger(`Elapsed time: ${elapsed} ms`)
+    expect(elapsed).toBeGreaterThanOrEqual(1000)
+  })
+
+  test('5 set x 4 get set x 4 get', async () => {
+    for (const { storage, wallet } of ctxs) {
+      const kvStore = new LocalKVStore(wallet, context, false, undefined, true)
+      let v4: string | undefined
+      async function captureValue() : Promise<void> {
+        v4 = await kvStore.get(key1)
+      } 
+      const promises = [
+        kvStore.set(key1, 'value1'),
+        kvStore.set(key1, 'value2'),
+        kvStore.set(key1, 'value3'),
+        kvStore.set(key1, 'value4'),
+        captureValue(),
+        kvStore.set(key1, 'value5'),
+        kvStore.set(key1, 'value6'),
+        kvStore.set(key1, 'value7'),
+        kvStore.set(key1, 'value8')
+      ]
+      await Promise.all(promises)
+      const v8 = await kvStore.get(key1)
+      expect(v4).toBe('value4')
+      expect(v8).toBe('value8')
+    }
+  })
 })
