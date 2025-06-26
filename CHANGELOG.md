@@ -7,6 +7,7 @@ attention to changes that materially alter behavior or extend functionality.
 
 - when spending non-change outputs, atomically tests spendable before setting to spent.
 - change unbasketted new outputs to spendable
+- updated WalletStorageManager to use lockQueues for read/write/sync/sp scheduling
 
 ## wallet-toolbox 1.4.7
 
