@@ -523,7 +523,7 @@ describe('update tests', () => {
   })
 
   test('7a updateTransactionStatus', async () => {
-    const { activeStorage: storage } = await _tu.createLegacyWalletSQLiteCopy('updateTransactionStatus6a')
+    const { activeStorage: storage } = await _tu.createLegacyWalletSQLiteCopy('updateTransactionStatus7a')
 
     let tx = verifyOne(
       await storage.findTransactions({

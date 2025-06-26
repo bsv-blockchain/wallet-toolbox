@@ -54,7 +54,7 @@ describe('LocalKVStore tests', () => {
 
   test('4 promise test', async () => {
     let resolveNewLock: () => void = () => {}
-    const newLock = new Promise<void>((resolve) => {
+    const newLock = new Promise<void>(resolve => {
       resolveNewLock = resolve
     })
     const t = Date.now()
@@ -71,9 +71,9 @@ describe('LocalKVStore tests', () => {
     for (const { storage, wallet } of ctxs) {
       const kvStore = new LocalKVStore(wallet, context, false, undefined, true)
       let v4: string | undefined
-      async function captureValue() : Promise<void> {
+      async function captureValue(): Promise<void> {
         v4 = await kvStore.get(key1)
-      } 
+      }
       const promises = [
         kvStore.set(key1, 'value1'),
         kvStore.set(key1, 'value2'),
