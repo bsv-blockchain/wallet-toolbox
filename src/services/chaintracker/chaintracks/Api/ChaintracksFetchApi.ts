@@ -1,4 +1,3 @@
-
 export interface ChaintracksFetchApi {
-  download(url: string): Promise<number[]>;
+  download(url: string): Promise<number[]>
 }

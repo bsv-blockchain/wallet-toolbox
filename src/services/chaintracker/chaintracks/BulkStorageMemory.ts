@@ -5,6 +5,7 @@ import { doubleSha256BE } from '../../../utility/utilityHelpers'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { BulkStorageBaseOptions } from './Api/BulkStorageApi'
+import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
 import { BulkStorageBase } from './Base/BulkStorageBase'
 import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
@@ -13,9 +14,9 @@ import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHea
 export interface BulkStorageMemoryOptions extends BulkStorageBaseOptions {}
 
 export class BulkStorageMemory extends BulkStorageBase {
-  static createBulkStorageMemoryOptions(chain: Chain): BulkStorageMemoryOptions {
+  static createBulkStorageMemoryOptions(chain: Chain, fs: ChaintracksFsApi): BulkStorageMemoryOptions {
     const options: BulkStorageMemoryOptions = {
-      ...BulkStorageBase.createBulkStorageBaseOptions(chain)
+      ...BulkStorageBase.createBulkStorageBaseOptions(chain, fs)
     }
     return options
   }

@@ -12,6 +12,7 @@ import { Chain } from '../../../../sdk/types'
 import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { asBuffer } from '../../../../utility/utilityHelpers.buffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
+import { Utils } from '@bsv/sdk'
 
 export abstract class BulkStorageBase implements BulkStorageApi {
   static createBulkStorageBaseOptions(chain: Chain, fs: ChaintracksFsApi): BulkStorageBaseOptions {
@@ -111,7 +112,7 @@ export abstract class BulkStorageBase implements BulkStorageApi {
       prevHash = file.lastHash
       info.files.push(file)
     }
-    const bytes = Array.from(new TextEncoder().encode(JSON.stringify(info)))
+    const bytes = Utils.toArray(JSON.stringify(info), 'utf8')
     await this.fs.writeFile(`${rootFolder}${jsonFilename}`, bytes)
   }
 }

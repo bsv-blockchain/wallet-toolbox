@@ -1,4 +1,4 @@
-import { defaultHttpClient, HttpClient } from '@bsv/sdk'
+import { defaultHttpClient, HttpClient, Utils } from '@bsv/sdk'
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
@@ -41,10 +41,14 @@ export class BulkIngestorCDN extends BulkIngestorBase {
    * @param localCachePath defaults to './data/bulk_cdn_headers/'
    * @returns
    */
-  static createBulkIngestorCDNOptions(chain: Chain, fs: ChaintracksFsApi, fetch: ChaintracksFetchApi, localCachePath?: string): BulkIngestorCDNOptions {
+  static createBulkIngestorCDNOptions(
+    chain: Chain,
+    fs: ChaintracksFsApi,
+    fetch: ChaintracksFetchApi,
+    localCachePath?: string
+  ): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
-      ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
-      fs,
+      ...BulkIngestorBase.createBulkIngestorBaseOptions(chain, fs),
       fetch,
       localCachePath: localCachePath || './data/bulk_cdn_headers/',
       jsonResource: `${chain}Net.json`,
@@ -53,15 +57,14 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return options
   }
 
-  fs: ChaintracksFsApi
   fetch: ChaintracksFetchApi
   jsonResource: string
   cdnUrl: string
 
   constructor(options: BulkIngestorCDNOptions) {
     super(options)
-    if (!options.jsonResource) throw new Error('The jsonResource options property is required.');
-    if (!options.cdnUrl) throw new Error('The cdnUrl options property is required.');
+    if (!options.jsonResource) throw new Error('The jsonResource options property is required.')
+    if (!options.cdnUrl) throw new Error('The cdnUrl options property is required.')
 
     this.fetch = options.fetch
     this.fs = options.fs
@@ -132,25 +135,24 @@ export class BulkIngestorCDN extends BulkIngestorBase {
         await this.fs.writeFile(path, data)
 
         console.log(`${new Date().toISOString()} downloaded ${url} actual size    ${data.length}`)
-
       } catch (err) {
         console.log(JSON.stringify(err))
         throw err
       }
 
-      bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(reader.rootFolder, file)
+      bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file)
     }
 
     bulkFiles.rootFolder = this.localCachePath
     bulkFiles.jsonFilename = this.jsonFilename
 
     if (filesUpdated) {
-      const bytes = Array.from(new TextEncoder().encode(JSON.stringify(bulkFiles)))
+      const bytes = Utils.toArray(JSON.stringify(bulkFiles), 'utf8')
       await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
     }
 
     return {
-      reader: await BulkFilesReader.fromJsonFile(this.localCachePath, this.jsonFilename, neededRange),
+      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange),
       liveHeaders: undefined
     }
   }

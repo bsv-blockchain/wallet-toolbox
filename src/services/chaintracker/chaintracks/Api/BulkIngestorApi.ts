@@ -3,6 +3,7 @@
 
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from './BlockHeaderApi'
+import { ChaintracksFsApi } from './ChaintracksFsApi'
 import { StorageEngineApi } from './StorageEngineApi'
 
 export interface BulkIngestorBaseOptions {
@@ -36,6 +37,8 @@ export interface BulkIngestorBaseOptions {
    * up to `liveHeightThreshold` of available headers remaining.
    */
   bypassLiveEnabled: boolean
+
+  fs: ChaintracksFsApi
 }
 
 export interface BulkIngestorApi {

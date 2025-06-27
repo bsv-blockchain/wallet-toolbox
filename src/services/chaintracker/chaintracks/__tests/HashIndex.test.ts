@@ -4,9 +4,13 @@ import { doubleSha256BE } from '../../../../utility/utilityHelpers'
 import { HashIndex } from '../util/HashIndex'
 import { asArray, asBuffer } from '../../../../utility/utilityHelpers.buffer'
 import { BulkFilesReader } from '../util/BulkFilesReader'
+import { ChaintracksFs } from '../util/ChaintracksFs'
 
 describe('testing makeHashIndex', () => {
   jest.setTimeout(100000)
+
+  const fs = ChaintracksFs
+
   test('HashIndex', async () => {
     const bufferOfHeaders = asArray(
       await fs.readFile('./src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_0.headers')
@@ -19,7 +23,7 @@ describe('testing makeHashIndex', () => {
 
   jest.setTimeout(100000)
   test.skip('write mainNet hash index files', async () => {
-    const reader = await BulkFilesReader.fromJsonFile('./test/data/bulk_cdn/', 'mainNet.json')
+    const reader = await BulkFilesReader.fromJsonFile(fs, './test/data/bulk_cdn/', 'mainNet.json')
     await reader.validateFiles()
     for (let i = 0; i < reader.files.length; i++) {
       const buffer = await reader.readBufferFromFile(reader.files[i])
@@ -27,11 +31,11 @@ describe('testing makeHashIndex', () => {
       let index = IndexLevel.makeBlockHashIndex([0, 0, 6], [27, 29, 30])
       index.load(buffer, 0)
       let indexBuffer = index.toBuffer()
-      await fs.writeFile(`./src/_tests/data/bulk_headers/mainNet_blockhash_${i}.index`, asBuffer(indexBuffer))
+      await fs.writeFile(`./src/_tests/data/bulk_headers/mainNet_blockhash_${i}.index`, indexBuffer)
       index = IndexLevel.makeMerkleRootIndex([0, 0, 6], [27, 29, 30])
       index.load(buffer, 0)
       indexBuffer = index.toBuffer()
-      await fs.writeFile(`./src/_tests/data/bulk_headers/mainNet_merkleroot_${i}.index`, asBuffer(indexBuffer))
+      await fs.writeFile(`./src/_tests/data/bulk_headers/mainNet_merkleroot_${i}.index`, indexBuffer)
     }
   })
 
@@ -43,7 +47,7 @@ describe('testing makeHashIndex', () => {
     // [0,0,6][27,29,30]    24.5M   11      2.6
     // [0,0,5][27,29,31]    27M     8       1.7
     // [0,0,4][27,29,20]    31M     7       1.3
-    const reader = await BulkFilesReader.fromJsonFile('./test/data/bulk_cdn/', 'mainNet.json')
+    const reader = await BulkFilesReader.fromJsonFile(fs, './test/data/bulk_cdn/', 'mainNet.json')
     //await reader.validateFiles()
     const buffer = await reader.readBufferFromFile(reader.files[0])
     if (buffer === undefined) throw new Error('oops')

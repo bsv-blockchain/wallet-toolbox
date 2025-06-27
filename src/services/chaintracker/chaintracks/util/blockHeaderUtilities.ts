@@ -18,11 +18,11 @@ export async function sha256HashOfBinaryFile(
   filepath: string,
   bufferSize = 80000
 ): Promise<{ hash: string; length: number }> {
-    const sha256 = new Hash.SHA256()
-    const bytes = await fs.readFile(filepath)
-    const length = bytes.length
-    sha256.update(bytes)
-    return { hash: Utils.toBase64(sha256.digest()), length }
+  const sha256 = new Hash.SHA256()
+  const bytes = await fs.readFile(filepath)
+  const length = bytes.length
+  sha256.update(bytes)
+  return { hash: Utils.toBase64(sha256.digest()), length }
 }
 
 /**

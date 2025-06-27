@@ -9,7 +9,7 @@ import { BlockHeader } from './Api/BlockHeaderApi'
 import { doubleSha256BE, doubleSha256LE } from '../../../utility/utilityHelpers'
 import { asArray, asBuffer } from '../../../utility/utilityHelpers.buffer'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
-import { ChaintracksFsApi, ChaintracksWritableFileApi } from './Api/ChaintracksFsApi'
+import { ChaintracksFsApi, ChaintracksAppendableFileApi } from './Api/ChaintracksFsApi'
 
 export interface BulkStorageFileOptions extends BulkStorageBaseOptions {
   rootFolder: string | undefined
@@ -29,7 +29,7 @@ export class BulkStorageFile extends BulkStorageBase {
 
   rootFolder: string
   filename: string
-  file?: ChaintracksWritableFileApi
+  file?: ChaintracksAppendableFileApi
   fileLength = 0
 
   constructor(options: BulkStorageFileOptions) {
@@ -51,7 +51,7 @@ export class BulkStorageFile extends BulkStorageBase {
 
   async makeAvailable(): Promise<void> {
     if (this.file) return
-    this.file = await this.fs.openWritableFile(this.rootFolder + this.filename)
+    this.file = await this.fs.openAppendableFile(this.rootFolder + this.filename)
     this.fileLength = await this.file.getLength()
   }
 

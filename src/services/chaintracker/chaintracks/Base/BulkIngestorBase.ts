@@ -9,6 +9,7 @@ import { deserializeBaseBlockHeaders, deserializeBlockHeaders, genesisBuffer } f
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { asString } from '../../../../utility/utilityHelpers.noBuffer'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 
 const enableConsoleLog = false
 
@@ -19,9 +20,10 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
    * @param localCachePath defaults to './data/ingest_headers/'
    * @returns
    */
-  static createBulkIngestorBaseOptions(chain: Chain, localCachePath?: string) {
+  static createBulkIngestorBaseOptions(chain: Chain, fs: ChaintracksFsApi, localCachePath?: string) {
     const options: BulkIngestorBaseOptions = {
       chain,
+      fs,
       jsonFilename: `${chain}Net.json`,
       localCachePath: localCachePath || './data/ingest_headers/',
       bypassLiveEnabled: true
@@ -30,14 +32,16 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   }
 
   chain: Chain
+  fs: ChaintracksFsApi
   jsonFilename: string
   localCachePath: string
   bypassLiveEnabled: boolean
 
   constructor(options: BulkIngestorBaseOptions) {
-    if (!options.jsonFilename) throw new Error('The jsonFilename options property is required.')
-    if (!options.localCachePath) throw new Error('The localCachePath options property is required.')
+    if (!options.jsonFilename) throw new Error('The jsonFilename options property is required.');
+    if (!options.localCachePath) throw new Error('The localCachePath options property is required.');
     this.chain = options.chain
+    this.fs = options.fs
     this.jsonFilename = options.jsonFilename
     this.localCachePath = options.localCachePath
     this.bypassLiveEnabled = options.bypassLiveEnabled
@@ -63,7 +67,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     if (!this.localCachePath) throw new Error('localCachePath options property is undefined.')
     if (!this.jsonFilename) throw new Error('jsonFilename options property is undefined.')
 
-    const manager = await BulkFilesManager.fromJsonFile(this.localCachePath, this.jsonFilename, neededRange)
+    const manager = await BulkFilesManager.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange)
 
     return manager
   }

@@ -209,8 +209,11 @@ export class BulkFilesReader {
     return json
   }
 
-  static async readJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<BulkHeaderFilesInfo> {
-
+  static async readJsonFile(
+    fs: ChaintracksFsApi,
+    rootFolder: string,
+    jsonFilename: string
+  ): Promise<BulkHeaderFilesInfo> {
     const filePath = (file: string) => rootFolder + file
 
     const jsonPath = filePath(jsonFilename)
@@ -236,7 +239,12 @@ export class BulkFilesReader {
    * @param range
    * @returns
    */
-  static async fromJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string, range?: HeightRange): Promise<BulkFilesReader> {
+  static async fromJsonFile(
+    fs: ChaintracksFsApi,
+    rootFolder: string,
+    jsonFilename: string,
+    range?: HeightRange
+  ): Promise<BulkFilesReader> {
     const readerFiles = await this.readJsonFile(fs, rootFolder, jsonFilename)
     return new BulkFilesReader(fs, readerFiles, range)
   }
@@ -250,7 +258,11 @@ export class BulkFilesReader {
    * @param hf
    * @returns actual BulkHeaderFileInfo verified
    */
-  static async validateHeaderFile(fs: ChaintracksFsApi, rootFolder: string, hf: BulkHeaderFileInfo): Promise<BulkHeaderFileInfo> {
+  static async validateHeaderFile(
+    fs: ChaintracksFsApi,
+    rootFolder: string,
+    hf: BulkHeaderFileInfo
+  ): Promise<BulkHeaderFileInfo> {
     const filename = rootFolder + hf.fileName
 
     const file = await fs.openReadableFile(filename)

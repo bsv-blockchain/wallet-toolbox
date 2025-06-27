@@ -13,8 +13,7 @@ import { validateBufferOfHeaders } from '../util/blockHeaderUtilities'
 import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { Utils, Hash } from '@bsv/sdk'
-import { asBuffer } from '../../../../utility/utilityHelpers.buffer'
-import { ChaintracksFsApi, ChaintracksWritableFileApi } from '../Api/ChaintracksFsApi'
+import { ChaintracksAppendableFileApi, ChaintracksFsApi, ChaintracksWritableFileApi } from '../Api/ChaintracksFsApi'
 
 /**
  * Support for block header hash to height index implementations
@@ -333,13 +332,12 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   }
 
   async exportBulkHeadersToFiles(params: {
-    fs: ChaintracksFsApi,
-    rootFolder?: string,
-    maxPerFile?: number,
-    heightMin?: number,
+    fs: ChaintracksFsApi
+    rootFolder?: string
+    maxPerFile?: number
+    heightMin?: number
     heightMax?: number
   }): Promise<void> {
-
     const { fs, rootFolder = './data/', maxPerFile = 625000 } = params
     let { heightMin = 0, heightMax } = params
 
@@ -378,16 +376,18 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
           fileHash: null
         }
 
-        let file = await fs.openWritableFile(filepath)
-        if (0 < await file.getLength()) {
-          // File exists...
+        let file: ChaintracksAppendableFileApi | undefined = await fs.openAppendableFile(filepath)
+        if (0 < (await file.getLength())) {
+          // File existed with non-zero contents...
+          await file.close()
+          file = undefined
           const hfa = await BulkFilesReader.validateHeaderFile(fs, rootFolder, hf)
           if (hfa.count < hf.count) {
-            // Existing file is incomplete, re-write it...
-            // Delete existing file...
-            await fs.unlink(filepath)
-            // Try open file for append again...
-            file = await fs.open(filepath, 'ax')
+            // Truncate to empty file...
+            const f2 = await fs.openWritableFile(filepath)
+            await f2.close()
+            // Re-open truncated file for appending.
+            file = await fs.openAppendableFile(filepath)
           } else {
             // Existing file is valid and complete, leave it.
             hf = hfa
@@ -396,7 +396,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
           }
         }
 
-        if (file !== null) {
+        if (file) {
           // We have an empty file open for append...write it.
 
           const sha256 = new Hash.SHA256()
@@ -410,7 +410,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
             lastHeaderHash = validateBufferOfHeaders(buffer, lastHeaderHash, 0, chunkSize)
 
             sha256.update(buffer)
-            await file.appendFile(asBuffer(buffer), 'binary')
+            await file.append(buffer)
             fileRemaining -= chunkSize
             nextHeight += chunkSize
           }
@@ -427,7 +427,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
         fileNum++
       }
 
-      await fs.writeFile(`${rootFolder}${jsonFilename}`, JSON.stringify(bulkHeaders))
+      await fs.writeFile(`${rootFolder}${jsonFilename}`, Utils.toArray(JSON.stringify(bulkHeaders), 'utf8'))
     } catch (err) {
       console.log(err)
     }
