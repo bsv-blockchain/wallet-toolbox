@@ -10,7 +10,7 @@ import { HeightRange } from './util/HeightRange'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 
-const enableConsoleLog = false
+const enableConsoleLog = true
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -33,7 +33,6 @@ export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
 }
 
 export class BulkIngestorCDN extends BulkIngestorBase {
-  httpClient: HttpClient
 
   /**
    *
@@ -70,7 +69,6 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     this.fs = options.fs
     this.jsonResource = options.jsonResource
     this.cdnUrl = options.cdnUrl
-    this.httpClient = defaultHttpClient()
   }
 
   override async getPresentHeight(): Promise<number | undefined> {
@@ -99,7 +97,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
       headers: this.getJsonHttpHeaders()
     }
 
-    const response = await this.httpClient.request<BulkHeaderFilesInfo>(toUrl(this.jsonResource), requestJsonOptions)
+    const response = await this.fetch.httpClient.request<BulkHeaderFilesInfo>(toUrl(this.jsonResource), requestJsonOptions)
     const bulkFiles = response.data
 
     let filesUpdated = false

@@ -53,9 +53,11 @@ export class ChaintracksReadableFile implements ChaintracksReadableFileApi {
   }
 
   async read(length?: number, offset?: number): Promise<number[]> {
-    const buffer = Buffer.alloc(length || 80 * 1024);
-    const rr = await this.f.read(buffer, 0, length || 80 * 1024, offset || 0);
-    return Array.from(rr.buffer)
+    length ||= 80 * 1024; // Default to 80KB if no length is specified
+    const buffer = Buffer.alloc(length);
+    const rr = await this.f.read(buffer, 0, length, offset || 0);
+    const rb = rr.bytesRead < length ? buffer.subarray(0, rr.bytesRead) : buffer;
+    return Array.from(rb)
   }
 
   static async openAsReadable(path: string): Promise<ChaintracksReadableFile> {

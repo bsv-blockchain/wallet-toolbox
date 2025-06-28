@@ -47,6 +47,7 @@ export function validateBufferOfHeaders(buffer: number[], previousHash: string, 
       }
     }
     const header = buffer.slice(headerStart, headerEnd)
+    const h = deserializeBlockHeader(header)
     const hashPrev = asString(header.slice(4, 36).reverse())
     if (lastHeaderHash !== hashPrev)
       throw { message: `header ${i} invalid previousHash ${lastHeaderHash} vs ${hashPrev}` }

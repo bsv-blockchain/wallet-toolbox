@@ -268,6 +268,7 @@ export class BulkFilesReader {
     const file = await fs.openReadableFile(filename)
     try {
       const sha256 = new Hash.SHA256()
+      const sha256Bug = new Hash.SHA256()
       const bufferSize = 10000 * 80
       let offset = 0
 
@@ -277,17 +278,26 @@ export class BulkFilesReader {
 
       const hfa = { ...hf }
 
+      let rrLast: number[] | undefined = undefined
+
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const rr = await file.read(bufferSize, offset)
-        offset += rr.length
         if (!rr.length) break
         if (rr.length % 80 !== 0)
           throw { message: `File ${filename} file read returned ${rr.length} bytes which is not a multiple of 80.` }
+        sha256.update(rr)
+        sha256Bug.update(rr)
+        if (rr.length === bufferSize)
+          rrLast = rr;
+        if (rrLast && rr.length < bufferSize) {
+          rrLast = rrLast.slice(rr.length);
+          sha256Bug.update(rrLast)
+        }
+        offset += rr.length
         const count = rr.length / 80
         prevHash = validateBufferOfHeaders(rr, prevHash, 0, count)
         fileCount += count
-        sha256.update(rr)
       }
 
       const lastHash = prevHash
@@ -297,8 +307,14 @@ export class BulkFilesReader {
       hfa.lastHash = lastHash
 
       const fileHash = Utils.toBase64(sha256.digest())
-      if (hf.fileHash !== null && fileHash !== hf.fileHash)
+      /**
+       * The original code that calculated file hashes submitted a partially overwritten buffer for the last chunk of the last header file.
+       * Once only valid file hashes are in use, this can be removed.
+       */
+      const fileHashBug = Utils.toBase64(sha256Bug.digest())
+      if (hf.fileHash !== null && fileHash !== hf.fileHash && fileHashBug !== hf.fileHash) {
         throw { message: `File ${filename} hash of ${fileHash} doesn't match expected hash of ${hf.fileHash}` }
+      }
 
       hfa.fileHash = fileHash
 
