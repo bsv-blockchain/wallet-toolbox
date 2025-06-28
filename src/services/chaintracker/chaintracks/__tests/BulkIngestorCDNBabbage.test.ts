@@ -8,10 +8,9 @@ describe('BulkIngestorCDNBabbage tests', () => {
   jest.setTimeout(99999999)
 
   test('0 ', async () => {
-    const chain: Chain = 'main'
+    const chain: Chain = 'test'
     const fs = ChaintracksFs
     const fetch = new ChaintracksFetch()
-    //const rootFolder = '/Users/tone/Kz/p2ppsr/ws/chaintracks-core/data'
     const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
     const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
       chain,
