@@ -1,5 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+node_modules
+
 # dependencies
 /.pnp
 .pnp.js
@@ -36,5 +38,5 @@ backup_*.sqlite
 backup-*.sqlite
 test/wallet/support/reqhistory.sqlite
 
-node_modules
-src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_1.headers
+
+src/services/chaintracker/chaintracks/__tests/data/
