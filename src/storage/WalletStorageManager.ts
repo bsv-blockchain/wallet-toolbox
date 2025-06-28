@@ -249,9 +249,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
   private readonly syncLocks: Array<(value: void | PromiseLike<void>) => void> = []
   private readonly spLocks: Array<(value: void | PromiseLike<void>) => void> = []
 
-  private async getActiveLock(
-    lockQueue: Array<(value: void | PromiseLike<void>) => void>
-  ): Promise<void> {
+  private async getActiveLock(lockQueue: Array<(value: void | PromiseLike<void>) => void>): Promise<void> {
     if (!this.isAvailable()) await this.makeAvailable()
 
     let resolveNewLock: () => void = () => {}
