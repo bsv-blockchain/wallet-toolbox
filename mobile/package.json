@@ -6,7 +6,7 @@
   "types": "./out/src/index.mobile.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bitcoin-sv/wallet-toolbox.git"
+    "url": "git+https://github.com/bsv-blockchain/wallet-toolbox.git"
   },
   "author": "Tone Engel",
   "license": "SEE LICENSE IN license.md",
@@ -16,9 +16,9 @@
     "BRC100"
   ],
   "bugs": {
-    "url": "https://github.com/bitcoin-sv/wallet-toolbox/issues"
+    "url": "https://github.com/bsv-blockchain/wallet-toolbox/issues"
   },
-  "homepage": "https://github.com/bitcoin-sv/wallet-toolbox#readme",
+  "homepage": "https://github.com/bsv-blockchain/wallet-toolbox#readme",
   "dependencies": {
     "@bsv/sdk": "^1.6.8"
   }
