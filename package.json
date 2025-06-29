@@ -31,7 +31,7 @@
   "homepage": "https://github.com/bsv-blockchain/wallet-toolbox#readme",
   "dependencies": {
     "@bsv/auth-express-middleware": "^1.2.0",
-    "@bsv/payment-express-middleware": "^1.1.0",
+    "@bsv/payment-express-middleware": "^1.2.1",
     "@bsv/sdk": "^1.6.8",
     "express": "^4.21.2",
     "idb": "^8.0.2",
