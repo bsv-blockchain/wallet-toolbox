@@ -6,13 +6,13 @@ export abstract class ChaintracksFsStatics {
   static async delete(path: string): Promise<void> {
     await fs.unlink(path);
   }
-  static async writeFile(path: string, data: number[]): Promise<void> {
+  static async writeFile(path: string, data: Uint8Array): Promise<void> {
     await this.ensureFoldersExist(path);
     await fs.writeFile(path, Buffer.from(data));
   }
-  static async readFile(path: string): Promise<number[]> {
+  static async readFile(path: string): Promise<Uint8Array> {
     const buffer = await fs.readFile(path);
-    return Array.from(buffer)
+    return Uint8Array.from(buffer)
   }
   static async openReadableFile(path: string): Promise<ChaintracksReadableFileApi> {
     return await ChaintracksReadableFile.openAsReadable(path);
@@ -52,12 +52,12 @@ export class ChaintracksReadableFile implements ChaintracksReadableFileApi {
     return stats.size;
   }
 
-  async read(length?: number, offset?: number): Promise<number[]> {
+  async read(length?: number, offset?: number): Promise<Uint8Array> {
     length ||= 80 * 1024; // Default to 80KB if no length is specified
     const buffer = Buffer.alloc(length);
     const rr = await this.f.read(buffer, 0, length, offset || 0);
     const rb = rr.bytesRead < length ? buffer.subarray(0, rr.bytesRead) : buffer;
-    return Array.from(rb)
+    return Uint8Array.from(rb)
   }
 
   static async openAsReadable(path: string): Promise<ChaintracksReadableFile> {
@@ -96,7 +96,7 @@ export class ChaintracksWritableFile implements ChaintracksWritableFileApi {
     }
   }
 
-  async append(data: number[]): Promise<void> {
+  async append(data: Uint8Array): Promise<void> {
     await this.ensureFoldersExist()
     throw new Error("Method not implemented.");
   }
@@ -122,7 +122,7 @@ export class ChaintracksAppendableFile extends ChaintracksReadableFile implement
     }
   }
 
-  async append(data: number[]): Promise<void> {
+  async append(data: Uint8Array): Promise<void> {
     await this.ensureFoldersExist()
     throw new Error("Method not implemented.");
   }

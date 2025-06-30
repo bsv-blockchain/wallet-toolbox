@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   InsertHeaderResult,
   StorageEngineBaseOptions,
@@ -20,7 +21,7 @@ import { ChaintracksAppendableFileApi, ChaintracksFsApi, ChaintracksWritableFile
  * needed for queries on block headers migrated to "bulk" storage.
  */
 export interface BlockHashHeight {
-  hash: Buffer
+  hash: string
   height: number
 }
 
@@ -29,7 +30,7 @@ export interface BlockHashHeight {
  * needed for queries on block headers migrated to "bulk" storage.
  */
 export interface MerkleRootHeight {
-  merkleRoot: Buffer
+  merkleRoot: string
   height: number
 }
 

@@ -13,7 +13,7 @@ export interface ChaintracksReadableFileApi {
    * @param length requested length to be returned, may return less than requested.
    * @param offset starting offset in the existing data storage to read from, defaults to 0.
    */
-  read(length?: number, offset?: number): Promise<number[]>
+  read(length?: number, offset?: number): Promise<Uint8Array>
 }
 
 /**
@@ -24,7 +24,7 @@ export interface ChaintracksAppendableFileApi extends ChaintracksReadableFileApi
   /**
    * @param data data to add to the end of existing data.
    */
-  append(data: number[]): Promise<void>
+  append(data: Uint8Array): Promise<void>
 }
 
 /**
@@ -38,7 +38,7 @@ export interface ChaintracksWritableFileApi {
   /**
    * @param data data to add to the end of existing data.
    */
-  append(data: number[]): Promise<void>
+  append(data: Uint8Array): Promise<void>
 }
 
 /**
@@ -48,8 +48,8 @@ export interface ChaintracksWritableFileApi {
  */
 export interface ChaintracksFsApi {
   delete(path: string): Promise<void>
-  writeFile(path: string, data: number[]): Promise<void>
-  readFile(path: string): Promise<number[]>
+  writeFile(path: string, data: Uint8Array): Promise<void>
+  readFile(path: string): Promise<Uint8Array>
   openReadableFile(path: string): Promise<ChaintracksReadableFileApi>
   openWritableFile(path: string): Promise<ChaintracksWritableFileApi>
   openAppendableFile(path: string): Promise<ChaintracksAppendableFileApi>

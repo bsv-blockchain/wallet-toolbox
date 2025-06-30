@@ -29,7 +29,7 @@ export interface StorageEngineBaseOptions {
    *
    * Must be less than or equal to `liveHeightThreshold`.
    *
-   * Headers with height older than active chain tip height minus ``
+   * Headers with height older than active chain tip height minus `reorgHeightThreshold`
    * may use batch processing when ingesting headers.
    */
   reorgHeightThreshold: number
@@ -41,7 +41,8 @@ export interface StorageEngineBaseOptions {
   bulkMigrationChunkSize: number
 
   /**
-   * Maximum batch insert chunk size for bulk index tables (BlockHash or MerkleRoot)
+   * Batch insert chunk size for bulk index tables (BlockHash or MerkleRoot).
+   * Must be less than or equal to `bulkmigrationChunkSize`.
    */
   bulkIndexTableChunkSize: number
 
@@ -254,14 +255,14 @@ export interface StorageEngineQueryApi {
 
   /**
    * Returns the height of the block in bulk storage with the given hash.
-   * Returns null hash is not found.
+   * Returns null if hash is not found.
    * @param hash block hash
    */
   findBulkHeightForBlockHash(hash: string): Promise<number | null>
 
   /**
    * Returns the height of the block in bulk storage with the given merkleRoot.
-   * Returns null hash is not found.
+   * Returns null if hash is not found.
    * @param merkleRoot
    */
   findBulkHeightForMerkleRoot(merkleRoot: string): Promise<number | null>

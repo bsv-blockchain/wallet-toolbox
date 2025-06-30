@@ -7,7 +7,7 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
   constructor() {
   }
 
-  async download(url: string): Promise<number[]> {
+  async download(url: string): Promise<Uint8Array> {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -21,6 +21,20 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
 
     const data = await response.arrayBuffer();
 
-    return Array.from(new Uint8Array(data));
+    return new Uint8Array(data)
+  }
+
+  async fetchJson<R>(url: string): Promise<R> {
+    const requestJsonOptions = {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      }
+    }
+    const response = await this.httpClient.request(url, requestJsonOptions)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`);
+    }
+    return response.data as R;
   }
 }

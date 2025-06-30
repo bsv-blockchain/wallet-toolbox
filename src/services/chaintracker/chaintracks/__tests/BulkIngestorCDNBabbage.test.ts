@@ -18,7 +18,6 @@ describe('BulkIngestorCDNBabbage tests', () => {
       fetch,
       `${rootFolder}/bulk_cdn/`)
     const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
-    const headers = await cdn.getJsonHttpHeaders()
     const r = await cdn.updateLocalCache(new HeightRange(0, 900000), 900000)
     expect(true).toBe(true)
   })

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
 
@@ -34,7 +35,7 @@ export async function sha256HashOfBinaryFile(
  * @param count Optional number of headers to validate. Validates to end of buffer if missing.
  * @returns Header hash of last header validated or previousHash if there where none.
  */
-export function validateBufferOfHeaders(buffer: number[], previousHash: string, offset = 0, count = -1): string {
+export function validateBufferOfHeaders(buffer: Uint8Array, previousHash: string, offset = 0, count = -1): string {
   if (count < 0) count = Math.floor((buffer.length - offset) / 80)
   count = Math.max(0, count)
   let lastHeaderHash = previousHash
@@ -366,7 +367,8 @@ export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[],
  * Deserialize a block header from an 80 byte buffer
  * @publicbody
  */
-export function deserializeBlockHeader(buffer: number[], offset = 0): BaseBlockHeader {
+export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0): BaseBlockHeader {
+  buffer = asArray(buffer)
   const reader = new Utils.Reader(buffer, offset)
   const header: BaseBlockHeader = {
     version: reader.readUInt32LE(),

@@ -2,9 +2,10 @@ import { HeightRange } from './HeightRange'
 import { deserializeBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
 
 import { BaseBlockHeader } from '../Api/BlockHeaderApi'
-import { asArray } from '../../../../utility/utilityHelpers.buffer'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash, Utils } from '@bsv/sdk'
+import { asUint8Array } from '../../../../index.client'
 
 /**
  * Descriptive information about a single bulk header file.
@@ -19,13 +20,21 @@ export interface BulkHeaderFileInfo {
    */
   firstHeight: number
   /**
-   * previousHash of first header in file in standard hex string block hash encoding
-   */
-  prevHash: string
-  /**
    * count of how many headers the file contains. File size must be 80 * count.
    */
   count: number
+  /**
+   * prevChainWork is the cummulative chain work up to the first header in this file's data, as a hex string.
+   */
+  prevChainWork: string
+  /**
+   * lastChainWork is the cummulative chain work including the last header in this file's data, as a hex string.
+   */
+  lastChainWork: string
+  /**
+   * previousHash of first header in file in standard hex string block hash encoding
+   */
+  prevHash: string
   /**
    * block hash of last header in the file in standard hex string block hash encoding
    */
@@ -48,6 +57,10 @@ export interface BulkHeaderFilesInfo {
    * Filename in `rootFolder` to/from which to serialize this Info as stringified JSON.
    */
   jsonFilename: string
+  /**
+   * How many headers each file contains.
+   */
+  headersPerFile: number
   /**
    * Array of information about each bulk block header file.
    */
@@ -110,13 +123,13 @@ export class BulkFilesReader {
     return this.files.find(file => file.firstHeight <= height && file.firstHeight + file.count > height)
   }
 
-  async readBufferForHeight(height: number): Promise<number[]> {
+  async readBufferForHeight(height: number): Promise<Uint8Array> {
     const header = await this.readBufferForHeightOrUndefined(height)
     if (!header) throw new Error(`Failed to read bulk header buffer at height=${height}`)
     return header
   }
 
-  async readBufferForHeightOrUndefined(height: number): Promise<number[] | undefined> {
+  async readBufferForHeightOrUndefined(height: number): Promise<Uint8Array | undefined> {
     const file = this.getFileForHeight(height)
     if (!file) return undefined
     const f = await this.fs.openReadableFile(this.rootFolder + file.fileName)
@@ -145,7 +158,7 @@ export class BulkFilesReader {
    * @param file
    * @param range
    */
-  async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<number[] | undefined> {
+  async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<Uint8Array | undefined> {
     // Constrain the range to the file's contents...
     let fileRange = this.getFileHeightRange(file)
     if (range) fileRange = fileRange.intersect(range)
@@ -169,20 +182,22 @@ export class BulkFilesReader {
   /**
    * @returns an array containing the next `maxBufferSize` bytes of headers from the files.
    */
-  async read(): Promise<number[] | undefined> {
+  async read(): Promise<Uint8Array | undefined> {
     if (this.nextHeight === undefined || !this.range || this.nextHeight > this.range.maxHeight) return undefined
     let lastHeight = this.nextHeight + this.maxBufferSize / 80 - 1
     lastHeight = Math.min(lastHeight, this.range.maxHeight)
     let file = this.getFileForHeight(this.nextHeight)
     const readRange = new HeightRange(this.nextHeight, lastHeight)
-    let buffers: number[] = []
+    let buffers = new Uint8Array(readRange.length * 80)
+    let offset = 0
     while (file) {
       const buffer = await this.readBufferFromFile(file, readRange)
       if (!buffer) break
-      buffers = buffers.concat(buffer)
+      buffers.set(buffer, offset)
+      offset += buffer.length
       file = this.nextFile(file)
     }
-    if (!buffers.length) return undefined
+    if (!buffers.length || offset !== readRange.length * 80) return undefined
     this.nextHeight = lastHeight + 1
     return buffers
   }
@@ -205,7 +220,7 @@ export class BulkFilesReader {
 
   static async writeEmptyJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<string> {
     const json = JSON.stringify({ files: [], rootFolder })
-    await fs.writeFile(rootFolder + jsonFilename, Utils.toArray(json, 'utf8'))
+    await fs.writeFile(rootFolder + jsonFilename, asUint8Array(json, 'utf8'))
     return json
   }
 
@@ -221,7 +236,7 @@ export class BulkFilesReader {
     let json: string
 
     try {
-      json = Utils.toUTF8(await fs.readFile(jsonPath))
+      json = asString(await fs.readFile(jsonPath), 'utf8')
     } catch (uerr: unknown) {
       json = await this.writeEmptyJsonFile(fs, rootFolder, jsonFilename)
     }
@@ -286,10 +301,11 @@ export class BulkFilesReader {
         if (!rr.length) break
         if (rr.length % 80 !== 0)
           throw { message: `File ${filename} file read returned ${rr.length} bytes which is not a multiple of 80.` }
-        sha256.update(rr)
-        sha256Bug.update(rr)
+        const arr = asArray(rr)
+        sha256.update(arr)
+        sha256Bug.update(arr)
         if (rr.length === bufferSize)
-          rrLast = rr;
+          rrLast = arr;
         if (rrLast && rr.length < bufferSize) {
           rrLast = rrLast.slice(rr.length);
           sha256Bug.update(rrLast)

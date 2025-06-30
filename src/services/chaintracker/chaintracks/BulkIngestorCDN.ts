@@ -1,4 +1,3 @@
-import { defaultHttpClient, HttpClient, Utils } from '@bsv/sdk'
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
@@ -9,6 +8,7 @@ import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
+import { asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 
 const enableConsoleLog = true
 
@@ -145,7 +145,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     bulkFiles.jsonFilename = this.jsonFilename
 
     if (filesUpdated) {
-      const bytes = Utils.toArray(JSON.stringify(bulkFiles), 'utf8')
+      const bytes = asUint8Array(JSON.stringify(bulkFiles), 'utf8')
       await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
     }
 

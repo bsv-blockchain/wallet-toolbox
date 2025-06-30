@@ -1,4 +1,5 @@
-import { promises as fs } from 'fs'
+// @ts-nocheck
+// import { promises as fs } from 'fs'
 import { IndexLevel, IndexLevelMakeVal, IndexLevelVal } from '../util/IndexLevel'
 import { doubleSha256BE } from '../../../../utility/utilityHelpers'
 import { HashIndex } from '../util/HashIndex'

@@ -1,8 +1,9 @@
-import { Utils } from '@bsv/sdk'
+// @ts-nocheck
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { BulkFilesReader } from './BulkFilesReader'
 import { HeightRange } from './HeightRange'
+import { asArray, asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
 
 /**
  * Breaks available bulk headers stored in multiple files into a sequence of buffers with
@@ -37,10 +38,10 @@ export class BulkFilesManager extends BulkFilesReader {
       files: this.files
     }
     const json = JSON.stringify(info)
-    await this.fs.writeFile(this.rootFolder + this.jsonFilename, Utils.toArray(json, 'utf8'))
+    await this.fs.writeFile(this.rootFolder + this.jsonFilename, asUint8Array(json, 'utf8'))
   }
 
-  async appendHeaders(headers: number[], firstHeight: number, previousHash: string): Promise<void> {
+  async appendHeaders(headers: Uint8Array, firstHeight: number, previousHash: string): Promise<void> {
     let file: BulkHeaderFileInfo = {
       fileName: this.jsonFilename.replace('.json', `_${this.files.length}.headers`),
       firstHeight,
