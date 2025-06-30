@@ -3,16 +3,13 @@ import { asArray, asString, doubleSha256BE, sdk, Services, validateScriptHash, w
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
 import { parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
+import { convertWocToBlockHeaderHex, WocChainInfo, WocHeader } from '../chaintracker/chaintracks/Ingest/WhatsOnChainIngestorBase'
+import { BlockHeader } from '../chaintracker/chaintracks/Api/BlockHeaderApi'
 
-/**
- *
- */
-export class WhatsOnChain extends SdkWhatsOnChain {
-  services: Services
+export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
-  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
+  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}) {
     super(chain, config)
-    this.services = services || new Services(chain)
   }
 
   /**
@@ -294,114 +291,6 @@ export class WhatsOnChain extends SdkWhatsOnChain {
     return r
   }
 
-  /**
-   * @param txid
-   * @returns
-   */
-  async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> {
-    const r: sdk.GetMerklePathResult = { name: 'WoCTsc', notes: [] }
-
-    const headers = this.getHttpHeaders()
-    const requestOptions = {
-      method: 'GET',
-      headers
-    }
-
-    for (let retry = 0; retry < 2; retry++) {
-      try {
-        const response = await this.httpClient.request<WhatsOnChainTscProof | WhatsOnChainTscProof[]>(
-          `${this.URL}/tx/${txid}/proof/tsc`,
-          requestOptions
-        )
-        if (response.statusText === 'Too Many Requests' && retry < 2) {
-          r.notes!.push({
-            what: 'getMerklePathRetry',
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-          await wait(2000)
-          continue
-        }
-
-        if (response.status === 404 && response.statusText === 'Not Found') {
-          r.notes!.push({
-            what: 'getMerklePathNotFound',
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-          return r
-        }
-
-        // response.statusText is often, but not always 'OK' on success...
-        if (!response.ok || response.status !== 200) {
-          r.notes!.push({
-            what: 'getMerklePathBadStatus',
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-          throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
-        }
-
-        if (!response.data) {
-          // Unmined, proof not yet available.
-          r.notes!.push({
-            what: 'getMerklePathNoData',
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-          return r
-        }
-
-        if (!Array.isArray(response.data)) response.data = [response.data]
-
-        if (response.data.length != 1) return r
-
-        const p = response.data[0]
-        const header = await services.hashToHeader(p.target)
-        if (header) {
-          const proof = {
-            index: p.index,
-            nodes: p.nodes,
-            height: header.height
-          }
-          r.merklePath = convertProofToMerklePath(txid, proof)
-          r.header = header
-          r.notes!.push({
-            what: 'getMerklePathSuccess',
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-        } else {
-          r.notes!.push({
-            what: 'getMerklePathNoHeader',
-            target: p.target,
-            name: r.name,
-            status: response.status,
-            statusText: response.statusText
-          })
-          throw new sdk.WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
-        }
-      } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
-        r.notes!.push({
-          what: 'getMerklePathError',
-          name: r.name,
-          code: e.code,
-          description: e.description
-        })
-        r.error = e
-      }
-      return r
-    }
-    r.notes!.push({ what: 'getMerklePathInternal', name: r.name })
-    throw new sdk.WERR_INTERNAL()
-  }
-
   async updateBsvExchangeRate(rate?: sdk.BsvExchangeRate, updateMsecs?: number): Promise<sdk.BsvExchangeRate> {
     if (rate) {
       // Check if the rate we know is stale enough to update.
@@ -653,6 +542,202 @@ export class WhatsOnChain extends SdkWhatsOnChain {
     r1.history = r1.history.concat(r2.history)
     return r1
   }
+
+  /**
+    {
+      "hash": "000000000000000004a288072ebb35e37233f419918f9783d499979cb6ac33eb",
+      "confirmations": 328433,
+      "size": 14421,
+      "height": 575045,
+      "version": 536928256,
+      "versionHex": "2000e000",
+      "merkleroot": "4ebcba09addd720991d03473f39dce4b9a72cc164e505cd446687a54df9b1585",
+      "time": 1553416668,
+      "mediantime": 1553414858,
+      "nonce": 87914848,
+      "bits": "180997ee",
+      "difficulty": 114608607557.4425,
+      "chainwork": "000000000000000000000000000000000000000000ddf5d385546872bab7dc01",
+      "previousblockhash": "00000000000000000988156c7075dc9147a5b62922f1310862e8b9000d46dd9b",
+      "nextblockhash": "00000000000000000112b36a37c10235fa0c991f680bc5482ba9692e0ae697db",
+      "nTx": 0,
+      "num_tx": 5
+    }
+   */
+  async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> {
+    const headers = this.getHttpHeaders()
+    const requestOptions = {
+      method: 'GET',
+      headers
+    }
+
+    const url = `${this.URL}/block/${hash}/header`
+
+    for (let retry = 0; retry < 2; retry++) {
+      const response = await this.httpClient.request<WocHeader>(url, requestOptions)
+      if (response.statusText === 'Too Many Requests' && retry < 2) {
+        await wait(2000)
+        continue
+      }
+
+      if (response.status === 404 && response.statusText === 'Not Found') return undefined
+
+      // response.statusText is often, but not always 'OK' on success...
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new sdk.WERR_INVALID_PARAMETER('hash', `valid block hash. '${hash}' response ${response.statusText}`)
+
+      const header = convertWocToBlockHeaderHex(response.data)
+
+      return header
+    }
+    throw new sdk.WERR_INTERNAL()
+  }
+
+  async getChainInfo(): Promise<WocChainInfo> {
+    const headers = this.getHttpHeaders()
+    const requestOptions = {
+      method: 'GET',
+      headers
+    }
+
+    const url = `${this.URL}/chain/info`
+
+    for (let retry = 0; retry < 2; retry++) {
+      const response = await this.httpClient.request<WocChainInfo>(url, requestOptions)
+      if (response.statusText === 'Too Many Requests' && retry < 2) {
+        await wait(2000)
+        continue
+      }
+
+      // response.statusText is often, but not always 'OK' on success...
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new sdk.WERR_INVALID_PARAMETER('hash', `valid block hash. '${url}' response ${response.statusText}`)
+
+      return response.data
+    }
+    throw new sdk.WERR_INTERNAL()
+  }
+}
+
+/**
+ *
+ */
+export class WhatsOnChain extends WhatsOnChainNoServices {
+  services: Services
+
+  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
+    super(chain, config)
+    this.services = services || new Services(chain)
+  }
+
+  /**
+   * @param txid
+   * @returns
+   */
+  async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> {
+    const r: sdk.GetMerklePathResult = { name: 'WoCTsc', notes: [] }
+
+    const headers = this.getHttpHeaders()
+    const requestOptions = {
+      method: 'GET',
+      headers
+    }
+
+    for (let retry = 0; retry < 2; retry++) {
+      try {
+        const response = await this.httpClient.request<WhatsOnChainTscProof | WhatsOnChainTscProof[]>(
+          `${this.URL}/tx/${txid}/proof/tsc`,
+          requestOptions
+        )
+        if (response.statusText === 'Too Many Requests' && retry < 2) {
+          r.notes!.push({
+            what: 'getMerklePathRetry',
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+          await wait(2000)
+          continue
+        }
+
+        if (response.status === 404 && response.statusText === 'Not Found') {
+          r.notes!.push({
+            what: 'getMerklePathNotFound',
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+          return r
+        }
+
+        // response.statusText is often, but not always 'OK' on success...
+        if (!response.ok || response.status !== 200) {
+          r.notes!.push({
+            what: 'getMerklePathBadStatus',
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+          throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+        }
+
+        if (!response.data) {
+          // Unmined, proof not yet available.
+          r.notes!.push({
+            what: 'getMerklePathNoData',
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+          return r
+        }
+
+        if (!Array.isArray(response.data)) response.data = [response.data]
+
+        if (response.data.length != 1) return r
+
+        const p = response.data[0]
+        const header = await services.hashToHeader(p.target)
+        if (header) {
+          const proof = {
+            index: p.index,
+            nodes: p.nodes,
+            height: header.height
+          }
+          r.merklePath = convertProofToMerklePath(txid, proof)
+          r.header = header
+          r.notes!.push({
+            what: 'getMerklePathSuccess',
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+        } else {
+          r.notes!.push({
+            what: 'getMerklePathNoHeader',
+            target: p.target,
+            name: r.name,
+            status: response.status,
+            statusText: response.statusText
+          })
+          throw new sdk.WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
+        }
+      } catch (eu: unknown) {
+        const e = sdk.WalletError.fromUnknown(eu)
+        r.notes!.push({
+          what: 'getMerklePathError',
+          name: r.name,
+          code: e.code,
+          description: e.description
+        })
+        r.error = e
+      }
+      return r
+    }
+    r.notes!.push({ what: 'getMerklePathInternal', name: r.name })
+    throw new sdk.WERR_INTERNAL()
+  }
+
 }
 
 interface WhatsOnChainTscProof {

@@ -358,7 +358,12 @@ export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[],
   const data = writer.toArray()
   if (buffer) {
     offset ||= 0
-    buffer.splice(offset, buffer.length, ...data)
+    for (let i = 0; i < data.length; i++) {
+      if (offset + i >= buffer.length) {
+        throw new Error(`Buffer overflow at offset ${offset + i} for data length ${data.length}`)
+      }
+      buffer[offset + i] = data[i]
+    }
   }
   return data
 }

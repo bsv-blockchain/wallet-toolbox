@@ -1,9 +1,7 @@
-// @ts-nocheck
-/* eslint-disable no-case-declarations */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { BlockHeaderHex, wait } from 'cwi-base'
-import WhatsOnChain from 'whatsonchain'
 import WebSocket from 'ws'
+import { WhatsOnChain } from '../../../providers/WhatsOnChain'
+import { BlockHeader } from '../Api/BlockHeaderApi'
+import { wait } from '../../../../utility/utilityHelpers'
 
 const enableConsoleLog = false
 
@@ -26,15 +24,15 @@ export interface WocChainInfo {
 export async function getWhatsOnChainTipHeight(chain: WocChain = 'main', apiKey?: string) : Promise<number> {
     const config = apiKey ? { apiKey } : {}
     const woc = new WhatsOnChain(chain, config)
-    const chainInfo = <WocChainInfo>await woc.chainInfo()
+    const chainInfo = await woc.getChainInfo()
     return chainInfo.blocks
 }
 
-export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: WocChain = 'main', apiKey?: string) : Promise<BlockHeaderHex> {
+export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: WocChain = 'main', apiKey?: string) : Promise<BlockHeader | undefined> {
     const config = apiKey ? { apiKey } : {}
     const woc = new WhatsOnChain(chain, config)
-    const header = <WocHeader>await woc.blockHeaderByHash(hash)
-    return convertWocToBlockHeaderHex(header)
+    const header = await woc.getBlockHeaderByHash(hash)
+    return header
 }
 
 // WhatsOnChain headers looks like:
@@ -60,7 +58,7 @@ export interface WocHeader {
     // orphaned
 }
 
-export function convertWocToBlockHeaderHex(woc: WocHeader) : BlockHeaderHex {
+export function convertWocToBlockHeaderHex(woc: WocHeader) : BlockHeader {
   const bits: number = typeof woc.bits === 'string' ? parseInt(woc.bits, 16) : woc.bits 
   if (!woc.previousblockhash) {
     woc.previousblockhash = '0000000000000000000000000000000000000000000000000000000000000000' // genesis
@@ -90,7 +88,7 @@ export function convertWocToBlockHeaderHex(woc: WocHeader) : BlockHeaderHex {
 export async function WocHeadersBulkListener(
     fromHeight: number,
     toHeight: number,
-    enqueue: (header: BlockHeaderHex) => void,
+    enqueue: (header: BlockHeader) => void,
     error: (code: number, message: string) => boolean,
     stop: StopListenerToken,
     chain: WocChain = "main",
@@ -306,7 +304,7 @@ export async function WocHeadersBulkListener_test() : Promise<void> {
  * @returns true only if exit caused by `stop`
  */
 export async function WocHeadersLiveListener(
-    enqueue: (header: BlockHeaderHex) => void,
+    enqueue: (header: BlockHeader) => void,
     error: (code: number, message: string) => boolean,
     stop: StopListenerToken,
     chain: WocChain = "main",

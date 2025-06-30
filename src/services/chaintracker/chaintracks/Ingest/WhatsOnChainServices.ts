@@ -1,13 +1,13 @@
-// @ts-nocheck
-import { BlockHeaderHex, Chain } from 'cwi-base'
-import WhatsOnChain from 'whatsonchain'
 import { convertWocToBlockHeaderHex, StopListenerToken, WocChainInfo, WocHeader, WocHeadersBulkListener, WocHeadersLiveListener } from './WhatsOnChainIngestorBase'
+import { BlockHeader } from '../Api/BlockHeaderApi'
+import { Chain } from '../../../../sdk'
+import { WhatsOnChain } from '../../../providers/WhatsOnChain'
 
 /**
  * return true to ignore error, false to close service connection
  */
 export type ErrorHandler = (code: number, message: string) => boolean
-export type EnqueueHandler = (header: BlockHeaderHex) => void
+export type EnqueueHandler = (header: BlockHeader) => void
 
 export interface WhatsOnChainServicesOptions {
     /**
@@ -71,10 +71,9 @@ export class WhatsOnChainServices {
         this.woc = new WhatsOnChain(this.chain, config)
     }
 
-    async getHeaderByHash(hash: Buffer) : Promise<BlockHeaderHex> {
-            const hashHex = hash.toString('hex')
-            const header = <WocHeader>await this.woc.blockHeaderByHash(hashHex)
-            return convertWocToBlockHeaderHex(header)
+    async getHeaderByHash(hash: string): Promise<BlockHeader | undefined> {
+        const header = await this.woc.getBlockHeaderByHash(hash)
+        return header
     }
 
     async getChainInfo() : Promise<WocChainInfo> {
@@ -85,7 +84,7 @@ export class WhatsOnChainServices {
             update = elapsed > WhatsOnChainServices.chainInfoMsecs[this.chain]
         }
         if (update) {
-            WhatsOnChainServices.chainInfo[this.chain] = <WocChainInfo>await this.woc.chainInfo()
+            WhatsOnChainServices.chainInfo[this.chain] = await this.woc.getChainInfo()
             WhatsOnChainServices.chainInfoTime[this.chain] = now
         }
         if (!WhatsOnChainServices.chainInfo[this.chain])

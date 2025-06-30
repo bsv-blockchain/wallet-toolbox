@@ -1,12 +1,11 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
-import { StorageEngineBaseOptions } from '../Api/StorageEngineApi'
+import { InsertHeaderResult, StorageEngineBaseOptions } from '../Api/StorageEngineApi'
 import { BlockHashHeight, MerkleRootHeight, StorageEngineBase } from '../Base/StorageEngineBase'
 import { Chain } from '../../../../sdk'
-import { LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { serializeBlockHeader } from '../util/blockHeaderUtilities'
+import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
+import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
+import { HeightRange, utils } from '..'
 
 export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
     /**
@@ -194,7 +193,7 @@ export class StorageEngineKnex extends StorageEngineBase {
             // This is the existing previous header to the one being inserted...
             let [oneBack] = await trx<LiveBlockHeader>(table).where({ hash: header.previousHash })
 
-            if (!oneBack && prev && prev.hash.equals(header.previousHash) && prev.height + 1 === header.height)
+            if (!oneBack && prev && prev.hash === header.previousHash && prev.height + 1 === header.height)
                 // Previous header is in bulk storage.
                 oneBack = prev
 
@@ -318,7 +317,7 @@ export class StorageEngineKnex extends StorageEngineBase {
         const liveHeaders: LiveBlockHeader[] = []
 
         const convertToLiveHeaders = (h: BaseBlockHeader, hp: LiveBlockHeader | undefined): LiveBlockHeader => {
-            if (hp && !hp.hash.equals(h.previousHash))
+            if (hp && hp.hash !== h.previousHash)
                 throw new Error(`Header has invalid previousHash ${h.previousHash}`)
             const lh: LiveBlockHeader = {
                 ...h,
@@ -372,7 +371,7 @@ export class StorageEngineKnex extends StorageEngineBase {
             } else {
                 // Adding to existing headers, check that previous is current tip...
                 const [tip] = await trx<LiveBlockHeader>(table).where({ isActive: true, isChainTip: true })
-                if (!tip || !tip.hash.equals(h0.previousHash))
+                if (!tip || tip.hash !== h0.previousHash)
                     throw new Error("New headers do not extend existing active chain tip.")
                 // Mark current tip as no longer being the tip.
                 await trx<LiveBlockHeader>(table).where({ headerId: tip.headerId }).update({ isChainTip: false })
@@ -396,7 +395,7 @@ export class StorageEngineKnex extends StorageEngineBase {
             await this.pruneLiveBlockHeaders(newTip.height)
     }
 
-    async appendToIndexTable(table: string, index: string, buffers: number[], minHeight: number): Promise<void> {
+    async appendToIndexTable(table: string, index: string, buffers: string[], minHeight: number): Promise<void> {
         const newRows: { height: number }[] = []
         for (let i = 0; i < buffers.length; i++) {
             const row = { height: minHeight + i }
@@ -416,7 +415,7 @@ export class StorageEngineKnex extends StorageEngineBase {
         }
     }
 
-    async appendToIndexTableChunked(table: string, index: string, buffers: number[], minHeight: number, chunkSize: number): Promise<void> {
+    async appendToIndexTableChunked(table: string, index: string, buffers: string[], minHeight: number, chunkSize: number): Promise<void> {
         let remaining = buffers.length
         while (remaining > 0) {
             const size = Math.min(remaining, chunkSize)
@@ -429,12 +428,12 @@ export class StorageEngineKnex extends StorageEngineBase {
         }
     }
 
-    async appendBlockHashes(hashes: number[], minHeight: number): Promise<void> {
+    async appendBlockHashes(hashes: string[], minHeight: number): Promise<void> {
         this.confirmHasBulkBlockHashToHeightIndex()
         await this.appendToIndexTableChunked(this.bulkBlockHashTableName, "hash", hashes, minHeight, this.bulkIndexTableChunkSize)
     }
 
-    async appendMerkleRoots(merkleRoots: number[], minHeight: number): Promise<void> {
+    async appendMerkleRoots(merkleRoots: string[], minHeight: number): Promise<void> {
         this.confirmHasBulkMerkleRootToHeightIndex()
         await this.appendToIndexTableChunked(this.bulkMerkleRootTableName, "merkleRoot", merkleRoots, minHeight, this.bulkIndexTableChunkSize)
     }
@@ -509,16 +508,15 @@ export class StorageEngineKnex extends StorageEngineBase {
         if (headers.length && headers[0].height !== height)
             throw new Error(`Live headers database does not contain first header requested at height ${height}`)
         
-        const bufs: number[][] = []
+        const buffer = new Array<number>(headers.length * 80)
         const hashes: string[] = []
         const merkleRoots: string[] = []
         for (let i = 0; i < headers.length; i++) {
             const h = headers[i]
-            bufs.push(serializeBlockHeader(h))
+            serializeBlockHeader(h, buffer, i * 80)
             hashes.push(h.hash)
             merkleRoots.push(h.merkleRoot)
         }
-        const buffer = Buffer.concat(bufs)
         const headerId = headers[headers.length - 1].headerId
         return { buffer, headerId, hashes, merkleRoots }
     }

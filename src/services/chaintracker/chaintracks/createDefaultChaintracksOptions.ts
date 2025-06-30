@@ -5,6 +5,11 @@ import { Chaintracks } from "./Chaintracks"
 import { BulkStorageFile } from "./BulkStorageFile"
 import { BulkIndexFile } from "./BulkIndexFile"
 import { ChaintracksFs } from "./util/ChaintracksFs"
+import { StorageEngineKnex } from "./Storage"
+import { BulkIngestorCDNBabbage } from "./BulkIngestorCDNBabbage"
+import { BulkIngestorWhatsOnChain } from "./Ingest/BulkIngestorWhatsOnChain"
+import { ChaintracksFetch } from "./util/ChaintracksFetch"
+import { LiveIngestorWhatsOnChain } from "./Ingest"
 
 /**
  * 
@@ -18,6 +23,7 @@ export function createDefaultChaintracksOptions(chain: Chain, rootFolder?: strin
     const options = Chaintracks.createOptions(chain)
 
     const fs = ChaintracksFs
+    const fetch = new ChaintracksFetch()
 
     const bulkStorageOptions = BulkStorageFile.createBulkStorageFileOptions(chain, fs, rootFolder)
     options.bulkStorage = new BulkStorageFile(bulkStorageOptions)
@@ -37,7 +43,7 @@ export function createDefaultChaintracksOptions(chain: Chain, rootFolder?: strin
     knexOptions.knex = knexInstance
     options.storageEngine = new StorageEngineKnex(knexOptions)
 
-    const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, `${rootFolder}/bulk_cdn/`)
+    const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fs, fetch, `${rootFolder}/bulk_cdn/`)
     options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
 
     const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChain.createBulkIngestorWhatsOnChainOptions(chain, `${rootFolder}/ingest_woc/`)

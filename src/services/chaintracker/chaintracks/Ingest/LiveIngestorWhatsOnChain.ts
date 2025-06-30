@@ -1,6 +1,5 @@
-// @ts-nocheck
-import { BlockHeader, Chain, toBlockHeader } from "cwi-base";
-import { LiveIngestorBase, LiveIngestorBaseOptions } from "@cwi/chaintracks-base";
+import { BlockHeader, Chain } from "../../../../sdk";
+import { LiveIngestorBase, LiveIngestorBaseOptions } from "../Base/LiveIngestorBase";
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from "./WhatsOnChainServices";
 
 export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions, WhatsOnChainServicesOptions {
@@ -57,16 +56,16 @@ export class LiveIngestorWhatsOnChain extends LiveIngestorBase {
 
     }
 
-    async getHeaderByHash(hash: Buffer): Promise<BlockHeader | undefined> {
+    async getHeaderByHash(hash: string): Promise<BlockHeader | undefined> {
         const header = await this.woc.getHeaderByHash(hash)
-        return toBlockHeader(header)
+        return header
     }
 
     async startListening(liveHeaders: BlockHeader[]): Promise<void> {
 
         const errors: { code: number, message: string, count: number }[] = []
         const enqueue: EnqueueHandler = (header) => {
-            liveHeaders.push(toBlockHeader(header))
+            liveHeaders.push(header)
         }
         const error: ErrorHandler = (code, message) => {
             errors.push({ code, message, count: errors.length })
