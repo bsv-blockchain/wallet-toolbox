@@ -53,19 +53,18 @@ describe('LocalKVStore tests', () => {
   })
 
   test('4 promise test', async () => {
-    let resolveNewLock: () => void = () => {}
-    const newLock = new Promise<void>(resolve => {
-      resolveNewLock = resolve
-    })
-    const t = Date.now()
-    setTimeout(() => {
-      resolveNewLock()
-    }, 1000)
-    await newLock
-    const elapsed = Date.now() - t
-    logger(`Elapsed time: ${elapsed} ms`)
-    expect(elapsed).toBeGreaterThanOrEqual(1000)
-  })
+    jest.useFakeTimers();
+    let resolveNewLock: () => void = () => {};
+    const newLock = new Promise<void>(resolve => { resolveNewLock = resolve; });
+    const t = Date.now();
+    setTimeout(() => { resolveNewLock(); }, 1000);
+    jest.advanceTimersByTime(1000);
+    await newLock;
+    const elapsed = Date.now() - t;
+    logger(`Elapsed time: ${elapsed} ms`);
+    expect(elapsed).toBeGreaterThanOrEqual(1000);
+    jest.useRealTimers();
+  });
 
   test('5 set x 4 get set x 4 get', async () => {
     for (const { storage, wallet } of ctxs) {

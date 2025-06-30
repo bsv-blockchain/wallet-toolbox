@@ -4,7 +4,7 @@ BSV BLOCKCHAIN | BRC100 Conforming Wallet, Wallet Storage and Wallet Signer Comp
 
 ## Objective
 
-The BSV Wallet Toolbox builds on the [SDK](https://bitcoin-sv.github.io/ts-sdk).
+The BSV Wallet Toolbox builds on the [SDK](https://bsv-blockchain.github.io/ts-sdk).
 
 It aims to support building sophisticated applications and services on the BSV Blockchain technology stack.
 
@@ -12,7 +12,7 @@ By providing interlocking building blocks for persistent storage and protocol ba
 
 ## Documentation
 
-[The Docs](https://bitcoin-sv.github.io/wallet-toolbox) are available here on Github pages.  
+[The Docs](https://bsv-blockchain.github.io/wallet-toolbox) are available here on Github pages.  
 
 The Toolbox is richly documented with code-level annotations. This should show up well within editors like VSCode.  
 
