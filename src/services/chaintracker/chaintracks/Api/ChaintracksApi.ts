@@ -6,7 +6,7 @@ import { ChaintracksApi } from './ChaintracksClientApi'
 import { LiveIngestorApi } from './LiveIngestorApi'
 import { StorageEngineApi } from './StorageEngineApi'
 
-export interface ChaintracksBaseOptions {
+export interface ChaintracksOptions {
   chain: Chain
   storageEngine: StorageEngineApi | undefined
   bulkStorage: BulkStorageApi | undefined

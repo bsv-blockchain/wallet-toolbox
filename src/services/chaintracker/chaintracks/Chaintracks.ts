@@ -1,23 +1,21 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { BulkStorageApi } from '../Api/BulkStorageApi'
-import { BulkIndexApi } from '../Api/BulkIndexApi'
-import { InsertHeaderResult, StorageEngineApi } from '../Api/StorageEngineApi'
-import { BulkIngestorApi } from '../Api/BulkIngestorApi'
-import { LiveIngestorApi } from '../Api/LiveIngestorApi'
+import { BulkStorageApi } from './Api/BulkStorageApi'
+import { BulkIndexApi } from './Api/BulkIndexApi'
+import { InsertHeaderResult, StorageEngineApi } from './Api/StorageEngineApi'
+import { BulkIngestorApi } from './Api/BulkIngestorApi'
+import { LiveIngestorApi } from './Api/LiveIngestorApi'
 
-import { validateAgainstDirtyHashes } from '../util/dirtyHashes'
+import { validateAgainstDirtyHashes } from './util/dirtyHashes'
 
-import { ChaintracksBaseOptions, ChaintracksManagementApi } from '../Api/ChaintracksApi'
-import { blockHash, validateHeaderFormat } from '../util/blockHeaderUtilities'
-import { Chain } from '../../../../sdk/types'
-import { ChaintracksInfoApi, HeaderListener, ReorgListener } from '../Api/ChaintracksClientApi'
-import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { asString } from '../../../../utility/utilityHelpers.noBuffer'
-import { randomBytesBase64, wait } from '../../../../index.client'
+import { ChaintracksOptions, ChaintracksManagementApi } from './Api/ChaintracksApi'
+import { blockHash, validateHeaderFormat } from './util/blockHeaderUtilities'
+import { Chain } from '../../../sdk/types'
+import { ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/ChaintracksClientApi'
+import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './Api/BlockHeaderApi'
+import { asString } from '../../../utility/utilityHelpers.noBuffer'
+import { randomBytesBase64, wait } from '../../../index.client'
 
-export abstract class ChaintracksBase implements ChaintracksManagementApi {
-  static createChaintracksBaseOptions(chain: Chain): ChaintracksBaseOptions {
+export class Chaintracks implements ChaintracksManagementApi {
+  static createOptions(chain: Chain): ChaintracksOptions {
     return {
       chain,
       storageEngine: undefined,
@@ -59,7 +57,7 @@ export abstract class ChaintracksBase implements ChaintracksManagementApi {
   private subscriberCallbacksEnabled = false
   private stopShiftLiveHeaders = false
 
-  constructor(public options: ChaintracksBaseOptions) {
+  constructor(public options: ChaintracksOptions) {
     if (!options.storageEngine) throw new Error('storageEngine is required.')
     if (!options.bulkIngestors || options.bulkIngestors.length < 1)
       throw new Error('At least one bulk ingestor is required.')

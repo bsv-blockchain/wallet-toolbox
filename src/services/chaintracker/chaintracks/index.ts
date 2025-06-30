@@ -1,5 +1,5 @@
 export * from './Api/ChaintracksApi'
-export * from './Base/ChaintracksBase'
+export * from './Chaintracks'
 
 export * from './Api/StorageEngineApi'
 export * from './Base/StorageEngineBase'
