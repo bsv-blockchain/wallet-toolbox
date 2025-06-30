@@ -37,3 +37,4 @@ backup-*.sqlite
 test/wallet/support/reqhistory.sqlite
 
 node_modules
+data/
