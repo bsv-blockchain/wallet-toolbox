@@ -49,9 +49,9 @@ export class StorageEngineKnex extends StorageEngineBase {
         const options: StorageEngineKnexOptions = {
             ...StorageEngineBase.createStorageEngineBaseOptions(chain),
             knex: undefined,
-            headerTableName: `${chain}_live_headers`,
-            bulkBlockHashTableName: `${chain}_bulk_hash`,
-            bulkMerkleRootTableName: `${chain}_bulk_merkle`,
+            headerTableName: `live_headers`,
+            bulkBlockHashTableName: `bulk_hash`,
+            bulkMerkleRootTableName: `bulk_merkle`,
             migrationsDirectory: './migrations'
         }
         return options

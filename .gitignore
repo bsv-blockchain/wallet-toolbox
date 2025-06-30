@@ -40,3 +40,4 @@ test/wallet/support/reqhistory.sqlite
 
 
 src/services/chaintracker/chaintracks/__tests/data/
+data/
