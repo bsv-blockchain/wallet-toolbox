@@ -138,7 +138,7 @@ export class BulkFilesReader {
   async readBufferForHeightOrUndefined(height: number): Promise<Uint8Array | undefined> {
     const file = this.getFileForHeight(height)
     if (!file) return undefined
-    const f = await this.fs.openReadableFile(this.rootFolder + file.fileName)
+    const f = await this.fs.openReadableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
     try {
       const buffer = await f.read(80, (height - file.firstHeight) * 80)
       return buffer
@@ -279,7 +279,7 @@ export class BulkFilesReader {
    * `hf.prevHash` must be valid on input. The previousHash value of the first header in this file.
    * `hf.firstHeight` is ignored by this function.
    * Remaining properties of `hf` are validated if non-null, assigned values from the file if null.
-   * @param rootFolder + `hf.fileName` must be the full path to the file to be validated.
+   * @param rootFolder path joined to `hf.fileName` must be the full path to the file to be validated.
    * @param hf BulkHeaderFileInfo to be validated.
    * @param data optional data to be validated. If undefined, data is read from cached files.
    * @returns actual BulkHeaderFileInfo verified

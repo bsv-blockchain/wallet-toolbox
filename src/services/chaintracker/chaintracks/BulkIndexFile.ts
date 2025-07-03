@@ -79,12 +79,12 @@ export class BulkIndexFile extends BulkIndexBase {
     const o = this.options
     if (o.hasBlockHashToHeightIndex && o.blockHashFilename && o.rootFolder) {
       this.hashIndex = HashIndex.makeBlockHashIndex(newBulkHeaders, minHeight)
-      await this.fs.writeFile(o.rootFolder + o.blockHashFilename, this.hashIndex.buffer)
+      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.blockHashFilename), this.hashIndex.buffer)
       console.log(`Wrote new hashIndex for ${newBulkHeaders.length / 80} headers.`)
     }
     if (o.hasMerkleRootToHeightIndex && o.merkleRootFilename && o.rootFolder) {
       this.rootIndex = HashIndex.makeMerkleRootIndex(newBulkHeaders, minHeight)
-      await this.fs.writeFile(o.rootFolder + o.merkleRootFilename, this.rootIndex.buffer)
+      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.merkleRootFilename), this.rootIndex.buffer)
       console.log(`Wrote new rootIndex for ${newBulkHeaders.length / 80} headers.`)
     }
   }

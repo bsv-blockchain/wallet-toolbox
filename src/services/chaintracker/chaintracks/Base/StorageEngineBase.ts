@@ -366,7 +366,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
         const filename = `${filenamePrefix}_${fileNum}.headers`
         console.log(filename)
 
-        const filepath = rootFolder + filename
+        const filepath = fs.pathJoin(rootFolder, filename)
 
         let hf: BulkHeaderFileInfo = {
           fileName: filename,

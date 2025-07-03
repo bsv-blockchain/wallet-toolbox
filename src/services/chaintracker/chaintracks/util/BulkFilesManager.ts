@@ -27,7 +27,7 @@ export class BulkFilesManager extends BulkFilesReader {
 
   async clearBulkHeaders(): Promise<void> {
     // Delete any existing files...
-    for (const file of this.files) await this.fs.delete(this.rootFolder + file.fileName)
+    for (const file of this.files) await this.fs.delete(this.fs.pathJoin(this.rootFolder, file.fileName))
     this.files = []
     await this.writeJsonFile()
   }

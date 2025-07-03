@@ -1,9 +1,9 @@
 import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
-import { asArray, asBuffer } from '../../../../utility/utilityHelpers.buffer'
+import { asArray, asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
 import { asString } from '../../../../utility/utilityHelpers.noBuffer'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { readUInt32BE } from './blockHeaderUtilities'
 import { IndexLevel, IndexLevelMakeVal } from './IndexLevel'
-import { promises as fs } from 'fs'
 
 export interface HashIndexInfo {
   version: number
@@ -68,18 +68,18 @@ export class HashIndex {
     return hashIndex
   }
 
-  static async loadFromFile(rootFolder: string, filename: string): Promise<HashIndex> {
-    const path = rootFolder + filename
-    await fs.mkdir(rootFolder, { recursive: true })
+  static async loadFromFile(fs: ChaintracksFsApi, rootFolder: string, filename: string): Promise<HashIndex> {
+    const path = fs.pathJoin(rootFolder, filename)
     let buffer: number[] | undefined
     try {
-      buffer = asArray(await fs.readFile(path))
+      const data = await fs.readFile(path)
+      buffer = asArray(data)
     } catch (uerr) {
       if ((uerr as { code: string })?.code !== 'ENOENT') throw uerr
     }
     if (!buffer) {
       buffer = IndexLevel.makeEmptyIndex()
-      await fs.writeFile(path, asBuffer(buffer))
+      await fs.writeFile(path, asUint8Array(buffer))
       buffer = asArray(await fs.readFile(path))
     }
     return new HashIndex(buffer)

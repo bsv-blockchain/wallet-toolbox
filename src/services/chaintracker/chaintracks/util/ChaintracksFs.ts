@@ -132,6 +132,6 @@ export class ChaintracksAppendableFile extends ChaintracksReadableFile implement
 
   async append(data: Uint8Array): Promise<void> {
     await this.ensureFoldersExist()
-    throw new Error('Method not implemented.')
+    await this.f.write(Buffer.from(data))
   }
 }

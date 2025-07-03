@@ -52,7 +52,7 @@ export class BulkStorageFile extends BulkStorageBase {
 
   async makeAvailable(): Promise<void> {
     if (this.file) return
-    this.file = await this.fs.openAppendableFile(this.rootFolder + this.filename)
+    this.file = await this.fs.openAppendableFile(this.fs.pathJoin(this.rootFolder, this.filename))
     this.fileLength = await this.file.getLength()
   }
 
@@ -60,10 +60,10 @@ export class BulkStorageFile extends BulkStorageBase {
   openFileForReading() {
     this.fileOpenForRead = false
     fs.mkdir(this.rootFolder, { recursive: true }).then(() => {
-      fs.open(this.rootFolder + this.filename, 'a+').then(
+      fs.open(this.rootFolder  + this.filename, 'a+').then(
         value => {
           this.file = value
-          fs.stat(this.rootFolder + this.filename).then(value => {
+          fs.stat(this.rootFolder  + this.filename).then(value => {
             this.fileLength = value.size
             this.fileOpenForRead = true
           })
