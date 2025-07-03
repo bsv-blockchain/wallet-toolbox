@@ -6,7 +6,8 @@ import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash, Utils } from '@bsv/sdk'
 import { asUint8Array } from '../../../../index.client'
-import { WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { Chain, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { validBulkHeaderFilesByFileHash } from './validBulkHeaderFilesByFileHash'
 
 /**
  * Descriptive information about a single bulk header file.
@@ -44,6 +45,10 @@ export interface BulkHeaderFileInfo {
    * file contents single sha256 hash as base64 string
    */
   fileHash: string | null
+  /**
+   * Which chain: 'main' or 'test'
+   */
+  chain?: Chain
 }
 
 /**
@@ -166,7 +171,7 @@ export class BulkFilesReader {
     if (fileRange.isEmpty) return undefined
     const position = (fileRange.minHeight - file.firstHeight) * 80
     const length = fileRange.length * 80
-    const f = await this.fs.openReadableFile(this.rootFolder + file.fileName)
+    const f = await this.fs.openReadableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
     try {
       const buffer = await f.read(length, position)
       return buffer
@@ -221,7 +226,7 @@ export class BulkFilesReader {
 
   static async writeEmptyJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<string> {
     const json = JSON.stringify({ files: [], rootFolder })
-    await fs.writeFile(rootFolder + jsonFilename, asUint8Array(json, 'utf8'))
+    await fs.writeFile(fs.pathJoin(rootFolder, jsonFilename), asUint8Array(json, 'utf8'))
     return json
   }
 
@@ -231,7 +236,8 @@ export class BulkFilesReader {
     jsonFilename: string,
     failToEmptyRange: boolean = true
   ): Promise<BulkHeaderFilesInfo> {
-    const filePath = (file: string) => rootFolder + file
+
+    const filePath = (file: string) => fs.pathJoin(rootFolder, file)
 
     const jsonPath = filePath(jsonFilename)
 
@@ -274,15 +280,35 @@ export class BulkFilesReader {
    * `hf.firstHeight` is ignored by this function.
    * Remaining properties of `hf` are validated if non-null, assigned values from the file if null.
    * @param rootFolder + `hf.fileName` must be the full path to the file to be validated.
-   * @param hf
+   * @param hf BulkHeaderFileInfo to be validated.
+   * @param data optional data to be validated. If undefined, data is read from cached files.
    * @returns actual BulkHeaderFileInfo verified
    */
   static async validateHeaderFile(
     fs: ChaintracksFsApi,
     rootFolder: string,
-    hf: BulkHeaderFileInfo
+    hf: BulkHeaderFileInfo,
+    data?: Uint8Array
   ): Promise<BulkHeaderFileInfo> {
-    const filename = rootFolder + hf.fileName
+
+    if (data) {
+      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
+      const vbhfi = validBulkHeaderFilesByFileHash[fileHash]
+      if (vbhfi &&
+        vbhfi.fileName === hf.fileName &&
+        vbhfi.firstHeight === hf.firstHeight &&
+        vbhfi.prevHash === hf.prevHash &&
+        vbhfi.count === hf.count &&
+        vbhfi.lastHash === hf.lastHash &&
+        vbhfi.fileHash === hf.fileHash &&
+        vbhfi.lastChainWork === hf.lastChainWork &&
+        vbhfi.prevChainWork === hf.prevChainWork &&
+        vbhfi.chain === hf.chain) {
+          return { ...hf }
+      }
+    }
+
+    const filename = fs.pathJoin(rootFolder, hf.fileName)
 
     const file = await fs.openReadableFile(filename)
     try {
@@ -315,7 +341,7 @@ export class BulkFilesReader {
         }
         offset += rr.length
         const count = rr.length / 80
-        prevHash = validateBufferOfHeaders(rr, prevHash, 0, count)
+        prevHash = validateBufferOfHeaders(rr, prevHash, 0, count).lastHeaderHash
         fileCount += count
       }
 

@@ -33,6 +33,9 @@ export abstract class ChaintracksFsStatics {
     const parsedPath = Path.parse(path)
     await fs.mkdir(parsedPath.dir, { recursive: true })
   }
+  static pathJoin(...parts: string[]): string {
+    return Path.join(...parts)
+  }
 }
 
 export const ChaintracksFs: ChaintracksFsApi = ChaintracksFsStatics

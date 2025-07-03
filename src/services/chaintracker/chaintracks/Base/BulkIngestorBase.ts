@@ -64,11 +64,11 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
    */
   filesInfo: BulkHeaderFilesInfo | undefined
 
-  async getBulkFilesManager(neededRange?: HeightRange): Promise<BulkFilesManager> {
+  async getBulkFilesManager(neededRange?: HeightRange, maxBufferSize?: number): Promise<BulkFilesManager> {
     if (!this.localCachePath) throw new Error('localCachePath options property is undefined.')
     if (!this.jsonFilename) throw new Error('jsonFilename options property is undefined.')
 
-    const manager = await BulkFilesManager.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange)
+    const manager = await BulkFilesManager.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange, maxBufferSize)
 
     return manager
   }

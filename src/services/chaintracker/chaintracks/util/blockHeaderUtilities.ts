@@ -36,10 +36,17 @@ export async function sha256HashOfBinaryFile(
  * @param count Optional number of headers to validate. Validates to end of buffer if missing.
  * @returns Header hash of last header validated or previousHash if there where none.
  */
-export function validateBufferOfHeaders(buffer: Uint8Array, previousHash: string, offset = 0, count = -1): string {
+export function validateBufferOfHeaders(
+  buffer: Uint8Array,
+  previousHash: string,
+  offset = 0,
+  count = -1,
+  previousChainWork?: string
+): { lastHeaderHash: string; lastChainWork: string | undefined } {
   if (count < 0) count = Math.floor((buffer.length - offset) / 80)
   count = Math.max(0, count)
   let lastHeaderHash = previousHash
+  let lastChainWork = previousChainWork
   for (let i = 0; i < count; i++) {
     const headerStart = offset + i * 80
     const headerEnd = headerStart + 80
@@ -55,8 +62,11 @@ export function validateBufferOfHeaders(buffer: Uint8Array, previousHash: string
       throw { message: `header ${i} invalid previousHash ${lastHeaderHash} vs ${hashPrev}` }
     lastHeaderHash = asString(doubleSha256BE(header))
     validateAgainstDirtyHashes(lastHeaderHash)
+    if (lastChainWork) {
+      lastChainWork = addWork(lastChainWork, convertBitsToWork(h.bits))
+    }
   }
-  return lastHeaderHash
+  return { lastHeaderHash, lastChainWork }
 }
 
 /**
@@ -79,7 +89,7 @@ export function isMoreWork(work1: string, work2: string): boolean {
  * @returns Sum of work1 + work2 as Buffer encoded chainWork value
  */
 export function addWork(work1: string, work2: string): string {
-  const sum = new BigNumber(asArray(work1), 16).add(new BigNumber(asArray(work2), 16))
+  const sum = new BigNumber(work1, 16).add(new BigNumber(work2, 16))
   return workBNtoBuffer(sum)
 }
 
@@ -88,7 +98,7 @@ export function addWork(work1: string, work2: string): string {
  * @returns work1 - work2 as Buffer encoded chainWork value
  */
 export function subWork(work1: string, work2: string): string {
-  const sum = new BigNumber(asArray(work1), 16).sub(new BigNumber(asArray(work2), 16))
+  const sum = new BigNumber(work1, 16).sub(new BigNumber(work2, 16))
   return workBNtoBuffer(sum)
 }
 

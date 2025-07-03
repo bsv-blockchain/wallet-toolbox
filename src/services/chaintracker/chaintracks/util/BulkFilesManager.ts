@@ -18,10 +18,11 @@ export class BulkFilesManager extends BulkFilesReader {
     fs: ChaintracksFsApi,
     rootFolder: string,
     jsonFilename: string,
-    range?: HeightRange
+    range?: HeightRange,
+    maxBufferSize?: number
   ): Promise<BulkFilesManager> {
     const info = await BulkFilesReader.readJsonFile(fs, rootFolder, jsonFilename)
-    return new BulkFilesManager(fs, info, range)
+    return new BulkFilesManager(fs, info, range, maxBufferSize)
   }
 
   async clearBulkHeaders(): Promise<void> {
@@ -38,7 +39,7 @@ export class BulkFilesManager extends BulkFilesReader {
       files: this.files
     }
     const json = JSON.stringify(info)
-    await this.fs.writeFile(this.rootFolder + this.jsonFilename, asUint8Array(json, 'utf8'))
+    await this.fs.writeFile(this.fs.pathJoin(this.rootFolder, this.jsonFilename), asUint8Array(json, 'utf8'))
   }
 
   async appendHeaders(headers: Uint8Array, firstHeight: number, previousHash: string): Promise<void> {
@@ -50,7 +51,7 @@ export class BulkFilesManager extends BulkFilesReader {
       lastHash: null,
       fileHash: null
     }
-    await this.fs.writeFile(this.rootFolder + file.fileName, headers)
+    await this.fs.writeFile(this.fs.pathJoin(this.rootFolder, file.fileName), headers)
     file = await BulkFilesReader.validateHeaderFile(this.fs, this.rootFolder, file)
     this.files.push(file)
     await this.writeJsonFile()

@@ -53,4 +53,6 @@ export interface ChaintracksFsApi {
   openReadableFile(path: string): Promise<ChaintracksReadableFileApi>
   openWritableFile(path: string): Promise<ChaintracksWritableFileApi>
   openAppendableFile(path: string): Promise<ChaintracksAppendableFileApi>
+
+  pathJoin(...parts: string[]): string
 }

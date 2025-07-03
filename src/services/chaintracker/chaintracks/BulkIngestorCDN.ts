@@ -8,8 +8,11 @@ import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
-import { asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
+import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
+import { validateBufferOfHeaders } from './util/blockHeaderUtilities'
+import { Hash } from '@bsv/sdk'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -58,6 +61,9 @@ export class BulkIngestorCDN extends BulkIngestorBase {
   jsonResource: string
   cdnUrl: string
 
+  bulkFiles: BulkHeaderFilesInfo | undefined
+  currentRange: HeightRange | undefined
+
   constructor(options: BulkIngestorCDNOptions) {
     super(options)
     if (!options.jsonResource) throw new Error('The jsonResource options property is required.')
@@ -80,6 +86,65 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return headers
   }
 
+  async exportHeadersToFs(toFs: ChaintracksFsApi, toHeadersPerFile: number, toFolder: string): Promise<void> {
+    if (!this.bulkFiles || !this.currentRange || this.currentRange.isEmpty) {
+      throw new WERR_INVALID_OPERATION('updateLocalCache must be called before exportHeadersToFs')
+    }
+
+    const toFileName = (i: number) => `${this.chain}Net_${i}.headers`
+    const toPath = (i: number) => toFs.pathJoin(toFolder, toFileName(i))
+    const toJsonPath = () => toFs.pathJoin(toFolder, `${this.chain}NetBlockHeaders.json`)
+
+    const toBulkFiles: BulkHeaderFilesInfo = {
+      rootFolder: toFolder,
+      jsonFilename: `${this.chain}NetBlockHeaders.json`,
+      headersPerFile: toHeadersPerFile,
+      files: []
+    }
+
+    const bf0 = this.bulkFiles.files[0]
+    if (!bf0 || bf0.firstHeight !== this.currentRange.minHeight) {
+      throw new WERR_INTERNAL(`file 0 firstHeight ${bf0.firstHeight} must equal currentRange minHeight ${this.currentRange.minHeight}`)
+    }
+
+    let firstHeight = this.currentRange.minHeight
+    let prevHash = bf0.prevHash
+    let prevChainWork = bf0.prevChainWork
+
+    let i = -1
+    for (;;) {
+      i++
+      const neededRange = new HeightRange(firstHeight, firstHeight + toHeadersPerFile - 1)
+      const reader = await this.getBulkFilesManager(neededRange, toHeadersPerFile * 80)
+      const data = await reader.read()
+      if (!data || data.length === 0) {
+        break
+      } 
+      const last = validateBufferOfHeaders(data, prevHash, 0, undefined, prevChainWork)
+
+      await toFs.writeFile(toPath(i), data)
+
+      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
+      const file: BulkHeaderFileInfo = {
+        fileName: toFileName(i),
+        firstHeight,
+        prevHash,
+        count: data.length / 80,
+        lastHash: last.lastHeaderHash,
+        fileHash,
+        lastChainWork: last.lastChainWork!,
+        prevChainWork: prevChainWork,
+        chain: this.chain
+      }
+      toBulkFiles.files.push(file)
+      firstHeight += file.count
+      prevHash = file.lastHash!
+      prevChainWork = file.lastChainWork!
+    }
+
+    await toFs.writeFile(toJsonPath(), asUint8Array(JSON.stringify(toBulkFiles), 'utf8'))
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateLocalCache(
     neededRange: HeightRange,
@@ -87,21 +152,27 @@ export class BulkIngestorCDN extends BulkIngestorBase {
   ): Promise<{ reader: BulkFilesReader; liveHeaders?: BlockHeader[] }> {
     const reader = await this.getBulkFilesManager(neededRange)
 
-    const toUrl = (file: string) => `${this.cdnUrl}${file}`
-    const filePath = (file: string) => this.localCachePath + file
+    const toUrl = (file: string) => this.fs.pathJoin(this.cdnUrl, file)
+    const filePath = (file: string) => this.fs.pathJoin(this.localCachePath, file)  
 
     const url = toUrl(this.jsonResource)
-    const bulkFiles: BulkHeaderFilesInfo = await this.fetch.fetchJson(url)
+    this.bulkFiles = await this.fetch.fetchJson(url)
+    if (!this.bulkFiles) {
+      throw new WERR_INVALID_PARAMETER(`${this.jsonResource}`, `a valid JSON resource available from ${url}`)
+    }
 
     let log = 'updateLocalCache log:\n'
+    let heightRange = HeightRange.empty
 
     try {
 
       let filesUpdated = false
-      for (let i = 0; i < bulkFiles.files.length; i++) {
-        const file = bulkFiles.files[i]
+      for (let i = 0; i < this.bulkFiles.files.length; i++) {
+        const file = this.bulkFiles.files[i]
         const path = filePath(file.fileName)
 
+        heightRange = heightRange.union(new HeightRange(file.firstHeight, file.firstHeight + file.count - 1))
+        
         log += JSON.stringify(file) + '\n'
 
         if (i < reader.files.length) {
@@ -117,14 +188,16 @@ export class BulkIngestorCDN extends BulkIngestorBase {
             lf.lastChainWork === file.lastChainWork &&
             lf.prevChainWork === file.prevChainWork
           ) {
-            log += `${i} unchanged ${bulkFiles.files[i].fileName}\n`
+            log += `${i} unchanged ${this.bulkFiles.files[i].fileName}\n`
             continue
           }
           log += `${i} updated, deleting cached ${filePath(lf.fileName)}\n`
           await this.fs.delete(filePath(lf.fileName))
         } else {
-          log += `${i} new ${bulkFiles.files[i].fileName}\n`
+          log += `${i} new ${this.bulkFiles.files[i].fileName}\n`
         }
+
+        let data: Uint8Array | undefined
 
         try {
           filesUpdated = true
@@ -132,7 +205,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
           log += `${new Date().toISOString()} downloading ${url} expected size ${file.count * 80}\n`
 
-          const data = await this.fetch.download(url)
+          data = await this.fetch.download(url)
           await this.fs.writeFile(path, data)
 
           log += `${new Date().toISOString()} downloaded ${url} actual size    ${data.length}\n`
@@ -141,22 +214,25 @@ export class BulkIngestorCDN extends BulkIngestorBase {
           throw err
         }
 
-        bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file)
+        file.chain = this.chain
+        this.bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file, data)
       }
 
-      bulkFiles.rootFolder = this.localCachePath
-      bulkFiles.jsonFilename = this.jsonFilename
+      this.bulkFiles.rootFolder = this.localCachePath
+      this.bulkFiles.jsonFilename = this.jsonFilename
 
       if (filesUpdated) {
-        const bytes = asUint8Array(JSON.stringify(bulkFiles), 'utf8')
-        await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
+        const bytes = asUint8Array(JSON.stringify(this.bulkFiles), 'utf8')
+        await this.fs.writeFile(this.fs.pathJoin(this.localCachePath, this.jsonFilename), bytes)
       }
     } finally {
       logger(log)
     }
 
+    this.currentRange = heightRange
+
     return {
-      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange),
+      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, heightRange),
       liveHeaders: undefined
     }
   }
