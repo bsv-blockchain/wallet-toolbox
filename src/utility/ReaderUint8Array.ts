@@ -1,29 +1,39 @@
-import { BigNumber } from "@bsv/sdk"
-import { asArray } from "./utilityHelpers.noBuffer"
+import { BigNumber, Utils } from '@bsv/sdk'
+import { asArray } from './utilityHelpers.noBuffer'
 
 export class ReaderUInt8Array {
   public bin: Uint8Array
   public pos: number
   private readonly length: number
 
-  constructor (bin: Uint8Array = new Uint8Array(0), pos: number = 0) {
+  static makeReader(bin: Uint8Array | number[], pos: number = 0): ReaderUInt8Array | Utils.Reader {
+    if (bin instanceof Uint8Array) {
+      return new ReaderUInt8Array(bin, pos)
+    }
+    if (Array.isArray(bin)) {
+      return new Utils.Reader(bin, pos)
+    }
+    throw new Error('ReaderUInt8Array.makeReader: bin must be Uint8Array or number[]')
+  }
+
+  constructor(bin: Uint8Array = new Uint8Array(0), pos: number = 0) {
     this.bin = bin
     this.pos = pos
     this.length = bin.length
   }
 
-  public eof (): boolean {
+  public eof(): boolean {
     return this.pos >= this.length
   }
 
-  public read (len = this.length): Uint8Array {
+  public read(len = this.length): Uint8Array {
     const start = this.pos
     const end = this.pos + len
     this.pos = end
     return this.bin.slice(start, end)
   }
 
-  public readReverse (len = this.length): Uint8Array {
+  public readReverse(len = this.length): Uint8Array {
     const buf2 = new Uint8Array(len)
     for (let i = 0; i < len; i++) {
       buf2[i] = this.bin[this.pos + len - 1 - i]
@@ -32,45 +42,45 @@ export class ReaderUInt8Array {
     return buf2
   }
 
-  public readUInt8 (): number {
+  public readUInt8(): number {
     const val = this.bin[this.pos]
     this.pos += 1
     return val
   }
 
-  public readInt8 (): number {
+  public readInt8(): number {
     const val = this.bin[this.pos]
     this.pos += 1
     // If the sign bit is set, convert to negative value
     return (val & 0x80) !== 0 ? val - 0x100 : val
   }
 
-  public readUInt16BE (): number {
+  public readUInt16BE(): number {
     const val = (this.bin[this.pos] << 8) | this.bin[this.pos + 1]
     this.pos += 2
     return val
   }
 
-  public readInt16BE (): number {
+  public readInt16BE(): number {
     const val = this.readUInt16BE()
     // If the sign bit is set, convert to negative value
     return (val & 0x8000) !== 0 ? val - 0x10000 : val
   }
 
-  public readUInt16LE (): number {
+  public readUInt16LE(): number {
     const val = this.bin[this.pos] | (this.bin[this.pos + 1] << 8)
     this.pos += 2
     return val
   }
 
-  public readInt16LE (): number {
+  public readInt16LE(): number {
     const val = this.readUInt16LE()
     // If the sign bit is set, convert to negative value
     const x = (val & 0x8000) !== 0 ? val - 0x10000 : val
     return x
   }
 
-  public readUInt32BE (): number {
+  public readUInt32BE(): number {
     const val =
       this.bin[this.pos] * 0x1000000 + // Shift the first byte by 24 bits
       ((this.bin[this.pos + 1] << 16) | // Shift the second byte by 16 bits
@@ -80,13 +90,13 @@ export class ReaderUInt8Array {
     return val
   }
 
-  public readInt32BE (): number {
+  public readInt32BE(): number {
     const val = this.readUInt32BE()
     // If the sign bit is set, convert to negative value
     return (val & 0x80000000) !== 0 ? val - 0x100000000 : val
   }
 
-  public readUInt32LE (): number {
+  public readUInt32LE(): number {
     const val =
       (this.bin[this.pos] |
         (this.bin[this.pos + 1] << 8) |
@@ -97,26 +107,26 @@ export class ReaderUInt8Array {
     return val
   }
 
-  public readInt32LE (): number {
+  public readInt32LE(): number {
     const val = this.readUInt32LE()
     // Explicitly check if the sign bit is set and then convert to a negative value
     return (val & 0x80000000) !== 0 ? val - 0x100000000 : val
   }
 
-  public readUInt64BEBn (): BigNumber {
+  public readUInt64BEBn(): BigNumber {
     const bin = asArray(this.bin.slice(this.pos, this.pos + 8))
     const bn = new BigNumber(bin)
     this.pos = this.pos + 8
     return bn
   }
 
-  public readUInt64LEBn (): BigNumber {
+  public readUInt64LEBn(): BigNumber {
     const bin = asArray(this.readReverse(8))
     const bn = new BigNumber(bin)
     return bn
   }
 
-  public readInt64LEBn (): BigNumber {
+  public readInt64LEBn(): BigNumber {
     const bin = asArray(this.readReverse(8))
     let bn = new BigNumber(bin)
     if (bn.gte(OverflowInt64)) {
@@ -125,7 +135,7 @@ export class ReaderUInt8Array {
     return bn
   }
 
-  public readVarIntNum (signed: boolean = true): number {
+  public readVarIntNum(signed: boolean = true): number {
     const first = this.readUInt8()
     let bn: BigNumber
     switch (first) {
@@ -138,16 +148,14 @@ export class ReaderUInt8Array {
         if (bn.lte(new BigNumber(2).pow(new BigNumber(53)))) {
           return bn.toNumber()
         } else {
-          throw new Error(
-            'number too large to retain precision - use readVarIntBn'
-          )
+          throw new Error('number too large to retain precision - use readVarIntBn')
         }
       default:
         return first
     }
   }
 
-  public readVarInt (): Uint8Array {
+  public readVarInt(): Uint8Array {
     const first = this.bin[this.pos]
     switch (first) {
       case 0xfd:
@@ -161,7 +169,7 @@ export class ReaderUInt8Array {
     }
   }
 
-  public readVarIntBn (): BigNumber {
+  public readVarIntBn(): BigNumber {
     const first = this.readUInt8()
     switch (first) {
       case 0xfd:

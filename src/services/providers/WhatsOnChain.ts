@@ -3,11 +3,14 @@ import { asArray, asString, doubleSha256BE, sdk, Services, validateScriptHash, w
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
 import { parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
-import { convertWocToBlockHeaderHex, WocChainInfo, WocHeader } from '../chaintracker/chaintracks/Ingest/WhatsOnChainIngestorBase'
+import {
+  convertWocToBlockHeaderHex,
+  WocChainInfo,
+  WocHeader
+} from '../chaintracker/chaintracks/Ingest/WhatsOnChainIngestorBase'
 import { BlockHeader } from '../chaintracker/chaintracks/Api/BlockHeaderApi'
 
 export class WhatsOnChainNoServices extends SdkWhatsOnChain {
-
   constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}) {
     super(chain, config)
   }
@@ -737,7 +740,6 @@ export class WhatsOnChain extends WhatsOnChainNoServices {
     r.notes!.push({ what: 'getMerklePathInternal', name: r.name })
     throw new sdk.WERR_INTERNAL()
   }
-
 }
 
 interface WhatsOnChainTscProof {

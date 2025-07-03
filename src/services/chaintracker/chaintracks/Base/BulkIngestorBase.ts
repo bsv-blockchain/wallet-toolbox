@@ -25,7 +25,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     const options: BulkIngestorBaseOptions = {
       chain,
       fs,
-      jsonFilename: `${chain}Net.json`,
+      jsonFilename: `${chain}NetBlockHeaders.json`,
       localCachePath: localCachePath || './data/ingest_headers/',
       bypassLiveEnabled: true
     }
@@ -39,8 +39,8 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   bypassLiveEnabled: boolean
 
   constructor(options: BulkIngestorBaseOptions) {
-    if (!options.jsonFilename) throw new Error('The jsonFilename options property is required.');
-    if (!options.localCachePath) throw new Error('The localCachePath options property is required.');
+    if (!options.jsonFilename) throw new Error('The jsonFilename options property is required.')
+    if (!options.localCachePath) throw new Error('The localCachePath options property is required.')
     this.chain = options.chain
     this.fs = options.fs
     this.jsonFilename = options.jsonFilename

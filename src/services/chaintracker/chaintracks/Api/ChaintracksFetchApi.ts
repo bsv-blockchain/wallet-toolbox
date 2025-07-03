@@ -1,4 +1,4 @@
-import { HttpClient } from "@bsv/sdk"
+import { HttpClient } from '@bsv/sdk'
 
 export interface ChaintracksFetchApi {
   httpClient: HttpClient

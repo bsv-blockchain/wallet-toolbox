@@ -9,8 +9,7 @@ import { HeightRange } from './util/HeightRange'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
-
-const enableConsoleLog = true
+import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -33,7 +32,6 @@ export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
 }
 
 export class BulkIngestorCDN extends BulkIngestorBase {
-
   /**
    *
    * @param chain
@@ -50,7 +48,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
       ...BulkIngestorBase.createBulkIngestorBaseOptions(chain, fs),
       fetch,
       localCachePath: localCachePath || './data/bulk_cdn_headers/',
-      jsonResource: `${chain}Net.json`,
+      jsonResource: `${chain}NetBlockHeaders.json`,
       cdnUrl: undefined
     }
     return options
@@ -92,61 +90,69 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     const toUrl = (file: string) => `${this.cdnUrl}${file}`
     const filePath = (file: string) => this.localCachePath + file
 
-    const requestJsonOptions = {
-      method: 'GET',
-      headers: this.getJsonHttpHeaders()
-    }
+    const url = toUrl(this.jsonResource)
+    const bulkFiles: BulkHeaderFilesInfo = await this.fetch.fetchJson(url)
 
-    const response = await this.fetch.httpClient.request<BulkHeaderFilesInfo>(toUrl(this.jsonResource), requestJsonOptions)
-    const bulkFiles = response.data
+    let log = 'updateLocalCache log:\n'
 
-    let filesUpdated = false
-    for (let i = 0; i < bulkFiles.files.length; i++) {
-      const file = bulkFiles.files[i]
-      const path = filePath(file.fileName)
-      if (enableConsoleLog) console.log(JSON.stringify(file))
-      if (i < reader.files.length) {
-        if (enableConsoleLog) console.log('exists')
-        const lf = reader.files[i]
-        if (
-          lf.fileName === file.fileName &&
-          lf.count === file.count &&
-          lf.fileHash === file.fileHash &&
-          lf.lastHash === file.lastHash
-        ) {
-          if (enableConsoleLog) console.log('unchanged')
-          continue
+    try {
+
+      let filesUpdated = false
+      for (let i = 0; i < bulkFiles.files.length; i++) {
+        const file = bulkFiles.files[i]
+        const path = filePath(file.fileName)
+
+        log += JSON.stringify(file) + '\n'
+
+        if (i < reader.files.length) {
+          log += `${i} exists\n`
+          const lf = reader.files[i]
+          if (
+            lf.fileHash === file.fileHash &&
+            lf.fileName === file.fileName &&
+            lf.firstHeight === file.firstHeight &&
+            lf.count === file.count &&
+            lf.prevHash === file.prevHash &&
+            lf.lastHash === file.lastHash &&
+            lf.lastChainWork === file.lastChainWork &&
+            lf.prevChainWork === file.prevChainWork
+          ) {
+            log += `${i} unchanged ${bulkFiles.files[i].fileName}\n`
+            continue
+          }
+          log += `${i} updated, deleting cached ${filePath(lf.fileName)}\n`
+          await this.fs.delete(filePath(lf.fileName))
+        } else {
+          log += `${i} new ${bulkFiles.files[i].fileName}\n`
         }
-        if (enableConsoleLog) console.log('updated')
-        await this.fs.delete(filePath(lf.fileName))
-      } else {
-        if (enableConsoleLog) console.log('new')
+
+        try {
+          filesUpdated = true
+          const url = toUrl(file.fileName)
+
+          log += `${new Date().toISOString()} downloading ${url} expected size ${file.count * 80}\n`
+
+          const data = await this.fetch.download(url)
+          await this.fs.writeFile(path, data)
+
+          log += `${new Date().toISOString()} downloaded ${url} actual size    ${data.length}\n`
+        } catch (err) {
+          log += `${new Date().toISOString()} error downloading ${url}: ${JSON.stringify(err)}\n`
+          throw err
+        }
+
+        bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file)
       }
 
-      try {
-        filesUpdated = true
-        const url = toUrl(file.fileName)
+      bulkFiles.rootFolder = this.localCachePath
+      bulkFiles.jsonFilename = this.jsonFilename
 
-        console.log(`${new Date().toISOString()} downloading ${url} expected size ${file.count * 80}`)
-
-        const data = await this.fetch.download(url)
-        await this.fs.writeFile(path, data)
-
-        console.log(`${new Date().toISOString()} downloaded ${url} actual size    ${data.length}`)
-      } catch (err) {
-        console.log(JSON.stringify(err))
-        throw err
+      if (filesUpdated) {
+        const bytes = asUint8Array(JSON.stringify(bulkFiles), 'utf8')
+        await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
       }
-
-      bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file)
-    }
-
-    bulkFiles.rootFolder = this.localCachePath
-    bulkFiles.jsonFilename = this.jsonFilename
-
-    if (filesUpdated) {
-      const bytes = asUint8Array(JSON.stringify(bulkFiles), 'utf8')
-      await this.fs.writeFile(this.localCachePath + this.jsonFilename, bytes)
+    } finally {
+      logger(log)
     }
 
     return {

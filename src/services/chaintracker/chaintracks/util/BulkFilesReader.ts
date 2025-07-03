@@ -6,6 +6,7 @@ import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash, Utils } from '@bsv/sdk'
 import { asUint8Array } from '../../../../index.client'
+import { WERR_INVALID_PARAMETER } from '../../../../sdk'
 
 /**
  * Descriptive information about a single bulk header file.
@@ -227,7 +228,8 @@ export class BulkFilesReader {
   static async readJsonFile(
     fs: ChaintracksFsApi,
     rootFolder: string,
-    jsonFilename: string
+    jsonFilename: string,
+    failToEmptyRange: boolean = true
   ): Promise<BulkHeaderFilesInfo> {
     const filePath = (file: string) => rootFolder + file
 
@@ -238,6 +240,8 @@ export class BulkFilesReader {
     try {
       json = asString(await fs.readFile(jsonPath), 'utf8')
     } catch (uerr: unknown) {
+      if (!failToEmptyRange)
+        throw new WERR_INVALID_PARAMETER(`${rootFolder}/${jsonFilename}`, `a valid, existing JSON file.`)
       json = await this.writeEmptyJsonFile(fs, rootFolder, jsonFilename)
     }
 
@@ -304,10 +308,9 @@ export class BulkFilesReader {
         const arr = asArray(rr)
         sha256.update(arr)
         sha256Bug.update(arr)
-        if (rr.length === bufferSize)
-          rrLast = arr;
+        if (rr.length === bufferSize) rrLast = arr
         if (rrLast && rr.length < bufferSize) {
-          rrLast = rrLast.slice(rr.length);
+          rrLast = rrLast.slice(rr.length)
           sha256Bug.update(rrLast)
         }
         offset += rr.length

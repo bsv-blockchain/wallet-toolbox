@@ -1,53 +1,72 @@
-import { Hash } from "@bsv/sdk";
-import { Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from "../../../../sdk";
-import { ReaderUInt8Array } from "../../../../utility/ReaderUint8Array";
-import { asArray, asString } from "../../../../utility/utilityHelpers.noBuffer";
-import { BlockHeader } from "../Api/BlockHeaderApi";
-import { addWork, convertBitsToWork, deserializeBlockHeader, sha256HashOfBinaryFile } from "../util/blockHeaderUtilities";
-import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from "../util/BulkFilesReader";
-import { ChaintracksFetch } from "../util/ChaintracksFetch";
-import { doubleSha256BE, doubleSha256LE, sha256Hash } from "../../../../utility/utilityHelpers";
-import { ChaintracksFetchApi } from "../Api/ChaintracksFetchApi";
+import { Hash } from '@bsv/sdk'
+import { Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { ReaderUInt8Array } from '../../../../utility/ReaderUint8Array'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
+import { BlockHeader } from '../Api/BlockHeaderApi'
+import {
+  addWork,
+  convertBitsToWork,
+  deserializeBlockHeader,
+  sha256HashOfBinaryFile
+} from '../util/blockHeaderUtilities'
+import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
+import { ChaintracksFetch } from '../util/ChaintracksFetch'
+import { doubleSha256BE, doubleSha256LE, sha256Hash } from '../../../../utility/utilityHelpers'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
+import { info } from 'console'
 
 export interface BulkBlockHeadersOptions {
   chain: Chain
-  fetch: ChaintracksFetchApi
-  preLoadFromHeight?: number
-  cdnUrl: string
   verifyChainWork: boolean
   verifyBlockHash: boolean
+  fetch: ChaintracksFetchApi
+  cdnUrl: string
+  preLoadFromHeight?: number
+  fs?: ChaintracksFsApi
+  cacheFolder?: string
 }
 
 /**
  * BulkBlockHeaders class manages retrieval, storage / caching, and access to bulk block headers.
- * 
+ *
  * Bulk block headers have aged such that the probability of a reorg can be treated as being zero.
- * 
+ *
  * Data is downloaded on demand from a suitable CDN source.
- * 
+ *
  * Downloaded data can be cached or stored locally.
- * 
+ *
  * As new headers are found, new chunks of bulk headers can be transferred from live header storage to bulk header storage.
  */
 export class BulkBlockHeaders {
-  static createDefaultOptions(chain: Chain, fetch?: ChaintracksFetchApi): BulkBlockHeadersOptions {
+  static createDefaultOptions(
+    chain: Chain,
+    fetch?: ChaintracksFetchApi,
+    fs?: ChaintracksFsApi
+  ): BulkBlockHeadersOptions {
     const options: BulkBlockHeadersOptions = {
       chain,
-      fetch: fetch || new ChaintracksFetch(),
-      preLoadFromHeight: undefined,
-      cdnUrl: 'https://cdn.projectbabbage.com/blockheaders/',
       verifyChainWork: false,
-      verifyBlockHash: false
+      verifyBlockHash: false,
+      fetch: fetch || new ChaintracksFetch(),
+      cdnUrl: 'https://cdn.projectbabbage.com/blockheaders/',
+      preLoadFromHeight: undefined,
+      fs,
+      cacheFolder: './data/cdn_cache/'
     }
     return options
   }
 
   chain: Chain = 'main'
-  fetch: ChaintracksFetchApi
-  preLoadFromHeight?: number
-  cdnUrl: string
   verifyChainwork: boolean
   verifyBlockHash: boolean
+  fetch: ChaintracksFetchApi
+  cdnUrl: string
+  preLoadFromHeight?: number
+  fs?: ChaintracksFsApi
+  cacheFolder?: string
+
+  info: BulkHeaderFilesInfo | undefined
 
   headersPerFile: number = 0
   madeAvailable: boolean = false
@@ -55,45 +74,55 @@ export class BulkBlockHeaders {
 
   constructor(options: BulkBlockHeadersOptions) {
     this.chain = options.chain
-    this.fetch = options.fetch
-    this.preLoadFromHeight = options.preLoadFromHeight
-    this.cdnUrl = options.cdnUrl
     this.verifyBlockHash = options.verifyBlockHash
     this.verifyChainwork = options.verifyChainWork
+    this.fetch = options.fetch
+    this.cdnUrl = options.cdnUrl
+    this.preLoadFromHeight = options.preLoadFromHeight
+    this.fs = options.fs
+    this.cacheFolder = options.cacheFolder
   }
 
-  async makeAvailable() : Promise<void> {
+  async makeAvailable(): Promise<void> {
     if (this.madeAvailable) return
-    const jsonResource = `${this.cdnUrl}/${this.chain}Net.json`
+    const jsonResource = `${this.cdnUrl}/${this.chain}BlockHeadersNet.json`
     let info: BulkHeaderFilesInfo = await this.fetch.fetchJson(jsonResource)
     if (info.files[0].prevChainWork !== '00'.repeat(32)) {
-      info = JSON.parse(this.chain === 'main' ? mainNetHeadersJson : testNetHeadersJson) as BulkHeaderFilesInfo;
+      info = JSON.parse(this.chain === 'main' ? mainNetHeadersJson : testNetHeadersJson) as BulkHeaderFilesInfo
     }
     if (!info || !info.files || info.files.length === 0) {
       throw new WERR_INTERNAL('No bulk header files found in CDN JSON resource.')
     }
+    this.info = info
     this.headersPerFile = info.headersPerFile
     for (const fileInfo of info.files) {
       const file = new BulkHeaderFile({ info: fileInfo })
       const fileIndex = Math.floor(file.firstHeight / this.headersPerFile)
       this.files[fileIndex] = file
       if (this.preLoadFromHeight !== undefined && fileInfo.firstHeight <= this.preLoadFromHeight) {
-        this.loadFile(file)
+        this.downloadFile(file)
       }
     }
     this.madeAvailable = true
   }
 
-  async loadFile(file: BulkHeaderFile): Promise<void> {
+  async downloadFile(file: BulkHeaderFile): Promise<void> {
+    let downloaded = false
     if (!file.data) {
       // Load data from CDN
       const url = `${this.cdnUrl}/${file.fileName}`
       file.data = await this.fetch.download(url)
+      downloaded = true
     }
     await file.validate({
       verifyChainWork: this.verifyChainwork,
       verifyBlockHash: this.verifyBlockHash
     })
+    if (downloaded && this.cacheFolder && this.fs && file.data) {
+      // Save to cache folder
+      const filePath = `${this.cacheFolder}/${file.fileName}`
+      await this.fs.writeFile(filePath, file.data)
+    }
   }
 
   async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> {
@@ -103,12 +132,17 @@ export class BulkBlockHeaders {
     const fileIndex = Math.floor(height / this.headersPerFile)
     const headerIndex = height % this.headersPerFile
     const file = this.files[fileIndex]
-    if (!file)
-      throw new WERR_INVALID_OPERATION(`no bulk header file found for index ${fileIndex}`);
+    if (!file) throw new WERR_INVALID_OPERATION(`no bulk header file found for index ${fileIndex}`)
     if (!file.data) {
-      await this.loadFile(file)
+      await this.downloadFile(file)
     }
     return await file.findHeaderForHeight(height)
+  }
+
+  async exportHeadersToFs(toFs: ChaintracksFsApi, toHeadersPerFile: number, toFolder: string): Promise<void> {
+    if (!this.fs || !this.cacheFolder) {
+      throw new WERR_INVALID_OPERATION('No fs or cacheFolder defined for exporting headers to file system.')
+    }
   }
 }
 
@@ -150,10 +184,7 @@ export class BulkHeaderFile {
 
   validated: boolean = false
 
-  constructor(params: {
-    info: BulkHeaderFileInfo
-    data?: Uint8Array
-  }) {
+  constructor(params: { info: BulkHeaderFileInfo; data?: Uint8Array }) {
     const { info } = params
     this.fileName = info.fileName
     this.firstHeight = info.firstHeight
@@ -164,17 +195,20 @@ export class BulkHeaderFile {
     this.lastChainWork = info.lastChainWork
     this.fileHash = info.fileHash!
     this.data = params.data
-  } 
+  }
 
   async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> {
     if (height < this.firstHeight || height >= this.firstHeight + this.count || !Number.isInteger(height))
-      throw new WERR_INVALID_PARAMETER('height', `a non-negative integer range [${this.firstHeight}, ${this.firstHeight + this.count}). ${height} is invalid.`)
+      throw new WERR_INVALID_PARAMETER(
+        'height',
+        `a non-negative integer range [${this.firstHeight}, ${this.firstHeight + this.count}). ${height} is invalid.`
+      )
     const headerIndex = height - this.firstHeight
     const header = deserializeAsBlockHeader(this.data!, headerIndex * 80, height)
     return header
   }
 
-  async validate(options: { verifyChainWork: boolean, verifyBlockHash: boolean }): Promise<void> {
+  async validate(options: { verifyChainWork: boolean; verifyBlockHash: boolean }): Promise<void> {
     const fileHash = asString(Hash.sha256(asArray(this.data!)), 'base64')
     if (fileHash !== this.fileHash) {
       throw new WERR_INTERNAL(`BulkHeaderFile: invalid fileHash. Expected ${this.fileHash} vs ${fileHash}.`)
@@ -188,12 +222,13 @@ export class BulkHeaderFile {
         if (h.height !== height) throw new WERR_INTERNAL(`Bulk storage validation failure: header height`)
         if (h.previousHash !== prevHash) throw new Error('Bulk storage validation failure: previous hash')
         prevHash = h.hash
-        if (options.verifyChainWork)
-          chainWork = addWork(chainWork, convertBitsToWork(h.bits));
+        if (options.verifyChainWork) chainWork = addWork(chainWork, convertBitsToWork(h.bits))
       }
       if (options.verifyChainWork) {
         if (this.lastChainWork !== chainWork) {
-          throw new WERR_INTERNAL(`Bulk storage validation failure: last chainwork mismatch. Expected ${this.lastChainWork}, got ${chainWork}.`)
+          throw new WERR_INTERNAL(
+            `Bulk storage validation failure: last chainwork mismatch. Expected ${this.lastChainWork}, got ${chainWork}.`
+          )
         }
       }
     }
@@ -202,9 +237,9 @@ export class BulkHeaderFile {
 }
 
 export function deserializeAsBlockHeader(buffer: Uint8Array, offset: number, height: number): BlockHeader {
-  const reader = new ReaderUInt8Array(buffer, offset);
+  const reader = new ReaderUInt8Array(buffer, offset)
   const hashedData = asArray(buffer.slice(offset, offset + 80))
-  const hash = asString(doubleSha256BE(hashedData), 'hex');
+  const hash = asString(doubleSha256BE(hashedData), 'hex')
   const header: BlockHeader = {
     version: reader.readUInt32LE(),
     previousHash: asString(reader.read(32).reverse()),
@@ -221,7 +256,7 @@ export function deserializeAsBlockHeader(buffer: Uint8Array, offset: number, hei
 const mainNetHeadersJson = `
 {
   "rootFolder": "https://cdn.projectbabbage.com/blockheaders/",
-  "jsonFilename": "mainNet.json",
+  "jsonFilename": "mainNetBlockHeaders.json",
   "headersPerFile": 400000,
   "files": [
     {
@@ -261,7 +296,7 @@ const mainNetHeadersJson = `
 const testNetHeadersJson = `
 {
   "rootFolder": "https://cdn.projectbabbage.com/blockheaders/",
-  "jsonFilename": "testNet.json",
+  "jsonFilename": "testNetBlockHeaders.json",
   "headersPerFile": 400000,
   "files": [
     {
@@ -316,4 +351,4 @@ const testNetHeadersJson = `
     }
   ]
 }
-`;
+`

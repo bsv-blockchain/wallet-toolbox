@@ -5,11 +5,11 @@ export interface ChaintracksReadableFileApi {
   path: string
   close(): Promise<void>
   /**
-   * Returns the length of the data storage in bytes. 
+   * Returns the length of the data storage in bytes.
    */
   getLength(): Promise<number>
   /**
-   * 
+   *
    * @param length requested length to be returned, may return less than requested.
    * @param offset starting offset in the existing data storage to read from, defaults to 0.
    */
@@ -43,7 +43,7 @@ export interface ChaintracksWritableFileApi {
 
 /**
  * Supports file-like access to named data storage.
- * 
+ *
  * Only minimal functionality required by Chaintracks is supported.
  */
 export interface ChaintracksFsApi {

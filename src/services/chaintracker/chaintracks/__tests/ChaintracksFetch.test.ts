@@ -1,10 +1,10 @@
-import { Hash } from "@bsv/sdk"
-import { BulkHeaderFilesInfo } from "../util/BulkFilesReader"
-import { ChaintracksFetch } from "../util/ChaintracksFetch"
-import { asArray, asString } from "../../../../utility/utilityHelpers.noBuffer"
+import { Hash } from '@bsv/sdk'
+import { BulkHeaderFilesInfo } from '../util/BulkFilesReader'
+import { ChaintracksFetch } from '../util/ChaintracksFetch'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 
 describe('ChaintracksFetch tests', () => {
-    jest.setTimeout(99999999)
+  jest.setTimeout(99999999)
 
   test('0 fetchJson', async () => {
     const fetch = new ChaintracksFetch()
@@ -44,7 +44,7 @@ describe('ChaintracksFetch tests', () => {
     const data = await fetch.download(url)
     expect(data.length).toBe(80 * 77821)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(fileHash).toBe("AK1FlgOaPVFOeG2x+Tp7htOt15UaSpHXZjgx3F263x8=")
+    expect(fileHash).toBe('AK1FlgOaPVFOeG2x+Tp7htOt15UaSpHXZjgx3F263x8=')
   })
 
   test('4 download', async () => {
@@ -54,6 +54,6 @@ describe('ChaintracksFetch tests', () => {
     const data = await fetch.download(url)
     expect(data.length).toBe(80 * 99705)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(fileHash).toBe("ebnNDDlfPU2zpwhhcnx5gs5p7fBbmrGqfjreRxcmmAU=")
+    expect(fileHash).toBe('ebnNDDlfPU2zpwhhcnx5gs5p7fBbmrGqfjreRxcmmAU=')
   })
 })

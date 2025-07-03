@@ -1,11 +1,10 @@
-import { defaultHttpClient, HttpClient } from "@bsv/sdk";
-import { ChaintracksFetchApi } from "../Api/ChaintracksFetchApi";
+import { defaultHttpClient, HttpClient } from '@bsv/sdk'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 
 export class ChaintracksFetch implements ChaintracksFetchApi {
-  httpClient: HttpClient = defaultHttpClient();
+  httpClient: HttpClient = defaultHttpClient()
 
-  constructor() {
-  }
+  constructor() {}
 
   async download(url: string): Promise<Uint8Array> {
     const response = await fetch(url, {
@@ -13,13 +12,13 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
       headers: {
         'Content-Type': 'application/octet-stream'
       }
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to download from ${url}: ${response.statusText}`);
+      throw new Error(`Failed to download from ${url}: ${response.statusText}`)
     }
 
-    const data = await response.arrayBuffer();
+    const data = await response.arrayBuffer()
 
     return new Uint8Array(data)
   }
@@ -33,8 +32,8 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
     }
     const response = await this.httpClient.request(url, requestJsonOptions)
     if (!response.ok) {
-      throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`);
+      throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`)
     }
-    return response.data as R;
+    return response.data as R
   }
 }

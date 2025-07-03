@@ -33,6 +33,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [LiveBlockHeader](#interface-liveblockheader) |
 | [ServiceCall](#interface-servicecall) |
 | [ServiceToCall](#interface-servicetocall) |
+| [WocChainInfo](#interface-wocchaininfo) |
+| [WocHeader](#interface-wocheader) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -418,6 +420,51 @@ See also: [ServiceCall](./services.md#interface-servicecall)
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: WocChainInfo
+
+```ts
+export interface WocChainInfo {
+    chain: string;
+    blocks: number;
+    headers: number;
+    bestblockhash: string;
+    difficulty: number;
+    mediantime: number;
+    verificationprogress: number;
+    pruned: boolean;
+    chainwork: string;
+}
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: WocHeader
+
+```ts
+export interface WocHeader {
+    hash: string;
+    size: number;
+    height: number;
+    version: number;
+    versionHex: string;
+    merkleroot: string;
+    time: number;
+    mediantime: number;
+    nonce: number;
+    bits: number | string;
+    difficulty: number;
+    chainwork: string;
+    previousblockhash: string;
+    confirmations: number;
+    txcount: number;
+    nextblockhash: string;
+}
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 #### Classes
 
 | |
@@ -428,6 +475,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [ServiceCollection](#class-servicecollection) |
 | [Services](#class-services) |
 | [WhatsOnChain](#class-whatsonchain) |
+| [WhatsOnChainNoServices](#class-whatsonchainnoservices) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -742,25 +790,67 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: WhatsOnChain
 
 ```ts
-export class WhatsOnChain extends SdkWhatsOnChain {
+export class WhatsOnChain extends WhatsOnChainNoServices {
     services: Services;
     constructor(chain: sdk.Chain = "main", config: WhatsOnChainConfig = {}, services?: Services) 
+    async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> 
+}
+```
+
+See also: [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [Services](./services.md#class-services), [WalletServices](./client.md#interface-walletservices), [WhatsOnChainNoServices](./services.md#class-whatsonchainnoservices)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: WhatsOnChainNoServices
+
+```ts
+export class WhatsOnChainNoServices extends SdkWhatsOnChain {
+    constructor(chain: sdk.Chain = "main", config: WhatsOnChainConfig = {}) 
     async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> 
     async getTxPropagation(txid: string): Promise<number> 
     async getRawTx(txid: string): Promise<string | undefined> 
     async getRawTxResult(txid: string): Promise<sdk.GetRawTxResult> 
     async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
     async postRawTx(rawTx: HexString): Promise<sdk.PostTxResultForTxid> 
-    async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> 
     async updateBsvExchangeRate(rate?: sdk.BsvExchangeRate, updateMsecs?: number): Promise<sdk.BsvExchangeRate> 
     async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string): Promise<sdk.GetUtxoStatusResult> 
     async getScriptHashConfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
     async getScriptHashUnconfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
     async getScriptHashHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
+    async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> 
+    async getChainInfo(): Promise<WocChainInfo> 
 }
 ```
 
-See also: [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [Services](./services.md#class-services), [WalletServices](./client.md#interface-walletservices)
+See also: [BlockHeader](./services.md#interface-blockheader), [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [WocChainInfo](./services.md#interface-wocchaininfo)
+
+###### Method getBlockHeaderByHash
+
+{
+  "hash": "000000000000000004a288072ebb35e37233f419918f9783d499979cb6ac33eb",
+  "confirmations": 328433,
+  "size": 14421,
+  "height": 575045,
+  "version": 536928256,
+  "versionHex": "2000e000",
+  "merkleroot": "4ebcba09addd720991d03473f39dce4b9a72cc164e505cd446687a54df9b1585",
+  "time": 1553416668,
+  "mediantime": 1553414858,
+  "nonce": 87914848,
+  "bits": "180997ee",
+  "difficulty": 114608607557.4425,
+  "chainwork": "000000000000000000000000000000000000000000ddf5d385546872bab7dc01",
+  "previousblockhash": "00000000000000000988156c7075dc9147a5b62922f1310862e8b9000d46dd9b",
+  "nextblockhash": "00000000000000000112b36a37c10235fa0c991f680bc5482ba9692e0ae697db",
+  "nTx": 0,
+  "num_tx": 5
+}
+
+```ts
+async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> 
+```
+See also: [BlockHeader](./services.md#interface-blockheader)
 
 ###### Method getRawTx
 
@@ -843,18 +933,115 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | |
 | --- | --- |
+| [WocHeadersBulkListener](#function-wocheadersbulklistener) | [getWhatsOnChainBlockHeaderByHash](#function-getwhatsonchainblockheaderbyhash) |
+| [WocHeadersBulkListener_test](#function-wocheadersbulklistener_test) | [getWhatsOnChainTipHeight](#function-getwhatsonchaintipheight) |
+| [WocHeadersLiveListener](#function-wocheaderslivelistener) | [isBaseBlockHeader](#function-isbaseblockheader) |
+| [WocHeadersLiveListener_test](#function-wocheaderslivelistener_test) | [isBlockHeader](#function-isblockheader) |
 | [arcDefaultUrl](#function-arcdefaulturl) | [isLive](#function-islive) |
 | [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [isLiveBlockHeader](#function-isliveblockheader) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) |
-| [getBeefForTxid](#function-getbeeffortxid) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) |
-| [getExchangeRatesIo](#function-getexchangeratesio) | [updateExchangeratesapi](#function-updateexchangeratesapi) |
-| [isBaseBlockHeader](#function-isbaseblockheader) | [validateScriptHash](#function-validatescripthash) |
-| [isBlockHeader](#function-isblockheader) |  |
+| [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) |
+| [getBeefForTxid](#function-getbeeffortxid) | [updateExchangeratesapi](#function-updateexchangeratesapi) |
+| [getExchangeRatesIo](#function-getexchangeratesio) | [validateScriptHash](#function-validatescripthash) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
 
+##### Function: WocHeadersBulkListener
+
+High speed WebSocket based based old block header listener
+
+```ts
+export async function WocHeadersBulkListener(fromHeight: number, toHeight: number, enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: WocChain = "main", idleWait = 5000): Promise<boolean> 
+```
+
+See also: [BlockHeader](./services.md#interface-blockheader), [StopListenerToken](./services.md#type-stoplistenertoken), [WocChain](./services.md#type-wocchain)
+
+Returns
+
+true on normal completion, false if should restart if no error received.
+
+Argument Details
+
++ **enqueue**
+  + returns headers received from WebSocket service
++ **error**
+  + notifies of abnormal events, return false to close websocket, true to ignore the error.
++ **stop**
+  + an object with a stop property which gets set to a method to stop listener
++ **chain**
+  + 'test' | 'main'
++ **idleWait**
+  + how many milliseconds to timeout between completion checks.
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: WocHeadersBulkListener_test
+
+v2
+{
+"message": {
+"data": {
+  "version": 872415232,
+  "previousblockhash": "00000000000000000ea1f9ba0817a0f922ee227be306fd9097a4e76caf5ff411",
+  "merkleroot": "dcd7efb3c39e8e2d597e4757b9a49c98f52f77a6df39d1d5936ac3abb2559944",
+  "time": 1750182239,
+  "bits": 403926191,
+  "nonce": 1043732575,
+  "hash": "0000000000000000032d09ca772ca5b3bc5b90a79a5bbcc4a05c99fb6d3b23d8",
+  "height": 901658
+}
+}
+}
+
+```ts
+export async function WocHeadersBulkListener_test(): Promise<void> 
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: WocHeadersLiveListener
+
+High speed WebSocket based based new block header listener
+
+```ts
+export async function WocHeadersLiveListener(enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: WocChain = "main", idleWait = 100000): Promise<boolean> 
+```
+
+See also: [BlockHeader](./services.md#interface-blockheader), [StopListenerToken](./services.md#type-stoplistenertoken), [WocChain](./services.md#type-wocchain)
+
+Returns
+
+true only if exit caused by `stop`
+
+Argument Details
+
++ **enqueue**
+  + returns headers received from WebSocket service
++ **error**
+  + notifies of abnormal events, return false to close websocket, true to ignore the error.
++ **stop**
+  + an object with a stop property which gets set to a method to stop listener
++ **chain**
+  + 'test' | 'main'
++ **idleWait**
+  + without any input, after this many milliseconds, assume dead service and exit.
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: WocHeadersLiveListener_test
+
+```ts
+export async function WocHeadersLiveListener_test(): Promise<void> 
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Function: arcDefaultUrl
 
 ```ts
@@ -873,6 +1060,17 @@ export function arcGorillaPoolUrl(chain: sdk.Chain): string | undefined
 ```
 
 See also: [Chain](./client.md#type-chain)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: convertWocToBlockHeaderHex
+
+```ts
+export function convertWocToBlockHeaderHex(woc: WocHeader): BlockHeader 
+```
+
+See also: [BlockHeader](./services.md#interface-blockheader), [WocHeader](./services.md#interface-wocheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -906,6 +1104,28 @@ export async function getExchangeRatesIo(key: string): Promise<ExchangeRatesIoAp
 ```
 
 See also: [ExchangeRatesIoApi](./services.md#interface-exchangeratesioapi)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: getWhatsOnChainBlockHeaderByHash
+
+```ts
+export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: WocChain = "main", apiKey?: string): Promise<BlockHeader | undefined> 
+```
+
+See also: [BlockHeader](./services.md#interface-blockheader), [WocChain](./services.md#type-wocchain)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: getWhatsOnChainTipHeight
+
+```ts
+export async function getWhatsOnChainTipHeight(chain: WocChain = "main", apiKey?: string): Promise<number> 
+```
+
+See also: [WocChain](./services.md#type-wocchain)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1035,6 +1255,35 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 #### Types
 
+| |
+| --- |
+| [StopListenerToken](#type-stoplistenertoken) |
+| [WocChain](#type-wocchain) |
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+
+##### Type: StopListenerToken
+
+```ts
+export type StopListenerToken = {
+    stop: (() => void) | undefined;
+}
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Type: WocChain
+
+```ts
+export type WocChain = "main" | "test"
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 #### Variables
 
 

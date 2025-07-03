@@ -2,11 +2,12 @@
 import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
 
-import { asArray, asBuffer, asString } from '../../../../utility/utilityHelpers.buffer'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
 import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
+import { ReaderUInt8Array } from '../../../../utility/ReaderUint8Array'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.
@@ -373,8 +374,7 @@ export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[],
  * @publicbody
  */
 export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0): BaseBlockHeader {
-  buffer = asArray(buffer)
-  const reader = new Utils.Reader(buffer, offset)
+  const reader = ReaderUInt8Array.makeReader(buffer, offset)
   const header: BaseBlockHeader = {
     version: reader.readUInt32LE(),
     previousHash: asString(reader.read(32).reverse()),
