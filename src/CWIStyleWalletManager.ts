@@ -71,6 +71,57 @@ import { PrivilegedKeyManager } from './sdk/PrivilegedKeyManager'
 export const PBKDF2_NUM_ROUNDS = 7777
 
 /**
+ * PBKDF-2 that prefers the browser / Node 20+ WebCrypto implementation and
+ * silently falls back to the existing JS code.
+ *
+ * @param passwordBytes   Raw password bytes.
+ * @param salt            Salt bytes.
+ * @param iterations      Number of rounds.
+ * @param keyLen          Desired key length in bytes.
+ * @param hash            Digest algorithm (default "sha512").
+ * @returns               Derived key bytes.
+ */
+async function pbkdf2NativeOrJs(
+  passwordBytes: number[],
+  salt: number[],
+  iterations: number,
+  keyLen: number,
+  hash: 'sha256' | 'sha512' = 'sha512'
+): Promise<number[]> {
+  // ----- fast-path: WebCrypto (both browser & recent Node expose globalThis.crypto.subtle)
+  const subtle = (globalThis as any)?.crypto?.subtle as SubtleCrypto | undefined
+  if (subtle) {
+    try {
+      const baseKey = await subtle.importKey(
+        'raw',
+        new Uint8Array(passwordBytes),
+        { name: 'PBKDF2' },
+        /*extractable*/ false,
+        ['deriveBits']
+      )
+
+      const bits = await subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: new Uint8Array(salt),
+          iterations,
+          hash: hash.toUpperCase() as AlgorithmIdentifier
+        },
+        baseKey,
+        keyLen * 8
+      )
+      return Array.from(new Uint8Array(bits))
+    } catch (err) {
+      console.warn('[pbkdf2] WebCrypto path failed → falling back to JS implementation', err)
+      /* fall through */
+    }
+  }
+
+  // ----- slow-path: old JavaScript implementation
+  return Hash.pbkdf2(passwordBytes, salt, iterations, keyLen, hash)
+}
+
+/**
  * Unique Identifier for the default profile (16 zero bytes).
  */
 export const DEFAULT_PROFILE_ID = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -734,7 +785,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       if (!this.currentUMPToken) {
         throw new Error('Provide presentation or recovery key first.')
       }
-      const derivedPasswordKey = Hash.pbkdf2(
+      const derivedPasswordKey = await pbkdf2NativeOrJs(
         Utils.toArray(password, 'utf8'),
         this.currentUMPToken.passwordSalt,
         PBKDF2_NUM_ROUNDS,
@@ -777,7 +828,13 @@ export class CWIStyleWalletManager implements WalletInterface {
       const recoveryKey = Random(32)
       await this.recoveryKeySaver(recoveryKey)
       const passwordSalt = Random(32)
-      const passwordKey = Hash.pbkdf2(Utils.toArray(password, 'utf8'), passwordSalt, PBKDF2_NUM_ROUNDS, 32, 'sha512')
+      const passwordKey = await pbkdf2NativeOrJs(
+        Utils.toArray(password, 'utf8'),
+        passwordSalt,
+        PBKDF2_NUM_ROUNDS,
+        32,
+        'sha512'
+      )
       const rootPrimaryKey = Random(32)
       const rootPrivilegedKey = Random(32)
 
@@ -1177,7 +1234,7 @@ export class CWIStyleWalletManager implements WalletInterface {
     }
 
     const passwordSalt = Random(32)
-    const newPasswordKey = Hash.pbkdf2(
+    const newPasswordKey = await pbkdf2NativeOrJs(
       Utils.toArray(newPassword, 'utf8'),
       passwordSalt,
       PBKDF2_NUM_ROUNDS,
@@ -1615,7 +1672,7 @@ export class CWIStyleWalletManager implements WalletInterface {
       })
 
       // Decrypt the root privileged key using the confirmed password
-      const derivedPasswordKey = Hash.pbkdf2(
+      const derivedPasswordKey = await pbkdf2NativeOrJs(
         Utils.toArray(password, 'utf8'),
         this.currentUMPToken!.passwordSalt,
         PBKDF2_NUM_ROUNDS,
