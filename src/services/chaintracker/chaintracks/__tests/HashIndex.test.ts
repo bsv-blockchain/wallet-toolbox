@@ -1,11 +1,11 @@
-// @ts-nocheck
-// import { promises as fs } from 'fs'
 import { IndexLevel, IndexLevelMakeVal, IndexLevelVal } from '../util/IndexLevel'
 import { doubleSha256BE } from '../../../../utility/utilityHelpers'
 import { HashIndex } from '../util/HashIndex'
-import { asArray, asBuffer } from '../../../../utility/utilityHelpers.buffer'
+import { asArray } from '../../../../utility/utilityHelpers.noBuffer'
 import { BulkFilesReader } from '../util/BulkFilesReader'
 import { ChaintracksFs } from '../util/ChaintracksFs'
+
+const fs = ChaintracksFs
 
 describe('testing makeHashIndex', () => {
   jest.setTimeout(100000)
@@ -13,9 +13,7 @@ describe('testing makeHashIndex', () => {
   const fs = ChaintracksFs
 
   test('HashIndex', async () => {
-    const bufferOfHeaders = asArray(
-      await fs.readFile('./src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_0.headers')
-    )
+    const bufferOfHeaders = await fs.readFile('./src/services/chaintracker/chaintracks/__tests/data/bulk_cdn/mainNet_0.headers')
     const makeVal: IndexLevelMakeVal = (header, height) => ({ buffer: doubleSha256BE(header), height })
     const index = HashIndex.fromBufferOfHeaders(bufferOfHeaders, 0, makeVal)
     const height = await index.findHeight('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')

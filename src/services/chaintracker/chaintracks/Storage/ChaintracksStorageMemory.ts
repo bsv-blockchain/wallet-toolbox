@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { Chain } from '@cwi/chaintracks-base'
+import { Chain } from '../../../../sdk'
 import { StorageEngineKnex, StorageEngineKnexOptions } from './ChaintracksStorageKnex'
 import knex from 'knex'
 

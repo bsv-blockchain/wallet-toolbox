@@ -1,19 +1,19 @@
 import { BigNumber, Utils } from '@bsv/sdk'
 import { asArray } from './utilityHelpers.noBuffer'
 
-export class ReaderUInt8Array {
+export class ReaderUint8Array {
   public bin: Uint8Array
   public pos: number
   private readonly length: number
 
-  static makeReader(bin: Uint8Array | number[], pos: number = 0): ReaderUInt8Array | Utils.Reader {
+  static makeReader(bin: Uint8Array | number[], pos: number = 0): ReaderUint8Array | Utils.Reader {
     if (bin instanceof Uint8Array) {
-      return new ReaderUInt8Array(bin, pos)
+      return new ReaderUint8Array(bin, pos)
     }
     if (Array.isArray(bin)) {
       return new Utils.Reader(bin, pos)
     }
-    throw new Error('ReaderUInt8Array.makeReader: bin must be Uint8Array or number[]')
+    throw new Error('ReaderUint8Array.makeReader: bin must be Uint8Array or number[]')
   }
 
   constructor(bin: Uint8Array = new Uint8Array(0), pos: number = 0) {

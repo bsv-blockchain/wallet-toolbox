@@ -37,7 +37,7 @@ export interface BulkIndexApi {
    * @param count times 80 must equal headers.length
    * @param headers encoded as packed array of 80 byte serialized block headers
    */
-  appendHeaders(minHeight: number, count: number, headers: number[]): Promise<void>
+  appendHeaders(minHeight: number, count: number, headers: Uint8Array): Promise<void>
 
   /**
    * Returns the height of the block with the given hash.

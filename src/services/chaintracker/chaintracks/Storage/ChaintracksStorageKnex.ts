@@ -462,7 +462,7 @@ export class StorageEngineKnex extends StorageEngineBase {
       .limit(count)
       .orderBy('height')
 
-    const bufs: number[][] = []
+    const bufs: Uint8Array[] = []
 
     if (this.bulkStorage && (headers.length === 0 || headers[0].height > height)) {
       // Some or all headers requested are in bulk storage...
@@ -475,10 +475,11 @@ export class StorageEngineKnex extends StorageEngineBase {
 
     if (headers.length > 0) {
       // Some or all headers requested were in live storage...
-      const buf = []
+      let buf = new Uint8Array(headers.length * 80)
       for (let i = 0; i < headers.length; i++) {
         const h = headers[i]
-        serializeBlockHeader(h, buf, i * 80)
+        const ha = serializeBlockHeader(h)
+        buf.set(ha, i * 80)
       }
       bufs.push(buf)
     }
@@ -506,7 +507,7 @@ export class StorageEngineKnex extends StorageEngineBase {
   async headersToBuffer(
     height: number,
     count: number
-  ): Promise<{ buffer: number[]; headerId: number; hashes: string[]; merkleRoots: string[] }> {
+  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }> {
     const headers = await this.knex<LiveBlockHeader>(this.headerTableName)
       .where({ isActive: true })
       .andWhere('height', '>=', height)
@@ -516,12 +517,13 @@ export class StorageEngineKnex extends StorageEngineBase {
     if (headers.length && headers[0].height !== height)
       throw new Error(`Live headers database does not contain first header requested at height ${height}`)
 
-    const buffer = new Array<number>(headers.length * 80)
+    const buffer = new Uint8Array(headers.length * 80)
     const hashes: string[] = []
     const merkleRoots: string[] = []
     for (let i = 0; i < headers.length; i++) {
       const h = headers[i]
-      serializeBlockHeader(h, buffer, i * 80)
+      const ha = serializeBlockHeader(h)
+      buffer.set(ha, i * 80)
       hashes.push(h.hash)
       merkleRoots.push(h.merkleRoot)
     }

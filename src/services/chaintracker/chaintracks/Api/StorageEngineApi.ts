@@ -190,7 +190,7 @@ export interface StorageEngineQueryApi {
   headersToBuffer(
     height: number,
     count: number
-  ): Promise<{ buffer: number[]; headerId: number; hashes: string[]; merkleRoots: string[] }>
+  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }>
 
   /**
    * Adds headers in 80 byte serialized format to a buffer.

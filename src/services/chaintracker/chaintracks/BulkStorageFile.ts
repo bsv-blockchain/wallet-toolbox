@@ -1,14 +1,10 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BulkStorageBaseOptions } from './Api/BulkStorageApi'
-
 import { BulkStorageBase } from './Base/BulkStorageBase'
-
 import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
-import { doubleSha256BE, doubleSha256LE } from '../../../utility/utilityHelpers'
-import { asArray, asBuffer } from '../../../utility/utilityHelpers.buffer'
+import { doubleSha256BE } from '../../../utility/utilityHelpers'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi, ChaintracksAppendableFileApi } from './Api/ChaintracksFsApi'
 
@@ -101,7 +97,7 @@ export class BulkStorageFile extends BulkStorageBase {
     return header
   }
 
-  async appendHeaders(minHeight: number, count: number, newBulkHeaders: number[]): Promise<void> {
+  async appendHeaders(minHeight: number, count: number, newBulkHeaders: Uint8Array): Promise<void> {
     await this.makeAvailable()
     if (!this.file) throw new Error('File should be open...')
     const maxHeight = await this.getMaxHeight()
@@ -114,7 +110,7 @@ export class BulkStorageFile extends BulkStorageBase {
     console.log(`bulk header count after append ${this.fileLength / 80}`)
   }
 
-  async headersToBuffer(height: number, count: number): Promise<number[]> {
+  async headersToBuffer(height: number, count: number): Promise<Uint8Array> {
     await this.makeAvailable()
     if (!this.file) throw new Error('File should be open...')
     const position = height * 80

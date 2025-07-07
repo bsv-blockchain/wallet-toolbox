@@ -1,20 +1,17 @@
 import { Hash } from '@bsv/sdk'
 import { Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
-import { ReaderUInt8Array } from '../../../../utility/ReaderUint8Array'
+import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import {
   addWork,
   convertBitsToWork,
-  deserializeBlockHeader,
-  sha256HashOfBinaryFile
 } from '../util/blockHeaderUtilities'
 import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
-import { doubleSha256BE, doubleSha256LE, sha256Hash } from '../../../../utility/utilityHelpers'
+import { doubleSha256BE } from '../../../../utility/utilityHelpers'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
-import { info } from 'console'
 
 export interface BulkBlockHeadersOptions {
   chain: Chain
@@ -237,7 +234,7 @@ export class BulkHeaderFile {
 }
 
 export function deserializeAsBlockHeader(buffer: Uint8Array, offset: number, height: number): BlockHeader {
-  const reader = new ReaderUInt8Array(buffer, offset)
+  const reader = new ReaderUint8Array(buffer, offset)
   const hashedData = asArray(buffer.slice(offset, offset + 80))
   const hash = asString(doubleSha256BE(hashedData), 'hex')
   const header: BlockHeader = {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   InsertHeaderResult,
   StorageEngineBaseOptions,
@@ -115,7 +114,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   abstract headersToBuffer(
     height: number,
     count: number
-  ): Promise<{ buffer: number[]; headerId: number; hashes: string[]; merkleRoots: string[] }>
+  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }>
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
@@ -330,107 +329,5 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   async findReorgDepth(header1: LiveBlockHeader, header2: LiveBlockHeader): Promise<number> {
     const ancestor = await this.findCommonAncestor(header1, header2)
     return Math.max(header1.height, header2.height) - ancestor.height
-  }
-
-  async exportBulkHeadersToFiles(params: {
-    fs: ChaintracksFsApi
-    rootFolder?: string
-    maxPerFile?: number
-    heightMin?: number
-    heightMax?: number
-  }): Promise<void> {
-    const { fs, rootFolder = './data/', maxPerFile = 625000 } = params
-    let { heightMin = 0, heightMax } = params
-
-    try {
-      const bulkAgeLimit = this.liveHeightThreshold
-      const filenamePrefix = this.chain === 'main' ? 'mainNet' : this.chain === 'test' ? 'testNet' : 'stn'
-
-      const tip = await this.findChainTipHeader()
-      if (!tip) return
-
-      heightMin = Math.max(0, heightMin)
-      if (heightMax === undefined) heightMax = tip.height - bulkAgeLimit
-      heightMax = Math.max(heightMin, Math.min(heightMax, tip.height - bulkAgeLimit))
-      let countRemaining = heightMax - heightMin + 1
-
-      const jsonFilename = `${filenamePrefix}.json`
-      const bulkHeaders: BulkHeaderFilesInfo = { files: [], rootFolder, jsonFilename }
-
-      const perFile = maxPerFile
-
-      let fileNum = 0
-      let nextHeight = heightMin
-      let lastHeaderHash = (await this.findHeaderForHeight(heightMin)).previousHash
-      while (countRemaining > 0) {
-        const filename = `${filenamePrefix}_${fileNum}.headers`
-        console.log(filename)
-
-        const filepath = fs.pathJoin(rootFolder, filename)
-
-        let hf: BulkHeaderFileInfo = {
-          fileName: filename,
-          firstHeight: nextHeight,
-          count: Math.min(perFile, countRemaining),
-          prevHash: lastHeaderHash,
-          lastHash: null,
-          fileHash: null
-        }
-
-        let file: ChaintracksAppendableFileApi | undefined = await fs.openAppendableFile(filepath)
-        if (0 < (await file.getLength())) {
-          // File existed with non-zero contents...
-          await file.close()
-          file = undefined
-          const hfa = await BulkFilesReader.validateHeaderFile(fs, rootFolder, hf)
-          if (hfa.count < hf.count) {
-            // Truncate to empty file...
-            const f2 = await fs.openWritableFile(filepath)
-            await f2.close()
-            // Re-open truncated file for appending.
-            file = await fs.openAppendableFile(filepath)
-          } else {
-            // Existing file is valid and complete, leave it.
-            hf = hfa
-            nextHeight += hf.count
-            lastHeaderHash = hf.lastHash ?? '00'.repeat(32)
-          }
-        }
-
-        if (file) {
-          // We have an empty file open for append...write it.
-
-          const sha256 = new Hash.SHA256()
-
-          let fileRemaining = hf.count
-          while (fileRemaining > 0) {
-            const chunkSize = Math.min(100, fileRemaining)
-
-            const { buffer } = await this.headersToBuffer(nextHeight, chunkSize)
-
-            lastHeaderHash = validateBufferOfHeaders(buffer, lastHeaderHash, 0, chunkSize)
-
-            sha256.update(buffer)
-            await file.append(buffer)
-            fileRemaining -= chunkSize
-            nextHeight += chunkSize
-          }
-
-          await file.close()
-
-          hf.fileHash = Utils.toBase64(sha256.digest())
-          hf.lastHash = lastHeaderHash
-        }
-
-        bulkHeaders.files.push(hf)
-
-        countRemaining -= hf.count
-        fileNum++
-      }
-
-      await fs.writeFile(`${rootFolder}${jsonFilename}`, Utils.toArray(JSON.stringify(bulkHeaders), 'utf8'))
-    } catch (err) {
-      console.log(err)
-    }
   }
 }

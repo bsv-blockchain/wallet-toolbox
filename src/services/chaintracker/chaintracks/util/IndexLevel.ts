@@ -2,6 +2,8 @@ import { Utils } from '@bsv/sdk'
 import { doubleSha256BE } from '../../../../utility/utilityHelpers'
 import { HashIndexInfo } from './HashIndex'
 import { writeUInt32BE } from './blockHeaderUtilities'
+import { asArray } from '../../../../utility/utilityHelpers.noBuffer'
+import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
 
 export type IndexLevelVal = { buffer: number[]; height: number }
 export type IndexLevelBin = IndexLevel | IndexLevelVal[] // e.g. BlockHashHeight, MerkleRootHeight
@@ -51,12 +53,12 @@ export class IndexLevel {
     return index
   }
 
-  load(buffer: number[], firstHeight: number) {
+  load(buffer: Uint8Array, firstHeight: number) {
     if (!this.makeVal) throw new Error('makeVal is required')
     for (let i = 0; i < buffer.length / 80; i++) {
       const header = buffer.slice(i * 80, i * 80 + 80)
       const height = i + firstHeight
-      const v = this.makeVal(header, height)
+      const v = this.makeVal(asArray(header), height)
       this.loadVal(v)
     }
   }
@@ -78,12 +80,12 @@ export class IndexLevel {
     }
   }
 
-  static makeEmptyIndex(): number[] {
+  static makeEmptyIndex(): Uint8Array {
     const index = new IndexLevel()
     return index.toBuffer()
   }
 
-  toBuffer(): number[] {
+  toBuffer(): Uint8Array {
     let countBins = 0
     let countVals = 0
     let maxVals = 0
@@ -105,7 +107,7 @@ export class IndexLevel {
     // <valcount>    At each offset, one byte count of vals in bin.
     // <val>         32 BE bytes buffer 4 BE byte height
     const length = 1 + 4 + 4 + 4 + 1 + levels * 2 + 4 + countBins * (4 + 4) + countVals * (32 + 4)
-    const buffer: number[] = new Array(length)
+    const buffer: Uint8Array = new Uint8Array(length)
     let offset = 0
     buffer[offset++] = 1
     offset = writeUInt32BE(this.firstHeight, buffer, offset)
@@ -121,7 +123,7 @@ export class IndexLevel {
       offset = writeUInt32BE(binOffset, buffer, offset)
       binOffset = writeUInt32BE(vals.length, buffer, binOffset)
       for (let i = 0; i < vals.length; i++) {
-        buffer.splice(binOffset, 32, ...vals[i].buffer)
+        buffer.set(vals[i].buffer, binOffset)
         binOffset += 32
         binOffset = writeUInt32BE(vals[i].height, buffer, binOffset)
       }
@@ -130,8 +132,8 @@ export class IndexLevel {
     return buffer
   }
 
-  static parseBuffer(buffer: number[]): HashIndexInfo {
-    const reader = new Utils.Reader(buffer)
+  static parseBuffer(buffer: Uint8Array): HashIndexInfo {
+    const reader = new ReaderUint8Array(buffer)
     const version = reader.read(1)[0]
     const firstHeight = reader.readUInt32BE()
     const count = reader.readUInt32BE()

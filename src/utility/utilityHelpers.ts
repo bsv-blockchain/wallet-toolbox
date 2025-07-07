@@ -1,8 +1,9 @@
-import { HexString, PubKeyHex, WalletInterface, WalletNetwork } from '@bsv/sdk'
+import { HexString, PubKeyHex, WalletNetwork } from '@bsv/sdk'
 import { Beef, Hash, PrivateKey, PublicKey, Random, Script, Transaction, Utils } from '@bsv/sdk'
 import { sdk } from '../index.client'
 import { Chain } from '../sdk/types'
 import { CertOpsWallet } from '../sdk'
+import { asArray } from './utilityHelpers.noBuffer'
 
 export async function getIdentityKey(wallet: CertOpsWallet): Promise<PubKeyHex> {
   return (await wallet.getPublicKey({ identityKey: true })).publicKey
@@ -220,7 +221,10 @@ export function maxDate(d1?: Date, d2?: Date): Date | undefined {
  * @returns sha256 hash of buffer contents.
  * @publicbody
  */
-export function sha256Hash(data: number[]): number[] {
+export function sha256Hash(data: number[] | Uint8Array): number[] {
+  if (!Array.isArray(data)) {
+    data = asArray(data)
+  }
   const first = new Hash.SHA256().update(data).digest()
   return first
 }
@@ -231,7 +235,10 @@ export function sha256Hash(data: number[]): number[] {
  * @returns double sha256 hash of data, byte 0 of hash first.
  * @publicbody
  */
-export function doubleSha256LE(data: number[]): number[] {
+export function doubleSha256LE(data: number[] | Uint8Array): number[] {
+  if (!Array.isArray(data)) {
+    data = asArray(data)
+  }
   const first = new Hash.SHA256().update(data).digest()
   const second = new Hash.SHA256().update(first).digest()
   return second
@@ -243,6 +250,6 @@ export function doubleSha256LE(data: number[]): number[] {
  * @returns reversed (big-endian) double sha256 hash of data, byte 31 of hash first.
  * @publicbody
  */
-export function doubleSha256BE(data: number[]): number[] {
+export function doubleSha256BE(data: number[] | Uint8Array): number[] {
   return doubleSha256LE(data).reverse()
 }

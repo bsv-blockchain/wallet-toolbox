@@ -1,5 +1,5 @@
 import { HeightRange } from './HeightRange'
-import { deserializeBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
+import { addWork, deserializeBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
 
 import { BaseBlockHeader } from '../Api/BlockHeaderApi'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
@@ -318,6 +318,13 @@ export class BulkFilesReader {
       let offset = 0
 
       let prevHash = hf.prevHash
+      let prevChainWork = hf.prevChainWork
+      if (!prevHash || prevHash.length !== 64) {
+        throw new Error(`Invalid previous hash ${prevHash} for file ${filename}. Must be a 64 character hex string.`)
+      }
+      if (!prevChainWork || prevChainWork.length !== 64) {
+        throw new Error(`Invalid previous chain work ${prevChainWork} for file ${filename}. Must be a 64 character hex string.`)
+      }
 
       let fileCount = 0
 
@@ -341,7 +348,9 @@ export class BulkFilesReader {
         }
         offset += rr.length
         const count = rr.length / 80
-        prevHash = validateBufferOfHeaders(rr, prevHash, 0, count).lastHeaderHash
+        const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(rr, prevHash, 0, count, prevChainWork)
+        prevChainWork = lastChainWork!
+        prevHash = lastHeaderHash
         fileCount += count
       }
 
@@ -350,6 +359,7 @@ export class BulkFilesReader {
         throw { message: `File ${filename} lastHash of ${lastHash} doesn't match expected lastHash of ${hf.lastHash}` }
 
       hfa.lastHash = lastHash
+      hfa.lastChainWork = prevChainWork
 
       const fileHash = Utils.toBase64(sha256.digest())
       /**

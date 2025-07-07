@@ -32,7 +32,7 @@ export abstract class BulkIndexBase implements BulkIndexApi {
 
   abstract setStorage(storage: StorageEngineApi): Promise<void>
   abstract validate(added: HeightRange): Promise<void>
-  abstract appendHeaders(minHeight: number, count: number, newBulkHeaders: number[]): Promise<void>
+  abstract appendHeaders(minHeight: number, count: number, newBulkHeaders: Uint8Array): Promise<void>
   abstract findHeightForBlockHash(hash: string): Promise<number | undefined>
   abstract findHeightForMerkleRoot(merkleRoot: string): Promise<number | undefined>
 }

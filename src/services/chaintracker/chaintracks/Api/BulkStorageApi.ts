@@ -48,7 +48,7 @@ export interface BulkStorageApi {
    * @param count times 80 must equal headers.length
    * @param headers encoded as packed array of 80 byte serialized block headers
    */
-  appendHeaders(minHeight: number, count: number, headers: number[]): Promise<void>
+  appendHeaders(minHeight: number, count: number, headers: Uint8Array): Promise<void>
 
   /**
    * Returns block header for a given block height on active chain.
@@ -73,7 +73,7 @@ export interface BulkStorageApi {
    * @param height of first header
    * @param count of headers
    */
-  headersToBuffer(height: number, count: number): Promise<number[]>
+  headersToBuffer(height: number, count: number): Promise<Uint8Array>
 
   /**
    * Exports current bulk headers, including all ingests, excluding live headers to static header files.

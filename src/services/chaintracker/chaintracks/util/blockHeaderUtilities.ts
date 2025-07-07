@@ -1,13 +1,12 @@
-// @ts-nocheck
 import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
 
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
-import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
+import { BaseBlockHeader, BlockHeader, isBaseBlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
-import { ReaderUInt8Array } from '../../../../utility/ReaderUint8Array'
+import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.
@@ -23,7 +22,7 @@ export async function sha256HashOfBinaryFile(
   const sha256 = new Hash.SHA256()
   const bytes = await fs.readFile(filepath)
   const length = bytes.length
-  sha256.update(bytes)
+  sha256.update(asArray(bytes))
   return { hash: Utils.toBase64(sha256.digest()), length }
 }
 
@@ -138,7 +137,7 @@ export function convertBitsToWork(bits: number | number[]): string {
 }
 
 export function deserializeBaseBlockHeaders(
-  buffer: number[],
+  buffer: number[] | Uint8Array,
   offset = 0,
   count?: number | undefined
 ): BaseBlockHeader[] {
@@ -152,7 +151,7 @@ export function deserializeBaseBlockHeaders(
 
 export function deserializeBlockHeaders(
   firstHeight: number,
-  buffer: number[],
+  buffer: number[] | Uint8Array,
   offset = 0,
   count?: number | undefined
 ): BlockHeader[] {
@@ -170,23 +169,6 @@ export function deserializeBlockHeaders(
     offset += 80
   }
   return headers
-}
-
-/**
- * Extract an array of block hashes and of merkleRoots from a buffer of serialized block headers.
- * @param buffer
- */
-export function extractHashesAndRoots(buffer: Buffer): { hashes: Buffer[]; merkleRoots: Buffer[] } {
-  const hashes: Buffer[] = []
-  const merkleRoots: Buffer[] = []
-  for (let i = 0; i < buffer.length / 80; i++) {
-    const offset = i * 80
-    const hash = asBuffer(doubleSha256LE(asArray(buffer.subarray(offset, 80 + offset))).reverse())
-    const merkleRoot = buffer.subarray(36 + offset, 68 + offset).reverse()
-    hashes.push(hash)
-    merkleRoots.push(merkleRoot)
-  }
-  return { hashes, merkleRoots }
 }
 
 /**
@@ -344,8 +326,8 @@ export function validateHeaderDifficulty(hash: Buffer, bits: number) {
  * @returns doule sha256 hash of header bytes reversed
  * @publicbody
  */
-export function blockHash(header: BaseBlockHeader | number[]): string {
-  const a = !Array.isArray(header) ? serializeBlockHeader(header) : header
+export function blockHash(header: BaseBlockHeader | number[] | Uint8Array): string {
+  const a = !Array.isArray(header) && !(header instanceof Uint8Array) ? serializeBlockHeader(header) : header
   if (a.length !== 80) throw new Error('Block header must be 80 bytes long.')
   return asString(doubleSha256BE(a))
 }
@@ -384,7 +366,7 @@ export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[],
  * @publicbody
  */
 export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0): BaseBlockHeader {
-  const reader = ReaderUInt8Array.makeReader(buffer, offset)
+  const reader = ReaderUint8Array.makeReader(buffer, offset)
   const header: BaseBlockHeader = {
     version: reader.readUInt32LE(),
     previousHash: asString(reader.read(32).reverse()),
@@ -457,7 +439,7 @@ export function convertUint32ToBuffer(n: number, littleEndian = true): number[] 
   return littleEndian ? a : a.reverse()
 }
 
-export function writeUInt32LE(n: number, a: number[], offset: number): number {
+export function writeUInt32LE(n: number, a: number[] | Uint8Array, offset: number): number {
   a[offset++] = n & 0xff // lowest byte
   a[offset++] = (n >> 8) & 0xff
   a[offset++] = (n >> 16) & 0xff
@@ -465,7 +447,7 @@ export function writeUInt32LE(n: number, a: number[], offset: number): number {
   return offset
 }
 
-export function writeUInt32BE(n: number, a: number[], offset: number): number {
+export function writeUInt32BE(n: number, a: number[] | Uint8Array, offset: number): number {
   a[offset++] = (n >> 24) & 0xff // highest byte
   a[offset++] = (n >> 16) & 0xff
   a[offset++] = (n >> 8) & 0xff
@@ -473,11 +455,11 @@ export function writeUInt32BE(n: number, a: number[], offset: number): number {
   return offset
 }
 
-export function readUInt32LE(a: number[], offset: number): number {
+export function readUInt32LE(a: number[] | Uint8Array, offset: number): number {
   return a[offset++] | (a[offset++] << 8) | (a[offset++] << 16) | (a[offset++] << 24)
 }
 
-export function readUInt32BE(a: number[], offset: number): number {
+export function readUInt32BE(a: number[] | Uint8Array, offset: number): number {
   return (a[offset++] << 24) | (a[offset++] << 16) | (a[offset++] << 8) | a[offset++]
 }
 
@@ -487,7 +469,7 @@ export function readUInt32BE(a: number[], offset: number): number {
  * @returns a number value in the Uint32 value range
  * @publicbody
  */
-export function convertBufferToUint32(buffer: number[], littleEndian = true): number {
+export function convertBufferToUint32(buffer: number[] | Uint8Array, littleEndian = true): number {
   const a = littleEndian ? buffer : buffer.slice().reverse()
   const n = a[0] | (a[1] << 8) | (a[2] << 16) | (a[3] << 24)
   return n

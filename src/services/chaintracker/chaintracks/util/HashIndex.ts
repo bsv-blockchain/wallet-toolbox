@@ -21,7 +21,7 @@ export class HashIndex {
   info: HashIndexInfo
   levelSize: number[]
 
-  constructor(public buffer: number[]) {
+  constructor(public buffer: Uint8Array) {
     this.info = IndexLevel.parseBuffer(buffer)
     this.levelSize = new Array(this.info.levels).fill(0)
     for (let i = this.info.levels - 1; i >= 0; i--) {
@@ -29,17 +29,17 @@ export class HashIndex {
     }
   }
 
-  static makeBlockHashIndex(bufferOfHeaders: number[], firstHeight: number) {
+  static makeBlockHashIndex(bufferOfHeaders: Uint8Array, firstHeight: number) {
     const makeVal: IndexLevelMakeVal = (header, height) => ({ buffer: doubleSha256BE(header), height })
     return this.fromBufferOfHeaders(bufferOfHeaders, firstHeight, makeVal)
   }
 
-  static makeMerkleRootIndex(bufferOfHeaders: number[], firstHeight: number) {
+  static makeMerkleRootIndex(bufferOfHeaders: Uint8Array, firstHeight: number) {
     const makeVal: IndexLevelMakeVal = (header, height) => ({ buffer: header.slice(36, 68).reverse(), height })
     return this.fromBufferOfHeaders(bufferOfHeaders, firstHeight, makeVal)
   }
 
-  static fromBufferOfHeaders(bufferOfHeaders: number[], firstHeight: number, makeVal: IndexLevelMakeVal): HashIndex {
+  static fromBufferOfHeaders(bufferOfHeaders: Uint8Array, firstHeight: number, makeVal: IndexLevelMakeVal): HashIndex {
     let count = bufferOfHeaders.length / 80
     const shifts: number[] = []
     while (count / 256 > 4) {
@@ -70,17 +70,16 @@ export class HashIndex {
 
   static async loadFromFile(fs: ChaintracksFsApi, rootFolder: string, filename: string): Promise<HashIndex> {
     const path = fs.pathJoin(rootFolder, filename)
-    let buffer: number[] | undefined
+    let buffer: Uint8Array | undefined
     try {
-      const data = await fs.readFile(path)
-      buffer = asArray(data)
+      buffer = await fs.readFile(path)
     } catch (uerr) {
       if ((uerr as { code: string })?.code !== 'ENOENT') throw uerr
     }
     if (!buffer) {
       buffer = IndexLevel.makeEmptyIndex()
       await fs.writeFile(path, asUint8Array(buffer))
-      buffer = asArray(await fs.readFile(path))
+      buffer = await fs.readFile(path)
     }
     return new HashIndex(buffer)
   }

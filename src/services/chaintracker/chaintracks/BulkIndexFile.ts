@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Chain } from '../../../sdk/types'
 import { BulkIndexBaseOptions } from './Api/BulkIndexApi'
@@ -7,6 +6,7 @@ import { BulkIndexBase } from './Base/BulkIndexBase'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { HashIndex } from './util/HashIndex'
 import { HeightRange } from './util/HeightRange'
+import { asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 
 export interface BulkIndexFileOptions extends BulkIndexBaseOptions {
   rootFolder: string | undefined
@@ -47,9 +47,9 @@ export class BulkIndexFile extends BulkIndexBase {
     this.storage = storage
     const o = this.options
     if (o.hasBlockHashToHeightIndex && o.blockHashFilename && o.rootFolder)
-      this.hashIndex = await HashIndex.loadFromFile(o.rootFolder, o.blockHashFilename)
+      this.hashIndex = await HashIndex.loadFromFile(this.fs, o.rootFolder, o.blockHashFilename)
     if (o.hasMerkleRootToHeightIndex && o.merkleRootFilename && o.rootFolder)
-      this.rootIndex = await HashIndex.loadFromFile(o.rootFolder, o.merkleRootFilename)
+      this.rootIndex = await HashIndex.loadFromFile(this.fs, o.rootFolder, o.merkleRootFilename)
   }
 
   override async validate(added: HeightRange): Promise<void> {
@@ -73,18 +73,18 @@ export class BulkIndexFile extends BulkIndexBase {
     console.log('Bulk header indices are valid.')
   }
 
-  override async appendHeaders(minHeight: number, count: number, newBulkHeaders: number[]): Promise<void> {
+  override async appendHeaders(minHeight: number, count: number, newBulkHeaders: Uint8Array): Promise<void> {
     if (minHeight !== 0) throw new Error('Only appendHeaders from zero is supported.')
     if (count !== newBulkHeaders.length / 80) throw new Error('newBulkHeaders length must be 80 * count')
     const o = this.options
     if (o.hasBlockHashToHeightIndex && o.blockHashFilename && o.rootFolder) {
       this.hashIndex = HashIndex.makeBlockHashIndex(newBulkHeaders, minHeight)
-      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.blockHashFilename), this.hashIndex.buffer)
+      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.blockHashFilename), asUint8Array(this.hashIndex.buffer))
       console.log(`Wrote new hashIndex for ${newBulkHeaders.length / 80} headers.`)
     }
     if (o.hasMerkleRootToHeightIndex && o.merkleRootFilename && o.rootFolder) {
       this.rootIndex = HashIndex.makeMerkleRootIndex(newBulkHeaders, minHeight)
-      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.merkleRootFilename), this.rootIndex.buffer)
+      await this.fs.writeFile(this.fs.pathJoin(o.rootFolder, o.merkleRootFilename), asUint8Array(this.rootIndex.buffer))
       console.log(`Wrote new rootIndex for ${newBulkHeaders.length / 80} headers.`)
     }
   }
