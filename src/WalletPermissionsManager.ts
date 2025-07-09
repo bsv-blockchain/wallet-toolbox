@@ -568,10 +568,13 @@ export class WalletPermissionsManager implements WalletInterface {
       }
     }
 
-    // Update the cache regardless of ephemeral status
-    const expiry = params.expiry || Math.floor(Date.now() / 1000) + 3600 * 24 * 30
-    const key = this.buildRequestKey(matching.request as PermissionRequest)
-    this.cachePermission(key, expiry)
+    // Only cache non-ephemeral permissions
+    // Ephemeral permissions should not be cached as they are one-time authorizations
+    if (!params.ephemeral) {
+      const expiry = params.expiry || Math.floor(Date.now() / 1000) + 3600 * 24 * 30
+      const key = this.buildRequestKey(matching.request as PermissionRequest)
+      this.cachePermission(key, expiry)
+    }
   }
 
   /**
@@ -825,10 +828,6 @@ export class WalletPermissionsManager implements WalletInterface {
         reason,
         renewal: false
       })
-      if (granted) {
-        // Unknown expiry until grantPermission() is called; cache for now with TTL only
-        this.cachePermission(cacheKey, 0)
-      }
       return granted
     }
   }
@@ -891,9 +890,6 @@ export class WalletPermissionsManager implements WalletInterface {
         reason,
         renewal: false
       })
-      if (granted) {
-        this.cachePermission(cacheKey, 0)
-      }
       return granted
     }
   }
@@ -975,9 +971,6 @@ export class WalletPermissionsManager implements WalletInterface {
         reason,
         renewal: false
       })
-      if (granted) {
-        this.cachePermission(cacheKey, 0)
-      }
       return granted
     }
   }
@@ -1026,7 +1019,7 @@ export class WalletPermissionsManager implements WalletInterface {
             `Spending authorization insufficient for ${satoshis}, no user consent (seekPermission=false).`
           )
         }
-        const granted = await this.requestPermissionFlow({
+        return await this.requestPermissionFlow({
           type: 'spending',
           originator,
           spending: { satoshis, lineItems },
@@ -1034,27 +1027,19 @@ export class WalletPermissionsManager implements WalletInterface {
           renewal: true,
           previousToken: token
         })
-        if (granted) {
-          this.cachePermission(cacheKey, 0)
-        }
-        return granted
       }
     } else {
       // no token
       if (!seekPermission) {
         throw new Error(`No spending authorization found, (seekPermission=false).`)
       }
-      const granted = await this.requestPermissionFlow({
+      return await this.requestPermissionFlow({
         type: 'spending',
         originator,
         spending: { satoshis, lineItems },
         reason,
         renewal: false
       })
-      if (granted) {
-        this.cachePermission(cacheKey, 0)
-      }
-      return granted
     }
   }
 
@@ -1102,7 +1087,7 @@ export class WalletPermissionsManager implements WalletInterface {
     }
 
     // 3) Let ensureProtocolPermission handle the rest.
-    const granted = await this.ensureProtocolPermission({
+    return await this.ensureProtocolPermission({
       originator,
       privileged: false,
       protocolID: [1, `action label ${label}`],
@@ -1111,10 +1096,6 @@ export class WalletPermissionsManager implements WalletInterface {
       seekPermission,
       usageType: 'generic'
     })
-    if (granted) {
-      this.cachePermission(cacheKey, 0)
-    }
-    return granted
   }
 
   /**

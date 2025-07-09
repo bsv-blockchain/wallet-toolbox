@@ -169,7 +169,7 @@ export abstract class TestUtilsWalletStorage {
     services: Services
   }> {
     const env = _tu.getEnv('main')
-    if (!env.cloudMySQLConnection) throw new sdk.WERR_INVALID_PARAMETER('env.cloundMySQLConnection', 'valid')
+    if (!env.cloudMySQLConnection) throw new sdk.WERR_INVALID_PARAMETER('env.cloudMySQLConnection', 'valid')
     const knex = Setup.createMySQLKnex(env.cloudMySQLConnection)
     const storage = new StorageKnex({
       chain: env.chain,
