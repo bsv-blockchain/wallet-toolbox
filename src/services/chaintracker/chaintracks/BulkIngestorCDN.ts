@@ -104,7 +104,9 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     const bf0 = this.bulkFiles.files[0]
     if (!bf0 || bf0.firstHeight !== this.currentRange.minHeight) {
-      throw new WERR_INTERNAL(`file 0 firstHeight ${bf0.firstHeight} must equal currentRange minHeight ${this.currentRange.minHeight}`)
+      throw new WERR_INTERNAL(
+        `file 0 firstHeight ${bf0.firstHeight} must equal currentRange minHeight ${this.currentRange.minHeight}`
+      )
     }
 
     let firstHeight = this.currentRange.minHeight
@@ -119,7 +121,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
       const data = await reader.read()
       if (!data || data.length === 0) {
         break
-      } 
+      }
       const last = validateBufferOfHeaders(data, prevHash, 0, undefined, prevChainWork)
 
       await toFs.writeFile(toPath(i), data)
@@ -153,7 +155,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     const reader = await this.getBulkFilesManager(neededRange)
 
     const toUrl = (file: string) => this.fs.pathJoin(this.cdnUrl, file)
-    const filePath = (file: string) => this.fs.pathJoin(this.localCachePath, file)  
+    const filePath = (file: string) => this.fs.pathJoin(this.localCachePath, file)
 
     const url = toUrl(this.jsonResource)
     this.bulkFiles = await this.fetch.fetchJson(url)
@@ -165,14 +167,13 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     let heightRange = HeightRange.empty
 
     try {
-
       let filesUpdated = false
       for (let i = 0; i < this.bulkFiles.files.length; i++) {
         const file = this.bulkFiles.files[i]
         const path = filePath(file.fileName)
 
         heightRange = heightRange.union(new HeightRange(file.firstHeight, file.firstHeight + file.count - 1))
-        
+
         log += JSON.stringify(file) + '\n'
 
         if (i < reader.files.length) {

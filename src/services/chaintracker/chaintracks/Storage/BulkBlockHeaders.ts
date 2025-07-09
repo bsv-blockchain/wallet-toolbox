@@ -3,10 +3,7 @@ import { Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } 
 import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { BlockHeader } from '../Api/BlockHeaderApi'
-import {
-  addWork,
-  convertBitsToWork,
-} from '../util/blockHeaderUtilities'
+import { addWork, convertBitsToWork } from '../util/blockHeaderUtilities'
 import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { doubleSha256BE } from '../../../../utility/utilityHelpers'

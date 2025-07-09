@@ -67,7 +67,13 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     if (!this.localCachePath) throw new Error('localCachePath options property is undefined.')
     if (!this.jsonFilename) throw new Error('jsonFilename options property is undefined.')
 
-    const manager = await BulkFilesManager.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange, maxBufferSize)
+    const manager = await BulkFilesManager.fromJsonFile(
+      this.fs,
+      this.localCachePath,
+      this.jsonFilename,
+      neededRange,
+      maxBufferSize
+    )
 
     return manager
   }

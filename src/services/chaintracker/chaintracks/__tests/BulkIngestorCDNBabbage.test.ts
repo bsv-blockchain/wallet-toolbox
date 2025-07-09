@@ -40,4 +40,3 @@ async function testUpdateLocalCache(chain: Chain) {
   const r = await cdn.updateLocalCache(new HeightRange(0, 900000), 900000)
   return { cdn, r }
 }
-

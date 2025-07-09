@@ -112,7 +112,7 @@ export abstract class BulkStorageBase implements BulkStorageApi {
       const buffer = await this.headersToBuffer(height, count)
       await this.fs.writeFile(this.fs.pathJoin(rootFolder, file.fileName), buffer)
       file = await BulkFilesReader.validateHeaderFile(this.fs, rootFolder, file)
-      if (!file.lastHash) throw new Error('Unexpected result.');
+      if (!file.lastHash) throw new Error('Unexpected result.')
       prevHash = file.lastHash
       prevChainWork = file.lastChainWork
       info.files.push(file)

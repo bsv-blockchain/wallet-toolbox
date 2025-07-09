@@ -236,7 +236,6 @@ export class BulkFilesReader {
     jsonFilename: string,
     failToEmptyRange: boolean = true
   ): Promise<BulkHeaderFilesInfo> {
-
     const filePath = (file: string) => fs.pathJoin(rootFolder, file)
 
     const jsonPath = filePath(jsonFilename)
@@ -290,11 +289,11 @@ export class BulkFilesReader {
     hf: BulkHeaderFileInfo,
     data?: Uint8Array
   ): Promise<BulkHeaderFileInfo> {
-
     if (data) {
       const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
       const vbhfi = validBulkHeaderFilesByFileHash[fileHash]
-      if (vbhfi &&
+      if (
+        vbhfi &&
         vbhfi.fileName === hf.fileName &&
         vbhfi.firstHeight === hf.firstHeight &&
         vbhfi.prevHash === hf.prevHash &&
@@ -303,8 +302,9 @@ export class BulkFilesReader {
         vbhfi.fileHash === hf.fileHash &&
         vbhfi.lastChainWork === hf.lastChainWork &&
         vbhfi.prevChainWork === hf.prevChainWork &&
-        vbhfi.chain === hf.chain) {
-          return { ...hf }
+        vbhfi.chain === hf.chain
+      ) {
+        return { ...hf }
       }
     }
 
@@ -323,7 +323,9 @@ export class BulkFilesReader {
         throw new Error(`Invalid previous hash ${prevHash} for file ${filename}. Must be a 64 character hex string.`)
       }
       if (!prevChainWork || prevChainWork.length !== 64) {
-        throw new Error(`Invalid previous chain work ${prevChainWork} for file ${filename}. Must be a 64 character hex string.`)
+        throw new Error(
+          `Invalid previous chain work ${prevChainWork} for file ${filename}. Must be a 64 character hex string.`
+        )
       }
 
       let fileCount = 0

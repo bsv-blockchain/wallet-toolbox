@@ -12339,7 +12339,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 Calculate the SHA256 hash of the SHA256 hash of an array of bytes.
 
 ```ts
-export function doubleSha256BE(data: number[]): number[] {
+export function doubleSha256BE(data: number[] | Uint8Array): number[] {
     return doubleSha256LE(data).reverse();
 }
 ```
@@ -12363,12 +12363,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 Calculate the SHA256 hash of the SHA256 hash of an array of bytes.
 
 ```ts
-export function doubleSha256LE(data: number[]): number[] {
+export function doubleSha256LE(data: number[] | Uint8Array): number[] {
+    if (!Array.isArray(data)) {
+        data = asArray(data);
+    }
     const first = new Hash.SHA256().update(data).digest();
     const second = new Hash.SHA256().update(first).digest();
     return second;
 }
 ```
+
+See also: [asArray](./client.md#function-asarray)
 
 Returns
 
@@ -12977,11 +12982,16 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 Calculate the SHA256 hash of an array of bytes
 
 ```ts
-export function sha256Hash(data: number[]): number[] {
+export function sha256Hash(data: number[] | Uint8Array): number[] {
+    if (!Array.isArray(data)) {
+        data = asArray(data);
+    }
     const first = new Hash.SHA256().update(data).digest();
     return first;
 }
 ```
+
+See also: [asArray](./client.md#function-asarray)
 
 Returns
 
