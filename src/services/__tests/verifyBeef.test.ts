@@ -28,7 +28,9 @@ describe('verifyBeef tests', () => {
       expect(ok).toBe(true)
     }
     {
-      const beef = verifyTruthy(await storage.getValidBeefForTxid(getBeefForTxid, undefined, undefined, undefined, undefined, 1))
+      const beef = verifyTruthy(
+        await storage.getValidBeefForTxid(getBeefForTxid, undefined, undefined, undefined, undefined, 1)
+      )
       const chaintracker = await services.getChainTracker()
       const ok = await beef.verify(chaintracker, true)
       expect(ok).toBe(true)
