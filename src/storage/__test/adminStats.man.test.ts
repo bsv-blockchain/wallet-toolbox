@@ -1,9 +1,8 @@
-import { before } from 'node:test'
 import { _tu, TestWalletOnly } from '../../../test/utils/TestUtilsWalletStorage'
 import { Setup } from '../../Setup'
 import { StorageKnex } from '../StorageKnex'
-import { AuthFetch, WalletInterface } from '@bsv/sdk'
-import { StorageAdminStats, StorageClient } from '../index.client'
+import { AuthFetch } from '@bsv/sdk'
+import { StorageAdminStats } from '../index.client'
 import { Format } from '../../utility/Format'
 
 describe('storage adminStats tests', () => {

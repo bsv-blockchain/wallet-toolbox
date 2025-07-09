@@ -1,6 +1,7 @@
 import { Beef } from '@bsv/sdk'
 import { Services } from '../Services'
-import { logger } from '../../../test/utils/TestUtilsWalletStorage'
+import { _tu, logger } from '../../../test/utils/TestUtilsWalletStorage'
+import { verifyTruthy } from '../../utility/utilityHelpers'
 
 describe('verifyBeef tests', () => {
   jest.setTimeout(99999999)
@@ -14,6 +15,27 @@ describe('verifyBeef tests', () => {
     logger(beef.toLogString())
 
     const ok = await beef.verify(chaintracker, true)
-    expect(ok)
+    expect(ok).toBe(true)
+  })
+
+  test('1_', async () => {
+    if (_tu.noEnv('main')) return
+    const { env, storage, services } = await _tu.createMainReviewSetup()
+
+    const getBeefForTxid = '4d9a1eff26bac99c7524cb7b2e808b77935d3d890562db2fefc6cb8cb92a6b16'
+    {
+      const beef = await services.getBeefForTxid(getBeefForTxid)
+      const chaintracker = await services.getChainTracker()
+      const ok = await beef.verify(chaintracker, true)
+      expect(ok).toBe(true)
+    }
+    {
+      const beef = verifyTruthy(
+        await storage.getValidBeefForTxid(getBeefForTxid, undefined, undefined, undefined, undefined, 1)
+      )
+      const chaintracker = await services.getChainTracker()
+      const ok = await beef.verify(chaintracker, true)
+      expect(ok).toBe(true)
+    }
   })
 })
