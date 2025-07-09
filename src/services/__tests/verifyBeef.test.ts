@@ -19,8 +19,10 @@ describe('verifyBeef tests', () => {
   })
 
   test('1_', async () => {
-    const getBeefForTxid = '4d9a1eff26bac99c7524cb7b2e808b77935d3d890562db2fefc6cb8cb92a6b16'
+    if (_tu.noEnv('main')) return
     const { env, storage, services } = await _tu.createMainReviewSetup()
+
+    const getBeefForTxid = '4d9a1eff26bac99c7524cb7b2e808b77935d3d890562db2fefc6cb8cb92a6b16'
     {
       const beef = await services.getBeefForTxid(getBeefForTxid)
       const chaintracker = await services.getChainTracker()
