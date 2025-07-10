@@ -1,6 +1,6 @@
 import { BulkStorageApi } from './Api/BulkStorageApi'
 import { BulkIndexApi } from './Api/BulkIndexApi'
-import { InsertHeaderResult, StorageEngineApi } from './Api/StorageEngineApi'
+import { InsertHeaderResult, ChaintracksStorageApi } from './Api/ChaintracksStorageApi'
 import { BulkIngestorApi } from './Api/BulkIngestorApi'
 import { LiveIngestorApi } from './Api/LiveIngestorApi'
 
@@ -31,7 +31,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   callbacks: { header: (HeaderListener | null)[]; reorg: (ReorgListener | null)[] } = { header: [], reorg: [] }
 
   chain: Chain
-  storageEngine: StorageEngineApi
+  storageEngine: ChaintracksStorageApi
   bulkStorage?: BulkStorageApi
   bulkIndex?: BulkIndexApi
   bulkIngestors: BulkIngestorApi[]

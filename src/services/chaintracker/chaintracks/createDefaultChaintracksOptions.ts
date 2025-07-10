@@ -5,7 +5,7 @@ import { Chaintracks } from './Chaintracks'
 import { BulkStorageFile } from './BulkStorageFile'
 import { BulkIndexFile } from './BulkIndexFile'
 import { ChaintracksFs } from './util/ChaintracksFs'
-import { StorageEngineKnex } from './Storage'
+import { ChaintracksStorageKnex } from './Storage'
 import { BulkIngestorCDNBabbage } from './BulkIngestorCDNBabbage'
 import { BulkIngestorWhatsOnChain } from './Ingest/BulkIngestorWhatsOnChain'
 import { ChaintracksFetch } from './util/ChaintracksFetch'
@@ -43,9 +43,9 @@ export function createDefaultChaintracksOptions(
 
   const knexInstance = makeKnex(knexConfig || localSqlite)
 
-  const knexOptions = StorageEngineKnex.createStorageEngineKnexOptions(chain)
+  const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain)
   knexOptions.knex = knexInstance
-  options.storageEngine = new StorageEngineKnex(knexOptions)
+  options.storageEngine = new ChaintracksStorageKnex(knexOptions)
 
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
     chain,

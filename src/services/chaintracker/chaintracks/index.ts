@@ -1,8 +1,8 @@
 export * from './Api/ChaintracksApi'
 export * from './Chaintracks'
 
-export * from './Api/StorageEngineApi'
-export * from './Base/StorageEngineBase'
+export * from './Api/ChaintracksStorageApi'
+export * from './Base/ChaintracksStorageBase'
 
 export * from './Api/BulkStorageApi'
 export * from './Base/BulkStorageBase'

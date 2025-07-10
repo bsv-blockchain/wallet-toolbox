@@ -1,4 +1,4 @@
-import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 import { HeightRange } from '../util/HeightRange'
 import { Chain } from '../../../../sdk/types'
 
@@ -58,5 +58,5 @@ export interface BulkIndexApi {
    * Components requiring asynchronous setup can override base class implementation.
    * @param storage
    */
-  setStorage(storage: StorageEngineApi): Promise<void>
+  setStorage(storage: ChaintracksStorageApi): Promise<void>
 }

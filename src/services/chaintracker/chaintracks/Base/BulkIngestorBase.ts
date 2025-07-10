@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { BulkIngestorApi, BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
-import { StorageEngineApi } from '../Api/StorageEngineApi'
+import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 
 import { BulkFilesReader, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { HeightRange } from '../util/HeightRange'
@@ -46,13 +46,13 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     this.bypassLiveEnabled = options.bypassLiveEnabled
   }
 
-  private storageEngine: StorageEngineApi | undefined
+  private storageEngine: ChaintracksStorageApi | undefined
 
-  async setStorage(storage: StorageEngineApi): Promise<void> {
+  async setStorage(storage: ChaintracksStorageApi): Promise<void> {
     this.storageEngine = storage
   }
 
-  storage(): StorageEngineApi {
+  storage(): ChaintracksStorageApi {
     if (!this.storageEngine) throw new Error('storageEngine must be set.')
     return this.storageEngine
   }

@@ -1,9 +1,9 @@
 import {
   InsertHeaderResult,
-  StorageEngineBaseOptions,
-  StorageEngineIngestApi,
-  StorageEngineQueryApi
-} from '../Api/StorageEngineApi'
+  ChaintracksStorageBaseOptions,
+  ChaintracksStorageIngestApi,
+  ChaintracksStorageQueryApi as ChaintracksStorageQueryApi
+} from '../Api/ChaintracksStorageApi'
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { HeightRange } from '../util/HeightRange'
 import { BulkIndexApi } from '../Api/BulkIndexApi'
@@ -37,9 +37,9 @@ export interface MerkleRootHeight {
 /**
  * Required interface methods of a Chaintracks Storage Engine implementation.
  */
-export abstract class StorageEngineBase implements StorageEngineQueryApi, StorageEngineIngestApi {
-  static createStorageEngineBaseOptions(chain: Chain): StorageEngineBaseOptions {
-    const options: StorageEngineBaseOptions = {
+export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryApi, ChaintracksStorageIngestApi {
+  static createStorageBaseOptions(chain: Chain): ChaintracksStorageBaseOptions {
+    const options: ChaintracksStorageBaseOptions = {
       chain,
       liveHeightThreshold: 2000,
       reorgHeightThreshold: 400,
@@ -67,7 +67,7 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   bulkStorage?: BulkStorageApi
   bulkIndex?: BulkIndexApi
 
-  constructor(options: StorageEngineBaseOptions) {
+  constructor(options: ChaintracksStorageBaseOptions) {
     this.chain = options.chain
     this.liveHeightThreshold = options.liveHeightThreshold
     this.reorgHeightThreshold = options.reorgHeightThreshold
@@ -129,8 +129,8 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
    * Use to throw a consistent error when bulk storage is not configured
    *  and a method is called that requires bulk storage.
    */
-  confirmHasBulkStorageEngine() {
-    if (!this.bulkStorage) throw new Error('Bulk storage is not configured in `StorageEngineBaseOptions`.')
+  confirmHasBulkStorage() {
+    if (!this.bulkStorage) throw new Error('Bulk storage is not configured in `ChaintracksStorageBaseOptions`.')
   }
 
   /**
@@ -139,9 +139,9 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
    *  and a method is called that requires the index.
    */
   confirmHasBulkBlockHashToHeightIndex() {
-    this.confirmHasBulkStorageEngine()
+    this.confirmHasBulkStorage()
     if (this.hasBlockHashToHeightIndex === false)
-      throw new Error('`hasBlockHashToHeightIndex` is false in `StorageEngineBaseOptions`.')
+      throw new Error('`hasBlockHashToHeightIndex` is false in `ChaintracksStorageBaseOptions`.')
   }
 
   /**
@@ -150,9 +150,9 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
    *  and a method is called that requires the index.
    */
   confirmHasBulkMerkleRootToHeightIndex() {
-    this.confirmHasBulkStorageEngine()
+    this.confirmHasBulkStorage()
     if (this.hasMerkleRootToHeightIndex === false)
-      throw new Error('`hasMerkleRootToHeightIndex` is false in `StorageEngineBaseOptions`.')
+      throw new Error('`hasMerkleRootToHeightIndex` is false in `ChaintracksStorageBaseOptions`.')
   }
 
   // BASE CLASS IMPLEMENTATIONS - MAY BE OVERRIDEN

@@ -4,7 +4,7 @@
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from './BlockHeaderApi'
 import { ChaintracksFsApi } from './ChaintracksFsApi'
-import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 
 export interface BulkIngestorBaseOptions {
   /**
@@ -81,7 +81,7 @@ export interface BulkIngestorApi {
    * Components requiring asynchronous setup can override base class implementation.
    * @param storage
    */
-  setStorage(storage: StorageEngineApi): Promise<void>
+  setStorage(storage: ChaintracksStorageApi): Promise<void>
 
-  storage(): StorageEngineApi
+  storage(): ChaintracksStorageApi
 }

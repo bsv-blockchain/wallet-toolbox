@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
-import { InsertHeaderResult, StorageEngineBaseOptions } from '../Api/StorageEngineApi'
-import { BlockHashHeight, MerkleRootHeight, StorageEngineBase } from '../Base/StorageEngineBase'
+import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
+import { BlockHashHeight, MerkleRootHeight, ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
 import { Chain, WalletError, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_NOT_IMPLEMENTED } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
@@ -10,7 +10,7 @@ import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
 import { determineDBType } from '../../../../index.all'
 
-export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
+export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
   /**
    * Required.
    *
@@ -38,13 +38,13 @@ export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
 }
 
 /**
- * Implements the StorageEngineApi using Knex.js for both MySql and Sqlite support.
- * Also see `StorageEngineMemory` which leverages Knex support for an in memory database.
+ * Implements the ChaintracksStorageApi using Knex.js for both MySql and Sqlite support.
+ * Also see `ChaintracksStorageMemory` which leverages Knex support for an in memory database.
  */
-export class StorageEngineKnex extends StorageEngineBase {
-  static createStorageEngineKnexOptions(chain: Chain): StorageEngineKnexOptions {
-    const options: StorageEngineKnexOptions = {
-      ...StorageEngineBase.createStorageEngineBaseOptions(chain),
+export class ChaintracksStorageKnex extends ChaintracksStorageBase {
+  static createStorageKnexOptions(chain: Chain): ChaintracksStorageKnexOptions {
+    const options: ChaintracksStorageKnexOptions = {
+      ...ChaintracksStorageBase.createStorageBaseOptions(chain),
       knex: undefined,
       headerTableName: `live_headers`,
       bulkBlockHashTableName: `bulk_hash`,
@@ -60,7 +60,7 @@ export class StorageEngineKnex extends StorageEngineBase {
   bulkBlockHashTableName: string
   bulkMerkleRootTableName: string
 
-  constructor(options: StorageEngineKnexOptions) {
+  constructor(options: ChaintracksStorageKnexOptions) {
     super(options)
     if (!options.knex) throw new Error('The knex options property is required.')
     this.knex = options.knex

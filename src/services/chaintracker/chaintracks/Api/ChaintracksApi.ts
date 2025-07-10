@@ -4,11 +4,11 @@ import { BulkIngestorApi } from './BulkIngestorApi'
 import { BulkStorageApi } from './BulkStorageApi'
 import { ChaintracksApi } from './ChaintracksClientApi'
 import { LiveIngestorApi } from './LiveIngestorApi'
-import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 
 export interface ChaintracksOptions {
   chain: Chain
-  storageEngine: StorageEngineApi | undefined
+  storageEngine: ChaintracksStorageApi | undefined
   bulkStorage: BulkStorageApi | undefined
   bulkIndex: BulkIndexApi | undefined
   bulkIngestors: BulkIngestorApi[]

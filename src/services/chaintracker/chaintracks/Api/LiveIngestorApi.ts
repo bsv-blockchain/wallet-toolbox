@@ -1,5 +1,5 @@
 import { BlockHeader } from './BlockHeaderApi'
-import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 
 /* eslint-disable @typescript-eslint/no-empty-interface */
 export interface LiveIngestorApi {
@@ -15,9 +15,9 @@ export interface LiveIngestorApi {
    * Components requiring asynchronous setup can override base class implementation.
    * @param storage
    */
-  setStorage(storage: StorageEngineApi): Promise<void>
+  setStorage(storage: ChaintracksStorageApi): Promise<void>
 
-  storage(): StorageEngineApi
+  storage(): ChaintracksStorageApi
 
   startListening(liveHeaders: BlockHeader[]): Promise<void>
 

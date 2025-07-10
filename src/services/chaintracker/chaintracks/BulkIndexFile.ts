@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Chain } from '../../../sdk/types'
 import { BulkIndexBaseOptions } from './Api/BulkIndexApi'
-import { StorageEngineApi } from './Api/StorageEngineApi'
+import { ChaintracksStorageApi } from './Api/ChaintracksStorageApi'
 import { BulkIndexBase } from './Base/BulkIndexBase'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { HashIndex } from './util/HashIndex'
@@ -33,7 +33,7 @@ export class BulkIndexFile extends BulkIndexBase {
   hashIndex: HashIndex | undefined
   rootIndex: HashIndex | undefined
 
-  private storage: StorageEngineApi | undefined
+  private storage: ChaintracksStorageApi | undefined
 
   constructor(options: BulkIndexFileOptions) {
     super(options)
@@ -43,7 +43,7 @@ export class BulkIndexFile extends BulkIndexBase {
     this.fs = options.fs
   }
 
-  override async setStorage(storage: StorageEngineApi): Promise<void> {
+  override async setStorage(storage: ChaintracksStorageApi): Promise<void> {
     this.storage = storage
     const o = this.options
     if (o.hasBlockHashToHeightIndex && o.blockHashFilename && o.rootFolder)

@@ -2,7 +2,7 @@
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { HeightRange } from '../util/HeightRange'
-import { StorageEngineApi } from './StorageEngineApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 import { ChaintracksFsApi } from './ChaintracksFsApi'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -88,7 +88,7 @@ export interface BulkStorageApi {
    * Components requiring asynchronous setup can override base class implementation.
    * @param storage
    */
-  setStorage(storage: StorageEngineApi): Promise<void>
+  setStorage(storage: ChaintracksStorageApi): Promise<void>
 
   /**
    * Validates bulk headers.

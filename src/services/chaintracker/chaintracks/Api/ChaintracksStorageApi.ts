@@ -7,7 +7,7 @@ import { BulkHeaderFileInfo } from '../util/BulkFilesReader'
 
 /// StorageEngine Interface
 
-export interface StorageEngineBaseOptions {
+export interface ChaintracksStorageBaseOptions {
   /**
    * Which chain is being tracked: main, test, or stn.
    */
@@ -65,7 +65,7 @@ export interface StorageEngineBaseOptions {
   batchInsertLimit: number
 }
 
-export interface StorageEngineQueryApi {
+export interface ChaintracksStorageQueryApi {
   /**
    * Returns the active chain tip header
    * Throws an error if there is no tip.
@@ -375,7 +375,7 @@ export type InsertHeaderResult = {
   noTip: boolean
 }
 
-export interface StorageEngineIngestApi {
+export interface ChaintracksStorageIngestApi {
   insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
   updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
   getBulkFiles(): Promise<BulkHeaderFileInfo[]>
@@ -514,7 +514,7 @@ export interface StorageEngineIngestApi {
   getLiveHeightRange(): Promise<HeightRange>
 }
 
-export interface StorageEngineApi extends StorageEngineQueryApi, StorageEngineIngestApi {
+export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, ChaintracksStorageIngestApi {
   /**
    * Close and release all resources.
    */

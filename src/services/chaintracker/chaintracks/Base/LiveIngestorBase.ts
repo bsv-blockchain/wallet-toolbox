@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Chain } from '../../../../sdk/types'
 import { LiveIngestorApi } from '../Api/LiveIngestorApi'
-import { StorageEngineApi } from '../Api/StorageEngineApi'
+import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 
 export interface LiveIngestorBaseOptions {
@@ -34,13 +34,13 @@ export abstract class LiveIngestorBase implements LiveIngestorApi {
    */
   async shutdown(): Promise<void> {}
 
-  private storageEngine?: StorageEngineApi
+  private storageEngine?: ChaintracksStorageApi
 
   /**
    * Allocate resources.
    * @param storage coordinating storage engine.
    */
-  async setStorage(storage: StorageEngineApi): Promise<void> {
+  async setStorage(storage: ChaintracksStorageApi): Promise<void> {
     this.storageEngine = storage
   }
 
@@ -48,7 +48,7 @@ export abstract class LiveIngestorBase implements LiveIngestorApi {
    *
    * @returns coordinating storage engine.
    */
-  storage(): StorageEngineApi {
+  storage(): ChaintracksStorageApi {
     if (!this.storageEngine) throw new Error('storageEngine must be set.')
     return this.storageEngine
   }

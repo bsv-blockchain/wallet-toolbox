@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { BulkIndexApi, BulkIndexBaseOptions } from '../Api/BulkIndexApi'
 import { HeightRange } from '../util/HeightRange'
-import { StorageEngineApi } from '../Api/StorageEngineApi'
+import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 import { Chain } from '../../../../sdk/types'
 
 export abstract class BulkIndexBase implements BulkIndexApi {
@@ -30,7 +30,7 @@ export abstract class BulkIndexBase implements BulkIndexApi {
 
   async shutdown(): Promise<void> {}
 
-  abstract setStorage(storage: StorageEngineApi): Promise<void>
+  abstract setStorage(storage: ChaintracksStorageApi): Promise<void>
   abstract validate(added: HeightRange): Promise<void>
   abstract appendHeaders(minHeight: number, count: number, newBulkHeaders: Uint8Array): Promise<void>
   abstract findHeightForBlockHash(hash: string): Promise<number | undefined>

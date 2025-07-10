@@ -1,21 +1,21 @@
 import { Chain } from '../../../../sdk'
-import { StorageEngineKnex, StorageEngineKnexOptions } from './ChaintracksStorageKnex'
+import { ChaintracksStorageKnex, ChaintracksStorageKnexOptions } from './ChaintracksStorageKnex'
 import knex from 'knex'
 
-export interface StorageEngineMemoryOptions extends StorageEngineKnexOptions {
+export interface ChaintracksStorageMemoryOptions extends ChaintracksStorageKnexOptions {
   sqliteClient: 'sqlite3' | 'better-sqlite3' | undefined
 }
 
-export class StorageEngineMemory extends StorageEngineKnex {
-  static createStorageEngineMemoryOptions(chain: Chain) {
-    const options: StorageEngineMemoryOptions = {
-      ...StorageEngineKnex.createStorageEngineKnexOptions(chain),
+export class ChaintracksStorageMemory extends ChaintracksStorageKnex {
+  static createStorageMemoryOptions(chain: Chain) {
+    const options: ChaintracksStorageMemoryOptions = {
+      ...ChaintracksStorageKnex.createStorageKnexOptions(chain),
       sqliteClient: 'sqlite3'
     }
     return options
   }
 
-  constructor(options: StorageEngineMemoryOptions) {
+  constructor(options: ChaintracksStorageMemoryOptions) {
     if (options.knex)
       throw new Error(
         'knex will be automatically configured from the sqliteClient property setting. Must be undefined.'

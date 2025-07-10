@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BulkStorageApi, BulkStorageBaseOptions } from '../Api/BulkStorageApi'
 
-import { StorageEngineBase } from './StorageEngineBase'
+import { ChaintracksStorageBase } from './ChaintracksStorageBase'
 
 import { HeightRange } from '../util/HeightRange'
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
@@ -48,7 +48,7 @@ export abstract class BulkStorageBase implements BulkStorageApi {
     return new HeightRange(0, await this.getMaxHeight())
   }
 
-  async setStorage(storage: StorageEngineBase): Promise<void> {}
+  async setStorage(storage: ChaintracksStorageBase): Promise<void> {}
 
   async validateHeaders(): Promise<LiveBlockHeader | undefined> {
     const countPerChunk = 200000
