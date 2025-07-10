@@ -340,4 +340,34 @@ describe('listOutputs test', () => {
       })
     }
   })
+
+  test('13 issue 50', async () => {
+    for (const { wallet } of ctxs) {
+      {
+        const args: ListOutputsArgs = {
+          basket: 'babbage-token-access',
+          tags: ['babbage_basket todo tokens'],   // <-- tag exists, 17 outputs
+          tagQueryMode: 'any',
+          includeTags: true,
+          includeCustomInstructions: true,
+          includeLabels: true,
+        };
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBeGreaterThan(0)
+      }
+      {
+        const args: ListOutputsArgs = {
+          basket: 'babbage-token-access',
+          tags: ['a_tag_that_does_not_exist'],   // tag does not exist.. error?
+          tagQueryMode: 'any',
+          includeTags: true,
+          includeCustomInstructions: true,
+          includeLabels: true,
+        };
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(0)
+      }
+    }
+  })
+
 })
