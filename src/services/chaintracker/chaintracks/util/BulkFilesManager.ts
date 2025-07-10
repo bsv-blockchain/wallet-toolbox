@@ -43,10 +43,11 @@ export class BulkFilesManager extends BulkFilesReader {
   }
 
   async appendHeaders(headers: Uint8Array, firstHeight: number, previousHash: string): Promise<void> {
-    if (!this.files || this.files.length === 0) {
-      throw new Error('At least one existing bulk header file is required to append headers.')
+    let prevChainWork = '00'.repeat(32)
+    if (this.files && this.files.length > 0) {
+      const lf = this.files[this.files.length - 1]
+      prevChainWork = lf.lastChainWork
     }
-    const lf = this.files[this.files.length - 1]
     let file: BulkHeaderFileInfo = {
       fileName: this.jsonFilename.replace('.json', `_${this.files.length}.headers`),
       firstHeight,
@@ -54,10 +55,11 @@ export class BulkFilesManager extends BulkFilesReader {
       count: headers.length / 80,
       lastHash: null,
       fileHash: null,
-      prevChainWork: lf.lastChainWork,
+      prevChainWork,
       lastChainWork: ''
     }
-    await this.fs.writeFile(this.fs.pathJoin(this.rootFolder, file.fileName), headers)
+    const f = await this.fs.openAppendableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
+    try { await f.append(headers) } finally { await f.close() }
     file = await BulkFilesReader.validateHeaderFile(this.fs, this.rootFolder, file)
     this.files.push(file)
     await this.writeJsonFile()

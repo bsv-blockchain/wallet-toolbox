@@ -157,7 +157,7 @@ export async function WocHeadersBulkListener(
           } else if (data.connect) {
             logger(json)
           } else if (data.pub) {
-            logger(json)
+            //logger(json)
             const wocHeader = data.pub.data
             if (wocHeader) {
               const header = convertWocToBlockHeaderHex(wocHeader)
@@ -338,7 +338,7 @@ export async function WocHeadersLiveListener(
   let done = false
   let wsIsOpen = false
 
-  let msecsWithoutMessage = 0
+  let msecsWithoutPing = 0
 
   function stopNow(): void {
     ok = true
@@ -372,7 +372,7 @@ export async function WocHeadersLiveListener(
           if (json === '{}') {
             ws.send('ping')
           } else {
-            logger(JSON.stringify(data))
+            //logger(JSON.stringify(data))
             const wocHeader = data.pub?.data || data.data?.data
             if (wocHeader) {
               const header = convertWocToBlockHeaderHex(wocHeader)
@@ -448,7 +448,7 @@ export async function WocHeadersLiveListener(
   ws.onmessage = function (this, ev) {
     // console.log("onmessage:", JSON.stringify(ev.data));
     processData(ev.data)
-    msecsWithoutMessage = 0
+    msecsWithoutPing = 0
   }
 
   //startPing()
@@ -459,7 +459,7 @@ export async function WocHeadersLiveListener(
   while (!done) {
     await wait(waitMsecs)
 
-    msecsWithoutMessage += waitMsecs
+    msecsWithoutPing += waitMsecs
     sinceLastSentPing += waitMsecs
 
     if (sinceLastSentPing > 10000) {

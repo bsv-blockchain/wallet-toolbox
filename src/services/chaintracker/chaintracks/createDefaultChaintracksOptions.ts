@@ -37,7 +37,7 @@ export function createDefaultChaintracksOptions(
 
   const localSqlite: Knex.Config = {
     client: 'sqlite3',
-    connection: { filename: `${rootFolder}${chain}Net_chaintracks.sqlite` },
+    connection: { filename: fs.pathJoin(rootFolder,`${chain}Net_chaintracks.sqlite`)},
     useNullAsDefault: true
   }
 
