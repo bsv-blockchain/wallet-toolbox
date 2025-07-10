@@ -127,6 +127,8 @@ export class ReaderUint8Array {
   }
 
   public readInt64LEBn(): BigNumber {
+    const OverflowInt64 = new BigNumber(2).pow(new BigNumber(63))
+    const OverflowUint64 = new BigNumber(2).pow(new BigNumber(64))
     const bin = asArray(this.readReverse(8))
     let bn = new BigNumber(bin)
     if (bn.gte(OverflowInt64)) {
@@ -183,6 +185,3 @@ export class ReaderUint8Array {
     }
   }
 }
-
-const OverflowInt64 = new BigNumber(2).pow(new BigNumber(63))
-const OverflowUint64 = new BigNumber(2).pow(new BigNumber(64))

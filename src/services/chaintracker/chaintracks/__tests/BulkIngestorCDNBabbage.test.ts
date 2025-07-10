@@ -37,6 +37,6 @@ async function testUpdateLocalCache(chain: Chain) {
   )
 
   const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
-  const r = await cdn.updateLocalCache(new HeightRange(0, 900000), 900000)
+  const r = await cdn.updateLocalCache(new HeightRange(0, 9900000), 900000)
   return { cdn, r }
 }

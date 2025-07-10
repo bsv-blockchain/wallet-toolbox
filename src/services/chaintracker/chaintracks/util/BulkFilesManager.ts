@@ -59,7 +59,11 @@ export class BulkFilesManager extends BulkFilesReader {
       lastChainWork: ''
     }
     const f = await this.fs.openAppendableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
-    try { await f.append(headers) } finally { await f.close() }
+    try {
+      await f.append(headers)
+    } finally {
+      await f.close()
+    }
     file = await BulkFilesReader.validateHeaderFile(this.fs, this.rootFolder, file)
     this.files.push(file)
     await this.writeJsonFile()

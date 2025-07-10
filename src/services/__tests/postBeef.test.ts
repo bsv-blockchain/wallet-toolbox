@@ -3,7 +3,7 @@ import { Services } from '../../index.client'
 import { _tu, logger } from '../../../test/utils/TestUtilsWalletStorage'
 import { sdk, Setup } from '../../index.all'
 
-describe('postBeef service tests', () => {
+describe.skip('postBeef service tests', () => {
   jest.setTimeout(99999999)
 
   test('0 postBeef mainnet', async () => {

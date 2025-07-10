@@ -2,6 +2,7 @@ import { Hash } from '@bsv/sdk'
 import { BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
+import { validBulkHeaderFilesByFileHash } from '../util/validBulkHeaderFilesByFileHash'
 
 describe('ChaintracksFetch tests', () => {
   jest.setTimeout(99999999)
@@ -21,9 +22,9 @@ describe('ChaintracksFetch tests', () => {
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     const url = `${cdnUrl}/testNet_0.headers`
     const data = await fetch.download(url)
-    expect(data.length).toBe(32000000)
+    expect(data.length).toBe(8000000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(fileHash).toBe('s22w9l/Mv4cUSu8LpHbiCfgpJmde72O/WVjia2fK1jI=')
+    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
   })
 
   test('2 download faster crypto.subtle sha256', async () => {
@@ -31,10 +32,10 @@ describe('ChaintracksFetch tests', () => {
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     const url = `${cdnUrl}/testNet_0.headers`
     const data = await fetch.download(url)
-    expect(data.length).toBe(32000000)
+    expect(data.length).toBe(8000000)
     const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', data))
     const fileHash = asString(hash, 'base64')
-    expect(fileHash).toBe('s22w9l/Mv4cUSu8LpHbiCfgpJmde72O/WVjia2fK1jI=')
+    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
   })
 
   test('3 download', async () => {
@@ -42,9 +43,9 @@ describe('ChaintracksFetch tests', () => {
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     const url = `${cdnUrl}/testNet_4.headers`
     const data = await fetch.download(url)
-    expect(data.length).toBe(80 * 77821)
+    expect(data.length).toBe(80 * 100000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(fileHash).toBe('AK1FlgOaPVFOeG2x+Tp7htOt15UaSpHXZjgx3F263x8=')
+    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
   })
 
   test('4 download', async () => {
@@ -52,8 +53,8 @@ describe('ChaintracksFetch tests', () => {
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     const url = `${cdnUrl}/mainNet_2.headers`
     const data = await fetch.download(url)
-    expect(data.length).toBe(80 * 99705)
+    expect(data.length).toBe(80 * 100000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(fileHash).toBe('ebnNDDlfPU2zpwhhcnx5gs5p7fBbmrGqfjreRxcmmAU=')
+    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
   })
 })

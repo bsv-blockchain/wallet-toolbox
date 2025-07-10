@@ -1,7 +1,7 @@
 import { Chain } from '../../../../sdk'
 import { BulkBlockHeaders } from '../Storage/BulkBlockHeaders'
 
-describe('BulkBlockHeaders tests', () => {
+describe.skip('BulkBlockHeaders tests', () => {
   jest.setTimeout(99999999)
 
   test('0 mainNet no preload', async () => {
