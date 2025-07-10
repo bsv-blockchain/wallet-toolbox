@@ -2,10 +2,12 @@ import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, StorageEngineBaseOptions } from '../Api/StorageEngineApi'
 import { BlockHashHeight, MerkleRootHeight, StorageEngineBase } from '../Base/StorageEngineBase'
-import { Chain } from '../../../../sdk'
+import { Chain, WalletError, WERR_NOT_IMPLEMENTED } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
-import { HeightRange, utils } from '..'
+import { BulkHeaderFileInfo, HeightRange, utils } from '..'
+import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
+import { DBType } from '../../../../storage/StorageReader'
 
 export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
   /**
@@ -32,12 +34,6 @@ export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
    * The table name for the block header merkleRoot to height index.
    */
   bulkMerkleRootTableName: string
-  /**
-   * Optional.
-   *
-   * Path to directory of Knex.js migrations.
-   */
-  migrationsDirectory: string
 }
 
 /**
@@ -52,16 +48,16 @@ export class StorageEngineKnex extends StorageEngineBase {
       headerTableName: `live_headers`,
       bulkBlockHashTableName: `bulk_hash`,
       bulkMerkleRootTableName: `bulk_merkle`,
-      migrationsDirectory: './migrations'
     }
     return options
   }
 
   knex: Knex
+  _dbType?: DBType
   headerTableName: string
+  bulkFilesTableName: string = 'bulk_files'
   bulkBlockHashTableName: string
   bulkMerkleRootTableName: string
-  migrationsDirectory: string | undefined
 
   constructor(options: StorageEngineKnexOptions) {
     super(options)
@@ -70,7 +66,6 @@ export class StorageEngineKnex extends StorageEngineBase {
     this.headerTableName = options.headerTableName
     this.bulkBlockHashTableName = options.bulkBlockHashTableName
     this.bulkMerkleRootTableName = options.bulkMerkleRootTableName
-    this.migrationsDirectory = options.migrationsDirectory
   }
 
   override async shutdown(): Promise<void> {
@@ -82,8 +77,6 @@ export class StorageEngineKnex extends StorageEngineBase {
   }
 
   override async migrateLatest(): Promise<void> {
-    //if (this.migrationsDirectory) {
-    //}
     await this.knex.migrate.latest({ migrationSource: new KnexMigrations(this.chain) })
   }
 
@@ -151,6 +144,43 @@ export class StorageEngineKnex extends StorageEngineBase {
     }
 
     await this.knex(this.headerTableName).insert(genesisHeader)
+  }
+
+  async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
+    const [id] = await this.knex(this.bulkFilesTableName).insert(file).returning('fileId')
+    return id
+  }
+  async findBulkFiles(): Promise<BulkHeaderFileInfo[]> {
+    const files = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
+      .select('fileId, chain, fileName, firstHeight, count, prevHash, lastHash, fileHash, prevChainWork, lastChainWork, validated')
+      .orderBy('firstHeight', 'asc')
+    return files
+  }
+  async findBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+    const [file] = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
+      .where({ fileId: fileId })
+      .select('data')
+    //return file.data ? new Uint8Array(file.data) : undefined
+
+    let data: number[] | undefined = undefined
+    if (Number.isInteger(offset) && Number.isInteger(length)) {
+      let rs: { data: Buffer | null }[] = await this.toDb(trx).raw(
+        `select ${this.dbTypeSubstring('data', offset! + 1, length)} as data from proven_txs where txid = '${txid}'`
+      )
+      if (this.dbtype === 'MySQL') rs = (rs as unknown as { data: Buffer | null }[][])[0]
+      const r = verifyOneOrNone(rs)
+      if (r && r.data) {
+        data = Array.from(r.data)
+      } 
+    }
+    return data
+  }
+  async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
+    const [id] = await this.knex(this.bulkFilesTableName)
+      .where({ fileId: fileId })
+      .update(file)
+      .returning('fileId')
+    return id
   }
 
   async insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult> {

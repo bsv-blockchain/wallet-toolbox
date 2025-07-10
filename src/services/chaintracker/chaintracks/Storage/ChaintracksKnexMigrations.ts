@@ -76,12 +76,16 @@ export class KnexMigrations implements MigrationSource<string> {
 
         await knex.schema.createTable(bulkFilesTableName, table => {
           table.increments('fileId')
-          table.string('fileName')
-          table.integer('firstHeight').unsigned()
-          table.integer('lastHeight').unsigned()
-          table.string('prevHash', 64)
-          table.string('lastHash', 64)
-          table.string('fileHash')
+          table.string('chain').notNullable()
+          table.string('fileName').notNullable()
+          table.integer('firstHeight').unsigned().notNullable()
+          table.integer('count').unsigned().notNullable()
+          table.string('prevHash', 64).notNullable() // hex encoded
+          table.string('lastHash', 64).notNullable() // hex encoded
+          table.string('prevChainWork', 64).notNullable() // hex encoded
+          table.string('lastChainWork', 64).notNullable() // hex encoded
+          table.string('fileHash').notNullable() // base64 encoded
+          table.boolean('validated').defaultTo(false).notNullable()
           table.binary('data', 32000000) // 32MB max size
         })
       },

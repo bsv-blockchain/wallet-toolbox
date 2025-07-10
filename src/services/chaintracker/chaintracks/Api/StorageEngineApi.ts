@@ -3,6 +3,7 @@ import { BulkStorageApi } from './BulkStorageApi'
 import { HeightRange } from '../util/HeightRange'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
+import { BulkHeaderFileInfo } from '../util/BulkFilesReader'
 
 /// StorageEngine Interface
 
@@ -375,6 +376,10 @@ export type InsertHeaderResult = {
 }
 
 export interface StorageEngineIngestApi {
+  insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
+  findBulkFiles(): Promise<BulkHeaderFileInfo[]>
+  updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
+
   /**
    * Inserts a genesis block header into a new, empty chain.
    * Requires that the chain is empty.

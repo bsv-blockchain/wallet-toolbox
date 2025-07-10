@@ -14,6 +14,7 @@ import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { Utils, Hash } from '@bsv/sdk'
 import { ChaintracksAppendableFileApi, ChaintracksFsApi, ChaintracksWritableFileApi } from '../Api/ChaintracksFsApi'
+import { BulkHeaderFile } from '../Storage/BulkBlockHeaders'
 
 /**
  * Support for block header hash to height index implementations
@@ -118,6 +119,10 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
+  abstract insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
+  abstract findBulkFiles(): Promise<BulkHeaderFileInfo[]>
+  abstract updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
+
 
   /**
    * Use to throw a consistent error when bulk storage is not configured

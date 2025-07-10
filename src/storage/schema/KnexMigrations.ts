@@ -161,7 +161,7 @@ export class KnexMigrations implements MigrationSource<string> {
 
     migrations['2024-12-26-001 initial migration'] = {
       async up(knex) {
-        const dbtype = await KnexMigrations.dbtype(knex)
+        const dbtype = await determineDBType(knex)
 
         await knex.schema.createTable('proven_txs', table => {
           addTimeStamps(knex, table, dbtype)
@@ -406,30 +406,30 @@ export class KnexMigrations implements MigrationSource<string> {
     }
     return migrations
   }
+}
 
-  /**
-   * @param knex
-   * @returns {DBType} connected database engine variant
-   */
-  static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
-    try {
-      const q = `SELECT 
-    CASE 
-        WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
-        WHEN (SELECT VERSION()) IS NOT NULL THEN 'MySQL'
-        ELSE 'Unknown'
-    END AS database_type;`
-      let r = await knex.raw(q)
-      if (!r[0]['database_type']) r = r[0]
-      if (r['rows']) r = r.rows
-      const dbtype: 'SQLite' | 'MySQL' | 'Unknown' = r[0].database_type
-      if (dbtype === 'Unknown')
-        throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
-      return dbtype
-    } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
-      if (e.code === 'SQLITE_ERROR') return 'SQLite'
+/**
+ * @param knex
+ * @returns {DBType} connected database engine variant
+ */
+export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> {
+  try {
+    const q = `SELECT 
+  CASE 
+      WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
+      WHEN (SELECT VERSION()) IS NOT NULL THEN 'MySQL'
+      ELSE 'Unknown'
+  END AS database_type;`
+    let r = await knex.raw(q)
+    if (!r[0]['database_type']) r = r[0]
+    if (r['rows']) r = r.rows
+    const dbtype: 'SQLite' | 'MySQL' | 'Unknown' = r[0].database_type
+    if (dbtype === 'Unknown')
       throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
-    }
+    return dbtype
+  } catch (eu: unknown) {
+    const e = sdk.WalletError.fromUnknown(eu)
+    if (e.code === 'SQLITE_ERROR') return 'SQLite'
+    throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
   }
 }

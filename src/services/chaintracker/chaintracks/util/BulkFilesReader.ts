@@ -13,6 +13,7 @@ import { validBulkHeaderFilesByFileHash } from './validBulkHeaderFilesByFileHash
  * Descriptive information about a single bulk header file.
  */
 export interface BulkHeaderFileInfo {
+  fileId?: number // optional, used for database storage
   /**
    * filename and extension, no path
    */
@@ -49,6 +50,10 @@ export interface BulkHeaderFileInfo {
    * Which chain: 'main' or 'test'
    */
   chain?: Chain
+
+  data?: Uint8Array // optional, used for validation
+
+  validated?: boolean
 }
 
 /**

@@ -217,6 +217,13 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
         file.chain = this.chain
         this.bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file, data)
+
+        const newFile = { ...this.bulkFiles.files[i] }
+        newFile.data = data
+        newFile.validated = true
+
+        const fileId = await this.storage().insertBulkFile(newFile)
+        logger(`insertBulkFile ${fileId}`)
       }
 
       this.bulkFiles.rootFolder = this.localCachePath

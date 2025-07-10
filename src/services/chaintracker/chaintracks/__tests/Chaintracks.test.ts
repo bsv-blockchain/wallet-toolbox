@@ -7,7 +7,7 @@ describe('Chaintracks tests', () => {
   jest.setTimeout(99999999)
 
   test('0 basic operation testnet', async () => {
-    const o = createDefaultChaintracksOptions('test', rootFolder)
+    const o = createDefaultChaintracksOptions('main', rootFolder)
     const c = new Chaintracks(o)
     const listening = c.startListening()
     await c.listening()
