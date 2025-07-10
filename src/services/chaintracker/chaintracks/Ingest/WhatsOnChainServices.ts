@@ -1,8 +1,6 @@
 import {
-  convertWocToBlockHeaderHex,
   StopListenerToken,
   WocChainInfo,
-  WocHeader,
   WocHeadersBulkListener,
   WocHeadersLiveListener
 } from './WhatsOnChainIngestorBase'

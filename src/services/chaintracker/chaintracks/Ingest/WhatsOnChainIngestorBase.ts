@@ -2,8 +2,7 @@ import WebSocket from 'ws'
 import { WhatsOnChain } from '../../../providers/WhatsOnChain'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { wait } from '../../../../utility/utilityHelpers'
-
-const enableConsoleLog = false
+import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 
 export type WocChain = 'main' | 'test'
 
@@ -98,7 +97,7 @@ export async function WocHeadersBulkListener(
   chain: WocChain = 'main',
   idleWait = 5000
 ): Promise<boolean> {
-  if (enableConsoleLog) console.log(`WocHeadersBulkListener from ${fromHeight} to ${toHeight} on ${chain} chain`)
+  logger(`WocHeadersBulkListener from ${fromHeight} to ${toHeight} on ${chain} chain`)
 
   let done = false
   let count = 0
@@ -126,10 +125,29 @@ export async function WocHeadersBulkListener(
       ping++
       return
     }
+
+    const typicalrawDataAsOf20250710BufferThatParsesTo = `{
+      "channel": "blockHeaders",
+      "pub": {
+        "data": {
+          "version": 635068416,
+          "previousblockhash": "000000000000000005f5778823b824dedf49a503aac60ae153471a3e737d1b1b",
+          "merkleroot": "617e2ce2c1348ec1b35ac727cad8bdec33b1b4b983bb00ba2583af4fe1e25ef7",
+          "time": 1752133908,
+          "bits": 403904562,
+          "nonce": 1932754962,
+          "hash": "00000000000000000670c88b898aadf911ecf4bc6ba4b71f9b319df47f022b8a",
+          "height": 904889
+        }
+      }
+    }`
+    // Earlier data formats...
+    // "{\"channel\":\"woc#c91c044b-66f5-4172-b509-82c11a41d7fc\",\"data\":{\"data\":{\"hash\":\"00000000000000000ce16106e2100b893f3da5989ef23cbac52eb568cf803dc1\",\"confirmations\":8,\"size\":3345869,\"height\":779890,\"version\":939515904,\"versionHex\":\"37ffe000\",\"merkleroot\":\"92e3d1d72d432c9216d296839eaa675b6ffb40ccf6e1a02229caf3d769dc0a5f\",\"txcount\":10757,\"time\":1676851109,\"mediantime\":1676849009,\"nonce\":4216995243,\"bits\":\"180e38cb\",\"difficulty\":77310268438.5808,\"chainwork\":\"00000000000000000000000000000000000000000142d5cf97c0ed497eae1066\",\"previousblockhash\":\"0000000000000000053d26b7b35a76bf2b672428bae591bc033ae99f9873697a\",\"nextblockhash\":\"000000000000000000e1a110376966033507953d50ade86eadef7226843f3349\"}}}"
+
+    // Returned rawData may be a Buffer...
     const data = JSON.parse(rawData)
     switch (data.type || 0) {
       case 0:
-        // "{\"channel\":\"woc#c91c044b-66f5-4172-b509-82c11a41d7fc\",\"data\":{\"data\":{\"hash\":\"00000000000000000ce16106e2100b893f3da5989ef23cbac52eb568cf803dc1\",\"confirmations\":8,\"size\":3345869,\"height\":779890,\"version\":939515904,\"versionHex\":\"37ffe000\",\"merkleroot\":\"92e3d1d72d432c9216d296839eaa675b6ffb40ccf6e1a02229caf3d769dc0a5f\",\"txcount\":10757,\"time\":1676851109,\"mediantime\":1676849009,\"nonce\":4216995243,\"bits\":\"180e38cb\",\"difficulty\":77310268438.5808,\"chainwork\":\"00000000000000000000000000000000000000000142d5cf97c0ed497eae1066\",\"previousblockhash\":\"0000000000000000053d26b7b35a76bf2b672428bae591bc033ae99f9873697a\",\"nextblockhash\":\"000000000000000000e1a110376966033507953d50ade86eadef7226843f3349\"}}}"
         // last wocHeader has empty string for nextBlockHash
         // eslint-disable-next-line no-case-declarations
         if (!done) {
@@ -137,10 +155,10 @@ export async function WocHeadersBulkListener(
           if (json === '{}') {
             ws.send('ping')
           } else if (data.connect) {
-            if (enableConsoleLog) console.log(JSON.stringify(data))
-          } else if (data.message) {
-            if (enableConsoleLog) console.log(JSON.stringify(data))
-            const wocHeader = data.message.data
+            logger(json)
+          } else if (data.pub) {
+            logger(json)
+            const wocHeader = data.pub.data
             if (wocHeader) {
               const header = convertWocToBlockHeaderHex(wocHeader)
               enqueue(header)
@@ -151,6 +169,8 @@ export async function WocHeadersBulkListener(
                 ws.close()
               }
             }
+          } else {
+            error(42, `unknown data ${json}`)
           }
         }
         break
@@ -167,7 +187,7 @@ export async function WocHeadersBulkListener(
         ws.close()
         break
       default:
-        error(42, `unknown data.type ${data.type} data ${data.data}`)
+        error(42, `unknown rawData ${rawData}`)
         ws.close()
     }
   }
@@ -175,7 +195,7 @@ export async function WocHeadersBulkListener(
   const ws = new WebSocket(webSocketUrl)
 
   ws.onopen = function (this, evt) {
-    if (enableConsoleLog) console.log(`WoC ${new Date().toISOString()} addHeaders from ${fromHeight} on ${chain}`)
+    logger(`WoC ${new Date().toISOString()} addHeaders from ${fromHeight} on ${chain}`)
     // This is required to trigger connect on server side.
     ws.send(JSON.stringify({}))
     wsIsOpen = true
@@ -201,7 +221,7 @@ export async function WocHeadersBulkListener(
   ws.onclose = function (this, ev) {
     // ok should be true if we got the last header, false otherwise.
     // error will have been called with anything abnormal...
-    if (enableConsoleLog) console.log(`WoC ${new Date().toISOString()} addHeaders input service closed`)
+    logger(`WoC ${new Date().toISOString()} addHeaders input service closed`)
     done = true
   }
 
@@ -230,7 +250,7 @@ export async function WocHeadersBulkListener(
     waitCycles++
   }
 
-  if (enableConsoleLog) console.log(`WoC ${new Date().toISOString()} ${count} headers added`)
+  logger(`WoC ${new Date().toISOString()} ${count} headers added`)
 
   return ok
 }
@@ -318,7 +338,7 @@ export async function WocHeadersLiveListener(
   let done = false
   let wsIsOpen = false
 
-  let msecsWithoutPing = 0
+  let msecsWithoutMessage = 0
 
   function stopNow(): void {
     ok = true
@@ -340,23 +360,26 @@ export async function WocHeadersLiveListener(
       // Ping
       return
     }
+    // rawData may be a Buffer...
     const data = JSON.parse(rawData)
+    const json = JSON.stringify(data)
     switch (data.type || 0) {
       case 0:
         // "{\"channel\":\"woc#c91c044b-66f5-4172-b509-82c11a41d7fc\",\"data\":{\"data\":{\"hash\":\"00000000000000000ce16106e2100b893f3da5989ef23cbac52eb568cf803dc1\",\"confirmations\":8,\"size\":3345869,\"height\":779890,\"version\":939515904,\"versionHex\":\"37ffe000\",\"merkleroot\":\"92e3d1d72d432c9216d296839eaa675b6ffb40ccf6e1a02229caf3d769dc0a5f\",\"txcount\":10757,\"time\":1676851109,\"mediantime\":1676849009,\"nonce\":4216995243,\"bits\":\"180e38cb\",\"difficulty\":77310268438.5808,\"chainwork\":\"00000000000000000000000000000000000000000142d5cf97c0ed497eae1066\",\"previousblockhash\":\"0000000000000000053d26b7b35a76bf2b672428bae591bc033ae99f9873697a\",\"nextblockhash\":\"000000000000000000e1a110376966033507953d50ade86eadef7226843f3349\"}}}"
         // last wocHeader has empty string for nextBlockHash
         // eslint-disable-next-line no-case-declarations
         if (!done) {
-          const json = JSON.stringify(data)
           if (json === '{}') {
             ws.send('ping')
           } else {
-            if (enableConsoleLog) console.log(JSON.stringify(data))
+            logger(JSON.stringify(data))
             const wocHeader = data.pub?.data || data.data?.data
             if (wocHeader) {
               const header = convertWocToBlockHeaderHex(wocHeader)
               enqueue(header)
               count++
+            } else {
+              error(42, `unknown data ${json}`)
             }
           }
         }
@@ -374,7 +397,7 @@ export async function WocHeadersLiveListener(
         ws.close()
         break
       default:
-        error(42, `unknown data.type ${data.type} data ${data.data}`)
+        error(42, `unknown data ${json}`)
         ws.close()
     }
   }
@@ -392,7 +415,7 @@ export async function WocHeadersLiveListener(
     */
 
   ws.onopen = function (this, evt) {
-    if (enableConsoleLog) console.log(`WoC ${new Date().toISOString()} listening for new headers`)
+    logger(`WoC ${new Date().toISOString()} listening for new headers`)
     // This is required to trigger connect on server side.
     ws.send(JSON.stringify({}))
     wsIsOpen = true
@@ -418,27 +441,30 @@ export async function WocHeadersLiveListener(
   ws.onclose = function (this, ev) {
     // ok should be true if we got the last header, false otherwise.
     // error will have been called with anything abnormal...
-    if (enableConsoleLog) console.log(`WoC ${new Date().toISOString()} listening for new headers service closed`)
+    logger(`WoC ${new Date().toISOString()} listening for new headers service closed`)
     done = true
   }
 
   ws.onmessage = function (this, ev) {
     // console.log("onmessage:", JSON.stringify(ev.data));
     processData(ev.data)
-    msecsWithoutPing = 0
+    msecsWithoutMessage = 0
   }
 
   //startPing()
 
   const waitMsecs = 1000
+  let sinceLastSentPing = 0
 
   while (!done) {
     await wait(waitMsecs)
 
-    msecsWithoutPing += waitMsecs
-    if (msecsWithoutPing > idleWait) {
-      console.log(`WoC ${new Date().toISOString()} idelWait exceeded without ping`)
-      done = true
+    msecsWithoutMessage += waitMsecs
+    sinceLastSentPing += waitMsecs
+
+    if (sinceLastSentPing > 10000) {
+      ws.send('ping')
+      sinceLastSentPing = 0
     }
   }
 

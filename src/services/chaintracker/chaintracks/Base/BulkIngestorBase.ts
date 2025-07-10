@@ -10,8 +10,7 @@ import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
-
-const enableConsoleLog = false
+import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 
 export abstract class BulkIngestorBase implements BulkIngestorApi {
   /**
@@ -130,10 +129,9 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     // newBulkRange may be empty, we still need bulk ingestor to retrieve missing liveHeaders efficiently
     const { reader, liveHeaders } = await this.updateLocalCache(newBulkRange, presentHeight, priorLiveHeaders)
 
-    if (enableConsoleLog)
-      console.log(
-        `${this.constructor.name} bulk ${bulkRange}, live ${liveRange}, reader ${reader.range} liveHeaders count ${liveHeaders?.length}`
-      )
+    logger(
+      `${this.constructor.name} bulk ${bulkRange}, live ${liveRange}, reader ${reader.range} liveHeaders count ${liveHeaders?.length}`
+    )
 
     if (reader.range.isEmpty) return liveHeaders // There are no new bulk headers to worry about...
 

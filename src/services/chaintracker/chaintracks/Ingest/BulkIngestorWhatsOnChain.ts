@@ -1,3 +1,4 @@
+import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 import { Chain } from '../../../../sdk'
 import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
 import { BlockHeader } from '../Api/BlockHeaderApi'
@@ -8,8 +9,6 @@ import { BulkFilesReader } from '../util/BulkFilesReader'
 import { ChaintracksFs } from '../util/ChaintracksFs'
 import { HeightRange } from '../util/HeightRange'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
-
-const enableConsoleLog = false
 
 export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions, WhatsOnChainServicesOptions {
   /**
@@ -76,7 +75,7 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
 
   override async getPresentHeight(): Promise<number | undefined> {
     const presentHeight = await this.woc.getChainTipHeight()
-    if (enableConsoleLog) console.log(`presentHeight=${presentHeight}`)
+    logger(`presentHeight=${presentHeight}`)
     return presentHeight
   }
 
