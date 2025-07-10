@@ -174,7 +174,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
         heightRange = heightRange.union(new HeightRange(file.firstHeight, file.firstHeight + file.count - 1))
 
-        log += JSON.stringify(file) + '\n'
+        // log += JSON.stringify(file) + '\n'
 
         if (i < reader.files.length) {
           log += `${i} exists\n`
@@ -233,7 +233,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     this.currentRange = heightRange
 
     return {
-      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, heightRange),
+      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange),
       liveHeaders: undefined
     }
   }
