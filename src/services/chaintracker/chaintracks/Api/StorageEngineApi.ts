@@ -377,8 +377,9 @@ export type InsertHeaderResult = {
 
 export interface StorageEngineIngestApi {
   insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
-  findBulkFiles(): Promise<BulkHeaderFileInfo[]>
   updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
+  getBulkFiles(): Promise<BulkHeaderFileInfo[]>
+  getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined>
 
   /**
    * Inserts a genesis block header into a new, empty chain.

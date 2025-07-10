@@ -2,12 +2,13 @@ import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, StorageEngineBaseOptions } from '../Api/StorageEngineApi'
 import { BlockHashHeight, MerkleRootHeight, StorageEngineBase } from '../Base/StorageEngineBase'
-import { Chain, WalletError, WERR_NOT_IMPLEMENTED } from '../../../../sdk'
+import { Chain, WalletError, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_NOT_IMPLEMENTED } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
 import { BulkHeaderFileInfo, HeightRange, utils } from '..'
 import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
+import { determineDBType } from '../../../../index.all'
 
 export interface StorageEngineKnexOptions extends StorageEngineBaseOptions {
   /**
@@ -47,13 +48,13 @@ export class StorageEngineKnex extends StorageEngineBase {
       knex: undefined,
       headerTableName: `live_headers`,
       bulkBlockHashTableName: `bulk_hash`,
-      bulkMerkleRootTableName: `bulk_merkle`,
+      bulkMerkleRootTableName: `bulk_merkle`
     }
     return options
   }
 
   knex: Knex
-  _dbType?: DBType
+  _dbtype?: DBType
   headerTableName: string
   bulkFilesTableName: string = 'bulk_files'
   bulkBlockHashTableName: string
@@ -74,6 +75,17 @@ export class StorageEngineKnex extends StorageEngineBase {
     } catch {
       /* ignore */
     }
+  }
+
+  async makeAvailable(): Promise<DBType> {
+    if (this._dbtype) return this._dbtype
+    this._dbtype = await determineDBType(this.knex)
+    return this._dbtype
+  }
+
+  get dbtype(): DBType {
+    if (!this._dbtype) throw new WERR_INVALID_OPERATION('must call makeAvailable first');
+    return this._dbtype
   }
 
   override async migrateLatest(): Promise<void> {
@@ -150,37 +162,42 @@ export class StorageEngineKnex extends StorageEngineBase {
     const [id] = await this.knex(this.bulkFilesTableName).insert(file).returning('fileId')
     return id
   }
-  async findBulkFiles(): Promise<BulkHeaderFileInfo[]> {
+  async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
+    const n = await this.knex(this.bulkFilesTableName).where({ fileId: fileId }).update(file)
+    return n
+  }
+  async getBulkFiles(): Promise<BulkHeaderFileInfo[]> {
     const files = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
-      .select('fileId, chain, fileName, firstHeight, count, prevHash, lastHash, fileHash, prevChainWork, lastChainWork, validated')
+      .select(
+        'fileId, chain, fileName, firstHeight, count, prevHash, lastHash, fileHash, prevChainWork, lastChainWork, validated'
+      )
       .orderBy('firstHeight', 'asc')
     return files
   }
-  async findBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> {
-    const [file] = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
-      .where({ fileId: fileId })
-      .select('data')
-    //return file.data ? new Uint8Array(file.data) : undefined
 
-    let data: number[] | undefined = undefined
+  dbTypeSubstring(source: string, fromOffset: number, forLength?: number) {
+    if (this.dbtype === 'MySQL') return `substring(${source} from ${fromOffset} for ${forLength!})`
+    return `substr(${source}, ${fromOffset}, ${forLength})`
+  }
+
+  async getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+    await this.makeAvailable()
+    if (!Number.isInteger(fileId)) throw new WERR_INVALID_PARAMETER('fileId', 'a valid, integer bulk_files fileId')
+    let data: Uint8Array | undefined = undefined
     if (Number.isInteger(offset) && Number.isInteger(length)) {
-      let rs: { data: Buffer | null }[] = await this.toDb(trx).raw(
-        `select ${this.dbTypeSubstring('data', offset! + 1, length)} as data from proven_txs where txid = '${txid}'`
+      let rs: { data: Buffer | null }[] = await this.knex.raw(
+        `select ${this.dbTypeSubstring('data', offset! + 1, length)} as data from ${this.bulkFilesTableName} where fileId = '${fileId}'`
       )
       if (this.dbtype === 'MySQL') rs = (rs as unknown as { data: Buffer | null }[][])[0]
       const r = verifyOneOrNone(rs)
       if (r && r.data) {
-        data = Array.from(r.data)
-      } 
+        data = Uint8Array.from(r.data)
+      }
+    } else {
+      const r = verifyOneOrNone(await this.knex(this.bulkFilesTableName).where({ fileId: fileId }).select('data'))
+      if (r.data) data = Uint8Array.from(r.data);
     }
     return data
-  }
-  async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
-    const [id] = await this.knex(this.bulkFilesTableName)
-      .where({ fileId: fileId })
-      .update(file)
-      .returning('fileId')
-    return id
   }
 
   async insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult> {

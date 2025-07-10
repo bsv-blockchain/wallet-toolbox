@@ -119,10 +119,11 @@ export abstract class StorageEngineBase implements StorageEngineQueryApi, Storag
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
-  abstract insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
-  abstract findBulkFiles(): Promise<BulkHeaderFileInfo[]>
-  abstract updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
 
+  abstract insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
+  abstract updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
+  abstract getBulkFiles(): Promise<BulkHeaderFileInfo[]>
+  abstract getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined>
 
   /**
    * Use to throw a consistent error when bulk storage is not configured

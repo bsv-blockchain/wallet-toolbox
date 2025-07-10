@@ -424,8 +424,7 @@ export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> {
     if (!r[0]['database_type']) r = r[0]
     if (r['rows']) r = r.rows
     const dbtype: 'SQLite' | 'MySQL' | 'Unknown' = r[0].database_type
-    if (dbtype === 'Unknown')
-      throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
+    if (dbtype === 'Unknown') throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
     return dbtype
   } catch (eu: unknown) {
     const e = sdk.WalletError.fromUnknown(eu)
