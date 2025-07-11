@@ -6,7 +6,6 @@ import {
 } from '../Api/ChaintracksStorageApi'
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { HeightRange } from '../util/HeightRange'
-import { BulkIndexApi } from '../Api/BulkIndexApi'
 import { BulkStorageApi } from '../Api/BulkStorageApi'
 import { deserializeBaseBlockHeader, deserializeBlockHeader, validateBufferOfHeaders } from '../util/blockHeaderUtilities'
 
@@ -63,7 +62,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   hasBlockHashToHeightIndex = false
   batchInsertLimit: number
   bulkStorage?: BulkStorageApi
-  bulkIndex?: BulkIndexApi
 
   isAvailable: boolean = false
   hasMigrated: boolean = false
@@ -94,17 +92,10 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     }
   }
 
-  async setBulkIndex(bulkIndex?: BulkIndexApi): Promise<void> {
-    this.bulkIndex = bulkIndex
-    if (this.bulkIndex) {
-      await this.bulkIndex.setStorage(this)
-    }
-  }
-
   async makeAvailable(): Promise<void> {
     if (this.isAvailable) return;
-    this.bulkFiles = await this.getBulkFiles()
     this.isAvailable = true
+    this.bulkFiles = await this.getBulkFiles()
   }
 
   async migrateLatest(): Promise<void> {
@@ -244,55 +235,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     }
   }
 
-  async findHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | BlockHeader> {
-    await this.makeAvailable()
-    const header = await this.findHeaderForBlockHashOrUndefined(hash)
-    if (!header) throw new Error(`Header with block hash of ${hash} was not found.`)
-    return header
-  }
-
-  async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<LiveBlockHeader | BlockHeader> {
-    await this.makeAvailable()
-    const header = await this.findHeaderForMerkleRootOrUndefined(merkleRoot, height)
-    if (!header) throw new Error(`Header with merkle root of ${merkleRoot} was not found.`)
-    return header
-  }
-
-  async findHeaderForBlockHashOrUndefined(hash: string): Promise<LiveBlockHeader | BlockHeader | undefined> {
-    await this.makeAvailable()
-    const liveHeader = await this.findLiveHeaderForBlockHash(hash)
-    if (liveHeader) return liveHeader
-    this.confirmHasBulkBlockHashToHeightIndex()
-    const height = (await this.findBulkHeightForBlockHash(hash)) || (await this.bulkIndex?.findHeightForBlockHash(hash))
-    if (height === undefined) return undefined
-    const header = await this.bulkStorage?.findHeaderForHeight(height)
-    return header
-  }
-
-  async findHeaderForMerkleRootOrUndefined(
-    merkleRoot: string,
-    height?: number
-  ): Promise<LiveBlockHeader | BlockHeader | undefined> {
-    await this.makeAvailable()
-    let header: LiveBlockHeader | BlockHeader | undefined | null
-    if (height) {
-      header = await this.findHeaderForHeightOrUndefined(height)
-      if (header?.merkleRoot !== merkleRoot) header = undefined
-    }
-    if (!header) {
-      header = await this.findLiveHeaderForMerkleRoot(merkleRoot)
-      if (!header) {
-        this.confirmHasBulkMerkleRootToHeightIndex()
-        height =
-          (await this.findBulkHeightForMerkleRoot(merkleRoot)) ||
-          (await this.bulkIndex?.findHeightForMerkleRoot(merkleRoot))
-        if (height !== undefined) header = await this.bulkStorage?.findHeaderForHeight(height)
-      }
-    }
-    if (!header) header = undefined
-    return header
-  }
-
   async findChainTipHash(): Promise<string> {
     await this.makeAvailable()
     const tip = await this.findChainTipHeader()
@@ -340,16 +282,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     const header = await this.findHeaderForHeightOrUndefined(height)
     if (header) return header
     throw new Error(`Header with height of ${height} was not found.`)
-  }
-
-  async findHeightForBlockHash(hash: string): Promise<number> {
-    await this.makeAvailable()
-    return (await this.findHeaderForBlockHash(hash)).height
-  }
-
-  async findHeightForMerkleRoot(merkleRoot: string): Promise<number> {
-    await this.makeAvailable()
-    return (await this.findHeaderForMerkleRoot(merkleRoot)).height
   }
 
   async isMerkleRootActive(merkleRoot: string): Promise<boolean> {

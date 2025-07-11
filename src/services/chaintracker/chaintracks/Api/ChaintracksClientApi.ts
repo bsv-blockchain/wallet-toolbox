@@ -29,7 +29,6 @@ export interface ChaintracksInfoApi {
   heightLive: number
   storageEngine: string
   bulkStorage: string | undefined
-  bulkIndex: string | undefined
   bulkIngestors: string[]
   liveIngestors: string[]
   packages: ChaintracksPackageInfoApi[]
@@ -86,33 +85,9 @@ export interface ChaintracksClientApi extends ChainTracker {
   findChainTipHash(): Promise<string>
 
   /**
-   * Only returns a value for headers in live storage.
-   * Returns undefined if `hash` is unknown or in bulk storage.
-   * @param hash
-   * @returns chainwork of block header with given hash
-   */
-  findChainWorkForBlockHash(hash: string): Promise<string | undefined>
-
-  /**
-   * Returns block header for a given block hash
-   * @param hash block hash
-   */
-  findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined>
-
-  /**
    * Returns block header for a given block height on active chain.
    */
   findHeaderForHeight(height: number): Promise<BlockHeader | undefined>
-
-  /**
-   * Returns block header for a given possible height and specific merkleRoot
-   * The height, available for all mined blocks, allows fast and compact indexing of
-   * bulk headers.
-   * Confirms that the found header has the request merkleRoot or returns undefined.
-   * @param merkleRoot
-   * @param height optional, may be required for bulk header lookup.
-   */
-  findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<BlockHeader | undefined>
 
   /**
    * Submit a possibly new header for adding

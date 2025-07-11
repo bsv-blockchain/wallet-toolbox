@@ -83,11 +83,15 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   }
 
   override async makeAvailable(): Promise<void> {
-    if (this.isAvailable) return
-    this._dbtype = await determineDBType(this.knex)
-    await super.makeAvailable()
+    if (this.isAvailable && this.hasMigrated) return;
     // Not a base class policy, but we want to ensure migrations are run before getting to business.
-    await this.migrateLatest()
+    if (!this.hasMigrated) {
+      await this.migrateLatest()
+    }
+    if (!this.isAvailable) {
+      this._dbtype = await determineDBType(this.knex)
+      await super.makeAvailable()
+    }
   }
 
   override async migrateLatest(): Promise<void> {

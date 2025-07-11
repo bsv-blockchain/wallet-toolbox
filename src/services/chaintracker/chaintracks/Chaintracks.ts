@@ -1,5 +1,4 @@
 import { BulkStorageApi } from './Api/BulkStorageApi'
-import { BulkIndexApi } from './Api/BulkIndexApi'
 import { InsertHeaderResult, ChaintracksStorageApi } from './Api/ChaintracksStorageApi'
 import { BulkIngestorApi } from './Api/BulkIngestorApi'
 import { LiveIngestorApi } from './Api/LiveIngestorApi'
@@ -20,7 +19,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       chain,
       storageEngine: undefined,
       bulkStorage: undefined,
-      bulkIndex: undefined,
       bulkIngestors: [],
       liveIngestors: [],
       addLiveRecursionLimit: 36,
@@ -33,7 +31,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   chain: Chain
   storageEngine: ChaintracksStorageApi
   bulkStorage?: BulkStorageApi
-  bulkIndex?: BulkIndexApi
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
   addLiveRecursionLimit = 11
@@ -66,7 +63,6 @@ export class Chaintracks implements ChaintracksManagementApi {
     this.chain = options.chain
     this.storageEngine = options.storageEngine
     this.bulkStorage = options.bulkStorage
-    this.bulkIndex = options.bulkIndex
     this.bulkIngestors = options.bulkIngestors
     this.liveIngestors = options.liveIngestors
 
@@ -103,7 +99,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       heightLive: liveRange.maxHeight,
       storageEngine: this.storageEngine.constructor.name,
       bulkStorage: this.bulkStorage?.constructor.name,
-      bulkIndex: this.bulkIndex?.constructor.name,
       bulkIngestors: this.bulkIngestors.map(bulkIngestor => bulkIngestor.constructor.name),
       liveIngestors: this.liveIngestors.map(liveIngestor => liveIngestor.constructor.name),
       packages: []
@@ -172,17 +167,9 @@ export class Chaintracks implements ChaintracksManagementApi {
     const chainWork = await this.findChainWorkForBlockHash(hash)
     return chainWork ? asString(chainWork) : undefined
   }
-  async findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined> {
-    this.checkIfClientApiIsEnabled()
-    return await this.storageEngine.findHeaderForBlockHashOrUndefined(hash)
-  }
   async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> {
     this.checkIfClientApiIsEnabled()
     return await this.storageEngine.findHeaderForHeightOrUndefined(height)
-  }
-  async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<BlockHeader | undefined> {
-    this.checkIfClientApiIsEnabled()
-    return await this.storageEngine.findHeaderForMerkleRootOrUndefined(merkleRoot, height)
   }
 
   async addHeader(header: BaseBlockHeader): Promise<void> {
@@ -248,13 +235,6 @@ export class Chaintracks implements ChaintracksManagementApi {
           console.log('validating bulk storage headers')
           this.livePrevHeader = await this.storageEngine.bulkStorage.validateHeaders()
           console.log('validated bulk storage headers')
-        }
-
-        // Validate bulk storage blockhash and merkleroot indices.
-        if (this.storageEngine.bulkIndex) {
-          await this.storageEngine.bulkIndex.validate(added)
-        } else {
-          throw new Error('Bulk storage without bulk index is not supported at this time.')
         }
 
         this.lastSynchronizePresentHeight = presentHeight
@@ -352,7 +332,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       for (const liveIn of this.liveIngestors) await liveIn.shutdown()
       for (const bulkIn of this.bulkIngestors) await bulkIn.shutdown()
       await this.storageEngine.shutdown()
-      await this.bulkIndex?.shutdown()
       await this.bulkStorage?.shutdown()
       this.log('Shutdown')
     }
@@ -416,7 +395,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       await this.storageEngine.migrateLatest()
 
       await this.storageEngine.setBulkStorage(this.bulkStorage)
-      await this.storageEngine.setBulkIndex(this.bulkIndex)
       for (const bulkIn of this.bulkIngestors) await bulkIn.setStorage(this.storageEngine)
       for (const liveIn of this.liveIngestors) await liveIn.setStorage(this.storageEngine)
     }
@@ -537,7 +515,7 @@ export class Chaintracks implements ChaintracksManagementApi {
         } else {
           const bheader = this.baseHeaders.shift()
           if (bheader) {
-            const prev = await this.findHeaderForBlockHash(bheader.previousHash)
+            const prev = await this.storageEngine.findLiveHeaderForBlockHash(bheader.previousHash)
             if (prev) {
               const header: BlockHeader = {
                 ...bheader,

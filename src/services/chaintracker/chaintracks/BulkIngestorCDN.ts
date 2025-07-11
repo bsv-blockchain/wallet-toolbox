@@ -222,7 +222,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
         newFile.data = data
         newFile.validated = true
 
-        const fileId = await this.storage().insertBulkFile(newFile)
+        const fileId = await this.storageOrUndefined()?.insertBulkFile(newFile)
         logger(`insertBulkFile ${fileId}`)
       }
 

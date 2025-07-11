@@ -1,4 +1,3 @@
-import { BulkIndexApi } from './BulkIndexApi'
 import { BulkStorageApi } from './BulkStorageApi'
 import { HeightRange } from '../util/HeightRange'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
@@ -88,24 +87,6 @@ export interface ChaintracksStorageQueryApi {
   findChainTipWork(): Promise<string>
 
   /**
-   * Given the hash of a block, returns 32 byte hex string with the chainWork value for that block.
-   * @param hash block hash
-   */
-  findChainWorkForBlockHash(hash: string): Promise<string>
-
-  /**
-   * Returns block header for a given block hash
-   * @param hash block hash
-   */
-  findHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | BlockHeader>
-
-  /**
-   * Returns block header for a given block hash
-   * @param hash block hash
-   */
-  findHeaderForBlockHashOrUndefined(hash: string): Promise<LiveBlockHeader | BlockHeader | undefined>
-
-  /**
    * Returns block header for a given block height on active chain.
    * @param hash block hash
    */
@@ -116,37 +97,6 @@ export interface ChaintracksStorageQueryApi {
    * @param hash block hash
    */
   findHeaderForHeightOrUndefined(height: number): Promise<LiveBlockHeader | BlockHeader | undefined>
-
-  /**
-   * Returns the height of the block with the given hash.
-   * May not be on the active chain.
-   * @param hash block hash
-   */
-  findHeightForBlockHash(hash: string): Promise<number>
-
-  /**
-   * Returns the height of the block with the given merkleRoot.
-   * May not be on the active chain.
-   * @param hash block hash
-   */
-  findHeightForMerkleRoot(merkleRoot: string): Promise<number>
-
-  /**
-   * Returns block header for a given merkleRoot
-   * Throws if not found.
-   * @param merkleRoot
-   */
-  findHeaderForMerkleRoot(merkleRoot: string): Promise<LiveBlockHeader | BlockHeader>
-
-  /**
-   * Returns block header for a given merkleRoot
-   * @param merkleRoot
-   * @param height
-   */
-  findHeaderForMerkleRootOrUndefined(
-    merkleRoot: string,
-    height?: number
-  ): Promise<LiveBlockHeader | BlockHeader | undefined>
 
   /**
    * Given two chain tip headers in a chain reorg scenario,
@@ -254,20 +204,6 @@ export interface ChaintracksStorageQueryApi {
    */
   findMaxHeaderId(): Promise<number>
 
-  /**
-   * Returns the height of the block in bulk storage with the given hash.
-   * Returns null if hash is not found.
-   * @param hash block hash
-   */
-  findBulkHeightForBlockHash(hash: string): Promise<number | null>
-
-  /**
-   * Returns the height of the block in bulk storage with the given merkleRoot.
-   * Returns null if hash is not found.
-   * @param merkleRoot
-   */
-  findBulkHeightForMerkleRoot(merkleRoot: string): Promise<number | null>
-
   //
   // Available Properties
   //
@@ -328,10 +264,6 @@ export interface ChaintracksStorageQueryApi {
    */
   bulkStorage?: BulkStorageApi
 
-  /**
-   * Optional "bulk" index component to provide Block Hash and MerkleRoot to Height index serice.
-   */
-  bulkIndex?: BulkIndexApi
 }
 
 export type InsertHeaderResult = {
@@ -535,10 +467,4 @@ export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, Chain
    */
   setBulkStorage(bulk?: BulkStorageApi): Promise<void>
 
-  /**
-   * Configure the bulk index service to be used, if not undefinedd.
-   * Initialize any resources.
-   * @param bulk
-   */
-  setBulkIndex(bulkIndex?: BulkIndexApi): Promise<void>
 }

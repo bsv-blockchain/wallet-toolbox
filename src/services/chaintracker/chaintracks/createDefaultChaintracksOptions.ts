@@ -3,7 +3,6 @@ import { Chain } from '../../../sdk'
 import { ChaintracksOptions } from './Api/ChaintracksApi'
 import { Chaintracks } from './Chaintracks'
 import { BulkStorageFile } from './BulkStorageFile'
-import { BulkIndexFile } from './BulkIndexFile'
 import { ChaintracksFs } from './util/ChaintracksFs'
 import { ChaintracksStorageKnex } from './Storage'
 import { BulkIngestorCDNBabbage } from './BulkIngestorCDNBabbage'
@@ -31,9 +30,6 @@ export function createDefaultChaintracksOptions(
 
   const bulkStorageOptions = BulkStorageFile.createBulkStorageFileOptions(chain, fs, rootFolder)
   options.bulkStorage = new BulkStorageFile(bulkStorageOptions)
-
-  const bulkIndexOptions = BulkIndexFile.createBulkIndexFileOptions(chain, fs, rootFolder)
-  options.bulkIndex = new BulkIndexFile(bulkIndexOptions)
 
   const localSqlite: Knex.Config = {
     client: 'sqlite3',

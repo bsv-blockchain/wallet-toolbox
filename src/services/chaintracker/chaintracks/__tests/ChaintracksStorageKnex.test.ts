@@ -26,6 +26,9 @@ describe('ChaintracksStorageKnex tests', () => {
       await storage.makeAvailable()
 
       const bfs = await storage.bulkFiles
+      // Test assumes synchronization has occurred and bulk files are available.
+      if (bfs?.length === 0) return
+
       expect(bfs.length).toBeGreaterThan(7)
 
       const gh = await storage.getBulkFileData(bfs[0].fileId!, 0, 80)

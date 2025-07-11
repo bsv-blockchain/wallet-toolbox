@@ -1,5 +1,4 @@
 import { Chain } from '../../../../sdk/types'
-import { BulkIndexApi } from './BulkIndexApi'
 import { BulkIngestorApi } from './BulkIngestorApi'
 import { BulkStorageApi } from './BulkStorageApi'
 import { ChaintracksApi } from './ChaintracksClientApi'
@@ -10,7 +9,6 @@ export interface ChaintracksOptions {
   chain: Chain
   storageEngine: ChaintracksStorageApi | undefined
   bulkStorage: BulkStorageApi | undefined
-  bulkIndex: BulkIndexApi | undefined
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
 

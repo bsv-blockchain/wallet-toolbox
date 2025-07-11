@@ -9,10 +9,6 @@ export * from './Base/BulkStorageBase'
 export * from './BulkStorageMemory'
 export * from './BulkStorageFile'
 
-export * from './Api/BulkIndexApi'
-export * from './Base/BulkIndexBase'
-export * from './BulkIndexFile'
-
 export * from './Api/BulkIngestorApi'
 export * from './Base/BulkIngestorBase'
 export * from './BulkIngestorCDN'
@@ -23,9 +19,7 @@ export * from './Base/LiveIngestorBase'
 
 export * from './util/BulkFilesManager'
 export * from './util/BulkFilesReader'
-export * from './util/HashIndex'
 export * from './util/HeightRange'
-export * from './util/IndexLevel'
 
 export * as utils from './util/blockHeaderUtilities'
 
