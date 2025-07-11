@@ -2,8 +2,8 @@ import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
 
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
-import { doubleSha256BE, doubleSha256LE } from '../../../../utility/utilityHelpers'
-import { BaseBlockHeader, BlockHeader, isBaseBlockHeader } from '../Api/BlockHeaderApi'
+import { doubleSha256BE } from '../../../../utility/utilityHelpers'
+import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
@@ -55,7 +55,7 @@ export function validateBufferOfHeaders(
       }
     }
     const header = buffer.slice(headerStart, headerEnd)
-    const h = deserializeBlockHeader(header)
+    const h = deserializeBaseBlockHeader(header)
     const hashPrev = asString(header.slice(4, 36).reverse())
     if (lastHeaderHash !== hashPrev)
       throw { message: `header ${i} invalid previousHash ${lastHeaderHash} vs ${hashPrev}` }
@@ -143,7 +143,7 @@ export function deserializeBaseBlockHeaders(
 ): BaseBlockHeader[] {
   const headers: BaseBlockHeader[] = []
   while ((!count || headers.length < count) && offset + 80 <= buffer.length && offset >= 0) {
-    headers.push(deserializeBlockHeader(buffer, offset))
+    headers.push(deserializeBaseBlockHeader(buffer, offset))
     offset += 80
   }
   return headers
@@ -159,7 +159,7 @@ export function deserializeBlockHeaders(
   let nextHeight = firstHeight
   while ((!count || headers.length < count) && offset + 80 <= buffer.length && offset >= 0) {
     const baseBuffer = buffer.slice(offset, offset + 80)
-    const base = deserializeBlockHeader(baseBuffer)
+    const base = deserializeBaseBlockHeader(baseBuffer)
     const header = {
       ...base,
       height: nextHeight++,
@@ -362,10 +362,10 @@ export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[],
 }
 
 /**
- * Deserialize a block header from an 80 byte buffer
+ * Deserialize a BaseBlockHeader from an 80 byte buffer
  * @publicbody
  */
-export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0): BaseBlockHeader {
+export function deserializeBaseBlockHeader(buffer: number[] | Uint8Array, offset = 0): BaseBlockHeader {
   const reader = ReaderUint8Array.makeReader(buffer, offset)
   const header: BaseBlockHeader = {
     version: reader.readUInt32LE(),
@@ -374,6 +374,16 @@ export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0
     time: reader.readUInt32LE(),
     bits: reader.readUInt32LE(),
     nonce: reader.readUInt32LE()
+  }
+  return header
+}
+
+export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0, height: number): BlockHeader {
+  const base = deserializeBaseBlockHeader(buffer, offset)
+  const header: BlockHeader = {
+    ...base,
+    height,
+    hash: asString(doubleSha256BE(buffer.slice(offset, offset + 80)))
   }
   return header
 }

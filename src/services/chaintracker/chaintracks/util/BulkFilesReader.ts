@@ -1,5 +1,5 @@
 import { HeightRange } from './HeightRange'
-import { addWork, deserializeBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
+import { addWork, deserializeBaseBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
 
 import { BaseBlockHeader } from '../Api/BlockHeaderApi'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
@@ -154,12 +154,12 @@ export class BulkFilesReader {
 
   async readHeaderForHeight(height: number): Promise<BaseBlockHeader> {
     const buffer = await this.readBufferForHeight(height)
-    return deserializeBlockHeader(buffer, 0)
+    return deserializeBaseBlockHeader(buffer, 0)
   }
 
   async readHeaderForHeightOrUndefined(height: number): Promise<BaseBlockHeader | undefined> {
     const buffer = await this.readBufferForHeightOrUndefined(height)
-    return buffer ? deserializeBlockHeader(buffer, 0) : undefined
+    return buffer ? deserializeBaseBlockHeader(buffer, 0) : undefined
   }
 
   /**

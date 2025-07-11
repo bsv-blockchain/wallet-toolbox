@@ -8,7 +8,7 @@ import { BulkStorageBaseOptions } from './Api/BulkStorageApi'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
 import { BulkStorageBase } from './Base/BulkStorageBase'
-import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
+import { deserializeBaseBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface BulkStorageMemoryOptions extends BulkStorageBaseOptions {}
@@ -39,7 +39,7 @@ export class BulkStorageMemory extends BulkStorageBase {
     const offset = height * 80
     const buffer = this.memory.slice(offset, offset + 80)
     const header: BlockHeader = {
-      ...deserializeBlockHeader(buffer),
+      ...deserializeBaseBlockHeader(buffer),
       height: height,
       hash: asString(doubleSha256BE(buffer))
     }

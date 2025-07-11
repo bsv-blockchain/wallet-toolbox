@@ -503,8 +503,16 @@ export interface ChaintracksStorageIngestApi {
   deleteOlderLiveBlockHeaders(headerId: number): Promise<void>
 
   /**
-   * Invoke when database is idle and about to begin work.
-   * Creates and/or updates schemas.
+   * Async initialization method.
+   * 
+   * May be called prior to other async methods to control when initialization occurs.
+   */
+  makeAvailable(): Promise<void>
+
+  /**
+   * Migrate storage schema to latest schema changes.
+   * 
+   * Typically invoked automatically by `makeAvailable`.
    */
   migrateLatest(): Promise<void>
 

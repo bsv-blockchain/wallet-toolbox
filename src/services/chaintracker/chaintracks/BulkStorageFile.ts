@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BulkStorageBaseOptions } from './Api/BulkStorageApi'
 import { BulkStorageBase } from './Base/BulkStorageBase'
-import { deserializeBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
+import { deserializeBaseBlockHeader, validateBufferOfHeaders } from './util/blockHeaderUtilities'
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { doubleSha256BE } from '../../../utility/utilityHelpers'
@@ -89,7 +89,7 @@ export class BulkStorageFile extends BulkStorageBase {
     const position = height * 80
     const a = await this.file.read(80, position)
     const header: BlockHeader = {
-      ...deserializeBlockHeader(a),
+      ...deserializeBaseBlockHeader(a),
       height: height,
       hash: asString(doubleSha256BE(a))
     }

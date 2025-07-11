@@ -39,7 +39,7 @@ export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOpt
 
 /**
  * Implements the ChaintracksStorageApi using Knex.js for both MySql and Sqlite support.
- * Also see `ChaintracksStorageMemory` which leverages Knex support for an in memory database.
+ * Also see `chaintracksStorageMemory` which leverages Knex support for an in memory database.
  */
 export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   static createStorageKnexOptions(chain: Chain): ChaintracksStorageKnexOptions {
@@ -69,6 +69,11 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     this.bulkMerkleRootTableName = options.bulkMerkleRootTableName
   }
 
+  get dbtype(): DBType {
+    if (!this._dbtype) throw new WERR_INVALID_OPERATION('must call makeAvailable first');
+    return this._dbtype
+  }
+
   override async shutdown(): Promise<void> {
     try {
       await this.knex.destroy()
@@ -77,19 +82,18 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     }
   }
 
-  async makeAvailable(): Promise<DBType> {
-    if (this._dbtype) return this._dbtype
+  override async makeAvailable(): Promise<void> {
+    if (this.isAvailable) return
     this._dbtype = await determineDBType(this.knex)
-    return this._dbtype
-  }
-
-  get dbtype(): DBType {
-    if (!this._dbtype) throw new WERR_INVALID_OPERATION('must call makeAvailable first');
-    return this._dbtype
+    await super.makeAvailable()
+    // Not a base class policy, but we want to ensure migrations are run before getting to business.
+    await this.migrateLatest()
   }
 
   override async migrateLatest(): Promise<void> {
+    if (this.hasMigrated) return
     await this.knex.migrate.latest({ migrationSource: new KnexMigrations(this.chain) })
+    await super.migrateLatest()
   }
 
   async findLiveHeightRange(): Promise<{ minHeight: number; maxHeight: number }> {
@@ -169,7 +173,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   async getBulkFiles(): Promise<BulkHeaderFileInfo[]> {
     const files = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
       .select(
-        'fileId, chain, fileName, firstHeight, count, prevHash, lastHash, fileHash, prevChainWork, lastChainWork, validated'
+        'fileId', 'chain', 'fileName', 'firstHeight', 'count', 'prevHash', 'lastHash', 'fileHash', 'prevChainWork', 'lastChainWork', 'validated'
       )
       .orderBy('firstHeight', 'asc')
     return files
