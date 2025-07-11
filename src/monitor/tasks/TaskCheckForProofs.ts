@@ -197,7 +197,7 @@ export async function getProofs(
       await req.updateStorageDynamicProperties(task.storage)
       await req.refreshFromStorage(task.storage)
       const { provenTxReqId, status, txid, attempts, history } = req.toApi()
-      const { index, height, blockHash, merklePath, merkleRoot } = ptx.toApi()
+      const { index, height, blockHash, merklePath, merkleRoot, rawTx } = ptx.toApi()
       const r = await task.storage.runAsStorageProvider(async sp => {
         return await sp.updateProvenTxReqWithNewProvenTx({
           provenTxReqId,
@@ -216,6 +216,17 @@ export async function getProofs(
       req.apiHistory = r.history
       req.provenTxId = r.provenTxId
       req.notified = true
+
+      task.monitor.processProvenTransaction({
+        status,
+        txid,
+        txIndex: index,
+        blockHeight: height,
+        blockHash,
+        merklePath,
+        merkleRoot,
+        rawTx
+      })
     } else {
       if (countsAsAttempt && req.status !== 'nosend') {
         req.attempts++

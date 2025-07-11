@@ -42,6 +42,12 @@ export interface MonitorOptions {
   unprovenAttemptsLimitTest: number
 
   unprovenAttemptsLimitMain: number
+
+  /**
+   * This are hooks for a wallet-toolbox client to get transaction updates.
+   */
+  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
 }
 
 /**
@@ -75,6 +81,8 @@ export class Monitor {
   chain: sdk.Chain
   storage: MonitorStorage
   chaintracks: ChaintracksServiceClient
+  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
 
   constructor(options: MonitorOptions) {
     this.options = { ...options }
@@ -82,6 +90,8 @@ export class Monitor {
     this.chain = this.services.chain
     this.storage = options.storage
     this.chaintracks = options.chaintracks
+    this.onTransactionProven = options.onTransactionProven
+    this.onTransactionBroadcasted = options.onTransactionBroadcasted
   }
 
   oneSecond = 1000
@@ -286,6 +296,27 @@ export class Monitor {
     TaskCheckForProofs.checkNow = true
   }
 
+  processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
+    if (this.onTransactionBroadcasted) {
+      console.log('🗣️ Sending transaction broadcast update up to the toolbox client')
+      this.onTransactionBroadcasted(broadcastResult)
+    }
+  }
+
+  /**
+   * This is a function run from a TaskCheckForProofs Monitor task.
+   *
+   * This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+   *
+   * @param txStatus
+   */
+  processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
+    if (this.onTransactionProven) {
+      console.log('📩 Sending transaction update up to the toolbox client')
+      this.onTransactionProven(txStatus)
+    }
+  }
+
   /**
    * Process reorg event received from Chaintracks
    *
@@ -300,19 +331,4 @@ export class Monitor {
   processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void {
     /* */
   }
-}
-
-function sum<T>(a: T[], getNum: (v: T) => number): number {
-  let s = 0
-  for (const v of a) s += getNum(v)
-  return s
-}
-
-function filter<T>(a: T[], pred: (v: T) => boolean): { ts: T[]; fs: T[] } {
-  const ts: T[] = []
-  const fs: T[] = []
-  for (const v of a)
-    if (pred(v)) ts.push(v)
-    else fs.push(v)
-  return { ts, fs }
 }

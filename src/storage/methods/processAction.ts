@@ -27,6 +27,7 @@ import {
 } from '../../index.client'
 import { ReviewActionResult, ProvenTxReqNonTerminalStatus, StorageGetBeefOptions } from '../../sdk'
 import { PostReqsToNetworkDetails } from './attemptToPostReqsToNetwork'
+import { createMergedBeefOfTxids } from '../../utility/mergedBeefOfTxids'
 
 export async function processAction(
   storage: StorageProvider,
@@ -451,16 +452,4 @@ async function commitNewTxToStorage(
   log = stampLog(log, `end storage commitNewTxToStorage`)
 
   return r
-}
-
-async function createMergedBeefOfTxids(txids: string[], storage: StorageProvider): Promise<number[]> {
-  const beef = new Beef()
-  const options: StorageGetBeefOptions = {
-    mergeToBeef: beef,
-    ignoreNewProven: true
-  }
-  for (const txid of txids) {
-    await storage.getBeefForTransaction(txid, options)
-  }
-  return beef.toBinary()
 }
