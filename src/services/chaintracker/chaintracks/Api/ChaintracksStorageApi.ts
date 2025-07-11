@@ -41,24 +41,6 @@ export interface ChaintracksStorageBaseOptions {
   bulkMigrationChunkSize: number
 
   /**
-   * Batch insert chunk size for bulk index tables (BlockHash or MerkleRoot).
-   * Must be less than or equal to `bulkmigrationChunkSize`.
-   */
-  bulkIndexTableChunkSize: number
-
-  /**
-   * Maintain a merkleRoot to block header height lookup index for all headers.
-   * Enables the `findHeightForMerkleRoot` and `findHeaderForMerkleRoot` lookup methods.
-   */
-  hasMerkleRootToHeightIndex: boolean
-
-  /**
-   * Maintain a block hash to block header height lookup index for all headers.
-   * Enables the `findHeightForBlockHash` and `findHeaderForBlockHash` lookup methods.
-   */
-  hasBlockHashToHeightIndex: boolean
-
-  /**
    * Maximum number of headers per call to batchInsert
    */
   batchInsertLimit: number
@@ -135,13 +117,8 @@ export interface ChaintracksStorageQueryApi {
    * @param count of headers
    * @returns `buffer` of serialized headers
    * @returns `headerId` of last header
-   * @returns `hashes` array of header hashes
-   * @returns `merkleRoots` array of header merkleRoots
    */
-  headersToBuffer(
-    height: number,
-    count: number
-  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }>
+  headersToBuffer( height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number; }>
 
   /**
    * Adds headers in 80 byte serialized format to a buffer.
@@ -236,23 +213,6 @@ export interface ChaintracksStorageQueryApi {
    * `bulkStorageEngine`.
    */
   bulkMigrationChunkSize: number
-
-  /**
-   * Maximum batch insert chunk size for bulk index tables (BlockHash or MerkleRoot)
-   */
-  bulkIndexTableChunkSize: number
-
-  /**
-   * Maintain a merkleRoot to block header height lookup index for all headers.
-   * Enables the `findHeightForMerkleRoot` and `findHeaderForMerkleRoot` lookup methods.
-   */
-  hasMerkleRootToHeightIndex: boolean
-
-  /**
-   * Maintain a block hash to block header height lookup index for all headers.
-   * Enables the `findHeightForBlockHash` and `findHeaderForBlockHash` lookup methods.
-   */
-  hasBlockHashToHeightIndex: boolean
 
   /**
    * Maximum number of headers per call to batchInsert
@@ -385,42 +345,6 @@ export interface ChaintracksStorageIngestApi {
    * - Delete the records from the live database.
    */
   migrateLiveToBulk(count: number): Promise<void>
-
-  /**
-   * Add block `{hash, height}` pairs to index table controlled by
-   * `hasBlockHashToHeightIndex` which enables queries for bulk storage headers
-   * by block hash lookup.
-   * The index converts block hash to height; which is the only native lookup option for
-   * bulk storage.
-   *
-   * The implementation must handle duplicates by ignoring them.
-   *
-   * If an error occurs a some point while pruning live row headers, the
-   * headers will be presented again for appending. The append must complete without error
-   * even if all or the values are duplicates.
-   *
-   * @param hashes array of block hashes for newly appended bulk storage block headers.
-   * @param minHeight height of first entry in `hashes`
-   */
-  appendBlockHashes(hashes: string[], minHeight: number): Promise<void>
-
-  /**
-   * Add `{merkleRoot, height} pairs to index table controlled by
-   * `hasMerkleRootToHeightIndex` which enables queries for bulk storage headers
-   * by merkleRoot lookup.
-   * The index converts merkleRoot to height; which is the only native lookup option for
-   * bulk storage.
-   *
-   * The implementation must handle duplicates by ignoring them.
-   *
-   * If an error occurs a some point while pruning live row headers, the
-   * headers will be presented again for appending. The append must complete without error
-   * even if all or the values are duplicates.
-   *
-   * @param merkleRoots array of merkleRoots for newly appended bulk storage block headers.
-   * @param minHeight height of first entry in `hashes`
-   */
-  appendMerkleRoots(merkleRoots: string[], minHeight: number): Promise<void>
 
   /**
    * Used to prune live block header records from the live database.

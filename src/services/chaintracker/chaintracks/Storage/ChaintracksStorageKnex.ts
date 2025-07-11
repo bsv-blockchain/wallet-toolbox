@@ -477,28 +477,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     }
   }
 
-  async appendBlockHashes(hashes: string[], minHeight: number): Promise<void> {
-    this.confirmHasBulkBlockHashToHeightIndex()
-    await this.appendToIndexTableChunked(
-      this.bulkBlockHashTableName,
-      'hash',
-      hashes,
-      minHeight,
-      this.bulkIndexTableChunkSize
-    )
-  }
-
-  async appendMerkleRoots(merkleRoots: string[], minHeight: number): Promise<void> {
-    this.confirmHasBulkMerkleRootToHeightIndex()
-    await this.appendToIndexTableChunked(
-      this.bulkMerkleRootTableName,
-      'merkleRoot',
-      merkleRoots,
-      minHeight,
-      this.bulkIndexTableChunkSize
-    )
-  }
-
   async deleteOlderLiveBlockHeaders(headerId: number): Promise<void> {
     const table = this.headerTableName
     await this.knex.transaction(async trx => {
@@ -562,7 +540,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   async headersToBuffer(
     height: number,
     count: number
-  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }> {
+  ): Promise<{ buffer: Uint8Array; headerId: number }> {
     const headers = await this.knex<LiveBlockHeader>(this.headerTableName)
       .where({ isActive: true })
       .andWhere('height', '>=', height)
@@ -573,16 +551,12 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       throw new Error(`Live headers database does not contain first header requested at height ${height}`)
 
     const buffer = new Uint8Array(headers.length * 80)
-    const hashes: string[] = []
-    const merkleRoots: string[] = []
     for (let i = 0; i < headers.length; i++) {
       const h = headers[i]
       const ha = serializeBlockHeader(h)
       buffer.set(ha, i * 80)
-      hashes.push(h.hash)
-      merkleRoots.push(h.merkleRoot)
     }
     const headerId = headers[headers.length - 1].headerId
-    return { buffer, headerId, hashes, merkleRoots }
+    return { buffer, headerId }
   }
 }

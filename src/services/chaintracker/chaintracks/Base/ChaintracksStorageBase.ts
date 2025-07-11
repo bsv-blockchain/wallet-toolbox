@@ -45,9 +45,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
       liveHeightThreshold: 2000,
       reorgHeightThreshold: 400,
       bulkMigrationChunkSize: 500,
-      bulkIndexTableChunkSize: 500,
-      hasMerkleRootToHeightIndex: true,
-      hasBlockHashToHeightIndex: true,
       batchInsertLimit: 400
     }
     return options
@@ -57,9 +54,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   liveHeightThreshold: number
   reorgHeightThreshold: number
   bulkMigrationChunkSize: number
-  bulkIndexTableChunkSize: number
-  hasMerkleRootToHeightIndex = false
-  hasBlockHashToHeightIndex = false
   batchInsertLimit: number
   bulkStorage?: BulkStorageApi
 
@@ -72,10 +66,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     this.liveHeightThreshold = options.liveHeightThreshold
     this.reorgHeightThreshold = options.reorgHeightThreshold
     this.bulkMigrationChunkSize = options.bulkMigrationChunkSize
-    this.bulkIndexTableChunkSize = options.bulkIndexTableChunkSize
     this.batchInsertLimit = options.batchInsertLimit
-    this.hasBlockHashToHeightIndex = options.hasBlockHashToHeightIndex
-    this.hasMerkleRootToHeightIndex = options.hasMerkleRootToHeightIndex
   }
 
   async shutdown(): Promise<void> {
@@ -86,9 +77,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     this.bulkStorage = bulk
     if (this.bulkStorage) {
       await this.bulkStorage.setStorage(this)
-    } else {
-      this.hasBlockHashToHeightIndex = false
-      this.hasMerkleRootToHeightIndex = false
     }
   }
 
@@ -104,8 +92,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   // Abstract functions to be defined by implementation classes
 
-  abstract appendBlockHashes(hashes: string[], minHeight: number): Promise<void>
-  abstract appendMerkleRoots(merkleRoots: string[], minHeight: number): Promise<void>
   abstract batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void>
   abstract deleteOlderLiveBlockHeaders(headerId: number): Promise<void>
   abstract findBulkHeightForBlockHash(hash: string): Promise<number | null>
@@ -119,10 +105,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract findLiveHeightRange(): Promise<{ minHeight: number; maxHeight: number }>
   abstract findMaxHeaderId(): Promise<number>
   abstract getLiveHeightRange(): Promise<HeightRange>
-  abstract headersToBuffer(
-    height: number,
-    count: number
-  ): Promise<{ buffer: Uint8Array; headerId: number; hashes: string[]; merkleRoots: string[] }>
+  abstract headersToBuffer( height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
@@ -138,28 +121,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
    */
   confirmHasBulkStorage() {
     if (!this.bulkStorage) throw new Error('Bulk storage is not configured in `ChaintracksStorageBaseOptions`.')
-  }
-
-  /**
-   * Use to throw a consistent error when bulk storage is not configured
-   *  or `hasBlockHasthToHeightIndex` is false
-   *  and a method is called that requires the index.
-   */
-  confirmHasBulkBlockHashToHeightIndex() {
-    this.confirmHasBulkStorage()
-    if (this.hasBlockHashToHeightIndex === false)
-      throw new Error('`hasBlockHashToHeightIndex` is false in `ChaintracksStorageBaseOptions`.')
-  }
-
-  /**
-   * Use to throw a consistent error when bulk storage is not configured
-   *  or `hasMerkleRootToHeightIndex` is false
-   *  and a method is called that requires the index.
-   */
-  confirmHasBulkMerkleRootToHeightIndex() {
-    this.confirmHasBulkStorage()
-    if (this.hasMerkleRootToHeightIndex === false)
-      throw new Error('`hasMerkleRootToHeightIndex` is false in `ChaintracksStorageBaseOptions`.')
   }
 
   // BASE CLASS IMPLEMENTATIONS - MAY BE OVERRIDEN
@@ -217,16 +178,10 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
       // Copy count oldest active LiveBlockHeaders from live database to buffer.
       const minHeight = (await this.findLiveHeightRange()).minHeight
-      const { buffer, headerId, hashes, merkleRoots } = await this.headersToBuffer(minHeight, count)
+      const { buffer, headerId } = await this.headersToBuffer(minHeight, count)
 
       // Append the buffer of headers to BulkStorage
       await this.bulkStorage.appendHeaders(minHeight, count, buffer)
-
-      // Add the buffer's BlockHash, Height pairs to corresponding index table.
-      if (this.hasBlockHashToHeightIndex) await this.appendBlockHashes(hashes, minHeight)
-
-      // Add the buffer's MerkleRoot, Height pairs to corresponding index table.
-      if (this.hasMerkleRootToHeightIndex) await this.appendMerkleRoots(merkleRoots, minHeight)
 
       // Delete the records from the live database.
       await this.deleteOlderLiveBlockHeaders(headerId)
