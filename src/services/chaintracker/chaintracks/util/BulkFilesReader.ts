@@ -6,14 +6,15 @@ import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash, Utils } from '@bsv/sdk'
 import { asUint8Array } from '../../../../index.client'
-import { Chain, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { validBulkHeaderFilesByFileHash } from './validBulkHeaderFilesByFileHash'
+import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 
 /**
  * Descriptive information about a single bulk header file.
  */
 export interface BulkHeaderFileInfo {
-  fileId?: number // optional, used for database storage
   /**
    * filename and extension, no path
    */
@@ -54,6 +55,151 @@ export interface BulkHeaderFileInfo {
   data?: Uint8Array // optional, used for validation
 
   validated?: boolean
+  /**
+   * optional, used for database storage
+   */
+  fileId?: number
+  /**
+   * optional, if valid `${sourceUrl}/${fileName}` is the source of this data.
+   */
+  sourceUrl?: string
+}
+
+export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
+  chain?: Chain | undefined
+  count: number
+  data?: Uint8Array<ArrayBufferLike> | undefined
+  fileHash: string | null
+  fileId?: number | undefined
+  fileName: string
+  firstHeight: number
+  lastChainWork: string
+  lastHash: string | null
+  prevChainWork: string
+  prevHash: string
+  sourceUrl?: string | undefined
+  validated?: boolean | undefined
+
+  constructor(info: BulkHeaderFileInfo) {
+    this.chain = info.chain
+    this.count = info.count
+    this.data = info.data
+    this.fileHash = info.fileHash
+    this.fileId = info.fileId
+    this.fileName = info.fileName
+    this.firstHeight = info.firstHeight
+    this.lastChainWork = info.lastChainWork
+    this.lastHash = info.lastHash
+    this.prevChainWork = info.prevChainWork
+    this.prevHash = info.prevHash
+    this.sourceUrl = info.sourceUrl
+    this.validated = info.validated
+  }
+
+  abstract readDataFromFile(length: number, offset: number): Promise<Uint8Array | undefined>
+
+  async ensureData(): Promise<Uint8Array> {
+    if (!this.data) throw new WERR_INVALID_OPERATION(`data is undefined and no ensureData() override`);
+    return this.data;
+  }
+
+  /**
+   * Whenever reloading data from a backing store, validated fileHash must be re-verified
+   * @returns the sha256 hash of the file's data as base64 string.
+   */
+  async computeFileHash(): Promise<string> {
+    if (!this.data) throw new WERR_INVALID_OPERATION(`requires defined data`);
+    return asString(Hash.sha256(asArray(this.data)), 'base64');
+  }
+
+  async releaseData(): Promise<void> {
+    this.data = undefined;
+  }
+
+  toCdnInfo(): BulkHeaderFileInfo {
+    return {
+      count: this.count,
+      fileHash: this.fileHash,
+      fileName: this.fileName,
+      firstHeight: this.firstHeight,
+      lastChainWork: this.lastChainWork,
+      lastHash: this.lastHash,
+      prevChainWork: this.prevChainWork,
+      prevHash: this.prevHash,
+    };
+  }
+
+  toStorageInfo(): BulkHeaderFileInfo {
+    return {
+      count: this.count,
+      fileHash: this.fileHash,
+      fileName: this.fileName,
+      firstHeight: this.firstHeight,
+      lastChainWork: this.lastChainWork,
+      lastHash: this.lastHash,
+      prevChainWork: this.prevChainWork,
+      prevHash: this.prevHash,
+      chain: this.chain,
+      validated: this.validated,
+      sourceUrl: this.sourceUrl,
+      fileId: this.fileId,
+    }
+  }
+}
+
+export class BulkHeaderFileFs extends BulkHeaderFile {
+  constructor(info: BulkHeaderFileInfo, public fs: ChaintracksFsApi, public rootFolder: string) {
+    super(info);
+  }
+
+  override async readDataFromFile(length: number, offset: number): Promise<Uint8Array | undefined> {
+    if (this.data) {
+      return this.data.slice(offset, offset + length);
+    }
+    const f = await this.fs.openReadableFile(this.fs.pathJoin(this.rootFolder, this.fileName))
+    try {
+      const buffer = await f.read(length, offset)
+      return buffer
+    } finally {
+      await f.close()
+    }
+  }
+
+  override async ensureData(): Promise<Uint8Array> {
+    if (this.data) return this.data;
+    this.data = await this.readDataFromFile(this.count * 80, 0);
+    if (!this.data) throw new WERR_INVALID_OPERATION(`failed to read data for ${this.fileName}`);
+    if (this.validated) {
+      const hash = await this.computeFileHash();
+      if (hash !== this.fileHash) throw new WERR_INVALID_OPERATION(`BACKING FILE DATA CORRUPTION: invalid fileHash for ${this.fileName}`);
+    }
+    return this.data
+  }
+}
+
+export class BulkHeaderFileFetchBackedStorage extends BulkHeaderFile {
+  constructor(info: BulkHeaderFileInfo, public storage: ChaintracksStorageBase, public fetch: ChaintracksFetchApi) {
+    super(info);
+    if (!this.sourceUrl) {
+      throw new WERR_INVALID_PARAMETER('sourceUrl', 'defined');
+    }
+  }
+
+  override async readDataFromFile(length: number, offset: number): Promise<Uint8Array | undefined> {
+    return (await this.ensureData()).slice(offset, offset + length);
+  }
+
+  override async ensureData(): Promise<Uint8Array> {
+    if (this.data) return this.data;
+    const url = this.fetch.pathJoin(this.sourceUrl!, this.fileName)
+    this.data = await this.fetch.download(url)
+    if (!this.data) throw new WERR_INVALID_OPERATION(`failed to download data from ${url}`);
+    if (this.validated) {
+      const hash = await this.computeFileHash();
+      if (hash !== this.fileHash) throw new WERR_INVALID_OPERATION(`BACKING DOWNLOAD DATA CORRUPTION: invalid fileHash for ${this.fileName}`);
+    }
+    return this.data
+  }
 }
 
 /**
@@ -82,20 +228,14 @@ export interface BulkHeaderFilesInfo {
  * Breaks available bulk headers stored in multiple files into a sequence of buffers with
  * limited maximum size.
  */
-export class BulkFilesReader {
-  fs: ChaintracksFsApi
-  rootFolder: string
-  jsonFilename: string
-  files: BulkHeaderFileInfo[]
+export abstract class BulkFilesReader {
+  files: BulkHeaderFile[]
   range: HeightRange
   maxBufferSize = 400 * 80
   nextHeight: number | undefined
 
-  constructor(fs: ChaintracksFsApi, files: BulkHeaderFilesInfo, range?: HeightRange, maxBufferSize?: number) {
-    this.fs = fs
-    this.rootFolder = files.rootFolder
-    this.jsonFilename = files.jsonFilename
-    this.files = files.files
+  constructor(files: BulkHeaderFile[], range?: HeightRange, maxBufferSize?: number) {
+    this.files = files
     this.range = HeightRange.empty
     this.setRange(range)
     this.setMaxBufferSize(maxBufferSize || 400 * 80)
@@ -129,27 +269,22 @@ export class BulkFilesReader {
     return new HeightRange(first.firstHeight, last.firstHeight + last.count - 1)
   }
 
-  getFileForHeight(height: number): BulkHeaderFileInfo | undefined {
+  getFileForHeight(height: number): BulkHeaderFile | undefined {
     if (!this.files) return undefined
     return this.files.find(file => file.firstHeight <= height && file.firstHeight + file.count > height)
+  }
+
+  async readBufferForHeightOrUndefined(height: number): Promise<Uint8Array | undefined> {
+    const file = this.getFileForHeight(height)
+    if (!file) return undefined
+    const buffer = await file.readDataFromFile(80, (height - file.firstHeight) * 80)
+    return buffer
   }
 
   async readBufferForHeight(height: number): Promise<Uint8Array> {
     const header = await this.readBufferForHeightOrUndefined(height)
     if (!header) throw new Error(`Failed to read bulk header buffer at height=${height}`)
     return header
-  }
-
-  async readBufferForHeightOrUndefined(height: number): Promise<Uint8Array | undefined> {
-    const file = this.getFileForHeight(height)
-    if (!file) return undefined
-    const f = await this.fs.openReadableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
-    try {
-      const buffer = await f.read(80, (height - file.firstHeight) * 80)
-      return buffer
-    } finally {
-      await f.close()
-    }
   }
 
   async readHeaderForHeight(height: number): Promise<BaseBlockHeader> {
@@ -169,25 +304,22 @@ export class BulkFilesReader {
    * @param file
    * @param range
    */
-  async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<Uint8Array | undefined> {
+  async readBufferFromFile(file: BulkHeaderFile, range?: HeightRange): Promise<Uint8Array | undefined> {
     // Constrain the range to the file's contents...
     let fileRange = this.getFileHeightRange(file)
     if (range) fileRange = fileRange.intersect(range)
     if (fileRange.isEmpty) return undefined
     const position = (fileRange.minHeight - file.firstHeight) * 80
     const length = fileRange.length * 80
-    const f = await this.fs.openReadableFile(this.fs.pathJoin(this.rootFolder, file.fileName))
-    try {
-      const buffer = await f.read(length, position)
-      return buffer
-    } finally {
-      await f.close()
-    }
+    return await file.readDataFromFile(length, position)
   }
 
-  nextFile(file: BulkHeaderFileInfo): BulkHeaderFileInfo | undefined {
+
+  nextFile(file: BulkHeaderFile | undefined): BulkHeaderFile | undefined {
+    if (!file) return this.files[0]
     const i = this.files.indexOf(file)
-    return i === -1 || i === this.files.length - 1 ? undefined : this.files[i + 1]
+    if (i < 0) throw new WERR_INVALID_PARAMETER(`file`, `a valid file from this.files`)
+    return this.files[i + 1]
   }
 
   /**
@@ -198,6 +330,7 @@ export class BulkFilesReader {
     let lastHeight = this.nextHeight + this.maxBufferSize / 80 - 1
     lastHeight = Math.min(lastHeight, this.range.maxHeight)
     let file = this.getFileForHeight(this.nextHeight)
+    if (!file) throw new WERR_INTERNAL(`logic error`)
     const readRange = new HeightRange(this.nextHeight, lastHeight)
     let buffers = new Uint8Array(readRange.length * 80)
     let offset = 0
@@ -221,12 +354,6 @@ export class BulkFilesReader {
   resetRange(range: HeightRange, maxBufferSize?: number) {
     this.setRange(range)
     this.setMaxBufferSize(maxBufferSize || 400 * 80)
-  }
-
-  async validateFiles(): Promise<void> {
-    for (const file of this.files) {
-      await BulkFilesReader.validateHeaderFile(this.fs, this.rootFolder, file)
-    }
   }
 
   static async writeEmptyJsonFile(fs: ChaintracksFsApi, rootFolder: string, jsonFilename: string): Promise<string> {
@@ -261,6 +388,41 @@ export class BulkFilesReader {
     return readerFiles
   }
 
+  async validateFiles(): Promise<void> {
+    let lastChainWork: string | undefined = '00'.repeat(32)
+    let lastHeaderHash = '00'.repeat(32)
+    for (const file of this.files) {
+      if (file.prevChainWork !== lastChainWork)
+        throw new WERR_INVALID_OPERATION(`prevChainWork mismatch for file ${file.fileName}: expected ${file.prevChainWork}, got ${lastChainWork}`);
+      if (file.prevHash !== lastHeaderHash)
+        throw new WERR_INVALID_OPERATION(`prevHash mismatch for file ${file.fileName}: expected ${file.prevHash}, got ${lastHeaderHash}`);
+      const data = await file.ensureData()
+      if (data.length !== file.count * 80)
+        throw new WERR_INVALID_OPERATION(`data length mismatch for file ${file.fileName}: expected ${file.count * 80} bytes, got ${data.length} bytes`);
+      const fileHash = await file.computeFileHash()
+      if (!file.fileHash)
+        throw new WERR_INVALID_OPERATION(`fileHash missing for file ${file.fileName}`);
+      if (file.fileHash !== fileHash)
+        throw new WERR_INVALID_OPERATION(`fileHash mismatch for file ${file.fileName}: expected ${file.fileHash}, got ${fileHash}`);
+
+      ({ lastHeaderHash, lastChainWork } = validateBufferOfHeaders(data, lastHeaderHash, 0, file.count, lastChainWork))
+
+      if (file.lastHash !== lastHeaderHash)
+        throw new WERR_INVALID_OPERATION(`lastHash mismatch for file ${file.fileName}: expected ${file.lastHash}, got ${lastHeaderHash}`);
+      if (file.lastChainWork !== lastChainWork)
+        throw new WERR_INVALID_OPERATION(`lastChainWork mismatch for file ${file.fileName}: expected ${file.lastChainWork}, got ${lastChainWork}`);
+
+      file.validated = true
+    }
+  }
+}
+
+export class BulkFilesReaderFs extends BulkFilesReader {
+
+  constructor(public fs: ChaintracksFsApi, files: BulkHeaderFileFs[], range?: HeightRange, maxBufferSize?: number) {
+    super(files, range, maxBufferSize)
+  }
+
   /**
    * Return a BulkFilesReader configured to access the intersection of `range` and available headers.
    * @param rootFolder
@@ -268,129 +430,37 @@ export class BulkFilesReader {
    * @param range
    * @returns
    */
-  static async fromJsonFile(
+  static async fromFs(
     fs: ChaintracksFsApi,
     rootFolder: string,
     jsonFilename: string,
-    range?: HeightRange
+    range?: HeightRange,
+    maxBufferSize?: number
   ): Promise<BulkFilesReader> {
-    const readerFiles = await this.readJsonFile(fs, rootFolder, jsonFilename)
-    return new BulkFilesReader(fs, readerFiles, range)
+    const filesInfo = await this.readJsonFile(fs, rootFolder, jsonFilename)
+    const readerFiles = filesInfo.files.map(
+      (file) => new BulkHeaderFileFs(file, fs, rootFolder)
+    )
+    return new BulkFilesReaderFs(fs, readerFiles, range, maxBufferSize)
+  }
+} 
+
+export class BulkFilesReaderFetchBackedStorage extends BulkFilesReader {
+
+  constructor(storage: ChaintracksStorageBase, files: BulkHeaderFileFetchBackedStorage[], range?: HeightRange, maxBufferSize?: number) {
+    super(files, range, maxBufferSize)
   }
 
-  /**
-   * Validates the contents of an existing static header file against expected `BulkHeaderFileInfo`.
-   * `hf.prevHash` must be valid on input. The previousHash value of the first header in this file.
-   * `hf.firstHeight` is ignored by this function.
-   * Remaining properties of `hf` are validated if non-null, assigned values from the file if null.
-   * @param rootFolder path joined to `hf.fileName` must be the full path to the file to be validated.
-   * @param hf BulkHeaderFileInfo to be validated.
-   * @param data optional data to be validated. If undefined, data is read from cached files.
-   * @returns actual BulkHeaderFileInfo verified
-   */
-  static async validateHeaderFile(
-    fs: ChaintracksFsApi,
-    rootFolder: string,
-    hf: BulkHeaderFileInfo,
-    data?: Uint8Array
-  ): Promise<BulkHeaderFileInfo> {
-    if (data) {
-      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-      const vbhfi = validBulkHeaderFilesByFileHash[fileHash]
-      if (
-        vbhfi &&
-        vbhfi.fileName === hf.fileName &&
-        vbhfi.firstHeight === hf.firstHeight &&
-        vbhfi.prevHash === hf.prevHash &&
-        vbhfi.count === hf.count &&
-        vbhfi.lastHash === hf.lastHash &&
-        vbhfi.fileHash === hf.fileHash &&
-        vbhfi.lastChainWork === hf.lastChainWork &&
-        vbhfi.prevChainWork === hf.prevChainWork &&
-        vbhfi.chain === hf.chain
-      ) {
-        return { ...hf }
-      }
-    }
-
-    const filename = fs.pathJoin(rootFolder, hf.fileName)
-
-    const file = await fs.openReadableFile(filename)
-    try {
-      const sha256 = new Hash.SHA256()
-      const sha256Bug = new Hash.SHA256()
-      const bufferSize = 10000 * 80
-      let offset = 0
-
-      let prevHash = hf.prevHash
-      let prevChainWork = hf.prevChainWork
-      if (!prevHash || prevHash.length !== 64) {
-        throw new Error(`Invalid previous hash ${prevHash} for file ${filename}. Must be a 64 character hex string.`)
-      }
-      if (!prevChainWork || prevChainWork.length !== 64) {
-        throw new Error(
-          `Invalid previous chain work ${prevChainWork} for file ${filename}. Must be a 64 character hex string.`
-        )
-      }
-
-      let fileCount = 0
-
-      const hfa = { ...hf }
-
-      let rrLast: number[] | undefined = undefined
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const rr = await file.read(bufferSize, offset)
-        if (!rr.length) break
-        if (rr.length % 80 !== 0)
-          throw { message: `File ${filename} file read returned ${rr.length} bytes which is not a multiple of 80.` }
-        const arr = asArray(rr)
-        sha256.update(arr)
-        sha256Bug.update(arr)
-        if (rr.length === bufferSize) rrLast = arr
-        if (rrLast && rr.length < bufferSize) {
-          rrLast = rrLast.slice(rr.length)
-          sha256Bug.update(rrLast)
-        }
-        offset += rr.length
-        const count = rr.length / 80
-        const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(rr, prevHash, 0, count, prevChainWork)
-        prevChainWork = lastChainWork!
-        prevHash = lastHeaderHash
-        fileCount += count
-      }
-
-      const lastHash = prevHash
-      if (hf.lastHash !== null && lastHash !== hf.lastHash)
-        throw { message: `File ${filename} lastHash of ${lastHash} doesn't match expected lastHash of ${hf.lastHash}` }
-
-      hfa.lastHash = lastHash
-      hfa.lastChainWork = prevChainWork
-
-      const fileHash = Utils.toBase64(sha256.digest())
-      /**
-       * The original code that calculated file hashes submitted a partially overwritten buffer for the last chunk of the last header file.
-       * Once only valid file hashes are in use, this can be removed.
-       */
-      const fileHashBug = Utils.toBase64(sha256Bug.digest())
-      if (hf.fileHash !== null && fileHash !== hf.fileHash && fileHashBug !== hf.fileHash) {
-        throw { message: `File ${filename} hash of ${fileHash} doesn't match expected hash of ${hf.fileHash}` }
-      }
-
-      hfa.fileHash = fileHash
-
-      if (hf.count !== null && fileCount !== hf.count)
-        throw { message: `File ${filename} count of ${fileCount} doesn't match expected header count ${hf.count}` }
-
-      hfa.count = fileCount
-
-      return hfa
-    } catch (err) {
-      console.log('validateHeaderFile error', err)
-      throw err
-    } finally {
-      await file.close()
-    }
+  static async fromStorage(
+    storage: ChaintracksStorageBase,
+    fetch: ChaintracksFetchApi,
+    range?: HeightRange,
+    maxBufferSize?: number
+  ): Promise<BulkFilesReaderFetchBackedStorage> {
+    const files = await storage.getBulkFiles()
+    const readerFiles = files.map(
+      (file) => new BulkHeaderFileFetchBackedStorage(file, storage, fetch)
+    )
+    return new BulkFilesReaderFetchBackedStorage(storage, readerFiles, range, maxBufferSize)
   }
-}
+} 

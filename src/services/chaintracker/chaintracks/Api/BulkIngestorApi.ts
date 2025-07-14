@@ -21,24 +21,10 @@ export interface BulkIngestorBaseOptions {
   jsonFilename: string | undefined
 
   /**
-   * Required.
-   *
-   * If defined, a local copy of downloaded files will be kept
-   * in the specified folder, speeding up future bulk ingests
-   * (as needed when using memory storage for performance or testing).
-   *
-   * Changes required to the local cache will be detected
-   * and the most recent files will be updated over time.
-   */
-  localCachePath: string | undefined
-
-  /**
    * If true, and the bulk ingestor supports it, bypass the live database
    * up to `liveHeightThreshold` of available headers remaining.
    */
   bypassLiveEnabled: boolean
-
-  fs: ChaintracksFsApi
 }
 
 export interface BulkIngestorApi {

@@ -36,4 +36,12 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
     }
     return response.data as R
   }
+
+  pathJoin(baseUrl: string, subpath: string): string {
+    // Ensure the subpath doesn't start with a slash to avoid issues
+    const cleanSubpath = subpath.replace(/^\/+/, '');
+    // Create a new URL object and append the subpath
+    const url = new URL(cleanSubpath, baseUrl);
+    return url.toString();
+  }
 }

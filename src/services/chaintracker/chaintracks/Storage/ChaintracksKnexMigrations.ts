@@ -86,7 +86,8 @@ export class KnexMigrations implements MigrationSource<string> {
           table.string('lastChainWork', 64).notNullable() // hex encoded
           table.string('fileHash').notNullable() // base64 encoded
           table.boolean('validated').defaultTo(false).notNullable()
-          table.binary('data', 32000000) // 32MB max size
+          table.string('sourceUrl').nullable()
+          table.binary('data', 32000000).nullable() // 32MB max size
         })
       },
       async down(knex) {

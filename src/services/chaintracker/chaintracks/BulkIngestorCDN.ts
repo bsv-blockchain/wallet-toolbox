@@ -6,13 +6,16 @@ import { BulkIngestorBase } from './Base/BulkIngestorBase'
 
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util/BulkFilesReader'
 import { HeightRange } from './util/HeightRange'
-import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
-import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
-import { validateBufferOfHeaders } from './util/blockHeaderUtilities'
+import { WalletError, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
+import { deserializeBlockHeader, genesisBuffer, genesisHeader, validateBufferOfHeaders, validateBulkFileData } from './util/blockHeaderUtilities'
 import { Hash } from '@bsv/sdk'
+import { BulkFilesManager } from './util/BulkFilesManager'
+import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
+
+import Path from 'path'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -30,7 +33,6 @@ export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
    */
   cdnUrl: string | undefined
 
-  fs: ChaintracksFsApi
   fetch: ChaintracksFetchApi
 }
 
@@ -43,14 +45,12 @@ export class BulkIngestorCDN extends BulkIngestorBase {
    */
   static createBulkIngestorCDNOptions(
     chain: Chain,
-    fs: ChaintracksFsApi,
     fetch: ChaintracksFetchApi,
     localCachePath?: string
   ): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
-      ...BulkIngestorBase.createBulkIngestorBaseOptions(chain, fs),
+      ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
       fetch,
-      localCachePath: localCachePath || './data/bulk_cdn_headers/',
       jsonResource: `${chain}NetBlockHeaders.json`,
       cdnUrl: undefined
     }
@@ -70,13 +70,16 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     if (!options.cdnUrl) throw new Error('The cdnUrl options property is required.')
 
     this.fetch = options.fetch
-    this.fs = options.fs
     this.jsonResource = options.jsonResource
     this.cdnUrl = options.cdnUrl
   }
 
   override async getPresentHeight(): Promise<number | undefined> {
     return undefined
+  }
+
+  override async getBulkFilesManager(neededRange?: HeightRange, maxBufferSize?: number): Promise<BulkFilesManager> {
+    throw new Error('getBulkFilesManager not implemented for BulkIngestorCDN')
   }
 
   getJsonHttpHeaders(): Record<string, string> {
@@ -152,87 +155,110 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     neededRange: HeightRange,
     presentHeight: number
   ): Promise<{ reader: BulkFilesReader; liveHeaders?: BlockHeader[] }> {
-    const reader = await this.getBulkFilesManager(neededRange)
+    const storage = this.storage()
 
-    const toUrl = (file: string) => this.fs.pathJoin(this.cdnUrl, file)
-    const filePath = (file: string) => this.fs.pathJoin(this.localCachePath, file)
+    const toUrl = (file: string) => Path.join(this.cdnUrl, file)
 
     const url = toUrl(this.jsonResource)
     this.bulkFiles = await this.fetch.fetchJson(url)
     if (!this.bulkFiles) {
       throw new WERR_INVALID_PARAMETER(`${this.jsonResource}`, `a valid JSON resource available from ${url}`)
     }
+    for (const bf of this.bulkFiles.files) {
+      if (!bf.chain) bf.chain = this.chain
+      if (!bf.sourceUrl) bf.sourceUrl = this.cdnUrl
+    }
 
     let log = 'updateLocalCache log:\n'
     let heightRange = HeightRange.empty
+    let localBulkFiles = storage.bulkFiles
 
     try {
       let filesUpdated = false
       for (let i = 0; i < this.bulkFiles.files.length; i++) {
-        const file = this.bulkFiles.files[i]
-        const path = filePath(file.fileName)
+        const bf = this.bulkFiles.files[i]
+        let updateLf = false
+        let insertAfterLf = false
 
-        heightRange = heightRange.union(new HeightRange(file.firstHeight, file.firstHeight + file.count - 1))
+        heightRange = heightRange.union(new HeightRange(bf.firstHeight, bf.firstHeight + bf.count - 1))
 
         // log += JSON.stringify(file) + '\n'
 
-        if (i < reader.files.length) {
-          log += `${i} exists\n`
-          const lf = reader.files[i]
-          if (
-            lf.fileHash === file.fileHash &&
-            lf.fileName === file.fileName &&
-            lf.firstHeight === file.firstHeight &&
-            lf.count === file.count &&
-            lf.prevHash === file.prevHash &&
-            lf.lastHash === file.lastHash &&
-            lf.lastChainWork === file.lastChainWork &&
-            lf.prevChainWork === file.prevChainWork
-          ) {
-            log += `${i} unchanged ${this.bulkFiles.files[i].fileName}\n`
+        let lf = localBulkFiles.find(lf => lf.firstHeight === bf.firstHeight)
+        if (lf) {
+          if (lf.prevChainWork !== bf.prevChainWork || lf.prevHash !== bf.prevHash) {
+            log += `${bf.fileName} is not a valid update file\n`
             continue
           }
-          log += `${i} updated, deleting cached ${filePath(lf.fileName)}\n`
-          await this.fs.delete(filePath(lf.fileName))
+          // This bulk file matches start of one previously downloaded, but may now have more data either locally or remotely.
+          if (lf.count >= bf.count) {
+            log += `${lf.fileName} exists, ignoring remote file, local file has at least as many headers\n`
+            continue
+          }
+          // Replace existing local file with updated remote file, but only if it is last file...
+          if (i !== localBulkFiles.length - 1) {
+            log += `${lf.fileName} exists, mid range remote file with more headers is NOT SUPPORTED\n`
+            break
+          }
+          updateLf = true
         } else {
-          log += `${i} new ${this.bulkFiles.files[i].fileName}\n`
+          lf = localBulkFiles.slice(-1)[0]
+          if (lf) {
+            if (
+              lf.firstHeight + lf.count !== bf.firstHeight || lf.lastHash !== bf.prevHash || lf.lastChainWork !== bf.prevChainWork
+            ) {
+              log += `${bf.fileName} adding new file that does not follow local files is NOT SUPPORTED\n`
+              break
+            }
+          } else {
+            if (bf.firstHeight !== 0 || bf.prevHash !== '00'.repeat(32) || bf.prevChainWork !== '00'.repeat(32)) {
+              log += `${bf.fileName} adding initial file that does not start at height zero is NOT SUPPORTED\n`
+              break
+            }
+            const gh = genesisHeader(this.chain)
+            const bgh = deserializeBlockHeader(bf.data!, 0, 0)
+            if (gh.hash !== bgh.hash) {
+              log += `${bf.fileName} adding initial file with incorrect genesis block hash is INVALID\n`
+              break
+            }
+          }
+          insertAfterLf = true
         }
 
-        let data: Uint8Array | undefined
-
-        try {
-          filesUpdated = true
-          const url = toUrl(file.fileName)
-
-          log += `${new Date().toISOString()} downloading ${url} expected size ${file.count * 80}\n`
-
-          data = await this.fetch.download(url)
-          await this.fs.writeFile(path, data)
-
-          log += `${new Date().toISOString()} downloaded ${url} actual size    ${data.length}\n`
-        } catch (err) {
-          log += `${new Date().toISOString()} error downloading ${url}: ${JSON.stringify(err)}\n`
-          throw err
+        let vbf
+        if (updateLf && lf && lf.fileId) {
+          try {
+            vbf = await validateBulkFileData(bf, lf.prevHash, lf.prevChainWork, this.fetch)
+            vbf.fileId = lf.fileId
+          } catch (eu: unknown) {
+            const e = WalletError.fromUnknown(eu)
+            log += `${bf.fileName} update failed validity check: ${e.message}\n`
+            continue
+          }
+          await storage.updateBulkFile(vbf.fileId!, vbf)
+          log += `${lf.fileName} updated. Now with ${vbf.count} (+${vbf.count - lf.count}) headers\n`
+        } else if (insertAfterLf) {
+          // lf will be undefined if this is the first file
+          try {
+            const prevHash = lf && lf.lastHash ? lf.lastHash : '00'.repeat(32)
+            const prevChainWork = lf ? lf.lastChainWork : '00'.repeat(32)
+            vbf = await validateBulkFileData(bf, prevHash, prevChainWork, this.fetch)
+          } catch (eu: unknown) {
+            const e = WalletError.fromUnknown(eu)
+            log += `${bf.fileName} insert failed validity check: ${e.message}\n`
+            continue
+          }
+          vbf.fileId = await storage.insertBulkFile(vbf)
+          log += `${bf.fileName} added\n`
         }
 
-        file.chain = this.chain
-        this.bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, file, data)
+        this.bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, bf, data)
 
-        const newFile = { ...this.bulkFiles.files[i] }
-        newFile.data = data
-        newFile.validated = true
-
-        const fileId = await this.storageOrUndefined()?.insertBulkFile(newFile)
-        logger(`insertBulkFile ${fileId}`)
       }
 
       this.bulkFiles.rootFolder = this.localCachePath
       this.bulkFiles.jsonFilename = this.jsonFilename
 
-      if (filesUpdated) {
-        const bytes = asUint8Array(JSON.stringify(this.bulkFiles), 'utf8')
-        await this.fs.writeFile(this.fs.pathJoin(this.localCachePath, this.jsonFilename), bytes)
-      }
     } finally {
       logger(log)
     }
@@ -241,6 +267,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     return {
       reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange),
+      // This ingestor never returns live headers.
       liveHeaders: undefined
     }
   }

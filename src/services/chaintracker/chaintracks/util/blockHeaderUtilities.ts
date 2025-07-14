@@ -7,6 +7,10 @@ import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
+import { BulkHeaderFileInfo } from './BulkFilesReader'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
+
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.
@@ -24,6 +28,44 @@ export async function sha256HashOfBinaryFile(
   const length = bytes.length
   sha256.update(asArray(bytes))
   return { hash: Utils.toBase64(sha256.digest()), length }
+}
+
+/**
+ * Validates the contents of a bulk header file.
+ * @param bf BulkHeaderFileInfo containing `data` to validate.
+ * @param prevHash Required previous header hash.
+ * @param prevChainWork Required previous chain work.
+ * @param fetch Optional ChaintracksFetchApi instance for fetching data.
+ * @returns Promise resolving to an object containing the last header hash and last chain work.
+ */
+export async function validateBulkFileData(
+  bf: BulkHeaderFileInfo, prevHash: string, prevChainWork: string, fetch?: ChaintracksFetchApi
+): Promise<BulkHeaderFileInfo> {
+
+  const vbf = { ...bf }
+
+  if (!vbf.data && vbf.sourceUrl && fetch) {
+    const url = fetch.pathJoin(vbf.sourceUrl, vbf.fileName)
+    vbf.data = await fetch.download(url)
+  }
+
+  if (!vbf.data) throw new WERR_INVALID_OPERATION(`bulk file ${vbf.fileName} data is unavailable`)
+  
+  if (vbf.count <= 0) throw new WERR_INVALID_PARAMETER('bf.count', `expected count to be greater than 0, but got ${vbf.count}`)
+
+  if (vbf.data.length !== vbf.count * 80) throw new WERR_INVALID_PARAMETER('bf.data',
+    `bulk file ${vbf.fileName} data length ${vbf.data.length} does not match expected count ${vbf.count}`
+  )
+
+  vbf.fileHash = asString(Hash.sha256(asArray(vbf.data)), 'base64')
+  if (bf.fileHash && bf.fileHash !== vbf.fileHash) throw new WERR_INVALID_PARAMETER('bf.fileHash', `expected ${bf.fileHash} but got ${vbf.fileHash}`)
+  
+  const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(vbf.data, prevHash, 0, undefined, prevChainWork)
+  vbf.lastHash = lastHeaderHash
+  vbf.lastChainWork = lastChainWork!
+  vbf.validated = true
+
+  return vbf
 }
 
 /**
