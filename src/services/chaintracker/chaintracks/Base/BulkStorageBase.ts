@@ -111,11 +111,13 @@ export abstract class BulkStorageBase implements BulkStorageApi {
       }
       const buffer = await this.headersToBuffer(height, count)
       await this.fs.writeFile(this.fs.pathJoin(rootFolder, file.fileName), buffer)
+      /*
       file = await BulkFilesReader.validateHeaderFile(this.fs, rootFolder, file)
       if (!file.lastHash) throw new Error('Unexpected result.')
       prevHash = file.lastHash
       prevChainWork = file.lastChainWork
       info.files.push(file)
+      */
     }
     const bytes = asUint8Array(JSON.stringify(info), 'utf8')
     await this.fs.writeFile(this.fs.pathJoin(rootFolder, jsonFilename), bytes)

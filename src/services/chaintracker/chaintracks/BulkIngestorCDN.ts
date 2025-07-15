@@ -4,7 +4,7 @@ import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
 
 import { BulkIngestorBase } from './Base/BulkIngestorBase'
 
-import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util/BulkFilesReader'
+import { BulkFilesReader, BulkFilesReaderFetchBackedStorage, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util/BulkFilesReader'
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
@@ -12,7 +12,6 @@ import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
 import { WalletError, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
 import { deserializeBlockHeader, genesisBuffer, genesisHeader, validateBufferOfHeaders, validateBulkFileData } from './util/blockHeaderUtilities'
 import { Hash } from '@bsv/sdk'
-import { BulkFilesManager } from './util/BulkFilesManager'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
 import Path from 'path'
@@ -46,7 +45,6 @@ export class BulkIngestorCDN extends BulkIngestorBase {
   static createBulkIngestorCDNOptions(
     chain: Chain,
     fetch: ChaintracksFetchApi,
-    localCachePath?: string
   ): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
       ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
@@ -78,10 +76,6 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return undefined
   }
 
-  override async getBulkFilesManager(neededRange?: HeightRange, maxBufferSize?: number): Promise<BulkFilesManager> {
-    throw new Error('getBulkFilesManager not implemented for BulkIngestorCDN')
-  }
-
   getJsonHttpHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       Accept: 'application/json'
@@ -89,72 +83,11 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return headers
   }
 
-  async exportHeadersToFs(toFs: ChaintracksFsApi, toHeadersPerFile: number, toFolder: string): Promise<void> {
-    if (!this.bulkFiles || !this.currentRange || this.currentRange.isEmpty) {
-      throw new WERR_INVALID_OPERATION('updateLocalCache must be called before exportHeadersToFs')
-    }
-
-    const toFileName = (i: number) => `${this.chain}Net_${i}.headers`
-    const toPath = (i: number) => toFs.pathJoin(toFolder, toFileName(i))
-    const toJsonPath = () => toFs.pathJoin(toFolder, `${this.chain}NetBlockHeaders.json`)
-
-    const toBulkFiles: BulkHeaderFilesInfo = {
-      rootFolder: toFolder,
-      jsonFilename: `${this.chain}NetBlockHeaders.json`,
-      headersPerFile: toHeadersPerFile,
-      files: []
-    }
-
-    const bf0 = this.bulkFiles.files[0]
-    if (!bf0 || bf0.firstHeight !== this.currentRange.minHeight) {
-      throw new WERR_INTERNAL(
-        `file 0 firstHeight ${bf0.firstHeight} must equal currentRange minHeight ${this.currentRange.minHeight}`
-      )
-    }
-
-    let firstHeight = this.currentRange.minHeight
-    let prevHash = bf0.prevHash
-    let prevChainWork = bf0.prevChainWork
-
-    let i = -1
-    for (;;) {
-      i++
-      const neededRange = new HeightRange(firstHeight, firstHeight + toHeadersPerFile - 1)
-      const reader = await this.getBulkFilesManager(neededRange, toHeadersPerFile * 80)
-      const data = await reader.read()
-      if (!data || data.length === 0) {
-        break
-      }
-      const last = validateBufferOfHeaders(data, prevHash, 0, undefined, prevChainWork)
-
-      await toFs.writeFile(toPath(i), data)
-
-      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-      const file: BulkHeaderFileInfo = {
-        fileName: toFileName(i),
-        firstHeight,
-        prevHash,
-        count: data.length / 80,
-        lastHash: last.lastHeaderHash,
-        fileHash,
-        lastChainWork: last.lastChainWork!,
-        prevChainWork: prevChainWork,
-        chain: this.chain
-      }
-      toBulkFiles.files.push(file)
-      firstHeight += file.count
-      prevHash = file.lastHash!
-      prevChainWork = file.lastChainWork!
-    }
-
-    await toFs.writeFile(toJsonPath(), asUint8Array(JSON.stringify(toBulkFiles), 'utf8'))
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateLocalCache(
     neededRange: HeightRange,
     presentHeight: number
-  ): Promise<{ reader: BulkFilesReader; liveHeaders?: BlockHeader[] }> {
+  ): Promise<{ reader: BulkFilesReaderFetchBackedStorage; liveHeaders?: BlockHeader[] }> {
     const storage = this.storage()
 
     const toUrl = (file: string) => Path.join(this.cdnUrl, file)
@@ -184,7 +117,8 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
         // log += JSON.stringify(file) + '\n'
 
-        let lf = localBulkFiles.find(lf => lf.firstHeight === bf.firstHeight)
+        let lfIndex: number | undefined = localBulkFiles.findIndex(lf => lf.firstHeight === bf.firstHeight)
+        let lf: BulkHeaderFileInfo | undefined = localBulkFiles[lfIndex]
         if (lf) {
           if (lf.prevChainWork !== bf.prevChainWork || lf.prevHash !== bf.prevHash) {
             log += `${bf.fileName} is not a valid update file\n`
@@ -225,7 +159,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
           insertAfterLf = true
         }
 
-        let vbf
+        let vbf: BulkHeaderFileInfo | undefined
         if (updateLf && lf && lf.fileId) {
           try {
             vbf = await validateBulkFileData(bf, lf.prevHash, lf.prevChainWork, this.fetch)
@@ -235,8 +169,13 @@ export class BulkIngestorCDN extends BulkIngestorBase {
             log += `${bf.fileName} update failed validity check: ${e.message}\n`
             continue
           }
+
+          // Update current last bulk file with more headers.
           await storage.updateBulkFile(vbf.fileId!, vbf)
+
+          localBulkFiles[lfIndex!] = vbf
           log += `${lf.fileName} updated. Now with ${vbf.count} (+${vbf.count - lf.count}) headers\n`
+          filesUpdated = true
         } else if (insertAfterLf) {
           // lf will be undefined if this is the first file
           try {
@@ -248,17 +187,19 @@ export class BulkIngestorCDN extends BulkIngestorBase {
             log += `${bf.fileName} insert failed validity check: ${e.message}\n`
             continue
           }
+
+          // Append a new bulk file following existing files.
           vbf.fileId = await storage.insertBulkFile(vbf)
+
+          localBulkFiles.push(vbf)
           log += `${bf.fileName} added\n`
+          filesUpdated = true
         }
 
-        this.bulkFiles.files[i] = await BulkFilesReader.validateHeaderFile(this.fs, reader.rootFolder, bf, data)
-
+        if (vbf && filesUpdated) {
+          heightRange = heightRange.union(new HeightRange(vbf.firstHeight, vbf.firstHeight + vbf.count - 1))
+        }
       }
-
-      this.bulkFiles.rootFolder = this.localCachePath
-      this.bulkFiles.jsonFilename = this.jsonFilename
-
     } finally {
       logger(log)
     }
@@ -266,7 +207,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     this.currentRange = heightRange
 
     return {
-      reader: await BulkFilesReader.fromJsonFile(this.fs, this.localCachePath, this.jsonFilename, neededRange),
+      reader: await BulkFilesReaderFetchBackedStorage.fromStorage(storage, this.fetch, neededRange),
       // This ingestor never returns live headers.
       liveHeaders: undefined
     }

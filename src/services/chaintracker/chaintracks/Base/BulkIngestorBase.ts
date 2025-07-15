@@ -4,12 +4,10 @@ import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 
 import { BulkFilesReader, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { HeightRange } from '../util/HeightRange'
-import { BulkFilesManager } from '../util/BulkFilesManager'
 import { deserializeBaseBlockHeaders, deserializeBlockHeaders, genesisBuffer } from '../util/blockHeaderUtilities'
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { asString } from '../../../../utility/utilityHelpers.noBuffer'
-import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 import { ChaintracksStorageBase } from './ChaintracksStorageBase'
 
@@ -59,14 +57,6 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
    * information about locally cached bulk header files managed by this bulk ingestor
    */
   filesInfo: BulkHeaderFilesInfo | undefined
-
-  abstract getBulkFilesManager(neededRange?: HeightRange, maxBufferSize?: number): Promise<BulkFilesManager>
-
-  async clearLocalCache(): Promise<BulkFilesManager> {
-    const manager = await this.getBulkFilesManager()
-    await manager.clearBulkHeaders()
-    return manager
-  }
 
   /**
    * If this bulk ingestor has a remote source of block headers that
