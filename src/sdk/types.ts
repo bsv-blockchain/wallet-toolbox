@@ -137,7 +137,6 @@ export type ReqHistoryNote = {
  * The transaction status that a client will receive when subscribing to transaction updates in the Monitor.
  */
 export interface ProvenTransactionStatus {
-  status: ProvenTxReqStatus
   txid: string
   txIndex: number
   blockHeight: number

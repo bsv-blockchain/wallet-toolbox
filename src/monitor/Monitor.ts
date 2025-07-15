@@ -296,9 +296,16 @@ export class Monitor {
     TaskCheckForProofs.checkNow = true
   }
 
+  /**
+   * This is a function run from a TaskSendWaiting Monitor task.
+   *
+   * This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
+   *
+   * @param broadcastResult
+   */
   processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
     if (this.onTransactionBroadcasted) {
-      console.log('🗣️ Sending transaction broadcast update up to the toolbox client')
+      console.log('Sending transaction broadcast update up to the toolbox client')
       this.onTransactionBroadcasted(broadcastResult)
     }
   }
@@ -312,7 +319,7 @@ export class Monitor {
    */
   processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
     if (this.onTransactionProven) {
-      console.log('📩 Sending transaction update up to the toolbox client')
+      console.log('Sending proven transaction update up to the toolbox client')
       this.onTransactionProven(txStatus)
     }
   }

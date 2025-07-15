@@ -218,7 +218,6 @@ export async function getProofs(
       req.notified = true
 
       task.monitor.processProvenTransaction({
-        status,
         txid,
         txIndex: index,
         blockHeight: height,
