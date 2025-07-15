@@ -264,4 +264,10 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     const ancestor = await this.findCommonAncestor(header1, header2)
     return Math.max(header1.height, header2.height) - ancestor.height
   }
+
+  async addOldBlockHeaders(headers: BlockHeader[], presentHeight: number): Promise<void> {
+    await this.makeAvailable()
+  
+    const { bulk, live } = await this.getAvailableHeightRanges()
+  }
 }

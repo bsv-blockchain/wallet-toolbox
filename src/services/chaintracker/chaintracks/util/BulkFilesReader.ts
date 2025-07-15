@@ -232,11 +232,11 @@ export interface BulkHeaderFilesInfo {
  * Breaks available bulk headers stored in multiple files into a sequence of buffers with
  * limited maximum size.
  */
-export class BulkFilesReader<T extends BulkHeaderFile> {
+export class BulkFilesReader {
   /**
    * Previously validated bulk header files which may pull data from backing storage on demand.
    */
-  files: T[]
+  files: BulkHeaderFile[]
   /**
    * Subset of headers currently being "read".
   */
@@ -250,7 +250,7 @@ export class BulkFilesReader<T extends BulkHeaderFile> {
    */
   nextHeight: number | undefined
 
-  constructor(files: T[], range?: HeightRange, maxBufferSize?: number) {
+  constructor(files: BulkHeaderFile[], range?: HeightRange, maxBufferSize?: number) {
     this.files = files
     this.range = HeightRange.empty
     this.setRange(range)
@@ -281,7 +281,7 @@ export class BulkFilesReader<T extends BulkHeaderFile> {
     return new HeightRange(first.firstHeight, last.firstHeight + last.count - 1)
   }
 
-  private getFileForHeight(height: number): T | undefined {
+  private getFileForHeight(height: number): BulkHeaderFile | undefined {
     if (!this.files) return undefined
     return this.files.find(file => file.firstHeight <= height && file.firstHeight + file.count > height)
   }
@@ -316,7 +316,7 @@ export class BulkFilesReader<T extends BulkHeaderFile> {
    * @param file
    * @param range
    */
-  private async readBufferFromFile(file: T, range?: HeightRange): Promise<Uint8Array | undefined> {
+  private async readBufferFromFile(file: BulkHeaderFile, range?: HeightRange): Promise<Uint8Array | undefined> {
     // Constrain the range to the file's contents...
     let fileRange = file.heightRange
     if (range) fileRange = fileRange.intersect(range)
@@ -326,7 +326,7 @@ export class BulkFilesReader<T extends BulkHeaderFile> {
     return await file.readDataFromFile(length, position)
   }
 
-  private nextFile(file: T | undefined): T | undefined {
+  private nextFile(file: BulkHeaderFile | undefined): BulkHeaderFile | undefined {
     if (!file) return this.files[0]
     const i = this.files.indexOf(file)
     if (i < 0) throw new WERR_INVALID_PARAMETER(`file`, `a valid file from this.files`)
@@ -453,7 +453,7 @@ export class BulkFilesReader<T extends BulkHeaderFile> {
   }
 }
 
-export class BulkFilesReaderFs extends BulkFilesReader<BulkHeaderFileFs> {
+export class BulkFilesReaderFs extends BulkFilesReader {
 
   constructor(public fs: ChaintracksFsApi, files: BulkHeaderFileFs[], range?: HeightRange, maxBufferSize?: number) {
     super(files, range, maxBufferSize)
@@ -513,7 +513,7 @@ export class BulkFilesReaderFs extends BulkFilesReader<BulkHeaderFileFs> {
   }
 } 
 
-export class BulkFilesReaderFetchBackedStorage extends BulkFilesReader<BulkHeaderFileFetchBackedStorage> {
+export class BulkFilesReaderFetchBackedStorage extends BulkFilesReader {
 
   constructor(storage: ChaintracksStorageBase, files: BulkHeaderFileFetchBackedStorage[], range?: HeightRange, maxBufferSize?: number) {
     super(files, range, maxBufferSize)

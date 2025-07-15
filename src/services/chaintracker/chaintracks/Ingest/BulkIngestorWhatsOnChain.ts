@@ -1,5 +1,5 @@
 import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
-import { Chain } from '../../../../sdk'
+import { Chain, WERR_INVALID_OPERATION } from '../../../../sdk'
 import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
@@ -51,13 +51,11 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
    * @param localCachePath defaults to './data/ingest_whatsonchain_headers'
    * @returns
    */
-  static createBulkIngestorWhatsOnChainOptions(chain: Chain, localCachePath?: string): BulkIngestorWhatsOnChainOptions {
+  static createBulkIngestorWhatsOnChainOptions(chain: Chain): BulkIngestorWhatsOnChainOptions {
     const options: BulkIngestorWhatsOnChainOptions = {
       ...WhatsOnChainServices.createWhatsOnChainServicesOptions(chain),
       ...BulkIngestorBase.createBulkIngestorBaseOptions(
-        chain,
-        ChaintracksFs,
-        localCachePath || './data/ingest_whatsonchain_headers'
+        chain
       ),
       idleWait: 5000
     }
@@ -81,50 +79,50 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateLocalCache(
+    /**
+     * Range of heights that may be added to bulk storage.
+     */
     neededRange: HeightRange,
+    /**
+     * Best guess at current height of active chain tip.
+     */
     presentHeight: number,
+    /**
+     * Any live headers accumulated thus far which will be forwarded to live header storage.
+     */
     priorLiveHeaders?: BlockHeader[]
   ): Promise<{ reader: BulkFilesReader; liveHeaders: BlockHeader[] }> {
-    const manager = await this.getBulkFilesManager(neededRange)
 
-    if (!manager.range.isEmpty && neededRange.minHeight < manager.range.minHeight)
-      // Can't use existing bulk headers if they don't start before what is needed.
-      await manager.clearBulkHeaders()
-
-    // Any header retreived with height greater than maxHeight is returned in liveHeaders (no bulk handling)
-    // This value is valid even if neededRange is empty (minHeight > maxHeight)
-    const maxHeight = neededRange.maxHeight
-    // What height to request headers from...
-    let fromHeight = maxHeight + 1
+    let fromHeight: number
 
     if (!neededRange.isEmpty) {
-      // If there's a range of header heights we could use that qualify for bulk processing (older than reorgHeightThreshold)...
       fromHeight = neededRange.minHeight
-      if (!manager.range.isEmpty && manager.range.maxHeight >= fromHeight) fromHeight = manager.range.maxHeight + 1
+    } else if (priorLiveHeaders && priorLiveHeaders.length > 0) {
+      // If we have prior live headers, start from the last one with a small overlap.
+      fromHeight = priorLiveHeaders.slice(-1)[0].height + 1 - 10
+    } else {
+      fromHeight = presentHeight - 10
     }
-
-    if (priorLiveHeaders && priorLiveHeaders.length > 0) {
-      // If we already have some liveHeaders, only ask for newer live headers.
-      const priorHeight = priorLiveHeaders[priorLiveHeaders.length - 1].height + 1
-      if (priorHeight > fromHeight) fromHeight = priorHeight
-    }
-
-    //const updateRange = new HeightRange(fromHeight, maxHeight)
 
     const liveHeaders: BlockHeader[] = []
-
     const bulkHeaders: BlockHeader[] = []
     const errors: { code: number; message: string; count: number }[] = []
     const enqueue: EnqueueHandler = header => {
-      if (header.height > maxHeight) liveHeaders.push(header)
-      else bulkHeaders.push(header)
+      const height = header.height
+      if (!neededRange.isEmpty && header.height <= neededRange.maxHeight) {
+        bulkHeaders.push(header)
+      } else {
+        liveHeaders.push(header)
+      }
     }
     const error: ErrorHandler = (code, message) => {
       errors.push({ code, message, count: errors.length })
       return false
     }
-
     const ok = await this.woc.listenForOldBlockHeaders(fromHeight, presentHeight, enqueue, error, this.idleWait)
+
+    if (ok) await this.storage().addOldBlockHeaders(bulkHeaders, liveHeaders, presentHeight)
+
     if (bulkHeaders.length) fromHeight = bulkHeaders[bulkHeaders.length - 1].height + 1
     if (!ok || errors.length > 0) {
       console.log(`WhatsOnChain bulk ingestor ok=${ok} error count=${errors.length}`)

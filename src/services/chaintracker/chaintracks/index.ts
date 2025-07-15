@@ -17,7 +17,6 @@ export * from './BulkIngestorCDNBabbage'
 export * from './Api/LiveIngestorApi'
 export * from './Base/LiveIngestorBase'
 
-export * from './util/BulkFilesManager'
 export * from './util/BulkFilesReader'
 export * from './util/HeightRange'
 
