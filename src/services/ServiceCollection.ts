@@ -1,5 +1,5 @@
 import { WalletError } from '../sdk/WalletError'
-import { ProviderCallHistory, ServiceCallHistory } from '../sdk/WalletServices.interfaces'
+import { PostBeefService, ProviderCallHistory, ServiceCallHistory } from '../sdk/WalletServices.interfaces'
 
 const MAX_RESET_COUNTS = 32
 const MAX_CALL_HISTORY = 32
@@ -57,6 +57,18 @@ export class ServiceCollection<T> {
       all.push(this.getServiceToCall(i))
     }
     return all
+  }
+
+  /**
+   * Used to de-prioritize a service call by moving it to the end of the list.
+   * @param stc 
+   */
+  moveServiceToLast(stc: ServiceToCall<T>) {
+    const index = this.services.findIndex(s => s.name === stc.providerName)
+    if (index !== -1) {
+      const [service] = this.services.splice(index, 1)
+      this.services.push(service)
+    }
   }
 
   get allServices() {
