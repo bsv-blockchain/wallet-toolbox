@@ -282,7 +282,7 @@ export class Services implements sdk.WalletServices {
             if (r.status === 'success') break
             if (r.txidResults && r.txidResults.every(txr => txr.serviceError)) {
               // move this service to the end of the list
-              services.moveServiceToLast(stc)
+              this.postBeefServices.moveServiceToLast(stc)
             }
           }
         }

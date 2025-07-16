@@ -1,5 +1,5 @@
 import { WalletError } from '../sdk/WalletError'
-import { PostBeefService, ProviderCallHistory, ServiceCallHistory } from '../sdk/WalletServices.interfaces'
+import { ProviderCallHistory, ServiceCallHistory } from '../sdk/WalletServices.interfaces'
 
 const MAX_RESET_COUNTS = 32
 const MAX_CALL_HISTORY = 32
