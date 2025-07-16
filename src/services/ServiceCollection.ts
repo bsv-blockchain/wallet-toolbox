@@ -59,6 +59,18 @@ export class ServiceCollection<T> {
     return all
   }
 
+  /**
+   * Used to de-prioritize a service call by moving it to the end of the list.
+   * @param stc
+   */
+  moveServiceToLast(stc: ServiceToCall<T>) {
+    const index = this.services.findIndex(s => s.name === stc.providerName)
+    if (index !== -1) {
+      const [service] = this.services.splice(index, 1)
+      this.services.push(service)
+    }
+  }
+
   get allServices() {
     return this.services.map(x => x.service)
   }
