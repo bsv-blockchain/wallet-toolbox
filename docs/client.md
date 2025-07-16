@@ -7781,6 +7781,7 @@ export class ServiceCollection<T> {
     getServiceToCall(i: number): ServiceToCall<T> 
     get serviceToCall(): ServiceToCall<T> 
     get allServicesToCall(): ServiceToCall<T>[] 
+    moveServiceToLast(stc: ServiceToCall<T>) 
     get allServices() 
     get count() 
     get index() 
@@ -7816,6 +7817,15 @@ See also: [ServiceCallHistory](./client.md#interface-servicecallhistory)
 Returns
 
 A copy of current service call history
+
+###### Method moveServiceToLast
+
+Used to de-prioritize a service call by moving it to the end of the list.
+
+```ts
+moveServiceToLast(stc: ServiceToCall<T>) 
+```
+See also: [ServiceToCall](./services.md#interface-servicetocall)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
