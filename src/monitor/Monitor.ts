@@ -44,7 +44,7 @@ export interface MonitorOptions {
   unprovenAttemptsLimitMain: number
 
   /**
-   * This are hooks for a wallet-toolbox client to get transaction updates.
+   * These are hooks for a wallet-toolbox client to get transaction updates.
    */
   onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
   onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
