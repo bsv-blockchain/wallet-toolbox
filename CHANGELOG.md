@@ -4,6 +4,10 @@ This document captures the history of significant changes to the wallet-toolbox 
 The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 1.5.10
+
+- Add automatic request timeouts and deprioritization of postBeef services.
+
 ## wallet-toolbox 1.5.7
 
 - One-off authorizations are no longer cached, ensuring they can only be used once.
