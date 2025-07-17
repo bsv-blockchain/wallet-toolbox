@@ -133,7 +133,7 @@ export type ReqHistoryNote = {
   [key: string]: boolean | string | number | undefined
 }
 
-/*
+/**
  * The transaction status that a client will receive when subscribing to transaction updates in the Monitor.
  */
 export interface ProvenTransactionStatus {
