@@ -1311,7 +1311,7 @@ export class WalletPermissionsManager implements WalletInterface {
         privDecoded !== !!privileged ||
         secLevelDecoded !== secLevel ||
         protoNameDecoded !== protoName ||
-        cptyDecoded !== counterparty
+        (secLevelDecoded === 2 && cptyDecoded !== counterparty)
       ) {
         continue
       }
