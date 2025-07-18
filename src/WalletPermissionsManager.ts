@@ -6,7 +6,8 @@ import {
   Transaction,
   WalletProtocol,
   Base64String,
-  PubKeyHex
+  PubKeyHex,
+  SecurityLevels
 } from '@bsv/sdk'
 import { validateCreateActionArgs } from './sdk'
 
@@ -1264,16 +1265,19 @@ export class WalletPermissionsManager implements WalletInterface {
     includeExpired: boolean
   ): Promise<PermissionToken | undefined> {
     const [secLevel, protoName] = protocolID
+    const tags = [
+      `originator ${originator}`,
+      `privileged ${!!privileged}`,
+      `protocolName ${protoName}`,
+      `protocolSecurityLevel ${secLevel}`
+    ]
+    if (secLevel === 2) {
+      tags.push(`counterparty ${counterparty}`)
+    }
     const result = await this.underlying.listOutputs(
       {
         basket: BASKET_MAP.protocol,
-        tags: [
-          `originator ${originator}`,
-          `privileged ${!!privileged}`,
-          `protocolName ${protoName}`,
-          `protocolSecurityLevel ${secLevel}`,
-          `counterparty ${counterparty}`
-        ],
+        tags,
         tagQueryMode: 'all',
         include: 'entire transactions'
       },
