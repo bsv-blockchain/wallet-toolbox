@@ -708,7 +708,7 @@ export class WalletPermissionsManager implements WalletInterface {
       throw new Error('Request ID not found.')
     }
     const err = new Error('The user has denied the request for permission.')
-    ;(err as any).code = 'ERR_PERMISSION_DENIED'
+      ; (err as any).code = 'ERR_PERMISSION_DENIED'
     for (const p of matching.pending) {
       p.reject(err)
     }
@@ -1271,7 +1271,7 @@ export class WalletPermissionsManager implements WalletInterface {
       `protocolName ${protoName}`,
       `protocolSecurityLevel ${secLevel}`
     ]
-    if (secLevel === SecurityLevels.Counterparty) {
+    if (secLevel === 2) {
       tags.push(`counterparty ${counterparty}`)
     }
     const result = await this.underlying.listOutputs(
