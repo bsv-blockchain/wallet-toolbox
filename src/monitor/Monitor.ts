@@ -305,7 +305,6 @@ export class Monitor {
    */
   callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
     if (this.onTransactionBroadcasted) {
-      console.log('Sending transaction broadcast update up to the toolbox client')
       this.onTransactionBroadcasted(broadcastResult)
     }
   }
@@ -319,7 +318,6 @@ export class Monitor {
    */
   callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
     if (this.onTransactionProven) {
-      console.log('Sending proven transaction update up to the toolbox client')
       this.onTransactionProven(txStatus)
     }
   }
