@@ -1626,7 +1626,7 @@ msecsWaitPerMerkleProofServiceReq: number
 
 ###### Property onTransactionBroadcasted
 
-This are hooks for a wallet-toolbox client to get transaction updates.
+These are hooks for a wallet-toolbox client to get transaction updates.
 
 ```ts
 onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
@@ -2425,6 +2425,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ---
 ##### Interface: ProvenTransactionStatus
 
+The transaction status that a client will receive when subscribing to transaction updates in the Monitor.
+
 ```ts
 export interface ProvenTransactionStatus {
     txid: string;
@@ -2433,7 +2435,6 @@ export interface ProvenTransactionStatus {
     blockHash: string;
     merklePath: number[];
     merkleRoot: string;
-    rawTx: number[];
 }
 ```
 
@@ -7480,8 +7481,8 @@ export class Monitor {
     lastNewHeader: BlockHeader | undefined;
     lastNewHeaderWhen: Date | undefined;
     processNewBlockHeader(header: BlockHeader): void 
-    processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
-    processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+    callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+    callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
     processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 }
 ```
@@ -7524,16 +7525,27 @@ without sync'ing enabled.
 addMultiUserTasks(): void 
 ```
 
-###### Method processBroadcastedTransaction
+###### Method callOnBroadcastedTransaction
 
 This is a function run from a TaskSendWaiting Monitor task.
 
 This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
 
 ```ts
-processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
 ```
 See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
+
+###### Method callOnProvenTransaction
+
+This is a function run from a TaskCheckForProofs Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+
+```ts
+callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+```
+See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processNewBlockHeader
 
@@ -7545,17 +7557,6 @@ Kicks processing 'unconfirmed' and 'unmined' request processing.
 processNewBlockHeader(header: BlockHeader): void 
 ```
 See also: [BlockHeader](./services.md#interface-blockheader)
-
-###### Method processProvenTransaction
-
-This is a function run from a TaskCheckForProofs Monitor task.
-
-This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
-
-```ts
-processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
-```
-See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processReorg
 
@@ -11816,46 +11817,45 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [acquireDirectCertificate](#function-acquiredirectcertificate) | [listActionsIdb](#function-listactionsidb) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
-| [arcDefaultUrl](#function-arcdefaulturl) | [listCertificates](#function-listcertificates) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
-| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [listOutputsIdb](#function-listoutputsidb) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
-| [arraysEqual](#function-arraysequal) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [asArray](#function-asarray) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [makeChangeLock](#function-makechangelock) | [validateInteger](#function-validateinteger) |
-| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [maxDate](#function-maxdate) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
-| [asBsvSdkScript](#function-asbsvsdkscript) | [offsetPubKey](#function-offsetpubkey) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
-| [asBsvSdkTx](#function-asbsvsdktx) | [optionalArraysEqual](#function-optionalarraysequal) | [validateListActionsArgs](#function-validatelistactionsargs) |
-| [asString](#function-asstring) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
-| [buildSignableTransaction](#function-buildsignabletransaction) | [processAction](#function-processaction) | [validateOptionalInteger](#function-validateoptionalinteger) |
-| [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
-| [convertProofToMerklePath](#function-convertprooftomerklepath) | [proveCertificate](#function-provecertificate) | [validateOriginator](#function-validateoriginator) |
-| [createAction](#function-createaction) | [purgeDataIdb](#function-purgedataidb) | [validateOutpointString](#function-validateoutpointstring) |
-| [createAction](#function-createaction) | [randomBytes](#function-randombytes) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytesBase64](#function-randombytesbase64) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
-| [createMergedBeefOfTxids](#function-createmergedbeefoftxids) | [randomBytesHex](#function-randombyteshex) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [reviewStatusIdb](#function-reviewstatusidb) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
-| [createSyncMap](#function-createsyncmap) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateSatoshis](#function-validatesatoshis) |
-| [doubleSha256BE](#function-doublesha256be) | [sha256Hash](#function-sha256hash) | [validateScriptHash](#function-validatescripthash) |
-| [doubleSha256LE](#function-doublesha256le) | [shareReqsWithWorld](#function-sharereqswithworld) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
-| [generateChangeSdk](#function-generatechangesdk) | [signAction](#function-signaction) | [validateSignActionArgs](#function-validatesignactionargs) |
-| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [stampLog](#function-stamplog) | [validateSignActionOptions](#function-validatesignactionoptions) |
-| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLogFormat](#function-stamplogformat) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
-| [getBeefForTxid](#function-getbeeffortxid) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) | [validateStringLength](#function-validatestringlength) |
-| [getExchangeRatesIo](#function-getexchangeratesio) | [toWalletNetwork](#function-towalletnetwork) | [validateWalletPayment](#function-validatewalletpayment) |
-| [getIdentityKey](#function-getidentitykey) | [transactionInputSize](#function-transactioninputsize) | [varUintSize](#function-varuintsize) |
-| [getProofs](#function-getproofs) | [transactionOutputSize](#function-transactionoutputsize) | [verifyHexString](#function-verifyhexstring) |
-| [getSyncChunk](#function-getsyncchunk) | [transactionSize](#function-transactionsize) | [verifyId](#function-verifyid) |
-| [internalizeAction](#function-internalizeaction) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) | [verifyInteger](#function-verifyinteger) |
-| [internalizeAction](#function-internalizeaction) | [updateExchangeratesapi](#function-updateexchangeratesapi) | [verifyNumber](#function-verifynumber) |
-| [isBaseBlockHeader](#function-isbaseblockheader) | [validateAbortActionArgs](#function-validateabortactionargs) | [verifyOne](#function-verifyone) |
-| [isBlockHeader](#function-isblockheader) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) | [verifyOneOrNone](#function-verifyoneornone) |
-| [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) | [verifyOptionalHexString](#function-verifyoptionalhexstring) |
-| [isHexString](#function-ishexstring) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) | [verifyTruthy](#function-verifytruthy) |
-| [isListActionsSpecOp](#function-islistactionsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) | [verifyUnlockScripts](#function-verifyunlockscripts) |
-| [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateCreateActionArgs](#function-validatecreateactionargs) | [wait](#function-wait) |
-| [isLive](#function-islive) | [validateCreateActionInput](#function-validatecreateactioninput) |  |
-| [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionOptions](#function-validatecreateactionoptions) |  |
+| [acquireDirectCertificate](#function-acquiredirectcertificate) | [listActionsIdb](#function-listactionsidb) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
+| [arcDefaultUrl](#function-arcdefaulturl) | [listCertificates](#function-listcertificates) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
+| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [listOutputsIdb](#function-listoutputsidb) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
+| [arraysEqual](#function-arraysequal) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
+| [asArray](#function-asarray) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [makeChangeLock](#function-makechangelock) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [maxDate](#function-maxdate) | [validateInteger](#function-validateinteger) |
+| [asBsvSdkScript](#function-asbsvsdkscript) | [offsetPubKey](#function-offsetpubkey) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
+| [asBsvSdkTx](#function-asbsvsdktx) | [optionalArraysEqual](#function-optionalarraysequal) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
+| [asString](#function-asstring) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateListActionsArgs](#function-validatelistactionsargs) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
+| [buildSignableTransaction](#function-buildsignabletransaction) | [processAction](#function-processaction) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
+| [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOptionalInteger](#function-validateoptionalinteger) |
+| [convertProofToMerklePath](#function-convertprooftomerklepath) | [proveCertificate](#function-provecertificate) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
+| [createAction](#function-createaction) | [purgeDataIdb](#function-purgedataidb) | [validateOriginator](#function-validateoriginator) |
+| [createAction](#function-createaction) | [randomBytes](#function-randombytes) | [validateOutpointString](#function-validateoutpointstring) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytesBase64](#function-randombytesbase64) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [randomBytesHex](#function-randombyteshex) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
+| [createSyncMap](#function-createsyncmap) | [reviewStatusIdb](#function-reviewstatusidb) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
+| [doubleSha256BE](#function-doublesha256be) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
+| [doubleSha256LE](#function-doublesha256le) | [sha256Hash](#function-sha256hash) | [validateSatoshis](#function-validatesatoshis) |
+| [generateChangeSdk](#function-generatechangesdk) | [shareReqsWithWorld](#function-sharereqswithworld) | [validateScriptHash](#function-validatescripthash) |
+| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [signAction](#function-signaction) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
+| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLog](#function-stamplog) | [validateSignActionArgs](#function-validatesignactionargs) |
+| [getBeefForTxid](#function-getbeeffortxid) | [stampLogFormat](#function-stamplogformat) | [validateSignActionOptions](#function-validatesignactionoptions) |
+| [getExchangeRatesIo](#function-getexchangeratesio) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
+| [getIdentityKey](#function-getidentitykey) | [toWalletNetwork](#function-towalletnetwork) | [validateStringLength](#function-validatestringlength) |
+| [getProofs](#function-getproofs) | [transactionInputSize](#function-transactioninputsize) | [validateWalletPayment](#function-validatewalletpayment) |
+| [getSyncChunk](#function-getsyncchunk) | [transactionOutputSize](#function-transactionoutputsize) | [varUintSize](#function-varuintsize) |
+| [internalizeAction](#function-internalizeaction) | [transactionSize](#function-transactionsize) | [verifyHexString](#function-verifyhexstring) |
+| [internalizeAction](#function-internalizeaction) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) | [verifyId](#function-verifyid) |
+| [isBaseBlockHeader](#function-isbaseblockheader) | [updateExchangeratesapi](#function-updateexchangeratesapi) | [verifyInteger](#function-verifyinteger) |
+| [isBlockHeader](#function-isblockheader) | [validateAbortActionArgs](#function-validateabortactionargs) | [verifyNumber](#function-verifynumber) |
+| [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) | [verifyOne](#function-verifyone) |
+| [isHexString](#function-ishexstring) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) | [verifyOneOrNone](#function-verifyoneornone) |
+| [isListActionsSpecOp](#function-islistactionsspecop) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) | [verifyOptionalHexString](#function-verifyoptionalhexstring) |
+| [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) | [verifyTruthy](#function-verifytruthy) |
+| [isLive](#function-islive) | [validateCreateActionArgs](#function-validatecreateactionargs) | [verifyUnlockScripts](#function-verifyunlockscripts) |
+| [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionInput](#function-validatecreateactioninput) | [wait](#function-wait) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -12087,17 +12087,6 @@ export function createDefaultWalletServicesOptions(chain: sdk.Chain, arcCallback
 ```
 
 See also: [Chain](./client.md#type-chain), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Function: createMergedBeefOfTxids
-
-```ts
-export async function createMergedBeefOfTxids(txids: string[], storage: StorageProvider): Promise<number[]> 
-```
-
-See also: [StorageProvider](./storage.md#class-storageprovider)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -13922,17 +13911,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | |
 | --- | --- |
-| [DEFAULT_PROFILE_ID](#variable-default_profile_id) | [parseResults](#variable-parseresults) |
-| [DEFAULT_SETTINGS](#variable-default_settings) | [queryOverlay](#variable-queryoverlay) |
-| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [specOpFailedActions](#variable-specopfailedactions) |
-| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [specOpInvalidChange](#variable-specopinvalidchange) |
-| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [specOpNoSendActions](#variable-specopnosendactions) |
-| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |
+| [DEFAULT_PROFILE_ID](#variable-default_profile_id) | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) |
+| [DEFAULT_SETTINGS](#variable-default_settings) | [parseResults](#variable-parseresults) |
+| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [queryOverlay](#variable-queryoverlay) |
+| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [specOpFailedActions](#variable-specopfailedactions) |
+| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [specOpInvalidChange](#variable-specopinvalidchange) |
+| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [specOpNoSendActions](#variable-specopnosendactions) |
+| [aggregateActionResults](#variable-aggregateactionresults) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |
 | [brc29ProtocolID](#variable-brc29protocolid) | [specOpThrowReviewActions](#variable-specopthrowreviewactions) |
 | [getBasketToSpecOp](#variable-getbaskettospecop) | [specOpWalletBalance](#variable-specopwalletbalance) |
 | [getLabelToSpecOp](#variable-getlabeltospecop) | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
 | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) | [transformVerifiableCertificatesWithTrust](#variable-transformverifiablecertificateswithtrust) |
-| [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -14036,6 +14025,56 @@ TESTNET_DEFAULT_SETTINGS: WalletSettings = {
 ```
 
 See also: [DEFAULT_SETTINGS](./client.md#variable-default_settings), [WalletSettings](./client.md#interface-walletsettings)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Variable: aggregateActionResults
+
+```ts
+aggregateActionResults = async (storage: StorageProvider, sendWithResultReqs: SendWithResult[], postToNetworkResult: PostReqsToNetworkResult): Promise<{
+    swr: SendWithResult[];
+    rar: ReviewActionResult[];
+}> => {
+    const swr: SendWithResult[] = [];
+    const rar: ReviewActionResult[] = [];
+    for (const ar of sendWithResultReqs) {
+        const txid = ar.txid;
+        const d = postToNetworkResult.details.find(d => d.txid === txid);
+        if (!d)
+            throw new WERR_INTERNAL(`missing details for ${txid}`);
+        const arNdr: ReviewActionResult = { txid: d.txid, status: "success", competingTxs: d.competingTxs };
+        switch (d.status) {
+            case "success":
+                ar.status = "unproven";
+                break;
+            case "doubleSpend":
+                ar.status = "failed";
+                arNdr.status = "doubleSpend";
+                if (d.competingTxs)
+                    arNdr.competingBeef = await createMergedBeefOfTxids(d.competingTxs, storage);
+                break;
+            case "serviceError":
+                ar.status = "sending";
+                arNdr.status = "serviceError";
+                break;
+            case "invalidTx":
+                ar.status = "failed";
+                arNdr.status = "invalidTx";
+                break;
+            case "unknown":
+            case "invalid":
+            default:
+                throw new WERR_INTERNAL(`processAction with notDelayed status ${d.status} should not occur.`);
+        }
+        swr.push({ txid, status: ar.status });
+        rar.push(arNdr);
+    }
+    return { swr, rar };
+}
+```
+
+See also: [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ReviewActionResult](./client.md#interface-reviewactionresult), [StorageProvider](./storage.md#class-storageprovider), [WERR_INTERNAL](./client.md#class-werr_internal), [processAction](./storage.md#function-processaction)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
