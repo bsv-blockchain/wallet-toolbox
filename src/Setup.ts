@@ -1,11 +1,13 @@
 import { KeyPairAddress, SetupWallet, SetupWalletClient } from './SetupWallet'
 import {
   BEEF,
+  CachedKeyDeriver,
   CreateActionArgs,
   CreateActionOptions,
   CreateActionOutput,
   CreateActionResult,
   KeyDeriver,
+  KeyDeriverApi,
   LockingScript,
   P2PKH,
   PrivateKey,
@@ -142,7 +144,7 @@ DEV_KEYS = '{
     args.rootKeyHex ||= args.env.devKeys[args.env.identityKey]
     const rootKey = PrivateKey.fromHex(args.rootKeyHex)
     const identityKey = rootKey.toPublicKey().toString()
-    const keyDeriver = new KeyDeriver(rootKey)
+    const keyDeriver = new CachedKeyDeriver(rootKey)
     const storage = new WalletStorageManager(identityKey, args.active, args.backups)
     if (storage.canMakeAvailable()) await storage.makeAvailable()
     const serviceOptions = Services.createDefaultOptions(chain)
@@ -196,7 +198,7 @@ DEV_KEYS = '{
     const chain = args.chain
     const endpointUrl = args.storageUrl || `https://${args.chain !== 'main' ? 'staging-' : ''}storage.babbage.systems`
     const rootKey = PrivateKey.fromHex(args.rootKeyHex)
-    const keyDeriver = new KeyDeriver(rootKey)
+    const keyDeriver = new CachedKeyDeriver(rootKey)
     const storage = new WalletStorageManager(keyDeriver.identityKey)
     const services = new Services(chain)
     const privilegedKeyManager = args.privilegedKeyGetter
@@ -512,7 +514,7 @@ export interface SetupWalletKnex extends SetupWallet {
 
   rootKey: PrivateKey
   identityKey: string
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   chain: sdk.Chain
   storage: WalletStorageManager
   services: Services

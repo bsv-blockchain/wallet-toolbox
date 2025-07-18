@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Beef,
+  CachedKeyDeriver,
   CreateActionArgs,
   InternalizeActionArgs,
   KeyDeriver,
@@ -426,7 +427,7 @@ export function createWalletPaymentOutput(args: {
   const t = new ScriptTemplateBRC29({
     derivationPrefix: randomBytesBase64(8),
     derivationSuffix: randomBytesBase64(8),
-    keyDeriver: new KeyDeriver(PrivateKey.fromString(args.fromRootKeyHex))
+    keyDeriver: new CachedKeyDeriver(PrivateKey.fromString(args.fromRootKeyHex))
   })
 
   const lockingScript = t.lock(args.fromRootKeyHex, args.toIdentityKey)
