@@ -82,7 +82,7 @@ msecsWaitPerMerkleProofServiceReq: number
 
 ###### Property onTransactionBroadcasted
 
-This are hooks for a wallet-toolbox client to get transaction updates.
+These are hooks for a wallet-toolbox client to get transaction updates.
 
 ```ts
 onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
@@ -191,8 +191,8 @@ export class Monitor {
     lastNewHeader: BlockHeader | undefined;
     lastNewHeaderWhen: Date | undefined;
     processNewBlockHeader(header: BlockHeader): void 
-    processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
-    processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+    callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+    callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
     processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 }
 ```
@@ -235,16 +235,27 @@ without sync'ing enabled.
 addMultiUserTasks(): void 
 ```
 
-###### Method processBroadcastedTransaction
+###### Method callOnBroadcastedTransaction
 
 This is a function run from a TaskSendWaiting Monitor task.
 
 This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
 
 ```ts
-processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
 ```
 See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
+
+###### Method callOnProvenTransaction
+
+This is a function run from a TaskCheckForProofs Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+
+```ts
+callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+```
+See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processNewBlockHeader
 
@@ -256,17 +267,6 @@ Kicks processing 'unconfirmed' and 'unmined' request processing.
 processNewBlockHeader(header: BlockHeader): void 
 ```
 See also: [BlockHeader](./services.md#interface-blockheader)
-
-###### Method processProvenTransaction
-
-This is a function run from a TaskCheckForProofs Monitor task.
-
-This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
-
-```ts
-processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
-```
-See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processReorg
 
