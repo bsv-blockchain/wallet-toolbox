@@ -222,7 +222,7 @@ and customization.
 export interface SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -255,7 +255,7 @@ identityKey: string
 The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
 
 ```ts
-keyDeriver: KeyDeriver
+keyDeriver: KeyDeriverApi
 ```
 
 ###### Property monitor
@@ -444,7 +444,7 @@ export interface SetupWalletIdb extends SetupWallet {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -479,7 +479,7 @@ export interface SetupWalletKnex extends SetupWallet {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -607,7 +607,7 @@ DEV_KEYS = '{
         args.rootKeyHex ||= args.env.devKeys[args.env.identityKey];
         const rootKey = PrivateKey.fromHex(args.rootKeyHex);
         const identityKey = rootKey.toPublicKey().toString();
-        const keyDeriver = new KeyDeriver(rootKey);
+        const keyDeriver = new CachedKeyDeriver(rootKey);
         const storage = new WalletStorageManager(identityKey, args.active, args.backups);
         if (storage.canMakeAvailable())
             await storage.makeAvailable();
@@ -804,7 +804,7 @@ static async createWallet(args: SetupWalletArgs): Promise<SetupWallet> {
     args.rootKeyHex ||= args.env.devKeys[args.env.identityKey];
     const rootKey = PrivateKey.fromHex(args.rootKeyHex);
     const identityKey = rootKey.toPublicKey().toString();
-    const keyDeriver = new KeyDeriver(rootKey);
+    const keyDeriver = new CachedKeyDeriver(rootKey);
     const storage = new WalletStorageManager(identityKey, args.active, args.backups);
     if (storage.canMakeAvailable())
         await storage.makeAvailable();
@@ -1005,7 +1005,7 @@ export abstract class SetupClient {
         const chain = args.chain;
         const rootKey = PrivateKey.fromHex(args.rootKeyHex);
         const identityKey = rootKey.toPublicKey().toString();
-        const keyDeriver = new KeyDeriver(rootKey);
+        const keyDeriver = new CachedKeyDeriver(rootKey);
         const storage = new WalletStorageManager(identityKey, args.active, args.backups);
         if (storage.canMakeAvailable())
             await storage.makeAvailable();
@@ -1166,7 +1166,7 @@ static async createWallet(args: SetupClientWalletArgs): Promise<SetupWallet> {
     const chain = args.chain;
     const rootKey = PrivateKey.fromHex(args.rootKeyHex);
     const identityKey = rootKey.toPublicKey().toString();
-    const keyDeriver = new KeyDeriver(rootKey);
+    const keyDeriver = new CachedKeyDeriver(rootKey);
     const storage = new WalletStorageManager(identityKey, args.active, args.backups);
     if (storage.canMakeAvailable())
         await storage.makeAvailable();

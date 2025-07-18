@@ -3033,7 +3033,7 @@ and customization.
 export interface SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -3066,7 +3066,7 @@ identityKey: string
 The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
 
 ```ts
-keyDeriver: KeyDeriver
+keyDeriver: KeyDeriverApi
 ```
 
 ###### Property monitor
@@ -3157,7 +3157,7 @@ export interface SetupWalletIdb extends SetupWallet {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -5276,7 +5276,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export interface WalletArgs {
     chain: sdk.Chain;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     storage: WalletStorageManager;
     services?: sdk.WalletServices;
     monitor?: Monitor;
@@ -7909,7 +7909,7 @@ export abstract class SetupClient {
         const chain = args.chain;
         const rootKey = PrivateKey.fromHex(args.rootKeyHex);
         const identityKey = rootKey.toPublicKey().toString();
-        const keyDeriver = new KeyDeriver(rootKey);
+        const keyDeriver = new CachedKeyDeriver(rootKey);
         const storage = new WalletStorageManager(identityKey, args.active, args.backups);
         if (storage.canMakeAvailable())
             await storage.makeAvailable();
@@ -8070,7 +8070,7 @@ static async createWallet(args: SetupClientWalletArgs): Promise<SetupWallet> {
     const chain = args.chain;
     const rootKey = PrivateKey.fromHex(args.rootKeyHex);
     const identityKey = rootKey.toPublicKey().toString();
-    const keyDeriver = new KeyDeriver(rootKey);
+    const keyDeriver = new CachedKeyDeriver(rootKey);
     const storage = new WalletStorageManager(identityKey, args.active, args.backups);
     if (storage.canMakeAvailable())
         await storage.makeAvailable();
@@ -10402,7 +10402,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export class Wallet implements WalletInterface, ProtoWallet {
     chain: sdk.Chain;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     storage: WalletStorageManager;
     settingsManager: WalletSettingsManager;
     lookupResolver: LookupResolver;
@@ -11410,9 +11410,9 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export class WalletSigner {
     isWalletSigner: true = true;
     chain: sdk.Chain;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     storage: WalletStorageManager;
-    constructor(chain: sdk.Chain, keyDeriver: KeyDeriver, storage: WalletStorageManager) 
+    constructor(chain: sdk.Chain, keyDeriver: KeyDeriverApi, storage: WalletStorageManager) 
 }
 ```
 
