@@ -4,8 +4,8 @@ import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 import { attemptToPostReqsToNetwork } from '../../storage/methods/attemptToPostReqsToNetwork'
 import { ProvenTxReqStatus, WERR_INTERNAL } from '../../sdk'
-import { ReviewActionResult } from '@bsv/sdk'
-import { createMergedBeefOfTxids } from '../../utility/mergedBeefOfTxids'
+import { ReviewActionResult, SendWithResult } from '@bsv/sdk'
+import { aggregateActionResults } from '../../utility/aggregateResults'
 
 export class TaskSendWaiting extends WalletMonitorTask {
   static taskName = 'SendWaiting'
@@ -105,40 +105,14 @@ export class TaskSendWaiting extends WalletMonitorTask {
         return attemptToPostReqsToNetwork(sp, reqs)
       })
 
-      const d = r.details.find(d => d.txid === req.txid)
-      if (!d) throw new WERR_INTERNAL(`missing details for ${req.txid}`)
-      const rar: ReviewActionResult = {
-        txid: d.txid,
-        status: 'success',
-        competingTxs: d.competingTxs
+      if (this.monitor.onTransactionBroadcasted) {
+        const rar = await this.storage.runAsStorageProvider(async sp => {
+          const ars: SendWithResult[] = [{ txid: req.txid, status: 'sending' }]
+          const { rar } = await aggregateActionResults(sp, ars, r)
+          return rar
+        })
+        this.monitor.callOnBroadcastedTransaction(rar[0])
       }
-      switch (d.status) {
-        case 'success':
-          // processing network has accepted this transaction
-          rar.status = 'success'
-          break
-        case 'doubleSpend':
-          // confirmed double spend.
-          rar.status = 'doubleSpend'
-          if (d.competingTxs) {
-            await this.storage.runAsStorageProvider(async sp => {
-              rar.competingBeef = await createMergedBeefOfTxids(d.competingTxs!, sp)
-            })
-          }
-          break
-        case 'serviceError':
-          rar.status = 'serviceError'
-          break
-        case 'invalidTx':
-          // nothing will fix this transaction
-          rar.status = 'invalidTx'
-          break
-        case 'unknown':
-        case 'invalid':
-        default:
-          throw new WERR_INTERNAL(`broadcasting status ${d.status} should not occur.`)
-      }
-      this.monitor.processBroadcastedTransaction(rar)
 
       log += r.log
     }

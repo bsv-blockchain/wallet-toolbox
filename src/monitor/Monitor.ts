@@ -303,7 +303,7 @@ export class Monitor {
    *
    * @param broadcastResult
    */
-  processBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
+  callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
     if (this.onTransactionBroadcasted) {
       console.log('Sending transaction broadcast update up to the toolbox client')
       this.onTransactionBroadcasted(broadcastResult)
@@ -317,7 +317,7 @@ export class Monitor {
    *
    * @param txStatus
    */
-  processProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
+  callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
     if (this.onTransactionProven) {
       console.log('Sending proven transaction update up to the toolbox client')
       this.onTransactionProven(txStatus)

@@ -7,9 +7,7 @@ import {
   parseTxScriptOffsets,
   randomBytesBase64,
   sdk,
-  sha256Hash,
   stampLog,
-  stampLogFormat,
   StorageProvider,
   TableCommission,
   TableOutput,
@@ -17,17 +15,14 @@ import {
   TableProvenTxReq,
   TableTransaction,
   TxScriptOffsets,
-  validateStorageFeeModel,
   verifyId,
   verifyInteger,
-  verifyNumber,
   verifyOne,
   verifyOneOrNone,
   verifyTruthy
 } from '../../index.client'
-import { ReviewActionResult, ProvenTxReqNonTerminalStatus, StorageGetBeefOptions } from '../../sdk'
-import { PostReqsToNetworkDetails } from './attemptToPostReqsToNetwork'
-import { createMergedBeefOfTxids } from '../../utility/mergedBeefOfTxids'
+import { ReviewActionResult } from '../../sdk'
+import { aggregateActionResults } from '../../utility/aggregateResults'
 
 export async function processAction(
   storage: StorageProvider,
@@ -123,15 +118,6 @@ export async function shareReqsWithWorld(
   // Collect what we know about these sendWith transaction txids from storage.
   const r = await storage.getReqsAndBeefToShareWithWorld(txids, [])
 
-  // Initialize aggregate results for each txid
-  const ars: {
-    txid: string
-    status: SendWithResultStatus
-    getReq: GetReqsAndBeefDetail
-    postReq?: PostReqsToNetworkDetails
-    ndr?: ReviewActionResult
-  }[] = []
-
   const readyToSendReqs: EntityProvenTxReq[] = []
   for (const getReq of r.details) {
     let status: SendWithResultStatus = 'failed'
@@ -140,9 +126,8 @@ export async function shareReqsWithWorld(
       status = 'sending'
       readyToSendReqs.push(new EntityProvenTxReq(getReq.req!))
     }
-    ars.push({
+    swr.push({
       txid: getReq.txid,
-      getReq,
       status
     })
   }
@@ -172,11 +157,11 @@ export async function shareReqsWithWorld(
         await storage.updateTransaction(transactionIds, { status: 'sending' }, trx)
       })
     }
-    return createResults()
+    return { swr, ndr }
   }
 
   if (readyToSendReqIds.length < 1) {
-    return createResults()
+    return { swr, ndr }
   }
 
   if (batch) {
@@ -190,53 +175,8 @@ export async function shareReqsWithWorld(
   //
   const prtn = await storage.attemptToPostReqsToNetwork(readyToSendReqs)
 
-  // merge the individual PostBeefResultForTxid results to postBeef in aggregate results.
-  for (const ar of ars) {
-    const txid = ar.txid
-    const d = prtn.details.find(d => d.txid === txid)
-    if (!d) throw new sdk.WERR_INTERNAL(`missing details for ${txid}`)
-    ar.ndr = { txid: d.txid, status: 'success', competingTxs: d.competingTxs }
-    switch (d.status) {
-      case 'success':
-        // processing network has accepted this transaction
-        ar.status = 'unproven'
-        break
-      case 'doubleSpend':
-        // confirmed double spend.
-        ar.status = 'failed'
-        ar.ndr.status = 'doubleSpend'
-        if (d.competingTxs) ar.ndr.competingBeef = await createMergedBeefOfTxids(d.competingTxs, storage)
-        break
-      case 'serviceError':
-        // services might improve
-        ar.status = 'sending'
-        ar.ndr.status = 'serviceError'
-        break
-      case 'invalidTx':
-        // nothing will fix this transaction
-        ar.status = 'failed'
-        ar.ndr.status = 'invalidTx'
-        break
-      case 'unknown':
-      case 'invalid':
-      default:
-        throw new sdk.WERR_INTERNAL(`processAction with notDelayed status ${d.status} should not occur.`)
-    }
-  }
-
-  return createResults()
-
-  function createResults(): { swr: SendWithResult[]; ndr: ReviewActionResult[] | undefined } {
-    swr = []
-    ndr = isDelayed ? undefined : []
-    for (const ar of ars) {
-      swr.push({ txid: ar.txid, status: ar.status })
-      if (ar.ndr && ndr) {
-        ndr.push(ar.ndr)
-      }
-    }
-    return { swr, ndr }
-  }
+  const { swr: swrRes, rar } = await aggregateActionResults(storage, swr, prtn)
+  return { swr: swrRes, ndr: rar }
 }
 
 interface ReqTxStatus {

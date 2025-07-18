@@ -143,7 +143,6 @@ export interface ProvenTransactionStatus {
   blockHash: string
   merklePath: number[]
   merkleRoot: string
-  rawTx: number[]
 }
 
 /**
