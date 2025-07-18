@@ -1,4 +1,4 @@
-import { MerklePath } from '@bsv/sdk'
+import { Beef, MerklePath } from '@bsv/sdk'
 import { asArray, EntityProvenTxReq, sdk, verifyOne, verifyTruthy, wait } from '../../src/index.client'
 import { TaskCheckForProofs } from '../../src/monitor/tasks/TaskCheckForProofs'
 import { TaskClock } from '../../src/monitor/tasks/TaskClock'
@@ -484,6 +484,128 @@ describe('Monitor tests', () => {
       monitor._tasks.push(task)
       const log = await monitor.runTask('ReviewStatus')
       //console.log(log)
+    }
+
+    for (const ctx of ctxs) {
+      await ctx.storage.destroy()
+    }
+  })
+
+  test('8 ProcessProvenTransaction', async () => {
+    const ctxs: TestWallet<{}>[] = []
+    ctxs.push(await _tu.createLegacyWalletSQLiteCopy('monitorTest8'))
+    let mockResultIndex = 0
+    let updatesReceived = 0
+
+    const expectedTxids = [
+      'c099c52277426abb863dc902d0389b008ddf2301d6b40ac718746ac16ca59136',
+      '6935ce33b9e3b9ee60360ce0606aa0a0970b4840203f457b5559212676dc33ab',
+      '67ca2475886b3fc2edd76a2eb8c32bd0bc308176c7dff463e0507942aeebcbec',
+      '3fa94b62a3b10d8c18bada527a9b68c4e70db67140719df16c44fb0328782532',
+      '519675259eff036c6597e4a497d37c132e718171dde4ea2257e84c947ecf656b'
+    ]
+
+    _tu.mockMerklePathServicesAsCallback(ctxs, async txid => {
+      expect(expectedTxids).toContain(txid)
+      const r = mockGetMerklePathResults[mockResultIndex++]
+      return r
+    })
+
+    for (const { activeStorage: storage, monitor } of ctxs) {
+      if (!monitor) throw new sdk.WERR_INTERNAL('test requires setup with monitor')
+
+      monitor.lastNewHeader = {
+        height: 999999999,
+        hash: '',
+        time: 0,
+        version: 0,
+        previousHash: '',
+        merkleRoot: '',
+        bits: 0,
+        nonce: 0
+      }
+
+      monitor.onTransactionProven = async (txStatus: sdk.ProvenTransactionStatus) => {
+        expect(txStatus.txid).toBeTruthy()
+        expect(txStatus.blockHash).toBeTruthy()
+        expect(txStatus.blockHeight).toBeTruthy()
+        expect(txStatus.merkleRoot).toBeTruthy()
+        updatesReceived++
+      }
+
+      for (const txid of expectedTxids) {
+        // no matching ProvenTx exists.
+        expect((await storage.findProvenTxs({ partial: { txid } })).length).toBe(0)
+        const req = verifyTruthy(await EntityProvenTxReq.fromStorageTxid(storage, txid))
+        expect(req.status).toBe('unmined')
+      }
+
+      const task = new TaskCheckForProofs(monitor, 1)
+      monitor._tasks.push(task)
+
+      await monitor.runTask('CheckForProofs')
+
+      for (const txid of expectedTxids) {
+        const proven = verifyOne(await storage.findProvenTxs({ partial: { txid } }))
+        expect(proven.merklePath).toBeTruthy()
+        const req = verifyTruthy(await EntityProvenTxReq.fromStorageTxid(storage, txid))
+        expect(req.status).toBe('completed')
+        expect(req.provenTxId).toBe(proven.provenTxId)
+      }
+
+      expect(updatesReceived).toEqual(expectedTxids.length)
+    }
+
+    for (const ctx of ctxs) {
+      await ctx.storage.destroy()
+    }
+  })
+
+  test('9 ProcessBroadcastedTransactions', async () => {
+    const ctxs: TestWallet<{}>[] = []
+    ctxs.push(await _tu.createLegacyWalletSQLiteCopy('monitorTest8'))
+    let updatesReceived = 0
+    let txidsPosted: string[] = []
+
+    const expectedTxids = [
+      'd9ec73b2e0f06e0f482d2d1db9ceccf2f212f0b24afbe10846ac907567be571f',
+      'b7634f08d8c7f3c6244050bebf73a79f40e672aba7d5232663609a58b123b816',
+      '3d2ea64ee584a1f6eb161dbedf3a8d299e3e4497ac7a203d23c044c998c6aa08',
+      'a3a8fe7f541c1383ff7b975af49b27284ae720af5f2705d8409baaf519190d26',
+      '6d68cc6fa7363e59aaccbaa65f0ca613a6ae8af718453ab5d3a2b022c59b5cc6'
+    ]
+
+    _tu.mockPostServicesAsCallback(ctxs, (beef: Beef, txids: string[]) => {
+      txidsPosted.push(...txids)
+      return 'success'
+    })
+
+    for (const { activeStorage: storage, monitor } of ctxs) {
+      if (!monitor) throw new sdk.WERR_INTERNAL('test requires setup with monitor')
+
+      for (const txid of expectedTxids) {
+        const req = verifyTruthy(await EntityProvenTxReq.fromStorageTxid(storage, txid))
+        expect(req.status).toBe('unsent')
+      }
+
+      monitor.onTransactionBroadcasted = async (broadcastResult: sdk.ReviewActionResult) => {
+        expect(broadcastResult.status).toBe('success')
+        expect(expectedTxids).toContain(broadcastResult.txid)
+        updatesReceived++
+      }
+
+      const task = new TaskSendWaiting(monitor, 1, 1)
+      monitor._tasks.push(task)
+
+      await monitor.runTask('SendWaiting')
+
+      expect(txidsPosted).toEqual(expectedTxids)
+      for (const txid of expectedTxids) {
+        const req = verifyOne(await storage.findProvenTxReqs({ partial: { txid } }))
+        expect(req.status).toBe('unmined')
+      }
+
+      expect(updatesReceived).toEqual(expectedTxids.length)
     }
 
     for (const ctx of ctxs) {

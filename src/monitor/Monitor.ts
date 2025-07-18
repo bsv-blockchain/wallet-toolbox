@@ -42,6 +42,12 @@ export interface MonitorOptions {
   unprovenAttemptsLimitTest: number
 
   unprovenAttemptsLimitMain: number
+
+  /**
+   * These are hooks for a wallet-toolbox client to get transaction updates.
+   */
+  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
 }
 
 /**
@@ -75,6 +81,8 @@ export class Monitor {
   chain: sdk.Chain
   storage: MonitorStorage
   chaintracks: ChaintracksServiceClient
+  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
 
   constructor(options: MonitorOptions) {
     this.options = { ...options }
@@ -82,6 +90,8 @@ export class Monitor {
     this.chain = this.services.chain
     this.storage = options.storage
     this.chaintracks = options.chaintracks
+    this.onTransactionProven = options.onTransactionProven
+    this.onTransactionBroadcasted = options.onTransactionBroadcasted
   }
 
   oneSecond = 1000
@@ -287,6 +297,32 @@ export class Monitor {
   }
 
   /**
+   * This is a function run from a TaskSendWaiting Monitor task.
+   *
+   * This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
+   *
+   * @param broadcastResult
+   */
+  callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
+    if (this.onTransactionBroadcasted) {
+      this.onTransactionBroadcasted(broadcastResult)
+    }
+  }
+
+  /**
+   * This is a function run from a TaskCheckForProofs Monitor task.
+   *
+   * This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+   *
+   * @param txStatus
+   */
+  callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
+    if (this.onTransactionProven) {
+      this.onTransactionProven(txStatus)
+    }
+  }
+
+  /**
    * Process reorg event received from Chaintracks
    *
    * Reorgs can move recent transactions to new blocks at new index positions.
@@ -300,19 +336,4 @@ export class Monitor {
   processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void {
     /* */
   }
-}
-
-function sum<T>(a: T[], getNum: (v: T) => number): number {
-  let s = 0
-  for (const v of a) s += getNum(v)
-  return s
-}
-
-function filter<T>(a: T[], pred: (v: T) => boolean): { ts: T[]; fs: T[] } {
-  const ts: T[] = []
-  const fs: T[] = []
-  for (const v of a)
-    if (pred(v)) ts.push(v)
-    else fs.push(v)
-  return { ts, fs }
 }

@@ -1,4 +1,4 @@
-import { PrivateKey, KeyDeriver, PublicKey } from '@bsv/sdk'
+import { PrivateKey, KeyDeriver, PublicKey, KeyDeriverApi } from '@bsv/sdk'
 import { WalletStorageManager, Monitor, sdk } from './index.client'
 import { Services } from './services'
 import { Wallet } from './Wallet'
@@ -23,7 +23,7 @@ export interface SetupWallet {
   /**
    * The `KeyDeriver` component used by the wallet for key derivation and cryptographic functions.
    */
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   /**
    * The chain ('main' or 'test') which the wallet accesses.
    */

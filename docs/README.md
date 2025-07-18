@@ -2,7 +2,7 @@
 
 The documentation is split into various pages, each covering a set of related functionality. The pages are as follows:
 
-- [Examples](https://bitcoin-sv.github.io/wallet-toolbox-examples/) - Getting started and specialized examples.
+- [Examples](https://bsv-blockchain.github.io/wallet-toolbox-examples/) - Getting started and specialized examples.
 - [Setup](./setup.md) — Classes supporting wallet setup, experimentation and customization.
 - [Wallet](./wallet.md) — Top level `Wallet` class and related APIs.
 - [Client](./client.md) — Browser deployment friendly toolbox subset.
@@ -14,13 +14,13 @@ The documentation is split into various pages, each covering a set of related fu
 
 [BRC-100](https://brc.dev/100) defines a Unified, Vendor-Neutral, Unchanging, and Open BSV Blockchain Standard Wallet-to-Application Interface which is implemented in this library within the WalletClient class. The API is laid out here as a swagger openapi document to offer a fast-track to understanding the interface which is implemented across multiple substrates. The JSON api is generally considered a developer friendly introduction to the WalletClient, where an binary equivalent ABI may be preferred for production use cases.
 
-- [Wallet API Swagger UI](https://bitcoin-sv.github.io/ts-sdk/swagger)
+- [Wallet API Swagger UI](https://bsv-blockchain.github.io/ts-sdk/swagger)
 
 ## Open RPC
 
 StorageClient implements the WalletStorageProvider interface over https using a JSON-RPC api which can be explored using the JSight UI.
 
-- [StorageClient JSight UI](https://bitcoin-sv.github.io/wallet-toolbox/open-rpc)
+- [StorageClient JSight UI](https://bsv-blockchain.github.io/wallet-toolbox/open-rpc)
 
 ## Getting Started
 

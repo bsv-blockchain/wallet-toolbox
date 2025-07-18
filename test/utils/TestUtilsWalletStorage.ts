@@ -1,10 +1,12 @@
 import {
   Beef,
+  CachedKeyDeriver,
   CreateActionArgs,
   CreateActionOutput,
   CreateActionResult,
   HexString,
   KeyDeriver,
+  KeyDeriverApi,
   P2PKH,
   PrivateKey,
   PublicKey,
@@ -309,7 +311,7 @@ export abstract class TestUtilsWalletStorage {
     args.rootKeyHex ||= '1'.repeat(64)
     const rootKey = PrivateKey.fromHex(args.rootKeyHex)
     const identityKey = rootKey.toPublicKey().toString()
-    const keyDeriver = new KeyDeriver(rootKey)
+    const keyDeriver = new CachedKeyDeriver(rootKey)
     const chain = args.chain
     const storage = new WalletStorageManager(identityKey, args.active, args.backups)
     if (storage.canMakeAvailable()) await storage.makeAvailable()
@@ -807,7 +809,7 @@ export abstract class TestUtilsWalletStorage {
     const rootKeyHex = _tu.legacyRootKeyHex
     const identityKey = '03ac2d10bdb0023f4145cc2eba2fcd2ad3070cb2107b0b48170c46a9440e4cc3fe'
     const rootKey = PrivateKey.fromHex(rootKeyHex)
-    const keyDeriver = new KeyDeriver(rootKey)
+    const keyDeriver = new CachedKeyDeriver(rootKey)
     const activeStorage = new StorageKnex({
       chain,
       knex: walletKnex,
@@ -977,7 +979,7 @@ export abstract class TestUtilsWalletStorage {
     const rootKeyHex = _tu.legacyRootKeyHex
     const identityKey = '03ac2d10bdb0023f4145cc2eba2fcd2ad3070cb2107b0b48170c46a9440e4cc3fe'
     const rootKey = PrivateKey.fromHex(rootKeyHex)
-    const keyDeriver = new KeyDeriver(rootKey)
+    const keyDeriver = new CachedKeyDeriver(rootKey)
 
     const activeStorage = new StorageIdb({
       chain,
@@ -1835,7 +1837,7 @@ export interface TestWalletProvider<T> extends TestWalletOnly {
 
   rootKey: PrivateKey
   identityKey: string
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   chain: sdk.Chain
   storage: WalletStorageManager
   services: Services
@@ -1853,7 +1855,7 @@ export interface TestWallet<T> extends TestWalletOnly {
 
   rootKey: PrivateKey
   identityKey: string
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   chain: sdk.Chain
   storage: WalletStorageManager
   services: Services
@@ -1867,7 +1869,7 @@ export interface TestWallet<T> extends TestWalletOnly {
 export interface TestWalletOnly {
   rootKey: PrivateKey
   identityKey: string
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   chain: sdk.Chain
   storage: WalletStorageManager
   services: Services

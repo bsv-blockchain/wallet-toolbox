@@ -65,10 +65,12 @@ export interface MonitorOptions {
     abandonedMsecs: number;
     unprovenAttemptsLimitTest: number;
     unprovenAttemptsLimitMain: number;
+    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [Services](./services.md#class-services)
+See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
 
 ###### Property msecsWaitPerMerkleProofServiceReq
 
@@ -77,6 +79,15 @@ How many msecs to wait after each getMerkleProof service request.
 ```ts
 msecsWaitPerMerkleProofServiceReq: number
 ```
+
+###### Property onTransactionBroadcasted
+
+These are hooks for a wallet-toolbox client to get transaction updates.
+
+```ts
+onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+```
+See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -146,6 +157,8 @@ export class Monitor {
     chain: sdk.Chain;
     storage: MonitorStorage;
     chaintracks: ChaintracksServiceClient;
+    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
     constructor(options: MonitorOptions) 
     oneSecond = 1000;
     oneMinute = 60 * this.oneSecond;
@@ -178,11 +191,13 @@ export class Monitor {
     lastNewHeader: BlockHeader | undefined;
     lastNewHeaderWhen: Date | undefined;
     processNewBlockHeader(header: BlockHeader): void 
+    callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+    callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
     processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
 
 ###### Property _otherTasks
 
@@ -219,6 +234,28 @@ without sync'ing enabled.
 ```ts
 addMultiUserTasks(): void 
 ```
+
+###### Method callOnBroadcastedTransaction
+
+This is a function run from a TaskSendWaiting Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
+
+```ts
+callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+```
+See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
+
+###### Method callOnProvenTransaction
+
+This is a function run from a TaskCheckForProofs Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+
+```ts
+callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+```
+See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processNewBlockHeader
 

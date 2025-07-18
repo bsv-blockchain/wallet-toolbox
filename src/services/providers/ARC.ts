@@ -135,7 +135,8 @@ export class ARC {
     const requestOptions: HttpClientRequestOptions = {
       method: 'POST',
       headers: this.requestHeaders(),
-      data: { rawTx }
+      data: { rawTx },
+      signal: AbortSignal.timeout(1000 * 30) // 30 seconds timeout, error.code will be 'ABORT_ERR'
     }
 
     const r: sdk.PostTxResultForTxid = {

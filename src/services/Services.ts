@@ -280,6 +280,10 @@ export class Services implements sdk.WalletServices {
             const r = await callService(stc)
             rs.push(r)
             if (r.status === 'success') break
+            if (r.txidResults && r.txidResults.every(txr => txr.serviceError)) {
+              // move this service to the end of the list
+              this.postBeefServices.moveServiceToLast(stc)
+            }
           }
         }
         break
