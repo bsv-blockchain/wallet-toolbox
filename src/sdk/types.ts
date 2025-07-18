@@ -134,6 +134,18 @@ export type ReqHistoryNote = {
 }
 
 /**
+ * The transaction status that a client will receive when subscribing to transaction updates in the Monitor.
+ */
+export interface ProvenTransactionStatus {
+  txid: string
+  txIndex: number
+  blockHeight: number
+  blockHash: string
+  merklePath: number[]
+  merkleRoot: string
+}
+
+/**
  * `listOutputs` special operation basket name value.
  *
  * Returns wallet's current change balance in the `totalOutputs` result property.
