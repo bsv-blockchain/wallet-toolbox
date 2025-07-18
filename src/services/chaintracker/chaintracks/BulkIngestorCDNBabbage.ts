@@ -17,10 +17,7 @@ export class BulkIngestorCDNBabbage extends BulkIngestorCDN {
     localCachePath?: string
   ): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
-      ...BulkIngestorCDN.createBulkIngestorCDNOptions(
-        chain,
-        fetch,
-      ),
+      ...BulkIngestorCDN.createBulkIngestorCDNOptions(chain, fetch),
       cdnUrl: 'https://cdn.projectbabbage.com/blockheaders/'
     }
     return options

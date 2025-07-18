@@ -2470,35 +2470,10 @@ export class KnexMigrations implements MigrationSource<string> {
     async getLatestMigration(): Promise<string> 
     static async latestMigration(): Promise<string> 
     setupMigrations(chain: string, storageName: string, storageIdentityKey: string, maxOutputScriptLength: number): Record<string, Migration> 
-    static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
-        try {
-            const q = `SELECT 
-    CASE 
-        WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
-        WHEN (SELECT VERSION()) IS NOT NULL THEN 'MySQL'
-        ELSE 'Unknown'
-    END AS database_type;`;
-            let r = await knex.raw(q);
-            if (!r[0]["database_type"])
-                r = r[0];
-            if (r["rows"])
-                r = r.rows;
-            const dbtype: "SQLite" | "MySQL" | "Unknown" = r[0].database_type;
-            if (dbtype === "Unknown")
-                throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-            return dbtype;
-        }
-        catch (eu: unknown) {
-            const e = sdk.WalletError.fromUnknown(eu);
-            if (e.code === "SQLITE_ERROR")
-                return "SQLite";
-            throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-        }
-    }
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [DBType](./storage.md#type-dbtype), [WERR_NOT_IMPLEMENTED](./client.md#class-werr_not_implemented), [WalletError](./client.md#class-walleterror)
+See also: [Chain](./client.md#type-chain)
 
 ###### Constructor
 
@@ -2513,17 +2488,6 @@ Argument Details
   + human readable name for this storage instance
 + **maxOutputScriptLength**
   + limit for scripts kept in outputs table, longer scripts will be pulled from rawTx
-
-###### Method dbtype
-
-```ts
-static async dbtype(knex: Knex<any, any[]>): Promise<DBType> 
-```
-See also: [DBType](./storage.md#type-dbtype)
-
-Returns
-
-connected database engine variant
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4540,16 +4504,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [listActionsIdb](#function-listactionsidb) | [reviewStatusIdb](#function-reviewstatusidb) |
-| [createAction](#function-createaction) | [listCertificates](#function-listcertificates) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [listOutputs](#function-listoutputs) | [shareReqsWithWorld](#function-sharereqswithworld) |
-| [createSyncMap](#function-createsyncmap) | [listOutputsIdb](#function-listoutputsidb) | [transactionInputSize](#function-transactioninputsize) |
-| [generateChangeSdk](#function-generatechangesdk) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [transactionOutputSize](#function-transactionoutputsize) |
-| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [offsetPubKey](#function-offsetpubkey) | [transactionSize](#function-transactionsize) |
-| [getBeefForTransaction](#function-getbeeffortransaction) | [processAction](#function-processaction) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [getSyncChunk](#function-getsyncchunk) | [purgeData](#function-purgedata) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [internalizeAction](#function-internalizeaction) | [purgeDataIdb](#function-purgedataidb) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
-| [listActions](#function-listactions) | [reviewStatus](#function-reviewstatus) | [varUintSize](#function-varuintsize) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [listActionsIdb](#function-listactionsidb) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) |
+| [createAction](#function-createaction) | [listCertificates](#function-listcertificates) | [shareReqsWithWorld](#function-sharereqswithworld) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [listOutputs](#function-listoutputs) | [transactionInputSize](#function-transactioninputsize) |
+| [createSyncMap](#function-createsyncmap) | [listOutputsIdb](#function-listoutputsidb) | [transactionOutputSize](#function-transactionoutputsize) |
+| [determineDBType](#function-determinedbtype) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [transactionSize](#function-transactionsize) |
+| [generateChangeSdk](#function-generatechangesdk) | [offsetPubKey](#function-offsetpubkey) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [processAction](#function-processaction) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [getBeefForTransaction](#function-getbeeffortransaction) | [purgeData](#function-purgedata) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
+| [getSyncChunk](#function-getsyncchunk) | [purgeDataIdb](#function-purgedataidb) | [varUintSize](#function-varuintsize) |
+| [internalizeAction](#function-internalizeaction) | [reviewStatus](#function-reviewstatus) |  |
+| [listActions](#function-listactions) | [reviewStatusIdb](#function-reviewstatusidb) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4599,6 +4564,21 @@ export function createSyncMap(): SyncMap
 ```
 
 See also: [SyncMap](./storage.md#interface-syncmap)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: determineDBType
+
+```ts
+export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> 
+```
+
+See also: [DBType](./storage.md#type-dbtype)
+
+Returns
+
+connected database engine variant
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

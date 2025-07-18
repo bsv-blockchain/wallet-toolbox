@@ -2,7 +2,13 @@ import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
 import { BlockHashHeight, MerkleRootHeight, ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
-import { Chain, WalletError, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_NOT_IMPLEMENTED } from '../../../../sdk'
+import {
+  Chain,
+  WalletError,
+  WERR_INVALID_OPERATION,
+  WERR_INVALID_PARAMETER,
+  WERR_NOT_IMPLEMENTED
+} from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
 import { BulkHeaderFileInfo, HeightRange, utils } from '..'
@@ -70,7 +76,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   }
 
   get dbtype(): DBType {
-    if (!this._dbtype) throw new WERR_INVALID_OPERATION('must call makeAvailable first');
+    if (!this._dbtype) throw new WERR_INVALID_OPERATION('must call makeAvailable first')
     return this._dbtype
   }
 
@@ -83,7 +89,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   }
 
   override async makeAvailable(): Promise<void> {
-    if (this.isAvailable && this.hasMigrated) return;
+    if (this.isAvailable && this.hasMigrated) return
     // Not a base class policy, but we want to ensure migrations are run before getting to business.
     if (!this.hasMigrated) {
       await this.migrateLatest()
@@ -177,7 +183,17 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   async getBulkFiles(): Promise<BulkHeaderFileInfo[]> {
     const files = await this.knex<BulkHeaderFileInfo>(this.bulkFilesTableName)
       .select(
-        'fileId', 'chain', 'fileName', 'firstHeight', 'count', 'prevHash', 'lastHash', 'fileHash', 'prevChainWork', 'lastChainWork', 'validated'
+        'fileId',
+        'chain',
+        'fileName',
+        'firstHeight',
+        'count',
+        'prevHash',
+        'lastHash',
+        'fileHash',
+        'prevChainWork',
+        'lastChainWork',
+        'validated'
       )
       .orderBy('firstHeight', 'asc')
     return files
@@ -203,7 +219,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       }
     } else {
       const r = verifyOneOrNone(await this.knex(this.bulkFilesTableName).where({ fileId: fileId }).select('data'))
-      if (r.data) data = Uint8Array.from(r.data);
+      if (r.data) data = Uint8Array.from(r.data)
     }
     return data
   }
@@ -537,10 +553,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     return r
   }
 
-  async headersToBuffer(
-    height: number,
-    count: number
-  ): Promise<{ buffer: Uint8Array; headerId: number }> {
+  async headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }> {
     const headers = await this.knex<LiveBlockHeader>(this.headerTableName)
       .where({ isActive: true })
       .andWhere('height', '>=', height)

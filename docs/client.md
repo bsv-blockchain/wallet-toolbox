@@ -14,79 +14,79 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [AdminStatsResult](#interface-adminstatsresult) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableOutputX](#interface-tableoutputx) |
-| [ArcConfig](#interface-arcconfig) | [PostBeefResult](#interface-postbeefresult) | [TableProvenTx](#interface-tableproventx) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableProvenTxReq](#interface-tableproventxreq) |
-| [AuthId](#interface-authid) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
-| [AuthPayload](#interface-authpayload) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TableSettings](#interface-tablesettings) |
-| [BaseBlockHeader](#interface-baseblockheader) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TableSyncState](#interface-tablesyncstate) |
-| [BaseBlockHeader](#interface-baseblockheader) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [TableTransaction](#interface-tabletransaction) |
-| [BitailsConfig](#interface-bitailsconfig) | [PostTxsResult](#interface-posttxsresult) | [TableTxLabel](#interface-tabletxlabel) |
-| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [TableTxLabelMap](#interface-tabletxlabelmap) |
-| [BlockHeader](#interface-blockheader) | [Profile](#interface-profile) | [TableUser](#interface-tableuser) |
-| [BlockHeader](#interface-blockheader) | [ProvenOrRawTx](#interface-provenorrawtx) | [TaskPurgeParams](#interface-taskpurgeparams) |
-| [BsvExchangeRate](#interface-bsvexchangerate) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [TestSetup1](#interface-testsetup1) |
-| [CertOpsWallet](#interface-certopswallet) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [TestSetup2](#interface-testsetup2) |
-| [Certifier](#interface-certifier) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TestWallet](#interface-testwallet) |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TestWalletOnly](#interface-testwalletonly) |
-| [CompleteAuthResponse](#interface-completeauthresponse) | [ProviderCallHistory](#interface-providercallhistory) | [TestWalletProvider](#interface-testwalletprovider) |
-| [CreateActionResultX](#interface-createactionresultx) | [PurgeParams](#interface-purgeparams) | [TrustSettings](#interface-trustsettings) |
-| [CreateTestWalletArgs](#interface-createtestwalletargs) | [PurgeResults](#interface-purgeresults) | [TrxToken](#interface-trxtoken) |
-| [EntitySyncMap](#interface-entitysyncmap) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
-| [EntityTimeStamp](#interface-entitytimestamp) | [ReviewActionResult](#interface-reviewactionresult) | [TuEnv](#interface-tuenv) |
-| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [TuEnvFlags](#interface-tuenvflags) |
-| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [TxScriptOffsets](#interface-txscriptoffsets) |
-| [FiatExchangeRates](#interface-fiatexchangerates) | [ServiceCall](#interface-servicecall) | [UMPToken](#interface-umptoken) |
-| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [ServiceCall](#interface-servicecall) | [UMPTokenInteractor](#interface-umptokeninteractor) |
-| [FindCertificatesArgs](#interface-findcertificatesargs) | [ServiceCallHistory](#interface-servicecallhistory) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
-| [FindCommissionsArgs](#interface-findcommissionsargs) | [ServiceCallHistoryCounts](#interface-servicecallhistorycounts) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
-| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ServiceToCall](#interface-servicetocall) | [ValidAbortActionArgs](#interface-validabortactionargs) |
-| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [SetupClientWalletArgs](#interface-setupclientwalletargs) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
-| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
-| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [SetupEnv](#interface-setupenv) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
-| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [SetupWallet](#interface-setupwallet) | [ValidBasketInsertion](#interface-validbasketinsertion) |
-| [FindOutputsArgs](#interface-findoutputsargs) | [SetupWalletArgs](#interface-setupwalletargs) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
-| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [SetupWalletClient](#interface-setupwalletclient) | [ValidCreateActionInput](#interface-validcreateactioninput) |
-| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [SetupWalletClientArgs](#interface-setupwalletclientargs) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
-| [FindProvenTxsArgs](#interface-findproventxsargs) | [SetupWalletIdb](#interface-setupwalletidb) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
-| [FindSincePagedArgs](#interface-findsincepagedargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
-| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [SetupWalletKnex](#interface-setupwalletknex) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
-| [FindTransactionsArgs](#interface-findtransactionsargs) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
-| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
-| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) | [ValidListActionsArgs](#interface-validlistactionsargs) |
-| [FindUsersArgs](#interface-findusersargs) | [SignActionResultX](#interface-signactionresultx) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
-| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StartAuthResponse](#interface-startauthresponse) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageAdminStats](#interface-storageadminstats) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
-| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
-| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
-| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
-| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageFeeModel](#interface-storagefeemodel) | [ValidSignActionArgs](#interface-validsignactionargs) |
-| [GetMerklePathResult](#interface-getmerklepathresult) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidSignActionOptions](#interface-validsignactionoptions) |
-| [GetRawTxResult](#interface-getrawtxresult) | [StorageIdbOptions](#interface-storageidboptions) | [ValidWalletPayment](#interface-validwalletpayment) |
-| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageIdbSchema](#interface-storageidbschema) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
-| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [StorageIdentity](#interface-storageidentity) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
-| [GetScriptHashHistory](#interface-getscripthashhistory) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [WalletArgs](#interface-walletargs) |
-| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [StorageKnexOptions](#interface-storageknexoptions) | [WalletBalance](#interface-walletbalance) |
-| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
-| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [WalletServices](#interface-walletservices) |
-| [GetUtxoStatusResult](#interface-getutxostatusresult) | [StorageProvenOrReq](#interface-storageprovenorreq) | [WalletServicesOptions](#interface-walletservicesoptions) |
-| [GroupedPermissionRequest](#interface-groupedpermissionrequest) | [StorageProviderOptions](#interface-storageprovideroptions) | [WalletSettings](#interface-walletsettings) |
-| [GroupedPermissions](#interface-groupedpermissions) | [StorageReaderOptions](#interface-storagereaderoptions) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
-| [KeyPair](#interface-keypair) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletSigner](#interface-walletsigner) |
-| [KeyPairAddress](#interface-keypairaddress) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletStorage](#interface-walletstorage) |
-| [ListActionsSpecOp](#interface-listactionsspecop) | [SyncChunk](#interface-syncchunk) | [WalletStorageInfo](#interface-walletstorageinfo) |
-| [ListOutputsSpecOp](#interface-listoutputsspecop) | [SyncError](#interface-syncerror) | [WalletStorageProvider](#interface-walletstorageprovider) |
-| [LiveBlockHeader](#interface-liveblockheader) | [SyncMap](#interface-syncmap) | [WalletStorageReader](#interface-walletstoragereader) |
-| [MockData](#interface-mockdata) | [TableCertificate](#interface-tablecertificate) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
-| [MonitorDaemonSetup](#interface-monitordaemonsetup) | [TableCertificateField](#interface-tablecertificatefield) | [WalletStorageSync](#interface-walletstoragesync) |
-| [MonitorOptions](#interface-monitoroptions) | [TableCertificateX](#interface-tablecertificatex) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
-| [OutPoint](#interface-outpoint) | [TableCommission](#interface-tablecommission) | [WalletStorageWriter](#interface-walletstoragewriter) |
-| [Paged](#interface-paged) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletTheme](#interface-wallettheme) |
-| [PendingSignAction](#interface-pendingsignaction) | [TableOutput](#interface-tableoutput) | [WocChainInfo](#interface-wocchaininfo) |
-| [PendingStorageInput](#interface-pendingstorageinput) | [TableOutputBasket](#interface-tableoutputbasket) | [WocHeader](#interface-wocheader) |
-| [PermissionRequest](#interface-permissionrequest) | [TableOutputTag](#interface-tableoutputtag) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
-| [PermissionToken](#interface-permissiontoken) | [TableOutputTagMap](#interface-tableoutputtagmap) |  |
+| [AdminStatsResult](#interface-adminstatsresult) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableOutputTagMap](#interface-tableoutputtagmap) |
+| [ArcConfig](#interface-arcconfig) | [PostBeefResult](#interface-postbeefresult) | [TableOutputX](#interface-tableoutputx) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableProvenTx](#interface-tableproventx) |
+| [AuthId](#interface-authid) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableProvenTxReq](#interface-tableproventxreq) |
+| [AuthPayload](#interface-authpayload) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
+| [BaseBlockHeader](#interface-baseblockheader) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TableSettings](#interface-tablesettings) |
+| [BaseBlockHeader](#interface-baseblockheader) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [TableSyncState](#interface-tablesyncstate) |
+| [BitailsConfig](#interface-bitailsconfig) | [PostTxsResult](#interface-posttxsresult) | [TableTransaction](#interface-tabletransaction) |
+| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [TableTxLabel](#interface-tabletxlabel) |
+| [BlockHeader](#interface-blockheader) | [Profile](#interface-profile) | [TableTxLabelMap](#interface-tabletxlabelmap) |
+| [BlockHeader](#interface-blockheader) | [ProvenOrRawTx](#interface-provenorrawtx) | [TableUser](#interface-tableuser) |
+| [BsvExchangeRate](#interface-bsvexchangerate) | [ProvenTransactionStatus](#interface-proventransactionstatus) | [TaskPurgeParams](#interface-taskpurgeparams) |
+| [CertOpsWallet](#interface-certopswallet) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [TestSetup1](#interface-testsetup1) |
+| [Certifier](#interface-certifier) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [TestSetup2](#interface-testsetup2) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [TestWallet](#interface-testwallet) |
+| [CompleteAuthResponse](#interface-completeauthresponse) | [ProvenTxReqNotify](#interface-proventxreqnotify) | [TestWalletOnly](#interface-testwalletonly) |
+| [CreateActionResultX](#interface-createactionresultx) | [ProviderCallHistory](#interface-providercallhistory) | [TestWalletProvider](#interface-testwalletprovider) |
+| [CreateTestWalletArgs](#interface-createtestwalletargs) | [PurgeParams](#interface-purgeparams) | [TrustSettings](#interface-trustsettings) |
+| [EntitySyncMap](#interface-entitysyncmap) | [PurgeResults](#interface-purgeresults) | [TrxToken](#interface-trxtoken) |
+| [EntityTimeStamp](#interface-entitytimestamp) | [RequestSyncChunkArgs](#interface-requestsyncchunkargs) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
+| [ExchangeRatesIoApi](#interface-exchangeratesioapi) | [ReviewActionResult](#interface-reviewactionresult) | [TuEnv](#interface-tuenv) |
+| [ExtendedVerifiableCertificate](#interface-extendedverifiablecertificate) | [ScriptTemplateParamsBRC29](#interface-scripttemplateparamsbrc29) | [TuEnvFlags](#interface-tuenvflags) |
+| [FiatExchangeRates](#interface-fiatexchangerates) | [ScriptTemplateUnlock](#interface-scripttemplateunlock) | [TxScriptOffsets](#interface-txscriptoffsets) |
+| [FindCertificateFieldsArgs](#interface-findcertificatefieldsargs) | [ServiceCall](#interface-servicecall) | [UMPToken](#interface-umptoken) |
+| [FindCertificatesArgs](#interface-findcertificatesargs) | [ServiceCall](#interface-servicecall) | [UMPTokenInteractor](#interface-umptokeninteractor) |
+| [FindCommissionsArgs](#interface-findcommissionsargs) | [ServiceCallHistory](#interface-servicecallhistory) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
+| [FindForUserSincePagedArgs](#interface-findforusersincepagedargs) | [ServiceCallHistoryCounts](#interface-servicecallhistorycounts) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
+| [FindMonitorEventsArgs](#interface-findmonitoreventsargs) | [ServiceToCall](#interface-servicetocall) | [ValidAbortActionArgs](#interface-validabortactionargs) |
+| [FindOutputBasketsArgs](#interface-findoutputbasketsargs) | [SetupClientWalletArgs](#interface-setupclientwalletargs) | [ValidAcquireCertificateArgs](#interface-validacquirecertificateargs) |
+| [FindOutputTagMapsArgs](#interface-findoutputtagmapsargs) | [SetupClientWalletClientArgs](#interface-setupclientwalletclientargs) | [ValidAcquireDirectCertificateArgs](#interface-validacquiredirectcertificateargs) |
+| [FindOutputTagsArgs](#interface-findoutputtagsargs) | [SetupEnv](#interface-setupenv) | [ValidAcquireIssuanceCertificateArgs](#interface-validacquireissuancecertificateargs) |
+| [FindOutputsArgs](#interface-findoutputsargs) | [SetupWallet](#interface-setupwallet) | [ValidBasketInsertion](#interface-validbasketinsertion) |
+| [FindPartialSincePagedArgs](#interface-findpartialsincepagedargs) | [SetupWalletArgs](#interface-setupwalletargs) | [ValidCreateActionArgs](#interface-validcreateactionargs) |
+| [FindProvenTxReqsArgs](#interface-findproventxreqsargs) | [SetupWalletClient](#interface-setupwalletclient) | [ValidCreateActionInput](#interface-validcreateactioninput) |
+| [FindProvenTxsArgs](#interface-findproventxsargs) | [SetupWalletClientArgs](#interface-setupwalletclientargs) | [ValidCreateActionOptions](#interface-validcreateactionoptions) |
+| [FindSincePagedArgs](#interface-findsincepagedargs) | [SetupWalletIdb](#interface-setupwalletidb) | [ValidCreateActionOutput](#interface-validcreateactionoutput) |
+| [FindSyncStatesArgs](#interface-findsyncstatesargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) | [ValidDiscoverByAttributesArgs](#interface-validdiscoverbyattributesargs) |
+| [FindTransactionsArgs](#interface-findtransactionsargs) | [SetupWalletKnex](#interface-setupwalletknex) | [ValidDiscoverByIdentityKeyArgs](#interface-validdiscoverbyidentitykeyargs) |
+| [FindTxLabelMapsArgs](#interface-findtxlabelmapsargs) | [SetupWalletKnexArgs](#interface-setupwalletknexargs) | [ValidInternalizeActionArgs](#interface-validinternalizeactionargs) |
+| [FindTxLabelsArgs](#interface-findtxlabelsargs) | [SetupWalletMySQLArgs](#interface-setupwalletmysqlargs) | [ValidInternalizeOutput](#interface-validinternalizeoutput) |
+| [FindUsersArgs](#interface-findusersargs) | [SetupWalletSQLiteArgs](#interface-setupwalletsqliteargs) | [ValidListActionsArgs](#interface-validlistactionsargs) |
+| [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [SignActionResultX](#interface-signactionresultx) | [ValidListCertificatesArgs](#interface-validlistcertificatesargs) |
+| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StartAuthResponse](#interface-startauthresponse) | [ValidListOutputsArgs](#interface-validlistoutputsargs) |
+| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StatusForTxidResult](#interface-statusfortxidresult) | [ValidProcessActionArgs](#interface-validprocessactionargs) |
+| [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageAdminStats](#interface-storageadminstats) | [ValidProcessActionOptions](#interface-validprocessactionoptions) |
+| [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageCreateActionResult](#interface-storagecreateactionresult) | [ValidProveCertificateArgs](#interface-validprovecertificateargs) |
+| [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) | [ValidRelinquishCertificateArgs](#interface-validrelinquishcertificateargs) |
+| [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) | [ValidRelinquishOutputArgs](#interface-validrelinquishoutputargs) |
+| [GetMerklePathResult](#interface-getmerklepathresult) | [StorageFeeModel](#interface-storagefeemodel) | [ValidSignActionArgs](#interface-validsignactionargs) |
+| [GetRawTxResult](#interface-getrawtxresult) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) | [ValidSignActionOptions](#interface-validsignactionoptions) |
+| [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageIdbOptions](#interface-storageidboptions) | [ValidWalletPayment](#interface-validwalletpayment) |
+| [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [StorageIdbSchema](#interface-storageidbschema) | [ValidWalletSignerArgs](#interface-validwalletsignerargs) |
+| [GetScriptHashHistory](#interface-getscripthashhistory) | [StorageIdentity](#interface-storageidentity) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
+| [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) | [WalletArgs](#interface-walletargs) |
+| [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [StorageKnexOptions](#interface-storageknexoptions) | [WalletBalance](#interface-walletbalance) |
+| [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [StorageProcessActionArgs](#interface-storageprocessactionargs) | [WalletPermissionsManagerCallbacks](#interface-walletpermissionsmanagercallbacks) |
+| [GetUtxoStatusResult](#interface-getutxostatusresult) | [StorageProcessActionResults](#interface-storageprocessactionresults) | [WalletServices](#interface-walletservices) |
+| [GroupedPermissionRequest](#interface-groupedpermissionrequest) | [StorageProvenOrReq](#interface-storageprovenorreq) | [WalletServicesOptions](#interface-walletservicesoptions) |
+| [GroupedPermissions](#interface-groupedpermissions) | [StorageProviderOptions](#interface-storageprovideroptions) | [WalletSettings](#interface-walletsettings) |
+| [KeyPair](#interface-keypair) | [StorageReaderOptions](#interface-storagereaderoptions) | [WalletSettingsManagerConfig](#interface-walletsettingsmanagerconfig) |
+| [KeyPairAddress](#interface-keypairaddress) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) | [WalletSigner](#interface-walletsigner) |
+| [ListActionsSpecOp](#interface-listactionsspecop) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) | [WalletStorage](#interface-walletstorage) |
+| [ListOutputsSpecOp](#interface-listoutputsspecop) | [SyncChunk](#interface-syncchunk) | [WalletStorageInfo](#interface-walletstorageinfo) |
+| [LiveBlockHeader](#interface-liveblockheader) | [SyncError](#interface-syncerror) | [WalletStorageProvider](#interface-walletstorageprovider) |
+| [MockData](#interface-mockdata) | [SyncMap](#interface-syncmap) | [WalletStorageReader](#interface-walletstoragereader) |
+| [MonitorDaemonSetup](#interface-monitordaemonsetup) | [TableCertificate](#interface-tablecertificate) | [WalletStorageServerOptions](#interface-walletstorageserveroptions) |
+| [MonitorOptions](#interface-monitoroptions) | [TableCertificateField](#interface-tablecertificatefield) | [WalletStorageSync](#interface-walletstoragesync) |
+| [OutPoint](#interface-outpoint) | [TableCertificateX](#interface-tablecertificatex) | [WalletStorageSyncReader](#interface-walletstoragesyncreader) |
+| [Paged](#interface-paged) | [TableCommission](#interface-tablecommission) | [WalletStorageWriter](#interface-walletstoragewriter) |
+| [PendingSignAction](#interface-pendingsignaction) | [TableMonitorEvent](#interface-tablemonitorevent) | [WalletTheme](#interface-wallettheme) |
+| [PendingStorageInput](#interface-pendingstorageinput) | [TableOutput](#interface-tableoutput) | [WocChainInfo](#interface-wocchaininfo) |
+| [PermissionRequest](#interface-permissionrequest) | [TableOutputBasket](#interface-tableoutputbasket) | [WocHeader](#interface-wocheader) |
+| [PermissionToken](#interface-permissiontoken) | [TableOutputTag](#interface-tableoutputtag) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1671,10 +1671,12 @@ export interface MonitorOptions {
     abandonedMsecs: number;
     unprovenAttemptsLimitTest: number;
     unprovenAttemptsLimitMain: number;
+    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [Services](./services.md#class-services)
+See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
 
 ###### Property msecsWaitPerMerkleProofServiceReq
 
@@ -1683,6 +1685,15 @@ How many msecs to wait after each getMerkleProof service request.
 ```ts
 msecsWaitPerMerkleProofServiceReq: number
 ```
+
+###### Property onTransactionBroadcasted
+
+These are hooks for a wallet-toolbox client to get transaction updates.
+
+```ts
+onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+```
+See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2470,6 +2481,24 @@ export interface ProvenOrRawTx {
 ```
 
 See also: [TableProvenTx](./storage.md#interface-tableproventx)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: ProvenTransactionStatus
+
+The transaction status that a client will receive when subscribing to transaction updates in the Monitor.
+
+```ts
+export interface ProvenTransactionStatus {
+    txid: string;
+    txIndex: number;
+    blockHeight: number;
+    blockHash: string;
+    merklePath: number[];
+    merkleRoot: string;
+}
+```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3435,7 +3464,7 @@ export interface SetupWalletKnex extends SetupWallet {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -4913,7 +4942,7 @@ export interface TestWallet<T> extends TestWalletOnly {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -4936,7 +4965,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export interface TestWalletOnly {
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -4959,7 +4988,7 @@ export interface TestWalletProvider<T> extends TestWalletOnly {
     userId: number;
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;
@@ -7966,35 +7995,10 @@ export class KnexMigrations implements MigrationSource<string> {
     async getLatestMigration(): Promise<string> 
     static async latestMigration(): Promise<string> 
     setupMigrations(chain: string, storageName: string, storageIdentityKey: string, maxOutputScriptLength: number): Record<string, Migration> 
-    static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
-        try {
-            const q = `SELECT 
-    CASE 
-        WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
-        WHEN (SELECT VERSION()) IS NOT NULL THEN 'MySQL'
-        ELSE 'Unknown'
-    END AS database_type;`;
-            let r = await knex.raw(q);
-            if (!r[0]["database_type"])
-                r = r[0];
-            if (r["rows"])
-                r = r.rows;
-            const dbtype: "SQLite" | "MySQL" | "Unknown" = r[0].database_type;
-            if (dbtype === "Unknown")
-                throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-            return dbtype;
-        }
-        catch (eu: unknown) {
-            const e = sdk.WalletError.fromUnknown(eu);
-            if (e.code === "SQLITE_ERROR")
-                return "SQLite";
-            throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-        }
-    }
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [DBType](./storage.md#type-dbtype), [WERR_NOT_IMPLEMENTED](./client.md#class-werr_not_implemented), [WalletError](./client.md#class-walleterror)
+See also: [Chain](./client.md#type-chain)
 
 ###### Constructor
 
@@ -8009,17 +8013,6 @@ Argument Details
   + human readable name for this storage instance
 + **maxOutputScriptLength**
   + limit for scripts kept in outputs table, longer scripts will be pulled from rawTx
-
-###### Method dbtype
-
-```ts
-static async dbtype(knex: Knex<any, any[]>): Promise<DBType> 
-```
-See also: [DBType](./storage.md#type-dbtype)
-
-Returns
-
-connected database engine variant
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -8075,6 +8068,8 @@ export class Monitor {
     chain: sdk.Chain;
     storage: MonitorStorage;
     chaintracks: ChaintracksServiceClient;
+    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
     constructor(options: MonitorOptions) 
     oneSecond = 1000;
     oneMinute = 60 * this.oneSecond;
@@ -8107,11 +8102,13 @@ export class Monitor {
     lastNewHeader: BlockHeader | undefined;
     lastNewHeaderWhen: Date | undefined;
     processNewBlockHeader(header: BlockHeader): void 
+    callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+    callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
     processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
 
 ###### Property _otherTasks
 
@@ -8148,6 +8145,28 @@ without sync'ing enabled.
 ```ts
 addMultiUserTasks(): void 
 ```
+
+###### Method callOnBroadcastedTransaction
+
+This is a function run from a TaskSendWaiting Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
+
+```ts
+callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+```
+See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
+
+###### Method callOnProvenTransaction
+
+This is a function run from a TaskCheckForProofs Monitor task.
+
+This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
+
+```ts
+callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+```
+See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
 ###### Method processNewBlockHeader
 
@@ -8637,7 +8656,7 @@ DEV_KEYS = '{
         args.rootKeyHex ||= args.env.devKeys[args.env.identityKey];
         const rootKey = PrivateKey.fromHex(args.rootKeyHex);
         const identityKey = rootKey.toPublicKey().toString();
-        const keyDeriver = new KeyDeriver(rootKey);
+        const keyDeriver = new CachedKeyDeriver(rootKey);
         const storage = new WalletStorageManager(identityKey, args.active, args.backups);
         if (storage.canMakeAvailable())
             await storage.makeAvailable();
@@ -8834,7 +8853,7 @@ static async createWallet(args: SetupWalletArgs): Promise<SetupWallet> {
     args.rootKeyHex ||= args.env.devKeys[args.env.identityKey];
     const rootKey = PrivateKey.fromHex(args.rootKeyHex);
     const identityKey = rootKey.toPublicKey().toString();
-    const keyDeriver = new KeyDeriver(rootKey);
+    const keyDeriver = new CachedKeyDeriver(rootKey);
     const storage = new WalletStorageManager(identityKey, args.active, args.backups);
     if (storage.canMakeAvailable())
         await storage.makeAvailable();
@@ -13730,37 +13749,38 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [WocHeadersBulkListener](#function-wocheadersbulklistener) | [isBlockHeader](#function-isblockheader) | [validateAbortActionArgs](#function-validateabortactionargs) |
-| [WocHeadersBulkListener_test](#function-wocheadersbulklistener_test) | [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) |
-| [WocHeadersLiveListener](#function-wocheaderslivelistener) | [isHexString](#function-ishexstring) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) |
-| [WocHeadersLiveListener_test](#function-wocheaderslivelistener_test) | [isListActionsSpecOp](#function-islistactionsspecop) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) |
-| [acquireDirectCertificate](#function-acquiredirectcertificate) | [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) |
-| [arcDefaultUrl](#function-arcdefaulturl) | [isLive](#function-islive) | [validateCreateActionArgs](#function-validatecreateactionargs) |
-| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionInput](#function-validatecreateactioninput) |
-| [arraysEqual](#function-arraysequal) | [listActions](#function-listactions) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
+| [WocHeadersBulkListener](#function-wocheadersbulklistener) | [isBaseBlockHeader](#function-isbaseblockheader) | [updateExchangeratesapi](#function-updateexchangeratesapi) |
+| [WocHeadersBulkListener_test](#function-wocheadersbulklistener_test) | [isBlockHeader](#function-isblockheader) | [validateAbortActionArgs](#function-validateabortactionargs) |
+| [WocHeadersLiveListener](#function-wocheaderslivelistener) | [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) |
+| [WocHeadersLiveListener_test](#function-wocheaderslivelistener_test) | [isHexString](#function-ishexstring) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) |
+| [acquireDirectCertificate](#function-acquiredirectcertificate) | [isListActionsSpecOp](#function-islistactionsspecop) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) |
+| [arcDefaultUrl](#function-arcdefaulturl) | [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) |
+| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [isLive](#function-islive) | [validateCreateActionArgs](#function-validatecreateactionargs) |
+| [arraysEqual](#function-arraysequal) | [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionInput](#function-validatecreateactioninput) |
+| [asArray](#function-asarray) | [listActions](#function-listactions) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
 | [asArray](#function-asarray) | [listActionsIdb](#function-listactionsidb) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
-| [asArray](#function-asarray) | [listCertificates](#function-listcertificates) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
-| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [listOutputs](#function-listoutputs) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
-| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [listOutputsIdb](#function-listoutputsidb) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [asBsvSdkScript](#function-asbsvsdkscript) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [asBsvSdkTx](#function-asbsvsdktx) | [logBasket](#function-logbasket) | [validateInteger](#function-validateinteger) |
-| [asBuffer](#function-asbuffer) | [logInput](#function-loginput) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
+| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [listCertificates](#function-listcertificates) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
+| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [listOutputs](#function-listoutputs) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
+| [asBsvSdkScript](#function-asbsvsdkscript) | [listOutputsIdb](#function-listoutputsidb) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [asBsvSdkTx](#function-asbsvsdktx) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [asBuffer](#function-asbuffer) | [logBasket](#function-logbasket) | [validateInteger](#function-validateinteger) |
+| [asString](#function-asstring) | [logInput](#function-loginput) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
 | [asString](#function-asstring) | [logOutput](#function-logoutput) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
-| [asString](#function-asstring) | [logTransaction](#function-logtransaction) | [validateListActionsArgs](#function-validatelistactionsargs) |
-| [asUint8Array](#function-asuint8array) | [makeAtomicBeef](#function-makeatomicbeef) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [makeChangeLock](#function-makechangelock) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
-| [buildSignableTransaction](#function-buildsignabletransaction) | [maxDate](#function-maxdate) | [validateOptionalInteger](#function-validateoptionalinteger) |
-| [cleanUnprocessedTransactionsUsingAbort](#function-cleanunprocessedtransactionsusingabort) | [offsetPubKey](#function-offsetpubkey) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
-| [cleanUnsentTransactionsUsingAbort](#function-cleanunsenttransactionsusingabort) | [optionalArraysEqual](#function-optionalarraysequal) | [validateOriginator](#function-validateoriginator) |
-| [cleanUnsignedTransactionsUsingAbort](#function-cleanunsignedtransactionsusingabort) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateOutpointString](#function-validateoutpointstring) |
-| [completeSignedTransaction](#function-completesignedtransaction) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
-| [convertProofToMerklePath](#function-convertprooftomerklepath) | [processAction](#function-processaction) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
-| [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [processAction](#function-processaction) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
+| [asUint8Array](#function-asuint8array) | [logTransaction](#function-logtransaction) | [validateListActionsArgs](#function-validatelistactionsargs) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [makeAtomicBeef](#function-makeatomicbeef) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
+| [buildSignableTransaction](#function-buildsignabletransaction) | [makeChangeLock](#function-makechangelock) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
+| [cleanUnprocessedTransactionsUsingAbort](#function-cleanunprocessedtransactionsusingabort) | [maxDate](#function-maxdate) | [validateOptionalInteger](#function-validateoptionalinteger) |
+| [cleanUnsentTransactionsUsingAbort](#function-cleanunsenttransactionsusingabort) | [offsetPubKey](#function-offsetpubkey) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
+| [cleanUnsignedTransactionsUsingAbort](#function-cleanunsignedtransactionsusingabort) | [optionalArraysEqual](#function-optionalarraysequal) | [validateOriginator](#function-validateoriginator) |
+| [completeSignedTransaction](#function-completesignedtransaction) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateOutpointString](#function-validateoutpointstring) |
+| [convertProofToMerklePath](#function-convertprooftomerklepath) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
+| [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [processAction](#function-processaction) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
+| [createAction](#function-createaction) | [processAction](#function-processaction) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
 | [createAction](#function-createaction) | [proveCertificate](#function-provecertificate) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
-| [createAction](#function-createaction) | [purgeData](#function-purgedata) | [validateSatoshis](#function-validatesatoshis) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [purgeDataIdb](#function-purgedataidb) | [validateScriptHash](#function-validatescripthash) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [randomBytes](#function-randombytes) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
-| [createSyncMap](#function-createsyncmap) | [randomBytesBase64](#function-randombytesbase64) | [validateSignActionArgs](#function-validatesignactionargs) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [purgeData](#function-purgedata) | [validateSatoshis](#function-validatesatoshis) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [purgeDataIdb](#function-purgedataidb) | [validateScriptHash](#function-validatescripthash) |
+| [createSyncMap](#function-createsyncmap) | [randomBytes](#function-randombytes) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
+| [determineDBType](#function-determinedbtype) | [randomBytesBase64](#function-randombytesbase64) | [validateSignActionArgs](#function-validatesignactionargs) |
 | [doubleSha256BE](#function-doublesha256be) | [randomBytesHex](#function-randombyteshex) | [validateSignActionOptions](#function-validatesignactionoptions) |
 | [doubleSha256LE](#function-doublesha256le) | [reviewStatus](#function-reviewstatus) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
 | [expectToThrowWERR](#function-expecttothrowwerr) | [reviewStatusIdb](#function-reviewstatusidb) | [validateStringLength](#function-validatestringlength) |
@@ -13776,7 +13796,6 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [getWhatsOnChainTipHeight](#function-getwhatsonchaintipheight) | [transactionOutputSize](#function-transactionoutputsize) | [verifyTruthy](#function-verifytruthy) |
 | [internalizeAction](#function-internalizeaction) | [transactionSize](#function-transactionsize) | [verifyUnlockScripts](#function-verifyunlockscripts) |
 | [internalizeAction](#function-internalizeaction) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) | [wait](#function-wait) |
-| [isBaseBlockHeader](#function-isbaseblockheader) | [updateExchangeratesapi](#function-updateexchangeratesapi) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -14343,6 +14362,21 @@ export function createSyncMap(): SyncMap
 ```
 
 See also: [SyncMap](./storage.md#interface-syncmap)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: determineDBType
+
+```ts
+export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> 
+```
+
+See also: [DBType](./storage.md#type-dbtype)
+
+Returns
+
+connected database engine variant
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -16363,16 +16397,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [DEFAULT_PROFILE_ID](#variable-default_profile_id) | [logger](#variable-logger) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |
-| [DEFAULT_SETTINGS](#variable-default_settings) | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) | [specOpThrowReviewActions](#variable-specopthrowreviewactions) |
-| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [normalizeDate](#variable-normalizedate) | [specOpWalletBalance](#variable-specopwalletbalance) |
-| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
-| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [parseResults](#variable-parseresults) | [transformVerifiableCertificatesWithTrust](#variable-transformverifiablecertificateswithtrust) |
-| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [queryOverlay](#variable-queryoverlay) | [triggerForeignKeyConstraintError](#variable-triggerforeignkeyconstrainterror) |
-| [brc29ProtocolID](#variable-brc29protocolid) | [setLogging](#variable-setlogging) | [triggerUniqueConstraintError](#variable-triggeruniqueconstrainterror) |
-| [getBasketToSpecOp](#variable-getbaskettospecop) | [specOpFailedActions](#variable-specopfailedactions) | [updateTable](#variable-updatetable) |
-| [getLabelToSpecOp](#variable-getlabeltospecop) | [specOpInvalidChange](#variable-specopinvalidchange) | [validateUpdateTime](#variable-validateupdatetime) |
-| [logUniqueConstraintError](#variable-loguniqueconstrainterror) | [specOpNoSendActions](#variable-specopnosendactions) | [verifyValues](#variable-verifyvalues) |
+| [DEFAULT_PROFILE_ID](#variable-default_profile_id) | [logger](#variable-logger) | [specOpThrowReviewActions](#variable-specopthrowreviewactions) |
+| [DEFAULT_SETTINGS](#variable-default_settings) | [maxPossibleSatoshis](#variable-maxpossiblesatoshis) | [specOpWalletBalance](#variable-specopwalletbalance) |
+| [PBKDF2_NUM_ROUNDS](#variable-pbkdf2_num_rounds) | [normalizeDate](#variable-normalizedate) | [transactionColumnsWithoutRawTx](#variable-transactioncolumnswithoutrawtx) |
+| [ProvenTxReqNonTerminalStatus](#variable-proventxreqnonterminalstatus) | [outputColumnsWithoutLockingScript](#variable-outputcolumnswithoutlockingscript) | [transformVerifiableCertificatesWithTrust](#variable-transformverifiablecertificateswithtrust) |
+| [ProvenTxReqTerminalStatus](#variable-proventxreqterminalstatus) | [parseResults](#variable-parseresults) | [triggerForeignKeyConstraintError](#variable-triggerforeignkeyconstrainterror) |
+| [TESTNET_DEFAULT_SETTINGS](#variable-testnet_default_settings) | [queryOverlay](#variable-queryoverlay) | [triggerUniqueConstraintError](#variable-triggeruniqueconstrainterror) |
+| [aggregateActionResults](#variable-aggregateactionresults) | [setLogging](#variable-setlogging) | [updateTable](#variable-updatetable) |
+| [brc29ProtocolID](#variable-brc29protocolid) | [specOpFailedActions](#variable-specopfailedactions) | [validateUpdateTime](#variable-validateupdatetime) |
+| [getBasketToSpecOp](#variable-getbaskettospecop) | [specOpInvalidChange](#variable-specopinvalidchange) | [verifyValues](#variable-verifyvalues) |
+| [getLabelToSpecOp](#variable-getlabeltospecop) | [specOpNoSendActions](#variable-specopnosendactions) |  |
+| [logUniqueConstraintError](#variable-loguniqueconstrainterror) | [specOpSetWalletChangeParams](#variable-specopsetwalletchangeparams) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -16476,6 +16511,56 @@ TESTNET_DEFAULT_SETTINGS: WalletSettings = {
 ```
 
 See also: [DEFAULT_SETTINGS](./client.md#variable-default_settings), [WalletSettings](./client.md#interface-walletsettings)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Variable: aggregateActionResults
+
+```ts
+aggregateActionResults = async (storage: StorageProvider, sendWithResultReqs: SendWithResult[], postToNetworkResult: PostReqsToNetworkResult): Promise<{
+    swr: SendWithResult[];
+    rar: ReviewActionResult[];
+}> => {
+    const swr: SendWithResult[] = [];
+    const rar: ReviewActionResult[] = [];
+    for (const ar of sendWithResultReqs) {
+        const txid = ar.txid;
+        const d = postToNetworkResult.details.find(d => d.txid === txid);
+        if (!d)
+            throw new WERR_INTERNAL(`missing details for ${txid}`);
+        const arNdr: ReviewActionResult = { txid: d.txid, status: "success", competingTxs: d.competingTxs };
+        switch (d.status) {
+            case "success":
+                ar.status = "unproven";
+                break;
+            case "doubleSpend":
+                ar.status = "failed";
+                arNdr.status = "doubleSpend";
+                if (d.competingTxs)
+                    arNdr.competingBeef = await createMergedBeefOfTxids(d.competingTxs, storage);
+                break;
+            case "serviceError":
+                ar.status = "sending";
+                arNdr.status = "serviceError";
+                break;
+            case "invalidTx":
+                ar.status = "failed";
+                arNdr.status = "invalidTx";
+                break;
+            case "unknown":
+            case "invalid":
+            default:
+                throw new WERR_INTERNAL(`processAction with notDelayed status ${d.status} should not occur.`);
+        }
+        swr.push({ txid, status: ar.status });
+        rar.push(arNdr);
+    }
+    return { swr, rar };
+}
+```
+
+See also: [PostReqsToNetworkResult](./storage.md#interface-postreqstonetworkresult), [ReviewActionResult](./client.md#interface-reviewactionresult), [StorageProvider](./storage.md#class-storageprovider), [WERR_INTERNAL](./client.md#class-werr_internal), [processAction](./storage.md#function-processaction)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

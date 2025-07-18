@@ -54,9 +54,7 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
   static createBulkIngestorWhatsOnChainOptions(chain: Chain): BulkIngestorWhatsOnChainOptions {
     const options: BulkIngestorWhatsOnChainOptions = {
       ...WhatsOnChainServices.createWhatsOnChainServicesOptions(chain),
-      ...BulkIngestorBase.createBulkIngestorBaseOptions(
-        chain
-      ),
+      ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
       idleWait: 5000
     }
     return options
@@ -92,7 +90,6 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
      */
     priorLiveHeaders?: BlockHeader[]
   ): Promise<{ reader: BulkFilesReader; liveHeaders: BlockHeader[] }> {
-
     let fromHeight: number
 
     if (!neededRange.isEmpty) {

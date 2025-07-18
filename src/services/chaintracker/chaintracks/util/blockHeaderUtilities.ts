@@ -39,9 +39,11 @@ export async function sha256HashOfBinaryFile(
  * @returns Promise resolving to an object containing the last header hash and last chain work.
  */
 export async function validateBulkFileData(
-  bf: BulkHeaderFileInfo, prevHash: string, prevChainWork: string, fetch?: ChaintracksFetchApi
+  bf: BulkHeaderFileInfo,
+  prevHash: string,
+  prevChainWork: string,
+  fetch?: ChaintracksFetchApi
 ): Promise<BulkHeaderFileInfo> {
-
   const vbf = { ...bf }
 
   if (!vbf.data && vbf.sourceUrl && fetch) {
@@ -50,16 +52,20 @@ export async function validateBulkFileData(
   }
 
   if (!vbf.data) throw new WERR_INVALID_OPERATION(`bulk file ${vbf.fileName} data is unavailable`)
-  
-  if (vbf.count <= 0) throw new WERR_INVALID_PARAMETER('bf.count', `expected count to be greater than 0, but got ${vbf.count}`)
 
-  if (vbf.data.length !== vbf.count * 80) throw new WERR_INVALID_PARAMETER('bf.data',
-    `bulk file ${vbf.fileName} data length ${vbf.data.length} does not match expected count ${vbf.count}`
-  )
+  if (vbf.count <= 0)
+    throw new WERR_INVALID_PARAMETER('bf.count', `expected count to be greater than 0, but got ${vbf.count}`)
+
+  if (vbf.data.length !== vbf.count * 80)
+    throw new WERR_INVALID_PARAMETER(
+      'bf.data',
+      `bulk file ${vbf.fileName} data length ${vbf.data.length} does not match expected count ${vbf.count}`
+    )
 
   vbf.fileHash = asString(Hash.sha256(asArray(vbf.data)), 'base64')
-  if (bf.fileHash && bf.fileHash !== vbf.fileHash) throw new WERR_INVALID_PARAMETER('bf.fileHash', `expected ${bf.fileHash} but got ${vbf.fileHash}`)
-  
+  if (bf.fileHash && bf.fileHash !== vbf.fileHash)
+    throw new WERR_INVALID_PARAMETER('bf.fileHash', `expected ${bf.fileHash} but got ${vbf.fileHash}`)
+
   const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(vbf.data, prevHash, 0, undefined, prevChainWork)
   vbf.lastHash = lastHeaderHash
   vbf.lastChainWork = lastChainWork!

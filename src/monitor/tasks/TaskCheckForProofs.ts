@@ -216,6 +216,15 @@ export async function getProofs(
       req.apiHistory = r.history
       req.provenTxId = r.provenTxId
       req.notified = true
+
+      task.monitor.callOnProvenTransaction({
+        txid,
+        txIndex: index,
+        blockHeight: height,
+        blockHash,
+        merklePath,
+        merkleRoot
+      })
     } else {
       if (countsAsAttempt && req.status !== 'nosend') {
         req.attempts++

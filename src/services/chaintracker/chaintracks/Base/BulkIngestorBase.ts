@@ -47,7 +47,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   storageOrUndefined(): ChaintracksStorageApi | undefined {
     return this.storageEngine
   }
-  
+
   storage(): ChaintracksStorageBase {
     if (!this.storageEngine) throw new Error('storageEngine must be set.')
     return this.storageEngine

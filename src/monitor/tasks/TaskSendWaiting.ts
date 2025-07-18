@@ -3,7 +3,9 @@ import { verifyTruthy } from '../../utility/index.client'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 import { attemptToPostReqsToNetwork } from '../../storage/methods/attemptToPostReqsToNetwork'
-import { ProvenTxReqStatus } from '../../sdk'
+import { ProvenTxReqStatus, WERR_INTERNAL } from '../../sdk'
+import { ReviewActionResult, SendWithResult } from '@bsv/sdk'
+import { aggregateActionResults } from '../../utility/aggregateResults'
 
 export class TaskSendWaiting extends WalletMonitorTask {
   static taskName = 'SendWaiting'
@@ -102,6 +104,15 @@ export class TaskSendWaiting extends WalletMonitorTask {
       const r = await this.storage.runAsStorageProvider(async sp => {
         return attemptToPostReqsToNetwork(sp, reqs)
       })
+
+      if (this.monitor.onTransactionBroadcasted) {
+        const rar = await this.storage.runAsStorageProvider(async sp => {
+          const ars: SendWithResult[] = [{ txid: req.txid, status: 'sending' }]
+          const { rar } = await aggregateActionResults(sp, ars, r)
+          return rar
+        })
+        this.monitor.callOnBroadcastedTransaction(rar[0])
+      }
 
       log += r.log
     }

@@ -118,7 +118,7 @@ export interface ChaintracksStorageQueryApi {
    * @returns `buffer` of serialized headers
    * @returns `headerId` of last header
    */
-  headersToBuffer( height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number; }>
+  headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
 
   /**
    * Adds headers in 80 byte serialized format to a buffer.
@@ -223,7 +223,6 @@ export interface ChaintracksStorageQueryApi {
    * Optional "bulk" storage engine to which headers are migrated after exceeding the `liveHeightThreshold`
    */
   bulkStorage?: BulkStorageApi
-
 }
 
 export type InsertHeaderResult = {
@@ -360,14 +359,14 @@ export interface ChaintracksStorageIngestApi {
 
   /**
    * Async initialization method.
-   * 
+   *
    * May be called prior to other async methods to control when initialization occurs.
    */
   makeAvailable(): Promise<void>
 
   /**
    * Migrate storage schema to latest schema changes.
-   * 
+   *
    * Typically invoked automatically by `makeAvailable`.
    */
   migrateLatest(): Promise<void>
@@ -390,5 +389,4 @@ export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, Chain
    * @param bulk
    */
   setBulkStorage(bulk?: BulkStorageApi): Promise<void>
-
 }

@@ -4,13 +4,24 @@ import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
 
 import { BulkIngestorBase } from './Base/BulkIngestorBase'
 
-import { BulkFilesReader, BulkFilesReaderFetchBackedStorage, BulkHeaderFileInfo, BulkHeaderFilesInfo } from './util/BulkFilesReader'
+import {
+  BulkFilesReader,
+  BulkFilesReaderFetchBackedStorage,
+  BulkHeaderFileInfo,
+  BulkHeaderFilesInfo
+} from './util/BulkFilesReader'
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
 import { WalletError, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
-import { deserializeBlockHeader, genesisBuffer, genesisHeader, validateBufferOfHeaders, validateBulkFileData } from './util/blockHeaderUtilities'
+import {
+  deserializeBlockHeader,
+  genesisBuffer,
+  genesisHeader,
+  validateBufferOfHeaders,
+  validateBulkFileData
+} from './util/blockHeaderUtilities'
 import { Hash } from '@bsv/sdk'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
@@ -42,10 +53,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
    * @param localCachePath defaults to './data/bulk_cdn_headers/'
    * @returns
    */
-  static createBulkIngestorCDNOptions(
-    chain: Chain,
-    fetch: ChaintracksFetchApi,
-  ): BulkIngestorCDNOptions {
+  static createBulkIngestorCDNOptions(chain: Chain, fetch: ChaintracksFetchApi): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
       ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
       fetch,
@@ -139,7 +147,9 @@ export class BulkIngestorCDN extends BulkIngestorBase {
           lf = localBulkFiles.slice(-1)[0]
           if (lf) {
             if (
-              lf.firstHeight + lf.count !== bf.firstHeight || lf.lastHash !== bf.prevHash || lf.lastChainWork !== bf.prevChainWork
+              lf.firstHeight + lf.count !== bf.firstHeight ||
+              lf.lastHash !== bf.prevHash ||
+              lf.lastChainWork !== bf.prevChainWork
             ) {
               log += `${bf.fileName} adding new file that does not follow local files is NOT SUPPORTED\n`
               break

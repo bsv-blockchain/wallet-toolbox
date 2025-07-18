@@ -45,7 +45,7 @@ describe('ARC tests', () => {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'XDeployment-ID': 'wallet-toolbox-test11',
+      'XDeployment-ID': 'wallet-toolbox-test11'
       //Authorization: `Bearer ${envMain.gorillaPoolApiKey}`
     }
 

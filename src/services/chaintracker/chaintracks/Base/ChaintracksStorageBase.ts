@@ -7,7 +7,11 @@ import {
 import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
 import { HeightRange } from '../util/HeightRange'
 import { BulkStorageApi } from '../Api/BulkStorageApi'
-import { deserializeBaseBlockHeader, deserializeBlockHeader, validateBufferOfHeaders } from '../util/blockHeaderUtilities'
+import {
+  deserializeBaseBlockHeader,
+  deserializeBlockHeader,
+  validateBufferOfHeaders
+} from '../util/blockHeaderUtilities'
 
 import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
@@ -81,7 +85,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   }
 
   async makeAvailable(): Promise<void> {
-    if (this.isAvailable) return;
+    if (this.isAvailable) return
     this.isAvailable = true
     this.bulkFiles = await this.getBulkFiles()
   }
@@ -105,7 +109,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract findLiveHeightRange(): Promise<{ minHeight: number; maxHeight: number }>
   abstract findMaxHeaderId(): Promise<number>
   abstract getLiveHeightRange(): Promise<HeightRange>
-  abstract headersToBuffer( height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
+  abstract headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
@@ -211,13 +215,13 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   async findBulkFilesHeaderForHeightOrUndefined(height: number): Promise<BlockHeader | undefined> {
     await this.makeAvailable()
-    const file = this.bulkFiles.find((f) => f.firstHeight <= height && f.firstHeight + f.count > height)
+    const file = this.bulkFiles.find(f => f.firstHeight <= height && f.firstHeight + f.count > height)
     if (!file) return undefined
-    if (!file.fileId) throw new WERR_INVALID_OPERATION(`Bulk file doesn't have a fileId: ${file.fileName}`);
+    if (!file.fileId) throw new WERR_INVALID_OPERATION(`Bulk file doesn't have a fileId: ${file.fileName}`)
     const offset = (height - file.firstHeight) * 80
     const data = await this.getBulkFileData(file.fileId, offset, 80)
-    if (!data) throw new WERR_INVALID_OPERATION(`Bulk file data for ${file.fileId}, ${offset} is not available.`);
-    const header = deserializeBlockHeader(data, 0, height) 
+    if (!data) throw new WERR_INVALID_OPERATION(`Bulk file data for ${file.fileId}, ${offset} is not available.`)
+    const header = deserializeBlockHeader(data, 0, height)
     return header
   }
 
@@ -267,7 +271,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   async addOldBlockHeaders(headers: BlockHeader[], presentHeight: number): Promise<void> {
     await this.makeAvailable()
-  
+
     const { bulk, live } = await this.getAvailableHeightRanges()
   }
 }
