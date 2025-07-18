@@ -9,7 +9,8 @@ import {
   LockingScript,
   P2PKH,
   PrivateKey,
-  Script
+  Script,
+  CachedKeyDeriver
 } from '@bsv/sdk'
 
 export const brc29ProtocolID: WalletProtocol = [2, '3241645161d8']
@@ -41,7 +42,7 @@ export class ScriptTemplateBRC29 implements ScriptTemplate {
   getKeyDeriver(privKey: PrivateKey | HexString): KeyDeriverApi {
     if (typeof privKey === 'string') privKey = PrivateKey.fromHex(privKey)
     if (!this.params.keyDeriver || this.params.keyDeriver.rootKey.toHex() !== privKey.toHex())
-      return new KeyDeriver(privKey)
+      return new CachedKeyDeriver(privKey)
     return this.params.keyDeriver
   }
 

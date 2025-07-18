@@ -3034,7 +3034,7 @@ and customization.
 export interface SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
-    keyDeriver: KeyDeriver;
+    keyDeriver: KeyDeriverApi;
     chain: sdk.Chain;
     storage: WalletStorageManager;
     services: Services;

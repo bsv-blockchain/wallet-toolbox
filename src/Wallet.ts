@@ -65,7 +65,8 @@ import {
   Certificate,
   LookupResolver,
   AtomicBEEF,
-  BEEF
+  BEEF,
+  KeyDeriverApi
 } from '@bsv/sdk'
 import * as sdk from './sdk'
 import { acquireDirectCertificate } from './signer/methods/acquireDirectCertificate'
@@ -92,7 +93,7 @@ import { ScriptTemplateBRC29 } from './utility/ScriptTemplateBRC29'
 
 export interface WalletArgs {
   chain: sdk.Chain
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   storage: WalletStorageManager
   services?: sdk.WalletServices
   monitor?: Monitor
@@ -107,7 +108,7 @@ function isWalletSigner(args: WalletArgs | WalletSigner): args is WalletSigner {
 
 export class Wallet implements WalletInterface, ProtoWallet {
   chain: sdk.Chain
-  keyDeriver: KeyDeriver
+  keyDeriver: KeyDeriverApi
   storage: WalletStorageManager
   settingsManager: WalletSettingsManager
   lookupResolver: LookupResolver
