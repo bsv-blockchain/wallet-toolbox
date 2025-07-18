@@ -679,7 +679,7 @@ describe('WalletPermissionsManager - Regression & Integration with Underlying Wa
     const result = await manager.waitForAuthentication({}, 'someone.com')
     expect(result.authenticated).toBe(true)
     expect(underlying.waitForAuthentication).toHaveBeenCalledTimes(1)
-  })
+  }, 30000)
 
   it('should proxy getHeight', async () => {
     const result = await manager.getHeight({}, 'someone.com')

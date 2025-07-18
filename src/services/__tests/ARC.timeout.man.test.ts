@@ -17,17 +17,60 @@ describe('ARC tests', () => {
     const requestOptions: HttpClientRequestOptions = {
       method: 'POST',
       headers,
-      data: { rawTx: beef905631 }
+      data: { rawTx: beef905631 },
+      signal: AbortSignal.timeout(100)
     }
 
-    requestOptions['signal'] = AbortSignal.timeout(5000)
+    try {
+      const response = await httpClient.request(url, requestOptions)
+      expect(true).toBe(false) // Should not reach here, expect an error
+    } catch (error: any) {
+      console.log('Error posting to TAAL:', error.message)
+      expect(error.code).toBe('ABORT_ERR')
+    }
 
     try {
+      requestOptions.signal = AbortSignal.timeout(30000) // 30 seconds timeout
       const response = await httpClient.request(url, requestOptions)
       expect(response.status).toBe(200)
     } catch (error: any) {
       console.log('Error posting to TAAL:', error.message)
+      expect(true).toBe(false) // Should not reach here, expect an error
+    }
+  })
+
+  test('12 post to GorillaPool for timeout', async () => {
+    const httpClient = defaultHttpClient()
+    const url = `https://arc.gorillapool.io/v1/tx`
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'XDeployment-ID': 'wallet-toolbox-test11',
+      //Authorization: `Bearer ${envMain.gorillaPoolApiKey}`
+    }
+
+    const requestOptions: HttpClientRequestOptions = {
+      method: 'POST',
+      headers,
+      data: { rawTx: beef905631 },
+      signal: AbortSignal.timeout(100)
+    }
+
+    try {
+      const response = await httpClient.request(url, requestOptions)
+      expect(true).toBe(false) // Should not reach here, expect an error
+    } catch (error: any) {
+      console.log('Error posting to TAAL:', error.message)
       expect(error.code).toBe('ABORT_ERR')
+    }
+
+    try {
+      requestOptions.signal = AbortSignal.timeout(30000) // 30 seconds timeout
+      const response = await httpClient.request(url, requestOptions)
+      expect(response.status).toBe(200)
+    } catch (error: any) {
+      console.log('Error posting to TAAL:', error.message)
+      expect(true).toBe(false) // Should not reach here, expect an error
     }
   })
 })

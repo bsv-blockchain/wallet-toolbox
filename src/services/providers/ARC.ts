@@ -135,7 +135,8 @@ export class ARC {
     const requestOptions: HttpClientRequestOptions = {
       method: 'POST',
       headers: this.requestHeaders(),
-      data: { rawTx }
+      data: { rawTx },
+      signal: AbortSignal.timeout(1000 * 30) // 30 seconds timeout, error.code will be 'ABORT_ERR'
     }
 
     const r: sdk.PostTxResultForTxid = {
@@ -143,8 +144,6 @@ export class ARC {
       status: 'success',
       notes: []
     }
-    // Set a timeout on the request
-    requestOptions['signal'] = AbortSignal.timeout(1000 * 30) // 30 seconds timeout, error.code will be 'ABORT_ERR'
 
     const url = `${this.URL}/v1/tx`
     const nn = () => ({ name: this.name, when: new Date().toISOString() })
