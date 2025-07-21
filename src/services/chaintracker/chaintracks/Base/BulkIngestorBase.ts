@@ -2,8 +2,9 @@
 import { BulkIngestorApi, BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
 import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 
-import { BulkFilesReader, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
-import { HeightRange } from '../util/HeightRange'
+import { BulkFilesReader } from '../util/BulkFilesReader'
+import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
+import { HeightRange, HeightRanges } from '../util/HeightRange'
 import { deserializeBaseBlockHeaders, deserializeBlockHeaders, genesisBuffer } from '../util/blockHeaderUtilities'
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
@@ -72,23 +73,23 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   abstract updateLocalCache(
     neededRange: HeightRange,
     presentHeight: number,
-    priorLiveHeaders?: BlockHeader[]
-  ): Promise<{ reader: BulkFilesReader; liveHeaders?: BlockHeader[] }>
+    priorLiveHeaders: BlockHeader[]
+  ): Promise<{ liveHeaders: BlockHeader[] }>
 
   abstract getPresentHeight(): Promise<number | undefined>
 
-  async synchronize(presentHeight: number, priorLiveHeaders?: BlockHeader[]): Promise<BlockHeader[] | undefined> {
+  async synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
     const storage = this.storage()
 
     // What bulk storage and live database have...
-    const { bulk: bulkRange, live: liveRange } = await storage.getAvailableHeightRanges()
+    const { bulk: bulkRange, live: liveRange } = before
     const storageRange = bulkRange.union(liveRange)
 
     if (presentHeight === storageRange.maxHeight)
       // Already up-to-date...
       return []
 
-    if (!storage.bulkStorage) throw new Error('Insoncistent storage state.')
+    //if (!storage.bulkStorage) throw new Error('Insoncistent storage state.')
 
     if (!storageRange.isEmpty && storageRange.minHeight > 0)
       throw new Error('Between bulk and live storage, the genesis header (height zero) is required.')
@@ -102,8 +103,8 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     let newBulkRange = new HeightRange(0, presentHeight - storage.liveHeightThreshold).subtract(bulkRange)
 
     // newBulkRange may be empty, we still need bulk ingestor to retrieve missing liveHeaders efficiently
-    const { reader, liveHeaders } = await this.updateLocalCache(newBulkRange, presentHeight, priorLiveHeaders)
-
+    const { liveHeaders } = await this.updateLocalCache(newBulkRange, presentHeight, priorLiveHeaders)
+/*
     logger(
       `${this.constructor.name} bulk ${bulkRange}, live ${liveRange}, reader ${reader.range} liveHeaders count ${liveHeaders?.length}`
     )
@@ -197,6 +198,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     await storage.bulkStorage.appendHeaders(newBulkRange.minHeight, newBulkRange.length, buffer)
 
     // STEP 3. Forward live headers to live ingestor to repopulate live storage.
+    */
     return liveHeaders
   }
 

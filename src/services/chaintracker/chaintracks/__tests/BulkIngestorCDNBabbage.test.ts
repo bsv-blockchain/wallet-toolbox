@@ -1,8 +1,11 @@
+import { Knex, knex as makeKnex } from 'knex'
 import { Chain } from '../../../../sdk'
 import { BulkIngestorCDNBabbage } from '../BulkIngestorCDNBabbage'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { ChaintracksFs } from '../util/ChaintracksFs'
 import { HeightRange } from '../util/HeightRange'
+import { ChaintracksStorageKnex } from '../Storage'
+import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
 
 const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
 const fs = ChaintracksFs
@@ -14,7 +17,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
   test('0 mainNet', async () => {
     const { cdn, r } = await testUpdateLocalCache('main')
     expect(cdn.bulkFiles?.files.length).toBeGreaterThan(8)
-    expect(r.liveHeaders).toBeUndefined()
+    expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
     expect(r.reader.range.maxHeight).toBeGreaterThan(800000)
   })
@@ -22,7 +25,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
   test('1 testNet', async () => {
     const { cdn, r } = await testUpdateLocalCache('test')
     expect(cdn.bulkFiles?.files.length).toBeGreaterThan(15)
-    expect(r.liveHeaders).toBeUndefined()
+    expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
     expect(r.reader.range.maxHeight).toBeGreaterThan(1500000)
   })
@@ -31,12 +34,23 @@ describe('BulkIngestorCDNBabbage tests', () => {
 async function testUpdateLocalCache(chain: Chain) {
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
     chain,
-    fs,
     fetch,
-    `${rootFolder}/bulk_cdn`
   )
 
   const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
-  const r = await cdn.updateLocalCache(new HeightRange(0, 9900000), 900000)
-  return { cdn, r }
+
+  const localSqlite: Knex.Config = {
+    client: 'sqlite3',
+    connection: { filename: fs.pathJoin(rootFolder, `${chain}Net_chaintracks.sqlite`) },
+    useNullAsDefault: true
+  }
+  const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
+  const storage = new ChaintracksStorageKnex(knexOptions)
+  await cdn.setStorage(storage)
+
+  const range = new HeightRange(0, 9900000)
+  const r = await cdn.updateLocalCache(range, 900000)
+  const reader = await BulkFilesReaderStorage.fromStorage(storage, fetch, range)
+  await storage.knex.destroy()
+  return { cdn, r: { reader, liveHeaders: r.liveHeaders } }
 }

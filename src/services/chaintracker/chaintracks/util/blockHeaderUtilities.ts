@@ -7,10 +7,11 @@ import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
-import { BulkHeaderFileInfo } from './BulkFilesReader'
+import { BulkHeaderFileInfo } from './BulkHeaderFile'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 
 import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { isKnownValidBulkHeaderFile } from './validBulkHeaderFilesByFileHash'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.
@@ -66,9 +67,14 @@ export async function validateBulkFileData(
   if (bf.fileHash && bf.fileHash !== vbf.fileHash)
     throw new WERR_INVALID_PARAMETER('bf.fileHash', `expected ${bf.fileHash} but got ${vbf.fileHash}`)
 
-  const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(vbf.data, prevHash, 0, undefined, prevChainWork)
-  vbf.lastHash = lastHeaderHash
-  vbf.lastChainWork = lastChainWork!
+  if (!isKnownValidBulkHeaderFile(vbf)) {
+    const { lastHeaderHash, lastChainWork } = validateBufferOfHeaders(vbf.data, prevHash, 0, undefined, prevChainWork)
+    vbf.lastHash = lastHeaderHash
+    vbf.lastChainWork = lastChainWork!
+    if (vbf.firstHeight === 0) {
+      validateGenesisHeader(vbf.data, vbf.chain!) 
+    }
+  }
   vbf.validated = true
 
   return vbf
@@ -98,9 +104,7 @@ export function validateBufferOfHeaders(
     const headerStart = offset + i * 80
     const headerEnd = headerStart + 80
     if (headerEnd > buffer.length) {
-      throw {
-        message: `header ${i} missing bytes for header at offset ${headerStart} in buffer of length ${buffer.length}`
-      }
+      throw new WERR_INVALID_PARAMETER('buffer', `multiple of 80 bytes long. header ${i} missing bytes for header at offset ${headerStart} in buffer of length ${buffer.length}`)
     }
     const header = buffer.slice(headerStart, headerEnd)
     const h = deserializeBaseBlockHeader(header)
@@ -114,6 +118,29 @@ export function validateBufferOfHeaders(
     }
   }
   return { lastHeaderHash, lastChainWork }
+}
+
+/**
+ * Verifies that buffer begins with valid genesis block header for the specified chain.
+ * @param buffer 
+ * @param chain 
+ */
+export function validateGenesisHeader( buffer: Uint8Array, chain: Chain) : void
+{
+    const header = buffer.slice(0, 80)
+    const h = deserializeBlockHeader(header, 0, 0)
+    const gh = genesisHeader(chain)
+    if (h.bits !== gh.bits
+      || h.previousHash !== gh.previousHash
+      || h.merkleRoot !== gh.merkleRoot
+      || h.time !== gh.time
+      || h.nonce !== gh.nonce
+      || h.version !== gh.version
+      || h.height !== gh.height
+      || h.hash !== gh.hash
+    ) {
+      throw new WERR_INVALID_PARAMETER('buffer', `genesis header for chain ${chain}`)
+    }
 }
 
 /**
@@ -375,7 +402,7 @@ export function validateHeaderDifficulty(hash: Buffer, bits: number) {
  * @publicbody
  */
 export function blockHash(header: BaseBlockHeader | number[] | Uint8Array): string {
-  const a = !Array.isArray(header) && !(header instanceof Uint8Array) ? serializeBlockHeader(header) : header
+  const a = !Array.isArray(header) && !(header instanceof Uint8Array) ? serializeBaseBlockHeader(header) : header
   if (a.length !== 80) throw new Error('Block header must be 80 bytes long.')
   return asString(doubleSha256BE(a))
 }
@@ -388,7 +415,7 @@ export function blockHash(header: BaseBlockHeader | number[] | Uint8Array): stri
  * @returns 80 byte Buffer
  * @publicbody
  */
-export function serializeBlockHeader(header: BaseBlockHeader, buffer?: number[], offset?: number): number[] {
+export function serializeBaseBlockHeader(header: BaseBlockHeader, buffer?: number[], offset?: number): number[] {
   const writer = new Utils.Writer()
   writer.writeUInt32LE(header.version)
   writer.write(asArray(header.previousHash).reverse())
@@ -469,7 +496,7 @@ export function genesisHeader(chain: Chain): BlockHeader {
  * @publicbody
  */
 export function genesisBuffer(chain: Chain): number[] {
-  return serializeBlockHeader(genesisHeader(chain))
+  return serializeBaseBlockHeader(genesisHeader(chain))
 }
 
 /**

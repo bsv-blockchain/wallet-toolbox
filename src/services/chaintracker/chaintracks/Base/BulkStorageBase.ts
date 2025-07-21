@@ -5,7 +5,9 @@ import { BulkStorageApi, BulkStorageBaseOptions } from '../Api/BulkStorageApi'
 import { ChaintracksStorageBase } from './ChaintracksStorageBase'
 
 import { HeightRange } from '../util/HeightRange'
-import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
+import { BulkFilesReader } from '../util/BulkFilesReader'
+import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
+import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 
 import { addWork, convertBitsToWork, deserializeBlockHeaders, genesisBuffer } from '../util/blockHeaderUtilities'
 import { Chain } from '../../../../sdk/types'

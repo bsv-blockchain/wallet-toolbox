@@ -6,10 +6,9 @@ import { BulkIngestorBase } from './Base/BulkIngestorBase'
 
 import {
   BulkFilesReader,
-  BulkFilesReaderFetchBackedStorage,
-  BulkHeaderFileInfo,
-  BulkHeaderFilesInfo
-} from './util/BulkFilesReader'
+  BulkFilesReaderStorage} from './util/BulkFilesReader'
+import { BulkHeaderFileInfo } from './util/BulkHeaderFile'
+import { BulkHeaderFilesInfo } from './util/BulkHeaderFile'
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
@@ -26,6 +25,7 @@ import { Hash } from '@bsv/sdk'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 
 import Path from 'path'
+import { validBulkHeaderFilesByFileHash } from './util/validBulkHeaderFilesByFileHash'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -95,7 +95,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
   async updateLocalCache(
     neededRange: HeightRange,
     presentHeight: number
-  ): Promise<{ reader: BulkFilesReaderFetchBackedStorage; liveHeaders?: BlockHeader[] }> {
+  ): Promise<{ liveHeaders: BlockHeader[] }> {
     const storage = this.storage()
 
     const toUrl = (file: string) => Path.join(this.cdnUrl, file)
@@ -103,11 +103,16 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     const url = toUrl(this.jsonResource)
     this.bulkFiles = await this.fetch.fetchJson(url)
     if (!this.bulkFiles) {
-      throw new WERR_INVALID_PARAMETER(`${this.jsonResource}`, `a valid JSON resource available from ${url}`)
+      throw new WERR_INVALID_PARAMETER(`${this.jsonResource}`, `a valid BulkHeaderFilesInfo JSON resource available from ${url}`)
     }
     for (const bf of this.bulkFiles.files) {
-      if (!bf.chain) bf.chain = this.chain
-      if (!bf.sourceUrl) bf.sourceUrl = this.cdnUrl
+      if (!bf.fileHash) {
+        throw new WERR_INVALID_PARAMETER(`fileHash`, `valid for alll files in ${this.jsonResource} from ${url}`)
+      }
+      if (!bf.chain || bf.chain !== this.chain) {
+        throw new WERR_INVALID_PARAMETER(`chain`, `"${this.chain}" for all files in ${this.jsonResource} from ${url}`)
+      }
+      if (!bf.sourceUrl || bf.sourceUrl !== this.cdnUrl) bf.sourceUrl = this.cdnUrl;
     }
 
     let log = 'updateLocalCache log:\n'
@@ -157,12 +162,6 @@ export class BulkIngestorCDN extends BulkIngestorBase {
           } else {
             if (bf.firstHeight !== 0 || bf.prevHash !== '00'.repeat(32) || bf.prevChainWork !== '00'.repeat(32)) {
               log += `${bf.fileName} adding initial file that does not start at height zero is NOT SUPPORTED\n`
-              break
-            }
-            const gh = genesisHeader(this.chain)
-            const bgh = deserializeBlockHeader(bf.data!, 0, 0)
-            if (gh.hash !== bgh.hash) {
-              log += `${bf.fileName} adding initial file with incorrect genesis block hash is INVALID\n`
               break
             }
           }
@@ -217,9 +216,8 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     this.currentRange = heightRange
 
     return {
-      reader: await BulkFilesReaderFetchBackedStorage.fromStorage(storage, this.fetch, neededRange),
-      // This ingestor never returns live headers.
-      liveHeaders: undefined
+      // This ingestor never returns any of its own live headers.
+      liveHeaders: []
     }
   }
 }

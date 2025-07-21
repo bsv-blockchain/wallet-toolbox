@@ -4,22 +4,27 @@ import {
   ChaintracksStorageIngestApi,
   ChaintracksStorageQueryApi as ChaintracksStorageQueryApi
 } from '../Api/ChaintracksStorageApi'
-import { BulkFilesReader, BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkFilesReader'
+import { BulkFilesReader } from '../util/BulkFilesReader'
+import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
+import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
 import { BulkStorageApi } from '../Api/BulkStorageApi'
 import {
+  addWork,
+  convertBitsToWork,
   deserializeBaseBlockHeader,
   deserializeBlockHeader,
+  isMoreWork,
+  serializeBaseBlockHeader,
+  subWork,
   validateBufferOfHeaders
 } from '../util/blockHeaderUtilities'
 
 import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { Utils, Hash } from '@bsv/sdk'
-import { ChaintracksAppendableFileApi, ChaintracksFsApi, ChaintracksWritableFileApi } from '../Api/ChaintracksFsApi'
-import { BulkHeaderFile } from '../Storage/BulkBlockHeaders'
-import { WERR_INVALID_OPERATION } from '../../../../sdk'
-import { deserialize } from 'v8'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 
 /**
  * Support for block header hash to height index implementations
@@ -131,7 +136,12 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   async getAvailableHeightRanges(): Promise<{ bulk: HeightRange; live: HeightRange }> {
     await this.makeAvailable()
-    const bulk = (await this.bulkStorage?.getHeightRange()) || HeightRange.empty
+    let bulk = HeightRange.empty
+    if (this.bulkFiles && this.bulkFiles.length > 0) {
+      const firstFile = this.bulkFiles[0]
+      const lastFile = this.bulkFiles[this.bulkFiles.length - 1]
+      bulk = new HeightRange(firstFile.firstHeight, lastFile.firstHeight + lastFile.count - 1)
+    }
     const live = await this.getLiveHeightRange()
     if (bulk.isEmpty) {
       if (!live.isEmpty && live.minHeight !== 0)
@@ -269,9 +279,172 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     return Math.max(header1.height, header2.height) - ancestor.height
   }
 
-  async addOldBlockHeaders(headers: BlockHeader[], presentHeight: number): Promise<void> {
+  async addOldBlockHeaders(
+    headers: BlockHeader[], presentHeight?: number, priorLiveHeaders?: BlockHeader[]
+  )
+  : Promise<{ liveHeaders: BlockHeader[] }>
+  {
     await this.makeAvailable()
 
+    if (!headers || headers.length === 0) return { liveHeaders: priorLiveHeaders || [] }
+
+    const liveHeightThreshold = this.liveHeightThreshold
+    const reorgHeightThreshold = this.reorgHeightThreshold
+    const bulkMigrationChunkSize = this.bulkMigrationChunkSize
+    const batchInsertLimit = this.batchInsertLimit
+
+    // Get the current extent of validated bulk and live block headers.
     const { bulk, live } = await this.getAvailableHeightRanges()
+    const bulkFiles = this.bulkFiles
+
+    // Review `headers`, applying the following rules:
+    // 1. Height must be outside the current bulk HeightRange.
+    // 2. Height must not exceed presentHeight - liveHeightThreshold. If presentHeight is unknown, use maximum height across all headers.
+    // 3. Compute chainWork for each header.
+    // 4. Verify chain of header hash and previousHash values. One header at each height. Retain chain with most chainWork.
+
+    const filteredHeaders = headers.concat(priorLiveHeaders || []).filter(h => h.height > bulk.maxHeight)
+
+    const sortedHeaders = filteredHeaders.sort((a, b) => a.height - b.height)
+    const maxHeight = presentHeight || sortedHeaders.slice(-1)[0].height
+    const maxBulkHeight = maxHeight - liveHeightThreshold
+    const liveHeaders = sortedHeaders.filter(h => h.height > maxBulkHeight)
+
+    if (liveHeaders.length === sortedHeaders.length) {
+      // All headers are live, no bulk headers to add.
+      return { liveHeaders }
+    }
+
+    const chains: {
+      headers: BlockHeader[];
+      /**
+       * Total chainwork of headers.
+       */
+      chainWork: string
+      /**
+       * Total chainwork of headers with height not greater than maxBulkHeight.
+       */
+      bulkChainWork?: string;
+    }[] = []
+
+    for (const h of sortedHeaders) {
+      const dupe = chains.find(c => {
+        const lh = c.headers[c.headers.length - 1]
+        return lh.hash === h.hash
+      })
+      if (dupe) continue;
+      const chainWork = convertBitsToWork(h.bits)
+      let chain = chains.find(c => {
+        const lh = c.headers[c.headers.length - 1]
+        return lh.height + 1 === h.height && lh.hash === h.previousHash
+      })
+      if (chain) {
+        chain.headers.push(h)
+        chain.chainWork = addWork(chain.chainWork, chainWork)
+        if (h.height <= maxBulkHeight) {
+          chain.bulkChainWork = chain.chainWork
+        }
+        continue
+      }
+      // Since headers are assumed to be sorted by height,
+      // if this header doesn't extend an existing chain,
+      // it may be a branch from the previous header.
+      chain = chains.find(c => {
+        const lh = c.headers[c.headers.length - 2]
+        return lh.height + 1 === h.height && lh.hash === h.previousHash
+      })
+      if (chain) {
+        // This header competes with tip of `chain`.
+        // Create a new chain with this header as the tip.
+        const headers = chain.headers.slice(0, -1)
+        headers.push(h)
+        const otherHeaderChainWork = convertBitsToWork(chain.headers[chain.headers.length - 1].bits)
+        const newChainWork = addWork(subWork(chain.chainWork, otherHeaderChainWork), chainWork)
+        const newChain = {
+          headers,
+          chainWork: newChainWork,
+          bulkChainWork: h.height <= maxBulkHeight ? newChainWork : undefined
+        } 
+        chains.push(newChain)
+        continue
+      }
+      // Starting a new chain
+      chains.push({ headers: [h], chainWork, bulkChainWork: h.height <= maxBulkHeight ? chainWork : undefined })
+    }
+
+    // Find the chain with the most chainWork.
+    const bestChain = chains.reduce((best, c) => isMoreWork(c.chainWork, best.chainWork) ? c : best, chains[0])
+
+    const newBulkHeaders = bestChain.headers.slice(0, maxBulkHeight - bestChain.headers[0].height + 1)
+
+    // Add newBulkHeaders to storage.
+    const lbf = bulkFiles.slice(-1)[0]
+    if (!lbf || lbf.firstHeight + lbf.count !== newBulkHeaders[0].height) {
+      throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers')
+    }
+    if (!bestChain.bulkChainWork) {
+      throw new WERR_INTERNAL(`bulkChainWork is not defined for the best chain with height ${bestChain.headers[0].height}`)
+    }
+    if (!lbf.lastHash) {
+      throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`)
+    }
+
+    const fbh = newBulkHeaders[0]
+    const lbh = newBulkHeaders.slice(-1)[0]
+    const data = serializeBaseBlockHeaders(newBulkHeaders)
+
+    if (lbf.sourceUrl) {
+      // So far we only have CDN bulk files, add one for incremental bulk headers.
+      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
+      const bf: BulkHeaderFileInfo = {
+        fileId: 0,
+        chain: this.chain,
+        sourceUrl: undefined,
+        fileName: 'incremental',
+        firstHeight: fbh.height,
+        count: newBulkHeaders.length,
+        prevChainWork: lbf.lastChainWork,
+        lastChainWork: addWork(lbf.lastChainWork, bestChain.bulkChainWork),
+        prevHash: lbf.lastHash,
+        lastHash: lbh.hash,
+        fileHash,
+        data
+      }
+      bf.fileId = await this.insertBulkFile(bf)
+      this.bulkFiles.push(bf)
+    } else {
+      // Extend existing incremental bulk header file.
+      if (!lbf.fileId) {
+        throw new WERR_INTERNAL(`fileId is not defined for the last bulk file ${lbf.fileName}`)
+      }
+      if (!lbf.data) {
+        lbf.data = await this.getBulkFileData(lbf.fileId)
+        if (!lbf.data) {
+          throw new WERR_INTERNAL(`data is not defined for the last bulk file ${lbf.fileName}`)
+        }
+      }
+      const combinedData = new Uint8Array(lbf.data.length + data.length)
+      combinedData.set(lbf.data, 0)
+      combinedData.set(data, lbf.data.length)
+      lbf.data = combinedData
+      lbf.fileHash = asString(Hash.sha256(asArray(combinedData)), 'base64')
+      lbf.count += newBulkHeaders.length
+      lbf.lastChainWork = addWork(lbf.lastChainWork, bestChain.bulkChainWork),
+      lbf.lastHash = lbh.hash
+      await this.updateBulkFile(lbf.fileId, lbf)
+    }
+
+    return { liveHeaders }
   }
+}
+
+export function serializeBaseBlockHeaders(headers: BlockHeader[]): Uint8Array {
+  const data = new Uint8Array(headers.length * 80)
+  let i = -1
+  for (const header of headers) {
+    i++
+    const d = serializeBaseBlockHeader(header)
+    data.set(d, i * 80)
+  }
+  return data
 }

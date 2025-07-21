@@ -10,11 +10,12 @@ import {
   WERR_NOT_IMPLEMENTED
 } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
-import { BulkHeaderFileInfo, HeightRange, utils } from '..'
+import { addWork, blockHash, convertBitsToWork, isMoreWork, serializeBaseBlockHeader } from '../util/blockHeaderUtilities'
 import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
 import { determineDBType } from '../../../../index.all'
+import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
+import { HeightRange } from '../util/HeightRange'
 
 export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
   /**
@@ -48,10 +49,10 @@ export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOpt
  * Also see `chaintracksStorageMemory` which leverages Knex support for an in memory database.
  */
 export class ChaintracksStorageKnex extends ChaintracksStorageBase {
-  static createStorageKnexOptions(chain: Chain): ChaintracksStorageKnexOptions {
+  static createStorageKnexOptions(chain: Chain, knex?: Knex): ChaintracksStorageKnexOptions {
     const options: ChaintracksStorageKnexOptions = {
       ...ChaintracksStorageBase.createStorageBaseOptions(chain),
-      knex: undefined,
+      knex,
       headerTableName: `live_headers`,
       bulkBlockHashTableName: `bulk_hash`,
       bulkMerkleRootTableName: `bulk_merkle`
@@ -173,7 +174,9 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   }
 
   async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
-    const [id] = await this.knex(this.bulkFilesTableName).insert(file).returning('fileId')
+    if (file.fileId === 0) delete file.fileId
+    const [id] = await this.knex(this.bulkFilesTableName).insert(file)
+    file.fileId = id
     return id
   }
   async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
@@ -193,7 +196,8 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         'fileHash',
         'prevChainWork',
         'lastChainWork',
-        'validated'
+        'validated',
+        'sourceUrl'
       )
       .orderBy('firstHeight', 'asc')
     return files
@@ -267,7 +271,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         return false
       }
 
-      const chainWork = utils.addWork(oneBack.chainWork, utils.convertBitsToWork(header.bits))
+      const chainWork = addWork(oneBack.chainWork, convertBitsToWork(header.bits))
 
       let tip: LiveBlockHeader | undefined
       if (oneBack.isActive && oneBack.isChainTip) {
@@ -283,7 +287,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
 
       priorTip = tip
 
-      setActiveChainTip = utils.isMoreWork(chainWork, tip.chainWork)
+      setActiveChainTip = isMoreWork(chainWork, tip.chainWork)
 
       const newHeader = {
         ...header,
@@ -388,7 +392,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         isActive: true,
         isChainTip: false,
         hash: blockHash(h),
-        chainWork: utils.convertBitsToWork(h.bits)
+        chainWork: convertBitsToWork(h.bits)
       }
       liveHeaders.push(lh)
       return lh
@@ -404,7 +408,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       h.headerId = hp.headerId + 1
       h.previousHeaderId = hp.headerId
       h.height = hp.height + 1
-      h.chainWork = utils.addWork(h.chainWork, hp.chainWork)
+      h.chainWork = addWork(h.chainWork, hp.chainWork)
       return h
     }
 
@@ -438,7 +442,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         h0.headerId = maxHeaderId + 1
         h0.previousHeaderId = tip.headerId
         h0.height = tip.height + 1
-        h0.chainWork = utils.addWork(h0.chainWork, tip.chainWork)
+        h0.chainWork = addWork(h0.chainWork, tip.chainWork)
       }
 
       let hp = h0
@@ -527,7 +531,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       let buf = new Uint8Array(headers.length * 80)
       for (let i = 0; i < headers.length; i++) {
         const h = headers[i]
-        const ha = serializeBlockHeader(h)
+        const ha = serializeBaseBlockHeader(h)
         buf.set(ha, i * 80)
       }
       bufs.push(buf)
@@ -566,7 +570,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     const buffer = new Uint8Array(headers.length * 80)
     for (let i = 0; i < headers.length; i++) {
       const h = headers[i]
-      const ha = serializeBlockHeader(h)
+      const ha = serializeBaseBlockHeader(h)
       buffer.set(ha, i * 80)
     }
     const headerId = headers[headers.length - 1].headerId

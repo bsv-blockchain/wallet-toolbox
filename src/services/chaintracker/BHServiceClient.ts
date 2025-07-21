@@ -2,7 +2,7 @@ import { BlockHeadersService, Utils } from '@bsv/sdk'
 import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './chaintracks/ChaintracksServiceClient'
 import { sdk } from '../../index.client'
 import { BaseBlockHeader, BlockHeader } from './chaintracks'
-import { serializeBlockHeader } from './chaintracks/util/blockHeaderUtilities'
+import { serializeBaseBlockHeader } from './chaintracks/util/blockHeaderUtilities'
 
 interface BHSHeader {
   hash: string
@@ -106,7 +106,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
         bits: response.difficultyTarget,
         nonce: response.nonce
       }
-      return serializeBlockHeader(header)
+      return serializeBaseBlockHeader(header)
     })
     return headers.reduce((str: string, arr: number[]) => str + Utils.toHex(arr), '')
   }

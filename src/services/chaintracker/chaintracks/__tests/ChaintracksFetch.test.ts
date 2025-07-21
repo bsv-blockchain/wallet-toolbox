@@ -1,5 +1,5 @@
 import { Hash } from '@bsv/sdk'
-import { BulkHeaderFilesInfo } from '../util/BulkFilesReader'
+import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { validBulkHeaderFilesByFileHash } from '../util/validBulkHeaderFilesByFileHash'

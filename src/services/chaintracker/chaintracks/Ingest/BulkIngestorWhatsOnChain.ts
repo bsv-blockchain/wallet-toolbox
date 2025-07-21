@@ -1,12 +1,8 @@
 import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
-import { Chain, WERR_INVALID_OPERATION } from '../../../../sdk'
-import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
+import { Chain } from '../../../../sdk'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
 import { BulkIngestorBase } from '../Base/BulkIngestorBase'
-import { blockHash, serializeBlockHeader } from '../util/blockHeaderUtilities'
-import { BulkFilesReader } from '../util/BulkFilesReader'
-import { ChaintracksFs } from '../util/ChaintracksFs'
 import { HeightRange } from '../util/HeightRange'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
@@ -89,7 +85,7 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
      * Any live headers accumulated thus far which will be forwarded to live header storage.
      */
     priorLiveHeaders?: BlockHeader[]
-  ): Promise<{ reader: BulkFilesReader; liveHeaders: BlockHeader[] }> {
+  ): Promise<{ liveHeaders: BlockHeader[] }> {
     let fromHeight: number
 
     if (!neededRange.isEmpty) {
@@ -101,16 +97,10 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
       fromHeight = presentHeight - 10
     }
 
-    const liveHeaders: BlockHeader[] = []
-    const bulkHeaders: BlockHeader[] = []
+    const oldHeaders: BlockHeader[] = []
     const errors: { code: number; message: string; count: number }[] = []
     const enqueue: EnqueueHandler = header => {
-      const height = header.height
-      if (!neededRange.isEmpty && header.height <= neededRange.maxHeight) {
-        bulkHeaders.push(header)
-      } else {
-        liveHeaders.push(header)
-      }
+      oldHeaders.push(header)
     }
     const error: ErrorHandler = (code, message) => {
       errors.push({ code, message, count: errors.length })
@@ -118,53 +108,17 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     }
     const ok = await this.woc.listenForOldBlockHeaders(fromHeight, presentHeight, enqueue, error, this.idleWait)
 
-    if (ok) await this.storage().addOldBlockHeaders(bulkHeaders, liveHeaders, presentHeight)
-
-    if (bulkHeaders.length) fromHeight = bulkHeaders[bulkHeaders.length - 1].height + 1
-    if (!ok || errors.length > 0) {
-      console.log(`WhatsOnChain bulk ingestor ok=${ok} error count=${errors.length}`)
-      for (const e of errors) console.log(`WhatsOnChain error code=${e.code} count=${e.count} message=${e.message}`)
+    let liveHeaders: BlockHeader[] = []
+    if (ok) {
+      const r = await this.storage().addOldBlockHeaders(oldHeaders, presentHeight, priorLiveHeaders)
+      liveHeaders = r.liveHeaders
     }
 
-    if (bulkHeaders.length > 0) {
-      // Sanitize headers received...
-      // Oldest header's height must equal neededRange.minHeight
-      // From newest header, previousHash must equal hash of previous header.
-      let sanitized = new Array<number>(0)
-      let lastPreviousHash: string | undefined
-      let lastHeight: number | undefined
-      const j = bulkHeaders.length
-      for (let i = j - 1; i >= 0; i--) {
-        const header = bulkHeaders[i]
-        if (lastHeight !== undefined && lastHeight - 1 !== header.height) {
-          console.log(
-            `WhatsOnChain bulk ingestor skipping header at height ${lastHeight - 1}, found ${header.height} ${header.hash}`
-          )
-          continue
-        }
-        const buffer = serializeBlockHeader(header)
-        const hash = blockHash(buffer)
-        if (lastPreviousHash && hash !== lastPreviousHash) {
-          console.log(
-            `WhatsOnChain bulk ingestor skipping header at height ${header.height}, hash ${header.hash} is not expected previous hash ${lastPreviousHash}`
-          )
-          continue
-        }
-        sanitized = buffer.concat(sanitized)
-        lastPreviousHash = header.previousHash
-        lastHeight = header.height
-      }
-
-      if (lastHeight && (manager.range.isEmpty || lastHeight === manager.range.maxHeight + 1) && lastPreviousHash) {
-        const newBulkHeaders = sanitized
-        const firstHeight = lastHeight
-        const previousHash = lastPreviousHash
-        await manager.appendHeaders(asUint8Array(newBulkHeaders), firstHeight, previousHash)
-        manager.nextHeight = firstHeight
-      }
+    if (errors.length > 0) {
+      const errorMessages = errors.map(e => `(${e.code}) ${e.message} (${e.count})`).join('\n')
+      logger(`Errors during WhatsOnChain ingestion:\n${errorMessages}`)
     }
 
-    manager.resetRange(neededRange)
-    return { reader: manager, liveHeaders }
+    return { liveHeaders }
   }
 }

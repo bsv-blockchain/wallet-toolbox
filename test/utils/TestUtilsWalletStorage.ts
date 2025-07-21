@@ -1935,7 +1935,8 @@ function mockPostServices(
 let logEnabled: boolean = false
 
 /**
- * Centralized logging function to handle logging based on the `logEnabled` flag.
+ * Centralized logging function to handle logging based on running in jest "single test" mode,
+ * or when `logEnabled` is true.
  *
  * @param {string} message - The main message to log.
  * @param {...any} optionalParams - Additional parameters to log (optional).

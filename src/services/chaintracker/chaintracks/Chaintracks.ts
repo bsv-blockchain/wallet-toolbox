@@ -12,6 +12,7 @@ import { ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/Chaintr
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './Api/BlockHeaderApi'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
 import { randomBytesBase64, wait } from '../../../index.client'
+import { HeightRange, HeightRanges } from './util/HeightRange'
 
 export class Chaintracks implements ChaintracksManagementApi {
   static createOptions(chain: Chain): ChaintracksOptions {
@@ -45,7 +46,6 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   private componentsInitialized = false
 
-  private hasBeenSynchronized = false
   private synchronizing = false
   private lastSynchronizePresentHeight: number | undefined
 
@@ -177,75 +177,68 @@ export class Chaintracks implements ChaintracksManagementApi {
     this.baseHeaders.push(header)
   }
 
-  async synchronize(presentHeight?: number): Promise<void> {
-    //if (this.isClientApiEnabled)
-    //    throw new Error("Client mode. Management functions are not allowed.")
+  async syncBulkStorage(presentHeight: number, before: HeightRanges): Promise<void> {
 
-    if (!this.synchronizing && !this.hasBeenSynchronized)
-      try {
-        this.synchronizing = true
-        await this.initializeComponents()
+    if (this.synchronizing) return
 
-        presentHeight = presentHeight || (await this.getPresentHeight())
+    try {
+      this.synchronizing = true
+      await this.initializeComponents()
 
-        if (this.lastSynchronizePresentHeight === presentHeight) return
+      if (this.lastSynchronizePresentHeight && this.lastSynchronizePresentHeight >= presentHeight) return
 
-        this.log('Synchronizing')
+      this.log('Synchronizing')
 
-        // Iterate through configured bulk ingestors, each bulk ingestor must:
-        // - examine the state of block headers known to the storage engine
-        // - examine its available source of block headers
+      // Iterate through configured bulk ingestors, each bulk ingestor must:
+      // - examine the state of block headers known to the storage engine
+      // - examine its available source of block headers
 
-        let liveHeaders: BlockHeader[] = []
+      let liveHeaders: BlockHeader[] = []
 
-        const before = await this.storageEngine.getAvailableHeightRanges()
-        let bulkDone = false
+      let bulkDone = false
 
-        for (const bulk of this.bulkIngestors) {
-          for (;;) {
-            try {
-              const newLiveHeaders = await bulk.synchronize(presentHeight, liveHeaders)
-              if (newLiveHeaders && newLiveHeaders.length > 0) liveHeaders = liveHeaders.concat(newLiveHeaders)
-              else break // Try a different bulk ingestor if we got nothing from this one...
-              if (liveHeaders && liveHeaders.length > 0) {
-                const h = liveHeaders[liveHeaders.length - 1]
-                if (h.height > presentHeight - 12) {
-                  // If bulk + liveHeaders is close enough to presentHeight, bulk ingesting is done.
-                  bulkDone = true
-                  break
-                }
+      for (const bulk of this.bulkIngestors) {
+        for (; ;) {
+          try {
+            liveHeaders = await bulk.synchronize(presentHeight, before, liveHeaders)
+            if (liveHeaders.length > 0) {
+              const h = liveHeaders[liveHeaders.length - 1]
+              if (h.height > presentHeight - 12) {
+                // If bulk + liveHeaders is close enough to presentHeight, bulk ingesting is done.
+                bulkDone = true
+                break
               }
-            } catch (uerr: unknown) {
-              console.log(uerr)
             }
+          } catch (uerr: unknown) {
+            console.log(uerr)
           }
-          if (bulkDone) break
         }
-        this.liveHeaders = liveHeaders || []
-
-        const after = await this.storageEngine.getAvailableHeightRanges()
-        const added = after.bulk.above(before.bulk)
-
-        console.log(`Before synchronize: bulk ${before.bulk}, live ${before.live}`)
-        console.log(` After synchronize: bulk ${after.bulk}, live ${after.live}`)
-        console.log(` ${added.length} headers added to bulk storage`)
-        console.log(` ${this.liveHeaders.length} headers forwarded to live header storage`)
-
-        if (this.storageEngine.bulkStorage && after.live.isEmpty && this.liveHeaders.length > 0) {
-          console.log('validating bulk storage headers')
-          this.livePrevHeader = await this.storageEngine.bulkStorage.validateHeaders()
-          console.log('validated bulk storage headers')
-        }
-
-        this.lastSynchronizePresentHeight = presentHeight
-        this.hasBeenSynchronized = true
-      } finally {
-        this.synchronizing = false
+        if (bulkDone) break
       }
+      this.liveHeaders = liveHeaders
+
+      const after = await this.storageEngine.getAvailableHeightRanges()
+      const added = after.bulk.above(before.bulk)
+
+      console.log(`Before synchronize: bulk ${before.bulk}, live ${before.live}`)
+      console.log(` After synchronize: bulk ${after.bulk}, live ${after.live}`)
+      console.log(` ${added.length} headers added to bulk storage`)
+      console.log(` ${this.liveHeaders.length} headers forwarded to live header storage`)
+
+      if (this.storageEngine.bulkStorage && after.live.isEmpty && this.liveHeaders.length > 0) {
+        console.log('validating bulk storage headers')
+        this.livePrevHeader = await this.storageEngine.bulkStorage.validateHeaders()
+        console.log('validated bulk storage headers')
+      }
+
+      this.lastSynchronizePresentHeight = presentHeight
+    } finally {
+      this.synchronizing = false
+    }
   }
 
   async isSynchronized(): Promise<boolean> {
-    return this.hasBeenSynchronized
+    return !!this.lastSynchronizePresentHeight
   }
 
   async isListening(): Promise<boolean> {
@@ -278,23 +271,28 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
     } else
       try {
-        this.log('Listening Start')
-
         this.startListeningActive = true
         this.listeningCallback = listening
 
         await this.initializeComponents()
 
         const presentHeight = await this.getPresentHeight()
+        const before = await this.storageEngine.getAvailableHeightRanges()
 
-        this.hasBeenSynchronized = false
-        await this.synchronize(presentHeight)
+        this.log(`Listening Start
+  presentHeight=${presentHeight}
+  Before synchronize: bulk ${before.bulk}, live ${before.live}
+`)
+
+        // Bring bulk storage up-to-date and initialize liveHeaders
+        await this.syncBulkStorage(presentHeight, before)
 
         this.stopShiftLiveHeaders = false
 
+        // Collection of all long running "threads": liveHeaders consumer and each live header ingestor.
         const promises: Promise<void>[] = []
 
-        // Start loop to shift out liveHeaders...long running.
+        // Start loop to shift out liveHeaders...
         promises.push(this.shiftLiveHeaders(presentHeight))
 
         // Start all live ingestors to push new headers onto liveHeaders... each long running.
@@ -384,7 +382,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   private checkIfClientApiIsEnabled() {
     if (this.isClientApiEnabled) return
-    if (!this.hasBeenSynchronized) throw new Error('Chaintracks must be synchronized to enable the client API.')
+    if (!this.lastSynchronizePresentHeight) throw new Error('Chaintracks must be synchronized to enable the client API.')
     if (!this.subscriberCallbacksEnabled)
       throw new Error('Chaintracks must be listening for new headers to enable the client API.')
   }

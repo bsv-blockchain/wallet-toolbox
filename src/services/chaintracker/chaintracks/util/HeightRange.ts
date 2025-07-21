@@ -3,6 +3,11 @@ export interface HeightRangeApi {
   maxHeight: number
 }
 
+export interface HeightRanges {
+  bulk: HeightRange
+  live: HeightRange
+}
+
 export class HeightRange implements HeightRangeApi {
   constructor(
     public minHeight: number,

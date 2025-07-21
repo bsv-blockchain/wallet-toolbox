@@ -2,6 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 import { Chain } from '../../../../sdk/types'
+import { HeightRanges } from '../util/HeightRange'
 import { BlockHeader } from './BlockHeaderApi'
 import { ChaintracksFsApi } from './ChaintracksFsApi'
 import { ChaintracksStorageApi } from './ChaintracksStorageApi'
@@ -58,9 +59,9 @@ export interface BulkIngestorApi {
    *
    * @param presentHeight approximate current height of public chain tip, if known
    * @param priorLiveHeaders any liveHeaders already obtained from a bulk ingestor
-   * @returns optional array of live block headers
+   * @returns live block headers after update. Must include priorLiveHeaders if any.
    */
-  synchronize(presentHeight: number, priorLiveHeaders?: BlockHeader[]): Promise<BlockHeader[] | undefined>
+  synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
 
   /**
    * Called before first Synchronize with reference to storage.

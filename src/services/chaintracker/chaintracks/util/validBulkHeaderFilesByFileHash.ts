@@ -1,4 +1,20 @@
-import { BulkHeaderFileInfo } from './BulkFilesReader'
+import { BulkHeaderFileInfo } from './BulkHeaderFile'
+
+export function isKnownValidBulkHeaderFile(vbf: BulkHeaderFileInfo): boolean {
+  if (!vbf || !vbf.fileHash) return false
+  const bf = validBulkHeaderFilesByFileHash[vbf.fileHash]
+  if (!bf
+    || bf.firstHeight !== vbf.firstHeight
+    || bf.count !== vbf.count
+    || bf.prevChainWork !== vbf.prevChainWork
+    || bf.prevHash !== vbf.prevHash
+    || bf.lastChainWork !== vbf.lastChainWork
+    || bf.lastHash !== vbf.lastHash
+    || bf.chain !== vbf.chain) {
+    return false
+  }
+  return true
+}
 
 export const validBulkHeaderFilesByFileHash: Record<string, BulkHeaderFileInfo> = {
   'gAJPUfI2DfAabJTOBxT1rwy1cS4/QULaQHaQWa1RWNk=': {

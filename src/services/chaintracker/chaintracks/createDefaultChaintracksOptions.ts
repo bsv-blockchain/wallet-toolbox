@@ -28,8 +28,8 @@ export function createDefaultChaintracksOptions(
   const fs = ChaintracksFs
   const fetch = new ChaintracksFetch()
 
-  const bulkStorageOptions = BulkStorageFile.createBulkStorageFileOptions(chain, fs, rootFolder)
-  options.bulkStorage = new BulkStorageFile(bulkStorageOptions)
+  //const bulkStorageOptions = BulkStorageFile.createBulkStorageFileOptions(chain, fs, rootFolder)
+  //options.bulkStorage = new BulkStorageFile(bulkStorageOptions)
 
   const localSqlite: Knex.Config = {
     client: 'sqlite3',
@@ -45,15 +45,12 @@ export function createDefaultChaintracksOptions(
 
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
     chain,
-    fs,
     fetch,
-    `${rootFolder}/bulk_cdn/`
   )
   options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
 
   const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChain.createBulkIngestorWhatsOnChainOptions(
     chain,
-    `${rootFolder}/ingest_woc/`
   )
   options.bulkIngestors.push(new BulkIngestorWhatsOnChain(bulkWhatsOnChainOptions))
 

@@ -12,9 +12,7 @@ export class BulkIngestorCDNBabbage extends BulkIngestorCDN {
    */
   static createBulkIngestorCDNBabbageOptions(
     chain: Chain,
-    fs: ChaintracksFsApi,
     fetch: ChaintracksFetchApi,
-    localCachePath?: string
   ): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
       ...BulkIngestorCDN.createBulkIngestorCDNOptions(chain, fetch),

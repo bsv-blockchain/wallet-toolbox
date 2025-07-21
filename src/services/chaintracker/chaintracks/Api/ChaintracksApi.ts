@@ -24,22 +24,6 @@ export interface ChaintracksOptions {
 }
 
 export interface ChaintracksManagementApi extends ChaintracksApi {
-  /**
-   * `synchronize` is always called automatically at the start of `startListening`
-   *
-   * It may be called directly to control when bulk synchronization happens in
-   * situations where a significant number of headers need to be ingested before
-   * new headers can be processed.
-   *
-   * Call this when you've been offline for a while, otherwise just call `startListening`.
-   *
-   * Returns when all bulk headers available at the time of the call have been integrated
-   * with the local storage engine and any recent live headers are made available to
-   * `startListening`.
-   *
-   * May be called if already synchronized or synchronizing in which case the request is ignored.
-   */
-  synchronize(): Promise<void>
 
   /**
    * close and release all resources
