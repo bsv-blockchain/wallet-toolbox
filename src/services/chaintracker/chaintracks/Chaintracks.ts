@@ -177,17 +177,13 @@ export class Chaintracks implements ChaintracksManagementApi {
     this.baseHeaders.push(header)
   }
 
-  async syncBulkStorage(presentHeight: number, before: HeightRanges): Promise<void> {
+  async syncBulkStorage(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
 
     if (this.synchronizing) return
 
     try {
       this.synchronizing = true
       await this.initializeComponents()
-
-      if (this.lastSynchronizePresentHeight && this.lastSynchronizePresentHeight >= presentHeight) return
-
-      this.log('Synchronizing')
 
       // Iterate through configured bulk ingestors, each bulk ingestor must:
       // - examine the state of block headers known to the storage engine
@@ -196,11 +192,21 @@ export class Chaintracks implements ChaintracksManagementApi {
       let liveHeaders: BlockHeader[] = []
 
       let bulkDone = false
+      let before = initialRanges
+      let after = before
+      let added = HeightRange.empty
 
-      for (const bulk of this.bulkIngestors) {
-        for (; ;) {
+      for (; ;) {
+        for (const bulk of this.bulkIngestors) {
           try {
+
             liveHeaders = await bulk.synchronize(presentHeight, before, liveHeaders)
+
+            after = await this.storageEngine.getAvailableHeightRanges()
+            added = after.bulk.above(before.bulk)
+            before = after
+            this.log(`Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`)
+
             if (liveHeaders.length > 0) {
               const h = liveHeaders[liveHeaders.length - 1]
               if (h.height > presentHeight - 12) {
@@ -217,18 +223,19 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
       this.liveHeaders = liveHeaders
 
-      const after = await this.storageEngine.getAvailableHeightRanges()
-      const added = after.bulk.above(before.bulk)
+      added = after.bulk.above(initialRanges.bulk)
 
-      console.log(`Before synchronize: bulk ${before.bulk}, live ${before.live}`)
-      console.log(` After synchronize: bulk ${after.bulk}, live ${after.live}`)
-      console.log(` ${added.length} headers added to bulk storage`)
-      console.log(` ${this.liveHeaders.length} headers forwarded to live header storage`)
+      this.log(`syncBulkStorage done
+  Before sync: bulk ${before.bulk}, live ${before.live}
+   After sync: bulk ${after.bulk}, live ${after.live}
+  ${added.length} headers added to bulk storage
+  ${this.liveHeaders.length} headers forwarded to live header storage
+`)
 
       if (this.storageEngine.bulkStorage && after.live.isEmpty && this.liveHeaders.length > 0) {
-        console.log('validating bulk storage headers')
+        this.log('validating bulk storage headers')
         this.livePrevHeader = await this.storageEngine.bulkStorage.validateHeaders()
-        console.log('validated bulk storage headers')
+        this.log('validated bulk storage headers')
       }
 
       this.lastSynchronizePresentHeight = presentHeight
@@ -279,13 +286,17 @@ export class Chaintracks implements ChaintracksManagementApi {
         const presentHeight = await this.getPresentHeight()
         const before = await this.storageEngine.getAvailableHeightRanges()
 
+        const chunkSize = this.storageEngine.bulkMigrationChunkSize
+        const skipBulkSync = !before.live.isEmpty && before.live.maxHeight >= presentHeight - chunkSize
+
         this.log(`Listening Start
   presentHeight=${presentHeight}
   Before synchronize: bulk ${before.bulk}, live ${before.live}
+  ${skipBulkSync ? 'Skipping' : 'Starting'} syncBulkStorage.
 `)
 
         // Bring bulk storage up-to-date and initialize liveHeaders
-        await this.syncBulkStorage(presentHeight, before)
+        if (!skipBulkSync) await this.syncBulkStorage(presentHeight, before);
 
         this.stopShiftLiveHeaders = false
 

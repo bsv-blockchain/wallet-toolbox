@@ -261,6 +261,24 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         oneBack = prev
 
       if (!oneBack) {
+        // Check if this is first live header...
+        const r = await trx(table).count()
+        const count = Number(r[0]['count(*)'])
+        if (count === 0) {
+          const lbf = this.bulkFiles.slice(-1)[0]
+          if (header.previousHash === lbf.lastHash && header.height === lbf.firstHeight + lbf.count) {
+            const chainWork = addWork(lbf.lastChainWork, convertBitsToWork(header.bits))
+            const newHeader = {
+              ...header,
+              previousHeaderId: null,
+              chainWork,
+              isChainTip: true,
+              isActive: true
+            }
+            await trx<LiveBlockHeader>(table).insert(newHeader)
+            return true
+          }
+        }
         // Never add a header that doesn't extend existing headers.
         // Or one that's confused about its height.
         noPrev = true

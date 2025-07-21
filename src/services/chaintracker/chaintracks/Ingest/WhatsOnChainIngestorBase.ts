@@ -97,7 +97,7 @@ export async function WocHeadersBulkListener(
   chain: WocChain = 'main',
   idleWait = 5000
 ): Promise<boolean> {
-  logger(`WocHeadersBulkListener from ${fromHeight} to ${toHeight} on ${chain} chain`)
+  //logger(`WocHeadersBulkListener from ${fromHeight} to ${toHeight} on ${chain} chain`)
 
   let done = false
   let count = 0
@@ -195,7 +195,7 @@ export async function WocHeadersBulkListener(
   const ws = new WebSocket(webSocketUrl)
 
   ws.onopen = function (this, evt) {
-    logger(`WoC ${new Date().toISOString()} addHeaders from ${fromHeight} on ${chain}`)
+    //logger(`WoC ${new Date().toISOString()} addHeaders from ${fromHeight} on ${chain}`)
     // This is required to trigger connect on server side.
     ws.send(JSON.stringify({}))
     wsIsOpen = true
@@ -221,7 +221,7 @@ export async function WocHeadersBulkListener(
   ws.onclose = function (this, ev) {
     // ok should be true if we got the last header, false otherwise.
     // error will have been called with anything abnormal...
-    logger(`WoC ${new Date().toISOString()} addHeaders input service closed`)
+    //logger(`WoC ${new Date().toISOString()} addHeaders input service closed`)
     done = true
   }
 
@@ -250,7 +250,7 @@ export async function WocHeadersBulkListener(
     waitCycles++
   }
 
-  logger(`WoC ${new Date().toISOString()} ${count} headers added`)
+  //logger(`WoC ${new Date().toISOString()} ${count} headers added`)
 
   return ok
 }
@@ -415,7 +415,7 @@ export async function WocHeadersLiveListener(
     */
 
   ws.onopen = function (this, evt) {
-    logger(`WoC ${new Date().toISOString()} listening for new headers`)
+    //logger(`WoC ${new Date().toISOString()} listening for new headers`)
     // This is required to trigger connect on server side.
     ws.send(JSON.stringify({}))
     wsIsOpen = true
@@ -441,7 +441,7 @@ export async function WocHeadersLiveListener(
   ws.onclose = function (this, ev) {
     // ok should be true if we got the last header, false otherwise.
     // error will have been called with anything abnormal...
-    logger(`WoC ${new Date().toISOString()} listening for new headers service closed`)
+    //logger(`WoC ${new Date().toISOString()} listening for new headers service closed`)
     done = true
   }
 

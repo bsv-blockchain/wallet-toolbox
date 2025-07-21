@@ -100,7 +100,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
       )
 
     // Bulk storage only applies to headers at least liveHeightThreshold old...
-    let newBulkRange = new HeightRange(0, presentHeight - storage.liveHeightThreshold).subtract(bulkRange)
+    let newBulkRange = new HeightRange(0, presentHeight).subtract(bulkRange)
 
     // newBulkRange may be empty, we still need bulk ingestor to retrieve missing liveHeaders efficiently
     const { liveHeaders } = await this.updateLocalCache(newBulkRange, presentHeight, priorLiveHeaders)
