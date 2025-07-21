@@ -32,7 +32,7 @@
   "dependencies": {
     "@bsv/auth-express-middleware": "^1.2.2",
     "@bsv/payment-express-middleware": "^1.2.3",
-    "@bsv/sdk": "^1.6.17",
+    "@bsv/sdk": "^1.6.18",
     "express": "^4.21.2",
     "idb": "^8.0.2",
     "knex": "^3.1.0",
