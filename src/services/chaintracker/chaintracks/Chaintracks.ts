@@ -19,7 +19,6 @@ export class Chaintracks implements ChaintracksManagementApi {
     return {
       chain,
       storageEngine: undefined,
-      bulkStorage: undefined,
       bulkIngestors: [],
       liveIngestors: [],
       addLiveRecursionLimit: 36,
@@ -31,7 +30,6 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   chain: Chain
   storageEngine: ChaintracksStorageApi
-  bulkStorage?: BulkStorageApi
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
   addLiveRecursionLimit = 11
@@ -62,7 +60,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       throw new Error('At least one live ingestor is required.')
     this.chain = options.chain
     this.storageEngine = options.storageEngine
-    this.bulkStorage = options.bulkStorage
     this.bulkIngestors = options.bulkIngestors
     this.liveIngestors = options.liveIngestors
 
@@ -98,7 +95,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       heightBulk: liveRange.minHeight - 1,
       heightLive: liveRange.maxHeight,
       storageEngine: this.storageEngine.constructor.name,
-      bulkStorage: this.bulkStorage?.constructor.name,
       bulkIngestors: this.bulkIngestors.map(bulkIngestor => bulkIngestor.constructor.name),
       liveIngestors: this.liveIngestors.map(liveIngestor => liveIngestor.constructor.name),
       packages: []
@@ -232,12 +228,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   ${this.liveHeaders.length} headers forwarded to live header storage
 `)
 
-      if (this.storageEngine.bulkStorage && after.live.isEmpty && this.liveHeaders.length > 0) {
-        this.log('validating bulk storage headers')
-        this.livePrevHeader = await this.storageEngine.bulkStorage.validateHeaders()
-        this.log('validated bulk storage headers')
-      }
-
       this.lastSynchronizePresentHeight = presentHeight
     } finally {
       this.synchronizing = false
@@ -341,7 +331,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       for (const liveIn of this.liveIngestors) await liveIn.shutdown()
       for (const bulkIn of this.bulkIngestors) await bulkIn.shutdown()
       await this.storageEngine.shutdown()
-      await this.bulkStorage?.shutdown()
       this.log('Shutdown')
     }
     this.componentsInitialized = false
@@ -376,11 +365,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   async exportBulkHeaders(rootFolder: string, jsonFilename?: string, maxPerFile?: number): Promise<void> {
     jsonFilename ||= `${this.chain}Net.json`
     maxPerFile ||= 400000
-    if (this.bulkStorage) {
-      this.log(`Exporting bulk headers to ${rootFolder}`)
-      await this.bulkStorage.exportBulkHeaders(rootFolder, jsonFilename, maxPerFile)
-      this.log(`Exporting bulk headers done.`)
-    } else this.log(`bulkStorage is not configured in options.`)
+    throw new Error('not re-implemented yet.')
   }
 
   //
@@ -403,7 +388,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       // Make sure database schema exists and is updated...
       await this.storageEngine.migrateLatest()
 
-      await this.storageEngine.setBulkStorage(this.bulkStorage)
       for (const bulkIn of this.bulkIngestors) await bulkIn.setStorage(this.storageEngine)
       for (const liveIn of this.liveIngestors) await liveIn.setStorage(this.storageEngine)
     }

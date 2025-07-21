@@ -89,8 +89,6 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
       // Already up-to-date...
       return []
 
-    //if (!storage.bulkStorage) throw new Error('Insoncistent storage state.')
-
     if (!storageRange.isEmpty && storageRange.minHeight > 0)
       throw new Error('Between bulk and live storage, the genesis header (height zero) is required.')
 

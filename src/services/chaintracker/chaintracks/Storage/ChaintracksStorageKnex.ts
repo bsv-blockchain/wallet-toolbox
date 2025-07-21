@@ -114,16 +114,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     return { minHeight: resultrow.minHeight, maxHeight }
   }
 
-  async findBulkHeightForBlockHash(hash: string): Promise<number | null> {
-    const [row] = await this.knex<BlockHashHeight>(this.bulkBlockHashTableName).where({ hash: hash })
-    return row?.height || null
-  }
-
-  async findBulkHeightForMerkleRoot(merkleRoot: string): Promise<number | null> {
-    const [row] = await this.knex<MerkleRootHeight>(this.bulkMerkleRootTableName).where({ merkleRoot: merkleRoot })
-    return row?.height || null
-  }
-
   async findLiveHeaderForHeaderId(headerId: number): Promise<LiveBlockHeader> {
     const [header] = await this.knex<LiveBlockHeader>(this.headerTableName).where({ headerId: headerId })
     if (!header) throw new Error(`HeaderId ${headerId} not found in live header database.`)
@@ -535,13 +525,14 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
 
     const bufs: Uint8Array[] = []
 
-    if (this.bulkStorage && (headers.length === 0 || headers[0].height > height)) {
+    if (headers.length === 0 || headers[0].height > height) {
       // Some or all headers requested are in bulk storage...
       // There may be some overlap between bulk and live, headers are only
       // deleted from live after they have been added to bulk.
       // Only get what is needed.
       const bulkCount = headers.length === 0 ? count : headers[0].height - height
-      bufs.push(await this.bulkStorage.headersToBuffer(height, bulkCount))
+      //bufs.push(await this.bulkStorage.headersToBuffer(height, bulkCount))
+      throw new Error('TODO IMPLEMENT BULK STORAGE')
     }
 
     if (headers.length > 0) {

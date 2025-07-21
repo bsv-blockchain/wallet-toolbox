@@ -8,7 +8,6 @@ import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 export interface ChaintracksOptions {
   chain: Chain
   storageEngine: ChaintracksStorageApi | undefined
-  bulkStorage: BulkStorageApi | undefined
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
 

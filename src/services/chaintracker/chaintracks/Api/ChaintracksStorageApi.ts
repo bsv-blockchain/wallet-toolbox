@@ -36,7 +36,7 @@ export interface ChaintracksStorageBaseOptions {
 
   /**
    * How many excess "live" headers to accumulate before migrating them as a chunk to the
-   * `bulkStorageEngine`.
+   * bulk header storage.
    */
   bulkMigrationChunkSize: number
 
@@ -210,7 +210,7 @@ export interface ChaintracksStorageQueryApi {
 
   /**
    * How many excess "live" headers to accumulate before migrating them as a chunk to the
-   * `bulkStorageEngine`.
+   * bulk header storage.
    */
   bulkMigrationChunkSize: number
 
@@ -218,11 +218,6 @@ export interface ChaintracksStorageQueryApi {
    * Maximum number of headers per call to batchInsert
    */
   batchInsertLimit: number
-
-  /**
-   * Optional "bulk" storage engine to which headers are migrated after exceeding the `liveHeightThreshold`
-   */
-  bulkStorage?: BulkStorageApi
 }
 
 export type InsertHeaderResult = {
@@ -382,11 +377,4 @@ export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, Chain
    * Close and release all resources.
    */
   shutdown(): Promise<void>
-
-  /**
-   * Configure the bulk storage service to be used, if not undefinedd.
-   * Initialize any resources.
-   * @param bulk
-   */
-  setBulkStorage(bulk?: BulkStorageApi): Promise<void>
 }

@@ -64,7 +64,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   reorgHeightThreshold: number
   bulkMigrationChunkSize: number
   batchInsertLimit: number
-  bulkStorage?: BulkStorageApi
 
   isAvailable: boolean = false
   hasMigrated: boolean = false
@@ -82,13 +81,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     /* base class does notning */
   }
 
-  async setBulkStorage(bulk?: BulkStorageApi): Promise<void> {
-    this.bulkStorage = bulk
-    if (this.bulkStorage) {
-      await this.bulkStorage.setStorage(this)
-    }
-  }
-
   async makeAvailable(): Promise<void> {
     if (this.isAvailable) return
     this.isAvailable = true
@@ -103,8 +95,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   abstract batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void>
   abstract deleteOlderLiveBlockHeaders(headerId: number): Promise<void>
-  abstract findBulkHeightForBlockHash(hash: string): Promise<number | null>
-  abstract findBulkHeightForMerkleRoot(merkleRoot: string): Promise<number | null>
   abstract findChainTipHeader(): Promise<LiveBlockHeader>
   abstract findChainTipHeaderOrUndefined(): Promise<LiveBlockHeader | undefined>
   abstract findLiveHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | null>
@@ -123,14 +113,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
   abstract getBulkFiles(): Promise<BulkHeaderFileInfo[]>
   abstract getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined>
-
-  /**
-   * Use to throw a consistent error when bulk storage is not configured
-   *  and a method is called that requires bulk storage.
-   */
-  confirmHasBulkStorage() {
-    if (!this.bulkStorage) throw new Error('Bulk storage is not configured in `ChaintracksStorageBaseOptions`.')
-  }
 
   // BASE CLASS IMPLEMENTATIONS - MAY BE OVERRIDEN
 
@@ -159,7 +141,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   async pruneLiveBlockHeaders(activeTipHeight: number): Promise<void> {
     await this.makeAvailable()
     try {
-      if (!this.bulkStorage) return
 
       const minHeight = this.lastActiveMinHeight || (await this.findLiveHeightRange()).minHeight
 
@@ -180,7 +161,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   async migrateLiveToBulk(count: number): Promise<void> {
     await this.makeAvailable()
-    if (!this.bulkStorage || count > this.bulkMigrationChunkSize) return
+    if (count > this.bulkMigrationChunkSize) return
 
     if (this.nowMigratingLiveToBulk) {
       console.log('Already migrating live to bulk.')
@@ -195,7 +176,8 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
       const { buffer, headerId } = await this.headersToBuffer(minHeight, count)
 
       // Append the buffer of headers to BulkStorage
-      await this.bulkStorage.appendHeaders(minHeight, count, buffer)
+      // await this.bulkStorage.appendHeaders(minHeight, count, buffer)
+      throw new Error('TODO IMPLEMENT ME')
 
       // Delete the records from the live database.
       await this.deleteOlderLiveBlockHeaders(headerId)
@@ -242,7 +224,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     const liveHeader = await this.findLiveHeaderForHeight(height)
     if (liveHeader !== null) return liveHeader
     let header = await this.findBulkFilesHeaderForHeightOrUndefined(height)
-    if (!header) header = await this.bulkStorage?.findHeaderForHeightOrUndefined(height)
     return header
   }
 
