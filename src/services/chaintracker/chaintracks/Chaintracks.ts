@@ -187,7 +187,8 @@ export class Chaintracks implements ChaintracksManagementApi {
       let after = before
       let added = HeightRange.empty
 
-      for (; ;) {
+      let done = false
+      for (; !done;) {
         for (const bulk of this.bulkIngestors) {
           try {
 
@@ -199,7 +200,10 @@ export class Chaintracks implements ChaintracksManagementApi {
             before = after
             this.log(`Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`)
 
-            if (r.done) return
+            if (r.done) {
+              done = true
+              break
+            }
 
           } catch (uerr: unknown) {
             console.log(uerr)
@@ -267,7 +271,7 @@ export class Chaintracks implements ChaintracksManagementApi {
         const before = await this.storageEngine.getAvailableHeightRanges()
 
         const chunkSize = this.storageEngine.bulkMigrationChunkSize
-        const skipBulkSync = !before.live.isEmpty && before.live.maxHeight >= presentHeight - chunkSize
+        const skipBulkSync = false && !before.live.isEmpty && before.live.maxHeight >= presentHeight - chunkSize
 
         this.log(`Listening Start
   presentHeight=${presentHeight}

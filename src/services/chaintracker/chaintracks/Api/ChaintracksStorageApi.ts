@@ -345,11 +345,9 @@ export interface ChaintracksStorageIngestApi {
    * and after the block hash and merkleRoot to height indices have been
    * updated.
    *
-   * All live database block header records with headerId less than or equal to `headerId` must be deleted.
-   *
-   * @param headerId delete all records with less or equal `headerId`
+   * @param maxHeight delete all records with less or equal `height`
    */
-  deleteOlderLiveBlockHeaders(headerId: number): Promise<void>
+  deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number>
 
   /**
    * Async initialization method.

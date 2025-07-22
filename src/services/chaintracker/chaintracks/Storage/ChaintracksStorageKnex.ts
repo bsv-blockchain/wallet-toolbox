@@ -518,12 +518,31 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     })
   }
 
-  async deleteOlderLiveBlockHeaders(headerId: number): Promise<void> {
-    const table = this.headerTableName
-    await this.knex.transaction(async trx => {
-      await trx<LiveBlockHeader>(table).where('previousHeaderId', '<=', headerId).update({ previousHeaderId: null })
-      await trx<LiveBlockHeader>(table).where('headerId', '<=', headerId).del()
-    })
+  async deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number> {
+    return this.knex.transaction(async (trx) => {
+      try {
+        const tableName = this.headerTableName
+        await trx(tableName)
+          .whereIn('previousHeaderId', function () {
+            this.select('headerId')
+              .from(tableName)
+              .where('height', '<=', maxHeight);
+          })
+          .update({ previousHeaderId: null });
+
+        const deletedCount = await trx(tableName)
+          .where('height', '<=', maxHeight)
+          .del();
+
+        // Commit transaction
+        await trx.commit();
+        return deletedCount;
+      } catch (error) {
+        // Rollback on error
+        await trx.rollback();
+        throw error;
+      }
+    });
   }
 
   async getHeaders(height: number, count: number): Promise<number[]> {
@@ -597,5 +616,13 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     }
     const headerId = headers[headers.length - 1].headerId
     return { buffer, headerId }
+  }
+
+  async liveHeadersForBulk(count: number): Promise<LiveBlockHeader[]> {
+    const headers = await this.knex<LiveBlockHeader>(this.headerTableName)
+      .where({ isActive: true })
+      .limit(count)
+      .orderBy('height')
+    return headers
   }
 }
