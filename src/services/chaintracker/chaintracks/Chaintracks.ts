@@ -1,4 +1,3 @@
-import { BulkStorageApi } from './Api/BulkStorageApi'
 import { InsertHeaderResult, ChaintracksStorageApi } from './Api/ChaintracksStorageApi'
 import { BulkIngestorApi } from './Api/BulkIngestorApi'
 import { LiveIngestorApi } from './Api/LiveIngestorApi'
@@ -181,10 +180,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       this.synchronizing = true
       await this.initializeComponents()
 
-      // Iterate through configured bulk ingestors, each bulk ingestor must:
-      // - examine the state of block headers known to the storage engine
-      // - examine its available source of block headers
-
       let liveHeaders: BlockHeader[] = []
 
       let bulkDone = false
@@ -196,21 +191,16 @@ export class Chaintracks implements ChaintracksManagementApi {
         for (const bulk of this.bulkIngestors) {
           try {
 
-            liveHeaders = await bulk.synchronize(presentHeight, before, liveHeaders)
+            const r = await bulk.synchronize(presentHeight, before, liveHeaders)
 
+            liveHeaders = r.liveHeaders
             after = await this.storageEngine.getAvailableHeightRanges()
             added = after.bulk.above(before.bulk)
             before = after
             this.log(`Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`)
 
-            if (liveHeaders.length > 0) {
-              const h = liveHeaders[liveHeaders.length - 1]
-              if (h.height > presentHeight - 12) {
-                // If bulk + liveHeaders is close enough to presentHeight, bulk ingesting is done.
-                bulkDone = true
-                break
-              }
-            }
+            if (r.done) return
+
           } catch (uerr: unknown) {
             console.log(uerr)
           }

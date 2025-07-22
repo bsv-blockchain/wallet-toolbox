@@ -253,3 +253,16 @@ export function doubleSha256LE(data: number[] | Uint8Array): number[] {
 export function doubleSha256BE(data: number[] | Uint8Array): number[] {
   return doubleSha256LE(data).reverse()
 }
+
+/**
+ * Logging function to handle logging based on running in jest "single test" mode,
+ *
+ * @param {string} message - The main message to log.
+ * @param {...any} optionalParams - Additional parameters to log (optional).
+ */
+export const logger = (message: string, ...optionalParams: any[]): void => {
+  const isSingleTest = process.argv.some(arg => arg === '--testNamePattern' || arg === '-t')
+  if (isSingleTest) {
+    console.log(message, ...optionalParams)
+  }
+}

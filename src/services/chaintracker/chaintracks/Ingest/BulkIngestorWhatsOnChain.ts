@@ -1,5 +1,5 @@
-import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 import { Chain } from '../../../../sdk'
+import { logger } from '../../../../utility/utilityHelpers'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
 import { BulkIngestorBase } from '../Base/BulkIngestorBase'
@@ -71,31 +71,7 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     return presentHeight
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateLocalCache(
-    /**
-     * Range of heights that may be added to bulk storage.
-     */
-    neededRange: HeightRange,
-    /**
-     * Best guess at current height of active chain tip.
-     */
-    presentHeight: number,
-    /**
-     * Any live headers accumulated thus far which will be forwarded to live header storage.
-     */
-    priorLiveHeaders?: BlockHeader[]
-  ): Promise<{ liveHeaders: BlockHeader[] }> {
-    let fromHeight: number
-
-    if (!neededRange.isEmpty) {
-      fromHeight = neededRange.minHeight
-    } else if (priorLiveHeaders && priorLiveHeaders.length > 0) {
-      // If we have prior live headers, start from the last one with a small overlap.
-      fromHeight = priorLiveHeaders.slice(-1)[0].height + 1 - 10
-    } else {
-      fromHeight = presentHeight - 10
-    }
+  async fetchHeaders(fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
 
     const oldHeaders: BlockHeader[] = []
     const errors: { code: number; message: string; count: number }[] = []
@@ -106,12 +82,12 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
       errors.push({ code, message, count: errors.length })
       return false
     }
-    const ok = await this.woc.listenForOldBlockHeaders(fromHeight, presentHeight, enqueue, error, this.idleWait)
+
+    const ok = await this.woc.listenForOldBlockHeaders(fetchRange.minHeight, fetchRange.maxHeight, enqueue, error, this.idleWait)
 
     let liveHeaders: BlockHeader[] = []
     if (ok) {
-      const r = await this.storage().addOldBlockHeaders(oldHeaders, presentHeight, priorLiveHeaders)
-      liveHeaders = r.liveHeaders
+      liveHeaders = await this.storage().addBulkHeaders(oldHeaders, bulkRange, priorLiveHeaders)
     }
 
     if (errors.length > 0) {
@@ -119,6 +95,6 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
       logger(`Errors during WhatsOnChain ingestion:\n${errorMessages}`)
     }
 
-    return { liveHeaders }
+    return liveHeaders
   }
 }

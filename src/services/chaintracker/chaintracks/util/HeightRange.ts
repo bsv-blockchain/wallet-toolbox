@@ -1,3 +1,5 @@
+import { BlockHeader } from "../Api/BlockHeaderApi"
+
 export interface HeightRangeApi {
   minHeight: number
   maxHeight: number
@@ -16,6 +18,17 @@ export class HeightRange implements HeightRangeApi {
 
   static readonly empty = new HeightRange(0, -1)
 
+  /**
+   * @param headers 
+   * @returns range of height values from the given headers, or the empty range if there are no headers.
+   */
+  static from(headers: BlockHeader[]): HeightRange {
+    if (headers.length === 0) return HeightRange.empty
+    const minHeight = headers.reduce((min, h) => Math.min(min, h.height), headers[0].height)
+    const maxHeight = headers.reduce((max, h) => Math.max(max, h.height), headers[0].height)
+    return new HeightRange(minHeight, maxHeight)
+  }
+
   get length() {
     return Math.max(0, this.maxHeight - this.minHeight + 1)
   }
@@ -29,10 +42,13 @@ export class HeightRange implements HeightRangeApi {
   }
 
   /**
-   * @param range
+   * @param range HeightRange or single height value.
    * @returns true if `range` is entirely within this range.
    */
-  contains(range: HeightRange) {
+  contains(range: HeightRange | number) {
+    if (typeof range === 'number') {
+      return this.minHeight <= range && this.maxHeight >= range
+    }
     return this.minHeight <= range.minHeight && this.maxHeight >= range.maxHeight
   }
 

@@ -1,20 +1,18 @@
 import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
-import { BlockHashHeight, MerkleRootHeight, ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
 import {
   Chain,
-  WalletError,
   WERR_INVALID_OPERATION,
   WERR_INVALID_PARAMETER,
-  WERR_NOT_IMPLEMENTED
 } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { addWork, blockHash, convertBitsToWork, isMoreWork, serializeBaseBlockHeader } from '../util/blockHeaderUtilities'
 import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
 import { determineDBType } from '../../../../index.all'
-import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
+import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
 
 export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
@@ -503,6 +501,21 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       remaining -= size
       minHeight += size
     }
+  }
+
+  override async deleteLiveBlockHeaders(): Promise<void> {
+    const table = this.headerTableName
+    await this.knex.transaction(async trx => {
+      await trx<LiveBlockHeader>(table).update({ previousHeaderId: null })
+      await trx<LiveBlockHeader>(table).del()
+    })
+  }
+
+  override async deleteBulkBlockHeaders(): Promise<void> {
+    const table = this.bulkFilesTableName
+    await this.knex.transaction(async trx => {
+      await trx<BulkHeaderFileInfo>(table).del()
+    })
   }
 
   async deleteOlderLiveBlockHeaders(headerId: number): Promise<void> {

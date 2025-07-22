@@ -1,31 +1,16 @@
 import { Chain } from '../../../sdk/types'
 import { BlockHeader } from './Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
-
 import { BulkIngestorBase } from './Base/BulkIngestorBase'
-
-import {
-  BulkFilesReader,
-  BulkFilesReaderStorage} from './util/BulkFilesReader'
 import { BulkHeaderFileInfo } from './util/BulkHeaderFile'
 import { BulkHeaderFilesInfo } from './util/BulkHeaderFile'
 import { HeightRange } from './util/HeightRange'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
-import { asArray, asString, asUint8Array } from '../../../utility/utilityHelpers.noBuffer'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
-import { WalletError, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../sdk'
-import {
-  deserializeBlockHeader,
-  genesisBuffer,
-  genesisHeader,
-  validateBufferOfHeaders,
-  validateBulkFileData
-} from './util/blockHeaderUtilities'
-import { Hash } from '@bsv/sdk'
-import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
+import { WalletError, WERR_INVALID_PARAMETER } from '../../../sdk'
+import { validateBulkFileData } from './util/blockHeaderUtilities'
 
 import Path from 'path'
-import { validBulkHeaderFilesByFileHash } from './util/validBulkHeaderFilesByFileHash'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -91,11 +76,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return headers
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateLocalCache(
-    neededRange: HeightRange,
-    presentHeight: number
-  ): Promise<{ liveHeaders: BlockHeader[] }> {
+  async fetchHeaders(fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
     const storage = this.storage()
 
     const toUrl = (file: string) => Path.join(this.cdnUrl, file)
@@ -215,9 +196,6 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     this.currentRange = heightRange
 
-    return {
-      // This ingestor never returns any of its own live headers.
-      liveHeaders: []
-    }
+    return priorLiveHeaders
   }
 }

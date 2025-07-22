@@ -1,4 +1,3 @@
-import { BulkStorageApi } from './BulkStorageApi'
 import { HeightRange } from '../util/HeightRange'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'

@@ -5,7 +5,6 @@ import {
   CreateActionOutput,
   CreateActionResult,
   HexString,
-  KeyDeriver,
   KeyDeriverApi,
   P2PKH,
   PrivateKey,

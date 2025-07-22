@@ -49,8 +49,8 @@ async function testUpdateLocalCache(chain: Chain) {
   await cdn.setStorage(storage)
 
   const range = new HeightRange(0, 9900000)
-  const r = await cdn.updateLocalCache(range, 900000)
+  const liveHeaders = await cdn.fetchHeaders(range, range, [])
   const reader = await BulkFilesReaderStorage.fromStorage(storage, fetch, range)
   await storage.knex.destroy()
-  return { cdn, r: { reader, liveHeaders: r.liveHeaders } }
+  return { cdn, r: { reader, liveHeaders } }
 }

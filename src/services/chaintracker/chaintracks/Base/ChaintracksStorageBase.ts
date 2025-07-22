@@ -4,25 +4,20 @@ import {
   ChaintracksStorageIngestApi,
   ChaintracksStorageQueryApi as ChaintracksStorageQueryApi
 } from '../Api/ChaintracksStorageApi'
-import { BulkFilesReader } from '../util/BulkFilesReader'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
-import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
-import { BulkStorageApi } from '../Api/BulkStorageApi'
 import {
   addWork,
   convertBitsToWork,
-  deserializeBaseBlockHeader,
   deserializeBlockHeader,
   isMoreWork,
   serializeBaseBlockHeader,
   subWork,
-  validateBufferOfHeaders
 } from '../util/blockHeaderUtilities'
 
 import { Chain } from '../../../../sdk/types'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { Utils, Hash } from '@bsv/sdk'
+import { Hash } from '@bsv/sdk'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 
@@ -64,6 +59,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   reorgHeightThreshold: number
   bulkMigrationChunkSize: number
   batchInsertLimit: number
+  bulkFileMaxCount: number = 100000 // 1.9 years per file
 
   isAvailable: boolean = false
   hasMigrated: boolean = false
@@ -94,6 +90,8 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   // Abstract functions to be defined by implementation classes
 
   abstract batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void>
+  abstract deleteLiveBlockHeaders(): Promise<void>
+  abstract deleteBulkBlockHeaders(): Promise<void>
   abstract deleteOlderLiveBlockHeaders(headerId: number): Promise<void>
   abstract findChainTipHeader(): Promise<LiveBlockHeader>
   abstract findChainTipHeaderOrUndefined(): Promise<LiveBlockHeader | undefined>
@@ -159,9 +157,9 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   private nowMigratingLiveToBulk = false
 
-  async migrateLiveToBulk(count: number): Promise<void> {
+  async migrateLiveToBulk(count: number, ignoreLimits = false): Promise<void> {
     await this.makeAvailable()
-    if (count > this.bulkMigrationChunkSize) return
+    if (!ignoreLimits && count > this.bulkMigrationChunkSize) return
 
     if (this.nowMigratingLiveToBulk) {
       console.log('Already migrating live to bulk.')
@@ -260,22 +258,17 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     return Math.max(header1.height, header2.height) - ancestor.height
   }
 
-  async addOldBlockHeaders(
-    headers: BlockHeader[], presentHeight?: number, priorLiveHeaders?: BlockHeader[]
+  async addBulkHeaders(
+    headers: BlockHeader[], bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]
   )
-  : Promise<{ liveHeaders: BlockHeader[] }>
+  : Promise<BlockHeader[]>
   {
     await this.makeAvailable()
 
-    if (!headers || headers.length === 0) return { liveHeaders: priorLiveHeaders || [] }
-
-    const liveHeightThreshold = this.liveHeightThreshold
-    const reorgHeightThreshold = this.reorgHeightThreshold
-    const bulkMigrationChunkSize = this.bulkMigrationChunkSize
-    const batchInsertLimit = this.batchInsertLimit
+    if (!headers || headers.length === 0) return priorLiveHeaders
 
     // Get the current extent of validated bulk and live block headers.
-    const { bulk, live } = await this.getAvailableHeightRanges()
+    const before = await this.getAvailableHeightRanges()
     const bulkFiles = this.bulkFiles
 
     // Review `headers`, applying the following rules:
@@ -284,16 +277,14 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     // 3. Compute chainWork for each header.
     // 4. Verify chain of header hash and previousHash values. One header at each height. Retain chain with most chainWork.
 
-    const filteredHeaders = headers.concat(priorLiveHeaders || []).filter(h => h.height > bulk.maxHeight)
-
+    const minHeight = !bulkRange.isEmpty ? bulkRange.minHeight : before.bulk.isEmpty ? 0 : before.bulk.maxHeight + 1
+    const filteredHeaders = headers.concat(priorLiveHeaders || []).filter(h => h.height >= minHeight)
     const sortedHeaders = filteredHeaders.sort((a, b) => a.height - b.height)
-    const maxHeight = presentHeight || sortedHeaders.slice(-1)[0].height
-    const maxBulkHeight = maxHeight - liveHeightThreshold
-    const liveHeaders = sortedHeaders.filter(h => h.height > maxBulkHeight)
+    const liveHeaders = sortedHeaders.filter(h => bulkRange.isEmpty || !bulkRange.contains(h.height))
 
     if (liveHeaders.length === sortedHeaders.length) {
       // All headers are live, no bulk headers to add.
-      return { liveHeaders }
+      return liveHeaders
     }
 
     const chains: {
@@ -322,7 +313,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
       if (chain) {
         chain.headers.push(h)
         chain.chainWork = addWork(chain.chainWork, chainWork)
-        if (h.height <= maxBulkHeight) {
+        if (h.height <= bulkRange.maxHeight) {
           chain.bulkChainWork = chain.chainWork
         }
         continue
@@ -344,19 +335,19 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
         const newChain = {
           headers,
           chainWork: newChainWork,
-          bulkChainWork: h.height <= maxBulkHeight ? newChainWork : undefined
+          bulkChainWork: h.height <= bulkRange.maxHeight ? newChainWork : undefined
         } 
         chains.push(newChain)
         continue
       }
       // Starting a new chain
-      chains.push({ headers: [h], chainWork, bulkChainWork: h.height <= maxBulkHeight ? chainWork : undefined })
+      chains.push({ headers: [h], chainWork, bulkChainWork: h.height <= bulkRange.maxHeight ? chainWork : undefined })
     }
 
     // Find the chain with the most chainWork.
     const bestChain = chains.reduce((best, c) => isMoreWork(c.chainWork, best.chainWork) ? c : best, chains[0])
 
-    const newBulkHeaders = bestChain.headers.slice(0, maxBulkHeight - bestChain.headers[0].height + 1)
+    const newBulkHeaders = bestChain.headers.slice(0, bulkRange.maxHeight - bestChain.headers[0].height + 1)
 
     // Add newBulkHeaders to storage.
     const lbf = bulkFiles.slice(-1)[0]
@@ -415,7 +406,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
       await this.updateBulkFile(lbf.fileId, lbf)
     }
 
-    return { liveHeaders }
+    return liveHeaders
   }
 }
 

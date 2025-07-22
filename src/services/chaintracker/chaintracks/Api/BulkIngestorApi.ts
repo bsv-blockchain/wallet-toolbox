@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 import { Chain } from '../../../../sdk/types'
-import { HeightRanges } from '../util/HeightRange'
+import { HeightRange, HeightRanges } from '../util/HeightRange'
 import { BlockHeader } from './BlockHeaderApi'
-import { ChaintracksFsApi } from './ChaintracksFsApi'
 import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 
 export interface BulkIngestorBaseOptions {
@@ -42,26 +38,30 @@ export interface BulkIngestorApi {
   getPresentHeight(): Promise<number | undefined>
 
   /**
-   * Synchronize stored headers with availble bulk header storage from this ingestor
-   *
-   * The definition of bulk storage is headers of sufficient age that there is exactly one
-   * header at each height, each header follows the header with its previousHash.
-   *
-   * All bulk ingestors are required to enforce these conditions on the headers they make avaible to ingest.
-   *
-   * As a corollary, a bulk ingestor must never offer headers for ingest that are within the `` of the present.
-   *
-   * The base class implementation takes care of much of the required logic, relying on override of updateLocalCache
-   * to provide access to the block headers sourced by this ingestor through a BulkFilesReader.
-   *
-   * Ingesters that also acquire more recent block headers than the `` can return these headers in the order
-   * retrieved with no additional processing.
-   *
-   * @param presentHeight approximate current height of public chain tip, if known
-   * @param priorLiveHeaders any liveHeaders already obtained from a bulk ingestor
-   * @returns live block headers after update. Must include priorLiveHeaders if any.
+   * A BulkIngestor fetches and updates storage with bulk headers in bulkRange.
+   * 
+   * If it can, it must also fetch live headers in fetch range that are not in bulkRange and return them as an array.
+   * 
+   * The storage methods `insertBulkFile`, `updateBulkFile`, and `addBulkHeaders` should be used to add bulk headers to storage.
+   * 
+   * @param fetchRange range of headers still needed, includes both missing bulk and live headers.
+   * @param bulkRange range of bulk headers still needed
+   * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.
+   * @returns new live headers: headers in fetchRange but not in bulkRange
    */
-  synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
+  fetchHeaders(fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
+
+  /**
+   * A BulkIngestor has two potential goals:
+   * 1. To source missing bulk headers and include them in bulk storage.
+   * 2. To source missing live headers to be forwarded to live storage. 
+   * 
+   * @param presentHeight current height of the active chain tip, may lag the true value.
+   * @param before current bulk and live storage height ranges, either may be empty.
+   * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.
+   * @returns updated priorLiveHeaders including any accumulated by this ingestor
+   */
+  synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BulkSyncResult>
 
   /**
    * Called before first Synchronize with reference to storage.
@@ -71,4 +71,11 @@ export interface BulkIngestorApi {
   setStorage(storage: ChaintracksStorageApi): Promise<void>
 
   storage(): ChaintracksStorageApi
+}
+
+export interface BulkSyncResult {
+  liveHeaders: BlockHeader[]
+  liveRange: HeightRange
+  done: boolean
+  log: string
 }

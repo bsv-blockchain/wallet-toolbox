@@ -2,7 +2,8 @@ import WebSocket from 'ws'
 import { WhatsOnChain } from '../../../providers/WhatsOnChain'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { wait } from '../../../../utility/utilityHelpers'
-import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
+
+const logger = console.log.bind(console)
 
 export type WocChain = 'main' | 'test'
 
