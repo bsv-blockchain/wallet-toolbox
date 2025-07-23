@@ -3,7 +3,7 @@ import { logger } from '../../../../utility/utilityHelpers'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
 import { BulkIngestorBase } from '../Base/BulkIngestorBase'
-import { HeightRange } from '../util/HeightRange'
+import { HeightRange, HeightRanges } from '../util/HeightRange'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
 export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions, WhatsOnChainServicesOptions {
@@ -71,7 +71,7 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     return presentHeight
   }
 
-  async fetchHeaders(fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
+  async fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
 
     const oldHeaders: BlockHeader[] = []
     const errors: { code: number; message: string; count: number }[] = []

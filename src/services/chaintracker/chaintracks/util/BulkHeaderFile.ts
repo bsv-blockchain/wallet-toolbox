@@ -60,28 +60,6 @@ export interface BulkHeaderFileInfo {
   sourceUrl?: string
 }
 
-/**
- * Describes a collection of bulk block header files.
- */
-export interface BulkHeaderFilesInfo {
-  /**
-   * Full path to folder containing files.
-   */
-  rootFolder: string
-  /**
-   * Filename in `rootFolder` to/from which to serialize this Info as stringified JSON.
-   */
-  jsonFilename: string
-  /**
-   * How many headers each file contains.
-   */
-  headersPerFile: number
-  /**
-   * Array of information about each bulk block header file.
-   */
-  files: BulkHeaderFileInfo[]
-}
-
 
 export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
   chain?: Chain | undefined;
@@ -235,3 +213,33 @@ export class BulkHeaderFileStorage extends BulkHeaderFile {
 }
 
 
+/**
+ * Describes a collection of bulk block header files.
+ */
+export interface BulkHeaderFilesInfo {
+  /**
+   * Where this file was fetched or read from.
+   */
+  rootFolder: string
+  /**
+   * Sub-path to this resource on rootFolder
+   */
+  jsonFilename: string
+  /**
+   * Array of information about each bulk block header file.
+   */
+  files: BulkHeaderFileInfo[]
+  /**
+   * Maximum number of headers in a single file in this collection of files.
+   */
+  headersPerFile: number
+}
+
+export abstract class BulkHeaderFiles implements BulkHeaderFilesInfo {
+  constructor(
+    public rootFolder: string,
+    public jsonFilename: string,
+    public files: BulkHeaderFileInfo[],
+    public headersPerFile: number
+  ) {}
+}

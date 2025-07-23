@@ -14,7 +14,6 @@ import { ChaintracksFetch } from '../util/ChaintracksFetch'
 interface ChaintracksNoDbData {
   chain: Chain
   liveHeaders: Map<number, LiveBlockHeader>
-  bulkFiles: BulkHeaderFileInfo[]
   maxHeaderId: number
   tipHeaderId: number
   hashToHeaderId: Map<string, number>
@@ -34,7 +33,6 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
   static mainData: ChaintracksNoDbData = {
     chain: 'main',
     liveHeaders: new Map<number, LiveBlockHeader>(),
-    bulkFiles: [],
     maxHeaderId: 0,
     tipHeaderId: 0,
     hashToHeaderId: new Map<string, number>()
@@ -42,7 +40,6 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
   static testData: ChaintracksNoDbData = {
     chain: 'test',
     liveHeaders: new Map<number, LiveBlockHeader>(),
-    bulkFiles: [],
     maxHeaderId: 0,
     tipHeaderId: 0,
     hashToHeaderId: new Map<string, number>()
@@ -71,8 +68,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
   }
 
   override async deleteBulkBlockHeaders(): Promise<void> {
-    const data = await this.getData()
-    data.bulkFiles = []
+    this.bulkFiles = []
   }
 
   override async deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number> {
@@ -251,7 +247,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
     if (!oneBack) {
       // Check if this is first live header
       if (data.liveHeaders.size === 0) {
-        const lbf = data.bulkFiles.slice(-1)[0]
+        const lbf = this.bulkFiles.slice(-1)[0]
         if (lbf && header.previousHash === lbf.lastHash && header.height === lbf.firstHeight + lbf.count) {
           const chainWork = addWork(lbf.lastChainWork, convertBitsToWork(header.bits))
           const newHeader = {
@@ -356,33 +352,28 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
   }
 
   override async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
-    const data = await this.getData()
     if (file.fileId === 0) delete file.fileId
-    const id = (data.bulkFiles.length > 0 ? Math.max(...data.bulkFiles.map(f => f.fileId || 0)) : 0) + 1
+    const id = (this.bulkFiles.length > 0 ? Math.max(...this.bulkFiles.map(f => f.fileId || 0)) : 0) + 1
     file.fileId = id
-    data.bulkFiles.push(file)
+    this.bulkFiles.push(file)
     return id
   }
 
   override async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
-    const data = await this.getData()
-    const index = data.bulkFiles.findIndex(f => f.fileId === fileId)
+    const index = this.bulkFiles.findIndex(f => f.fileId === fileId)
     if (index === -1) return 0
-    data.bulkFiles[index] = { ...data.bulkFiles[index], ...file }
+    this.bulkFiles[index] = { ...this.bulkFiles[index], ...file }
     return 1
   }
 
   override async getBulkFiles(): Promise<BulkHeaderFileInfo[]> {
-    const data = await this.getData()
-    const bulkFiles = data.bulkFiles.sort((a, b) => (a.firstHeight || 0) - (b.firstHeight || 0))
-    return bulkFiles
+    return this.bulkFiles.sort((a, b) => a.firstHeight - b.firstHeight)
   }
 
   override async getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> {
-    const data = await this.getData()
     if (!Number.isInteger(fileId)) throw new WERR_INVALID_PARAMETER('fileId', 'a valid, integer bulk_files fileId')
     
-    const file = data.bulkFiles.find(f => f.fileId === fileId)
+    const file = this.bulkFiles.find(f => f.fileId === fileId)
     if (!file || !file.data) return undefined
 
     if (Number.isInteger(offset) && Number.isInteger(length)) {

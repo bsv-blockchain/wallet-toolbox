@@ -16,7 +16,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
 
   test('0 mainNet', async () => {
     const { cdn, r } = await testUpdateLocalCache('main')
-    expect(cdn.bulkFiles?.files.length).toBeGreaterThan(8)
+    expect(cdn.availableBulkFiles?.files.length).toBeGreaterThan(8)
     expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
     expect(r.reader.range.maxHeight).toBeGreaterThan(800000)
@@ -24,7 +24,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
 
   test('1 testNet', async () => {
     const { cdn, r } = await testUpdateLocalCache('test')
-    expect(cdn.bulkFiles?.files.length).toBeGreaterThan(15)
+    expect(cdn.availableBulkFiles?.files.length).toBeGreaterThan(15)
     expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
     expect(r.reader.range.maxHeight).toBeGreaterThan(1500000)
@@ -46,10 +46,11 @@ async function testUpdateLocalCache(chain: Chain) {
   }
   const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
   const storage = new ChaintracksStorageKnex(knexOptions)
+  const before = await storage.getAvailableHeightRanges()
   await cdn.setStorage(storage)
 
   const range = new HeightRange(0, 9900000)
-  const liveHeaders = await cdn.fetchHeaders(range, range, [])
+  const liveHeaders = await cdn.fetchHeaders(before, range, range, [])
   const reader = await BulkFilesReaderStorage.fromStorage(storage, fetch, range)
   await storage.knex.destroy()
   return { cdn, r: { reader, liveHeaders } }

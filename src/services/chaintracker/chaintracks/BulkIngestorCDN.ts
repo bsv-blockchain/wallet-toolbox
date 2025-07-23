@@ -4,13 +4,11 @@ import { BulkIngestorBaseOptions } from './Api/BulkIngestorApi'
 import { BulkIngestorBase } from './Base/BulkIngestorBase'
 import { BulkHeaderFileInfo } from './util/BulkHeaderFile'
 import { BulkHeaderFilesInfo } from './util/BulkHeaderFile'
-import { HeightRange } from './util/HeightRange'
+import { HeightRange, HeightRanges } from './util/HeightRange'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
 import { WalletError, WERR_INVALID_PARAMETER } from '../../../sdk'
 import { validateBulkFileData } from './util/blockHeaderUtilities'
-
-import Path from 'path'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -28,6 +26,8 @@ export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
    */
   cdnUrl: string | undefined
 
+  maxPerFile: number | undefined
+
   fetch: ChaintracksFetchApi
 }
 
@@ -38,12 +38,13 @@ export class BulkIngestorCDN extends BulkIngestorBase {
    * @param localCachePath defaults to './data/bulk_cdn_headers/'
    * @returns
    */
-  static createBulkIngestorCDNOptions(chain: Chain, fetch: ChaintracksFetchApi): BulkIngestorCDNOptions {
+  static createBulkIngestorCDNOptions(chain: Chain, cdnUrl: string, fetch: ChaintracksFetchApi, maxPerFile?: number): BulkIngestorCDNOptions {
     const options: BulkIngestorCDNOptions = {
       ...BulkIngestorBase.createBulkIngestorBaseOptions(chain),
       fetch,
       jsonResource: `${chain}NetBlockHeaders.json`,
-      cdnUrl: undefined
+      cdnUrl,
+      maxPerFile
     }
     return options
   }
@@ -51,8 +52,10 @@ export class BulkIngestorCDN extends BulkIngestorBase {
   fetch: ChaintracksFetchApi
   jsonResource: string
   cdnUrl: string
+  maxPerFile: number | undefined
 
-  bulkFiles: BulkHeaderFilesInfo | undefined
+  availableBulkFiles: BulkHeaderFilesInfo | undefined
+  selectedFiles: BulkHeaderFileInfo[] | undefined
   currentRange: HeightRange | undefined
 
   constructor(options: BulkIngestorCDNOptions) {
@@ -63,6 +66,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     this.fetch = options.fetch
     this.jsonResource = options.jsonResource
     this.cdnUrl = options.cdnUrl
+    this.maxPerFile = options.maxPerFile
   }
 
   override async getPresentHeight(): Promise<number | undefined> {
@@ -76,17 +80,48 @@ export class BulkIngestorCDN extends BulkIngestorBase {
     return headers
   }
 
-  async fetchHeaders(fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
+  /**
+   * A BulkFile CDN serves a JSON BulkHeaderFilesInfo resource which lists all the available binary bulk header files available and associated metadata.
+   * 
+   * The term "CDN file" is used for a local bulk file that has a sourceUrl. (Not undefined)
+   * The term "incremental file" is used for the local bulk file that holds all the non-CDN bulk headers and must chain to the live headers if there are any.
+   * 
+   * Bulk ingesting from a CDN happens in one of three contexts:
+   * 
+   * 1. Cold Start: No local bulk or live headers.
+   * 2. Incremental: Available CDN files extend into an existing incremental file but not into the live headers.
+   * 3. Replace: Available CDN files extend into live headers.
+   * 
+   * Context Cold Start:
+   * - The CDN files are selected in height order, starting at zero, always choosing the largest count less than the local maximum (maxPerFile).
+   * 
+   * Context Incremental:
+   * - Last existing CDN file is updated if CDN now has a higher count.
+   * - Additional CDN files are added as in Cold Start.
+   * - The existing incremental file is truncated or deleted.
+   * 
+   * Context Replace:
+   * - Existing live headers are truncated or deleted.
+   * - Proceed as context Incremental.
+   * 
+   * @param before bulk and live range of headers before ingesting any new headers.
+   * @param fetchRange total range of header heights needed including live headers
+   * @param bulkRange range of missing bulk header heights required.
+   * @param priorLiveHeaders 
+   * @returns 
+   */
+  async fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
     const storage = this.storage()
 
-    const toUrl = (file: string) => Path.join(this.cdnUrl, file)
+    const toUrl = (file: string) => this.fetch.pathJoin(this.cdnUrl, file)
 
     const url = toUrl(this.jsonResource)
-    this.bulkFiles = await this.fetch.fetchJson(url)
-    if (!this.bulkFiles) {
+    this.availableBulkFiles = await this.fetch.fetchJson(url)
+    if (!this.availableBulkFiles) {
       throw new WERR_INVALID_PARAMETER(`${this.jsonResource}`, `a valid BulkHeaderFilesInfo JSON resource available from ${url}`)
     }
-    for (const bf of this.bulkFiles.files) {
+    this.selectedFiles = selectBulkHeaderFiles(this.availableBulkFiles.files, this.chain, this.maxPerFile || this.availableBulkFiles.headersPerFile)
+    for (const bf of this.selectedFiles) {
       if (!bf.fileHash) {
         throw new WERR_INVALID_PARAMETER(`fileHash`, `valid for alll files in ${this.jsonResource} from ${url}`)
       }
@@ -95,6 +130,8 @@ export class BulkIngestorCDN extends BulkIngestorBase {
       }
       if (!bf.sourceUrl || bf.sourceUrl !== this.cdnUrl) bf.sourceUrl = this.cdnUrl;
     }
+    const lsf = this.selectedFiles.slice(-1)[0]
+    this.currentRange = new HeightRange(0, lsf.firstHeight + lsf.count - 1)
 
     let log = 'updateLocalCache log:\n'
     let heightRange = HeightRange.empty
@@ -102,8 +139,8 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     try {
       let filesUpdated = false
-      for (let i = 0; i < this.bulkFiles.files.length; i++) {
-        const bf = this.bulkFiles.files[i]
+      for (let i = 0; i < this.availableBulkFiles.files.length; i++) {
+        const bf = this.availableBulkFiles.files[i]
         let updateLf = false
         let insertAfterLf = false
 
@@ -198,4 +235,18 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     return priorLiveHeaders
   }
+}
+
+export function selectBulkHeaderFiles(files: BulkHeaderFileInfo[], chain: Chain, maxPerFile: number): BulkHeaderFileInfo[] {
+  const r: BulkHeaderFileInfo[] = []
+  let height = 0
+  for (;;) {
+    const choices = files.filter((f) => f.firstHeight === height && f.count <= maxPerFile && f.chain === chain)
+    // Pick the file with the maximum count
+    const choice = choices.reduce((a, b) => (a.count > b.count ? a : b), choices[0]);
+    if (!choice) break; // no more files to select
+    r.push(choice)
+    height += choice.count
+  }
+  return r
 }
