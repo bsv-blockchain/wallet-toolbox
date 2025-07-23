@@ -106,24 +106,6 @@ export interface ChaintracksStorageQueryApi {
    * Only adds active headers.
    * Buffer length divided by 80 is the actual number returned.
    *
-   * Only returns headers from live storage, newer than reorgHeightThreshold
-   *
-   * This function supports the migration of live headers to bulk storage.
-   *
-   * Returns `{ buffer, headerId, hashes, merkleRoots }`
-   *
-   * @param height of first header, must be > presentHeight - reorgHeightThreshold
-   * @param count of headers
-   * @returns `buffer` of serialized headers
-   * @returns `headerId` of last header
-   */
-  headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
-
-  /**
-   * Adds headers in 80 byte serialized format to a buffer.
-   * Only adds active headers.
-   * Buffer length divided by 80 is the actual number returned.
-   *
    * This function supports the ChaintracksClientApi
    *
    * @param height of first header, must be >= zero.
@@ -267,16 +249,6 @@ export interface ChaintracksStorageIngestApi {
   getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined>
 
   /**
-   * Inserts a genesis block header into a new, empty chain.
-   * Requires that the chain is empty.
-   * `height` must be zero.
-   * `chainWork` must be the initial chainWork of the genesis header.
-   * @param header The initial genesis header for a new chain.
-   * @param chainWork The initial chainWork of for the header.
-   */
-  insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
-
-  /**
    * Attempts to insert a block header into the chain.
    *
    * Returns 'added' false and 'dupe' true if header's hash already exists in the live database
@@ -300,14 +272,6 @@ export interface ChaintracksStorageIngestApi {
    * @param prev if not undefined, the last bulk storage header with total bulk chainWork
    */
   insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
-
-  /**
-   * Inserts an array of block headers which extend the active chain tip.
-   * Implementation must call `pruneLiveBlockHeaders` after adding new header.
-   * @param headers Array of headers to insert
-   * @param firstHeight Height of first header in array
-   */
-  batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void>
 
   /**
    * Must be called after the addition of new LiveBlockHeaders.
@@ -340,10 +304,8 @@ export interface ChaintracksStorageIngestApi {
   migrateLiveToBulk(count: number): Promise<void>
 
   /**
-   * Used to prune live block header records from the live database.
-   * Called after the headers have been appended to bulk storage
-   * and after the block hash and merkleRoot to height indices have been
-   * updated.
+   * Delete live headers with height less or equal to `maxHeight`
+   * after they have been migrated to bulk storage.
    *
    * @param maxHeight delete all records with less or equal `height`
    */

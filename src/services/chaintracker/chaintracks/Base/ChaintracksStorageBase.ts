@@ -22,24 +22,6 @@ import { Hash } from '@bsv/sdk'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 
-/**
- * Support for block header hash to height index implementations
- * needed for queries on block headers migrated to "bulk" storage.
- */
-export interface BlockHashHeight {
-  hash: string
-  height: number
-}
-
-/**
- * Support for block header merkle root to height index implementations
- * needed for queries on block headers migrated to "bulk" storage.
- */
-export interface MerkleRootHeight {
-  merkleRoot: string
-  height: number
-}
-
 interface AddBulkHeadersChain {
   headers: BlockHeader[]
   /**
@@ -102,7 +84,6 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   // Abstract functions to be defined by implementation classes
 
-  abstract batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void>
   abstract deleteLiveBlockHeaders(): Promise<void>
   abstract deleteBulkBlockHeaders(): Promise<void>
   abstract deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number>
@@ -115,10 +96,8 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract findLiveHeightRange(): Promise<{ minHeight: number; maxHeight: number }>
   abstract findMaxHeaderId(): Promise<number>
   abstract getLiveHeightRange(): Promise<HeightRange>
-  abstract headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }>
   abstract liveHeadersForBulk(count: number): Promise<LiveBlockHeader[]>
   abstract getHeaders(height: number, count: number): Promise<number[]>
-  abstract insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
 
   abstract insertBulkFile(file: BulkHeaderFileInfo): Promise<number>

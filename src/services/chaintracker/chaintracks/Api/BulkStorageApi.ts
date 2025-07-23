@@ -89,13 +89,4 @@ export interface BulkStorageApi {
    * @param storage
    */
   setStorage(storage: ChaintracksStorageApi): Promise<void>
-
-  /**
-   * Validates bulk headers.
-   * Verifies:
-   * 1. First header is genesis header.
-   * 2. All headers hash to value of following header's previousHash.
-   * @returns last bulk header with valid total chainWork or undefined if zero bulk headers.
-   */
-  validateHeaders(): Promise<LiveBlockHeader | undefined>
 }

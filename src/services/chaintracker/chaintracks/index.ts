@@ -6,8 +6,6 @@ export * from './Base/ChaintracksStorageBase'
 
 export * from './Api/BulkStorageApi'
 export * from './Base/BulkStorageBase'
-export * from './BulkStorageMemory'
-export * from './BulkStorageFile'
 
 export * from './Api/BulkIngestorApi'
 export * from './Base/BulkIngestorBase'

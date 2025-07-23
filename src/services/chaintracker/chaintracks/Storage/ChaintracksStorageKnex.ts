@@ -14,6 +14,8 @@ import { DBType } from '../../../../storage/StorageReader'
 import { determineDBType } from '../../../../index.all'
 import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
+import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
+import { ChaintracksFetch } from '../util/ChaintracksFetch'
 
 export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
   /**
@@ -143,22 +145,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   async findLiveHeaderForMerkleRoot(merkleRoot: string): Promise<LiveBlockHeader | null> {
     const [header] = await this.knex<LiveBlockHeader>(this.headerTableName).where({ merkleRoot: merkleRoot })
     return header
-  }
-
-  async insertGenesisHeader(header: BaseBlockHeader, chainWork: string): Promise<void> {
-    const check = await this.knex(this.headerTableName).select('headerId').limit(1)
-    if (check.length !== 0) throw new Error('Live headers database is not empty, genesis header not added.')
-
-    const genesisHeader = {
-      ...header,
-      chainWork,
-      hash: blockHash(header),
-      height: 0,
-      isActive: true,
-      isChainTip: true
-    }
-
-    await this.knex(this.headerTableName).insert(genesisHeader)
   }
 
   async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
@@ -385,85 +371,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     )
   }
 
-  async batchInsertHeaders(headers: BaseBlockHeader[], firstHeight: number): Promise<void> {
-    const liveHeaders: LiveBlockHeader[] = []
-
-    const convertToLiveHeaders = (h: BaseBlockHeader, hp: LiveBlockHeader | undefined): LiveBlockHeader => {
-      if (hp && hp.hash !== h.previousHash) throw new Error(`Header has invalid previousHash ${h.previousHash}`)
-      const lh: LiveBlockHeader = {
-        ...h,
-        headerId: 0,
-        previousHeaderId: 0,
-        height: 0,
-        isActive: true,
-        isChainTip: false,
-        hash: blockHash(h),
-        chainWork: convertBitsToWork(h.bits)
-      }
-      liveHeaders.push(lh)
-      return lh
-    }
-
-    /**
-     * Update "live" block header fields to follow a previous header.
-     * @param h header to update
-     * @param hp previous header
-     * @returns
-     */
-    const updateLiveHeader = (h: LiveBlockHeader, hp: LiveBlockHeader): LiveBlockHeader => {
-      h.headerId = hp.headerId + 1
-      h.previousHeaderId = hp.headerId
-      h.height = hp.height + 1
-      h.chainWork = addWork(h.chainWork, hp.chainWork)
-      return h
-    }
-
-    if (headers.length < 1) return
-
-    // Sanity check and convert the new headers...
-    let hp: LiveBlockHeader | undefined = undefined
-    for (let i = 0; i < headers.length; i++) hp = convertToLiveHeaders(headers[i], hp)
-
-    // Headers to be added are now in liveHeaders.
-    // headerId, previousHeaderId, and height are all zero at this point.
-    // chainWork is only this headers work, must be replaced by cummulative work value.
-
-    const table = this.headerTableName
-
-    await this.knex.transaction(async trx => {
-      const maxHeaderId = ((await trx(table).max('headerId as v')).pop()?.v as number) || -1
-
-      const h0 = liveHeaders[0]
-      if (maxHeaderId === -1) {
-        // Starting with genesis header, table is empty...
-        h0.previousHeaderId = null
-        h0.height = firstHeight
-      } else {
-        // Adding to existing headers, check that previous is current tip...
-        const [tip] = await trx<LiveBlockHeader>(table).where({ isActive: true, isChainTip: true })
-        if (!tip || tip.hash !== h0.previousHash)
-          throw new Error('New headers do not extend existing active chain tip.')
-        // Mark current tip as no longer being the tip.
-        await trx<LiveBlockHeader>(table).where({ headerId: tip.headerId }).update({ isChainTip: false })
-        h0.headerId = maxHeaderId + 1
-        h0.previousHeaderId = tip.headerId
-        h0.height = tip.height + 1
-        h0.chainWork = addWork(h0.chainWork, tip.chainWork)
-      }
-
-      let hp = h0
-      for (let i = 1; i < liveHeaders.length; i++) hp = updateLiveHeader(liveHeaders[i], hp)
-
-      liveHeaders[liveHeaders.length - 1].isChainTip = true
-
-      // Add the chunk of new headers and the new "chain tip" record with isActive 0
-      await trx.batchInsert(table, liveHeaders, liveHeaders.length)
-    })
-
-    const newTip = liveHeaders.pop()
-    if (newTip) await this.pruneLiveBlockHeaders(newTip.height)
-  }
-
   async appendToIndexTable(table: string, index: string, buffers: string[], minHeight: number): Promise<void> {
     const newRows: { height: number }[] = []
     for (let i = 0; i < buffers.length; i++) {
@@ -563,8 +470,11 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       // deleted from live after they have been added to bulk.
       // Only get what is needed.
       const bulkCount = headers.length === 0 ? count : headers[0].height - height
-      //bufs.push(await this.bulkStorage.headersToBuffer(height, bulkCount))
-      throw new Error('TODO IMPLEMENT BULK STORAGE')
+      const range = new HeightRange(height, height + bulkCount - 1)
+      const reader = await BulkFilesReaderStorage.fromStorage(this, new ChaintracksFetch(), range, bulkCount * 80)
+      const bulkData = await reader.read()
+      if (bulkData)
+        bufs.push(bulkData);
     }
 
     if (headers.length > 0) {
@@ -596,26 +506,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       }
     }
     return r
-  }
-
-  async headersToBuffer(height: number, count: number): Promise<{ buffer: Uint8Array; headerId: number }> {
-    const headers = await this.knex<LiveBlockHeader>(this.headerTableName)
-      .where({ isActive: true })
-      .andWhere('height', '>=', height)
-      .andWhere('height', '<', height + count)
-      .limit(count)
-      .orderBy('height')
-    if (headers.length && headers[0].height !== height)
-      throw new Error(`Live headers database does not contain first header requested at height ${height}`)
-
-    const buffer = new Uint8Array(headers.length * 80)
-    for (let i = 0; i < headers.length; i++) {
-      const h = headers[i]
-      const ha = serializeBaseBlockHeader(h)
-      buffer.set(ha, i * 80)
-    }
-    const headerId = headers[headers.length - 1].headerId
-    return { buffer, headerId }
   }
 
   async liveHeadersForBulk(count: number): Promise<LiveBlockHeader[]> {

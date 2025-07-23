@@ -52,42 +52,6 @@ export abstract class BulkStorageBase implements BulkStorageApi {
 
   async setStorage(storage: ChaintracksStorageBase): Promise<void> {}
 
-  async validateHeaders(): Promise<LiveBlockHeader | undefined> {
-    const countPerChunk = 200000
-    let height = 0
-    let chainWork = '00'.repeat(32)
-    let prevHash = '00'.repeat(32)
-    let lastHeader: BlockHeader | undefined
-    for (;;) {
-      const buffer = await this.headersToBuffer(height, countPerChunk)
-      if (!buffer) break
-      const count = buffer.length / 80
-      if (count === 0) break
-      if (height === 0) {
-        if (!genesisBuffer(this.chain).every((v, i) => v === buffer[i]))
-          throw new Error('Bulk storage validation failure: genesis header')
-      }
-      const headers = deserializeBlockHeaders(height, buffer)
-      for (const h of headers) {
-        if (h.previousHash !== prevHash) throw new Error('Bulk storage validation failure: previous hash')
-        chainWork = addWork(chainWork, convertBitsToWork(h.bits))
-        prevHash = h.hash
-        lastHeader = h
-      }
-      height += count
-    }
-    if (!lastHeader) return undefined
-    const liveHeader: LiveBlockHeader = {
-      ...lastHeader,
-      chainWork,
-      isChainTip: true,
-      isActive: true,
-      headerId: -1,
-      previousHeaderId: null
-    }
-    return liveHeader
-  }
-
   async exportBulkHeaders(rootFolder: string, jsonFilename: string, maxPerFile: number): Promise<void> {
     const info: BulkHeaderFilesInfo = {
       rootFolder: rootFolder,
