@@ -1002,16 +1002,11 @@ export class WalletPermissionsManager implements WalletInterface {
       // We skip spending permission entirely
       return true
     }
-    const cacheKey = this.buildRequestKey({ type: 'spending', originator })
-    if (this.isPermissionCached(cacheKey)) {
-      return true
-    }
     const token = await this.findSpendingToken(originator)
     if (token?.authorizedAmount) {
       // Check how much has been spent so far
       const spentSoFar = await this.querySpentSince(token)
       if (spentSoFar + satoshis <= token.authorizedAmount) {
-        this.cachePermission(cacheKey, token.expiry)
         return true
       } else {
         // Renew if possible
