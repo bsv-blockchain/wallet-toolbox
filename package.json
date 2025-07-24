@@ -1,6 +1,6 @@
 {
   "name": "@bsv/wallet-toolbox",
-  "version": "1.5.18",
+  "version": "1.5.19",
   "description": "BRC100 conforming wallet, wallet storage and wallet signer components",
   "main": "./out/src/index.js",
   "types": "./out/src/index.d.ts",
@@ -32,7 +32,7 @@
   "dependencies": {
     "@bsv/auth-express-middleware": "^1.2.2",
     "@bsv/payment-express-middleware": "^1.2.3",
-    "@bsv/sdk": "^1.6.19",
+    "@bsv/sdk": "^1.6.20",
     "express": "^4.21.2",
     "idb": "^8.0.2",
     "knex": "^3.1.0",
