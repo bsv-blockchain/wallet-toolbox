@@ -21,18 +21,7 @@ import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeade
 import { Hash } from '@bsv/sdk'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
-
-interface AddBulkHeadersChain {
-  headers: BlockHeader[]
-  /**
-   * Total chainwork of headers.
-   */
-  chainWork: string
-  /**
-   * Total chainwork of headers with height not greater than maxBulkHeight.
-   */
-  bulkChainWork?: string
-}
+import { BulkFileDataManager } from '../util/BulkFileDataManager'
 
 /**
  * Required interface methods of a Chaintracks Storage Engine implementation.
@@ -44,7 +33,8 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
       liveHeightThreshold: 2000,
       reorgHeightThreshold: 400,
       bulkMigrationChunkSize: 500,
-      batchInsertLimit: 400
+      batchInsertLimit: 400,
+      bulkFileDataManager: undefined
     }
     return options
   }
@@ -58,7 +48,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 
   isAvailable: boolean = false
   hasMigrated: boolean = false
-  bulkFiles: BulkHeaderFileInfo[] = []
+  bulkFiles: BulkFileDataManager
 
   constructor(options: ChaintracksStorageBaseOptions) {
     this.chain = options.chain
@@ -66,6 +56,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     this.reorgHeightThreshold = options.reorgHeightThreshold
     this.bulkMigrationChunkSize = options.bulkMigrationChunkSize
     this.batchInsertLimit = options.batchInsertLimit
+    this.bulkFiles = options.bulkFileDataManager
   }
 
   async shutdown(): Promise<void> {
@@ -455,4 +446,16 @@ export function serializeBaseBlockHeaders(headers: BlockHeader[]): Uint8Array {
     data.set(d, i * 80)
   }
   return data
+}
+
+interface AddBulkHeadersChain {
+  headers: BlockHeader[]
+  /**
+   * Total chainwork of headers.
+   */
+  chainWork: string
+  /**
+   * Total chainwork of headers with height not greater than maxBulkHeight.
+   */
+  bulkChainWork?: string
 }

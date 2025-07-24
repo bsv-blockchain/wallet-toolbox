@@ -2,6 +2,7 @@ import { HeightRange } from '../util/HeightRange'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
+import { BulkFileDataManager } from '../util/BulkFileDataManager'
 
 /// StorageEngine Interface
 
@@ -43,6 +44,11 @@ export interface ChaintracksStorageBaseOptions {
    * Maximum number of headers per call to batchInsert
    */
   batchInsertLimit: number
+
+  /**
+   * Controls in memory caching and retrieval of missing bulk header data.
+   */
+  bulkFileDataManager: BulkFileDataManager | undefined
 }
 
 export interface ChaintracksStorageQueryApi {

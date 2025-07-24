@@ -9,6 +9,7 @@ import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { logger } from '../../../../test/utils/TestUtilsWalletStorage'
 import { WalletError, WERR_INVALID_PARAMETER } from '../../../sdk'
 import { validateBulkFileData } from './util/blockHeaderUtilities'
+import { selectBulkHeaderFiles } from './util/BulkFileDataManager'
 
 export interface BulkIngestorCDNOptions extends BulkIngestorBaseOptions {
   /**
@@ -235,18 +236,4 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 
     return priorLiveHeaders
   }
-}
-
-export function selectBulkHeaderFiles(files: BulkHeaderFileInfo[], chain: Chain, maxPerFile: number): BulkHeaderFileInfo[] {
-  const r: BulkHeaderFileInfo[] = []
-  let height = 0
-  for (;;) {
-    const choices = files.filter((f) => f.firstHeight === height && f.count <= maxPerFile && f.chain === chain)
-    // Pick the file with the maximum count
-    const choice = choices.reduce((a, b) => (a.count > b.count ? a : b), choices[0]);
-    if (!choice) break; // no more files to select
-    r.push(choice)
-    height += choice.count
-  }
-  return r
 }
