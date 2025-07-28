@@ -1002,7 +1002,7 @@ export class WalletPermissionsManager implements WalletInterface {
       // We skip spending permission entirely
       return true
     }
-    const cacheKey = this.buildRequestKey({ type: 'spending', originator })
+    const cacheKey = this.buildRequestKey({ type: 'spending', originator, spending: { satoshis } })
     if (this.isPermissionCached(cacheKey)) {
       return true
     }
@@ -1043,6 +1043,7 @@ export class WalletPermissionsManager implements WalletInterface {
       })
     }
   }
+
 
   /**
    * Ensures the originator has label usage permission.
@@ -2908,15 +2909,15 @@ export class WalletPermissionsManager implements WalletInterface {
    * do not produce multiple user prompts.
    */
   private buildRequestKey(r: PermissionRequest): string {
-    switch (r.type) {
-      case 'protocol':
-        return `proto:${r.originator}:${!!r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
-      case 'basket':
-        return `basket:${r.originator}:${r.basket}`
-      case 'certificate':
-        return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
-      case 'spending':
-        return `spend:${r.originator}`
-    }
+  switch (r.type) {
+    case 'protocol':
+      return `proto:${r.originator}:${!!r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
+    case 'basket':
+      return `basket:${r.originator}:${r.basket}`
+    case 'certificate':
+      return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
+    case 'spending':
+      return `spend:${r.originator}:${r.spending?.satoshis}`
+  }
   }
 }
