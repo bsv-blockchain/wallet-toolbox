@@ -15,7 +15,7 @@ describe('Chaintracks tests', () => {
     await c.listening()
 
     let done = false
-    for (; !done;) {
+    for (; !done; ) {
       await wait(10000)
     }
 
@@ -26,14 +26,14 @@ describe('Chaintracks tests', () => {
 
   test('1 NoDb mainnet', async () => {
     const o = createDefaultChaintracksOptions('main', rootFolder)
-    const so = ChaintracksStorageNoDb.createStorageNoDbOptions(o.chain)
+    const so = ChaintracksStorageNoDb.createStorageBaseOptions(o.chain)
     o.storageEngine = new ChaintracksStorageNoDb(so)
     const c = new Chaintracks(o)
     const listening = c.startListening()
     await c.listening()
 
     let done = false
-    for (; !done;) {
+    for (; !done; ) {
       await wait(10000)
     }
 

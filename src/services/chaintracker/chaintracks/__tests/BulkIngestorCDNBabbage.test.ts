@@ -32,10 +32,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
 })
 
 async function testUpdateLocalCache(chain: Chain) {
-  const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
-    chain,
-    fetch,
-  )
+  const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
 
   const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
 

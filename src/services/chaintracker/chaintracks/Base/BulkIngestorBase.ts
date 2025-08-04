@@ -7,7 +7,6 @@ import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { ChaintracksStorageBase } from './ChaintracksStorageBase'
 
-
 export abstract class BulkIngestorBase implements BulkIngestorApi {
   /**
    *
@@ -61,34 +60,45 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
    * At least one derived BulkIngestor must override this method to provide the current height of the active chain tip.
    * @returns undefined unless overridden
    */
-  async getPresentHeight(): Promise<number | undefined> { return undefined }
+  async getPresentHeight(): Promise<number | undefined> {
+    return undefined
+  }
 
   /**
    * A BulkIngestor fetches and updates storage with bulk headers in bulkRange.
-   * 
+   *
    * If it can, it must also fetch live headers in fetch range that are not in bulkRange and return them as an array.
-   * 
+   *
    * The storage methods `insertBulkFile`, `updateBulkFile`, and `addBulkHeaders` should be used to add bulk headers to storage.
-   * 
+   *
    * @param before bulk and live range of headers before ingesting any new headers.
    * @param fetchRange range of headers still needed, includes both missing bulk and live headers.
    * @param bulkRange range of bulk headers still needed
    * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.
    * @returns new live headers: headers in fetchRange but not in bulkRange
    */
-  abstract fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
+  abstract fetchHeaders(
+    before: HeightRanges,
+    fetchRange: HeightRange,
+    bulkRange: HeightRange,
+    priorLiveHeaders: BlockHeader[]
+  ): Promise<BlockHeader[]>
 
   /**
    * A BulkIngestor has two potential goals:
    * 1. To source missing bulk headers and include them in bulk storage.
-   * 2. To source missing live headers to be forwarded to live storage. 
-   * 
+   * 2. To source missing live headers to be forwarded to live storage.
+   *
    * @param presentHeight current height of the active chain tip, may lag the true value.
    * @param before current bulk and live storage height ranges, either may be empty.
    * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.
    * @returns updated priorLiveHeaders including any accumulated by this ingestor
    */
-  async synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BulkSyncResult> {
+  async synchronize(
+    presentHeight: number,
+    before: HeightRanges,
+    priorLiveHeaders: BlockHeader[]
+  ): Promise<BulkSyncResult> {
     const storage = this.storage()
 
     const r: BulkSyncResult = {
@@ -107,7 +117,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     const currentFullRange = before.bulk.union(before.live)
     if (currentFullRange.maxHeight >= presentHeight) {
       r.done = true
-      return r;
+      return r
     }
 
     const targetBulkRange = new HeightRange(0, Math.max(0, presentHeight - storage.liveHeightThreshold))
@@ -121,7 +131,10 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
     // Q2: If missingBulkRange isn't empty and there are live headers in storage,
     // migrate from existing live headers in excess of reorgHeightThreshold.
     if (!missingBulkRange.isEmpty && !before.live.isEmpty) {
-      const countToMigrate = Math.min(missingBulkRange.length, Math.max(0, before.live.length - storage.reorgHeightThreshold))
+      const countToMigrate = Math.min(
+        missingBulkRange.length,
+        Math.max(0, before.live.length - storage.reorgHeightThreshold)
+      )
       r.log += `Migrating ${countToMigrate} live headers to bulk storage.\n`
       await storage.migrateLiveToBulk(countToMigrate)
       await updateMissingBulkRange()
@@ -142,7 +155,9 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
       rangeToFetch = targetFullRange.subtract(before.bulk)
       // And if there are live headers in excess of reorgHeightThreshold, they can be skipped as well.
       if (before.live.length > storage.reorgHeightThreshold) {
-        rangeToFetch = rangeToFetch.subtract(new HeightRange(before.live.minHeight, before.live.maxHeight - storage.reorgHeightThreshold))
+        rangeToFetch = rangeToFetch.subtract(
+          new HeightRange(before.live.minHeight, before.live.maxHeight - storage.reorgHeightThreshold)
+        )
       }
     } else {
       // If there are missing bulk headers, ingest from start of missing through present height.

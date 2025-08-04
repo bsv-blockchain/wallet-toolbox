@@ -39,15 +39,10 @@ export function createDefaultChaintracksOptions(
   knexOptions.knex = knexInstance
   options.storageEngine = new ChaintracksStorageKnex(knexOptions)
 
-  const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(
-    chain,
-    fetch,
-  )
+  const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
   options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
 
-  const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChain.createBulkIngestorWhatsOnChainOptions(
-    chain,
-  )
+  const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChain.createBulkIngestorWhatsOnChainOptions(chain)
   options.bulkIngestors.push(new BulkIngestorWhatsOnChain(bulkWhatsOnChainOptions))
 
   const liveWhatsOnChainOptions = LiveIngestorWhatsOnChain.createLiveIngestorWhatsOnChainOptions(chain)

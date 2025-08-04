@@ -39,24 +39,29 @@ export interface BulkIngestorApi {
 
   /**
    * A BulkIngestor fetches and updates storage with bulk headers in bulkRange.
-   * 
+   *
    * If it can, it must also fetch live headers in fetch range that are not in bulkRange and return them as an array.
-   * 
+   *
    * The storage methods `insertBulkFile`, `updateBulkFile`, and `addBulkHeaders` should be used to add bulk headers to storage.
-   * 
+   *
    * @param before bulk and live range of headers before ingesting any new headers.
    * @param fetchRange range of headers still needed, includes both missing bulk and live headers.
    * @param bulkRange range of bulk headers still needed
    * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.
    * @returns new live headers: headers in fetchRange but not in bulkRange
    */
-  fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
+  fetchHeaders(
+    before: HeightRanges,
+    fetchRange: HeightRange,
+    bulkRange: HeightRange,
+    priorLiveHeaders: BlockHeader[]
+  ): Promise<BlockHeader[]>
 
   /**
    * A BulkIngestor has two potential goals:
    * 1. To source missing bulk headers and include them in bulk storage.
-   * 2. To source missing live headers to be forwarded to live storage. 
-   * 
+   * 2. To source missing live headers to be forwarded to live storage.
+   *
    * @param presentHeight current height of the active chain tip, may lag the true value.
    * @param before current bulk and live storage height ranges, either may be empty.
    * @param priorLiveHeaders any headers accumulated by prior bulk ingestor(s) that are too recent for bulk storage.

@@ -23,7 +23,6 @@ export interface ChaintracksOptions {
 }
 
 export interface ChaintracksManagementApi extends ChaintracksApi {
-
   /**
    * close and release all resources
    */

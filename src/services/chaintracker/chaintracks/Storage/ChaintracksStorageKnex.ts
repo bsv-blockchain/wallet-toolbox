@@ -2,13 +2,15 @@ import { Knex } from 'knex'
 import { KnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
 import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
-import {
-  Chain,
-  WERR_INVALID_OPERATION,
-  WERR_INVALID_PARAMETER,
-} from '../../../../sdk'
+import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { addWork, blockHash, convertBitsToWork, isMoreWork, serializeBaseBlockHeader } from '../util/blockHeaderUtilities'
+import {
+  addWork,
+  blockHash,
+  convertBitsToWork,
+  isMoreWork,
+  serializeBaseBlockHeader
+} from '../util/blockHeaderUtilities'
 import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
 import { determineDBType } from '../../../../index.all'
@@ -16,6 +18,7 @@ import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
 import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
+import { ChaintracksStorageBulkFileApi } from '../Api/ChaintracksStorageApi'
 
 export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
   /**
@@ -48,7 +51,7 @@ export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOpt
  * Implements the ChaintracksStorageApi using Knex.js for both MySql and Sqlite support.
  * Also see `chaintracksStorageMemory` which leverages Knex support for an in memory database.
  */
-export class ChaintracksStorageKnex extends ChaintracksStorageBase {
+export class ChaintracksStorageKnex extends ChaintracksStorageBase implements ChaintracksStorageBulkFileApi {
   static createStorageKnexOptions(chain: Chain, knex?: Knex): ChaintracksStorageKnexOptions {
     const options: ChaintracksStorageKnexOptions = {
       ...ChaintracksStorageBase.createStorageBaseOptions(chain),
@@ -147,8 +150,13 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
     return header
   }
 
+  async deleteBulkFile(fileId: number): Promise<number> {
+    const count = await this.knex(this.bulkFilesTableName).where({ fileId: fileId }).del()
+    return count
+  }
+  
   async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
-    if (file.fileId === 0) delete file.fileId
+    if (!file.fileId) delete file.fileId
     const [id] = await this.knex(this.bulkFilesTableName).insert(file)
     file.fileId = id
     return id
@@ -239,7 +247,9 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
         const r = await trx(table).count()
         const count = Number(r[0]['count(*)'])
         if (count === 0) {
-          const lbf = this.bulkFiles.slice(-1)[0]
+          const lbf = await this.bulkManager.getLastFile()
+          if (!lbf)
+            throw new WERR_INVALID_OPERATION('bulk headers must exist before first live header can be added')
           if (header.previousHash === lbf.lastHash && header.height === lbf.firstHeight + lbf.count) {
             const chainWork = addWork(lbf.lastChainWork, convertBitsToWork(header.bits))
             const newHeader = {
@@ -426,30 +436,26 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
   }
 
   async deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number> {
-    return this.knex.transaction(async (trx) => {
+    return this.knex.transaction(async trx => {
       try {
         const tableName = this.headerTableName
         await trx(tableName)
           .whereIn('previousHeaderId', function () {
-            this.select('headerId')
-              .from(tableName)
-              .where('height', '<=', maxHeight);
+            this.select('headerId').from(tableName).where('height', '<=', maxHeight)
           })
-          .update({ previousHeaderId: null });
+          .update({ previousHeaderId: null })
 
-        const deletedCount = await trx(tableName)
-          .where('height', '<=', maxHeight)
-          .del();
+        const deletedCount = await trx(tableName).where('height', '<=', maxHeight).del()
 
         // Commit transaction
-        await trx.commit();
-        return deletedCount;
+        await trx.commit()
+        return deletedCount
       } catch (error) {
         // Rollback on error
-        await trx.rollback();
-        throw error;
+        await trx.rollback()
+        throw error
       }
-    });
+    })
   }
 
   async getHeaders(height: number, count: number): Promise<number[]> {
@@ -473,8 +479,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase {
       const range = new HeightRange(height, height + bulkCount - 1)
       const reader = await BulkFilesReaderStorage.fromStorage(this, new ChaintracksFetch(), range, bulkCount * 80)
       const bulkData = await reader.read()
-      if (bulkData)
-        bufs.push(bulkData);
+      if (bulkData) bufs.push(bulkData)
     }
 
     if (headers.length > 0) {

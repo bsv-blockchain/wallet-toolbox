@@ -1,10 +1,10 @@
-import { asString, asArray } from '../../../../index.client';
-import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk';
-import { HeightRange } from './HeightRange';
-import { ChaintracksFsApi } from '../Api/ChaintracksFsApi';
-import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi';
-import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase';
-import { Hash } from '@bsv/sdk';
+import { asString, asArray } from '../../../../index.client'
+import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
+import { HeightRange } from './HeightRange'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
+import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { Hash } from '@bsv/sdk'
 
 /**
  * Descriptive information about a single bulk header file.
@@ -49,6 +49,9 @@ export interface BulkHeaderFileInfo {
 
   data?: Uint8Array // optional, used for validation
 
+  /**
+   * true iff these properties should be considered pre-validated, including a valid required fileHash of data (when not undefined).
+   */
   validated?: boolean
   /**
    * optional, used for database storage
@@ -60,47 +63,46 @@ export interface BulkHeaderFileInfo {
   sourceUrl?: string
 }
 
-
 export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
-  chain?: Chain | undefined;
-  count: number;
-  data?: Uint8Array<ArrayBufferLike> | undefined;
-  fileHash: string | null;
-  fileId?: number | undefined;
-  fileName: string;
-  firstHeight: number;
-  lastChainWork: string;
-  lastHash: string | null;
-  prevChainWork: string;
-  prevHash: string;
-  sourceUrl?: string | undefined;
-  validated?: boolean | undefined;
+  chain?: Chain | undefined
+  count: number
+  data?: Uint8Array<ArrayBufferLike> | undefined
+  fileHash: string | null
+  fileId?: number | undefined
+  fileName: string
+  firstHeight: number
+  lastChainWork: string
+  lastHash: string | null
+  prevChainWork: string
+  prevHash: string
+  sourceUrl?: string | undefined
+  validated?: boolean | undefined
 
   constructor(info: BulkHeaderFileInfo) {
-    this.chain = info.chain;
-    this.count = info.count;
-    this.data = info.data;
-    this.fileHash = info.fileHash;
-    this.fileId = info.fileId;
-    this.fileName = info.fileName;
-    this.firstHeight = info.firstHeight;
-    this.lastChainWork = info.lastChainWork;
-    this.lastHash = info.lastHash;
-    this.prevChainWork = info.prevChainWork;
-    this.prevHash = info.prevHash;
-    this.sourceUrl = info.sourceUrl;
-    this.validated = info.validated;
+    this.chain = info.chain
+    this.count = info.count
+    this.data = info.data
+    this.fileHash = info.fileHash
+    this.fileId = info.fileId
+    this.fileName = info.fileName
+    this.firstHeight = info.firstHeight
+    this.lastChainWork = info.lastChainWork
+    this.lastHash = info.lastHash
+    this.prevChainWork = info.prevChainWork
+    this.prevHash = info.prevHash
+    this.sourceUrl = info.sourceUrl
+    this.validated = info.validated
   }
 
-  abstract readDataFromFile(length: number, offset: number): Promise<Uint8Array | undefined>;
+  abstract readDataFromFile(length: number, offset: number): Promise<Uint8Array | undefined>
 
   get heightRange(): HeightRange {
-    return new HeightRange(this.firstHeight, this.firstHeight + this.count - 1);
+    return new HeightRange(this.firstHeight, this.firstHeight + this.count - 1)
   }
 
   async ensureData(): Promise<Uint8Array> {
-    if (!this.data) throw new WERR_INVALID_OPERATION(`data is undefined and no ensureData() override`);
-    return this.data;
+    if (!this.data) throw new WERR_INVALID_OPERATION(`data is undefined and no ensureData() override`)
+    return this.data
   }
 
   /**
@@ -108,12 +110,12 @@ export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
    * @returns the sha256 hash of the file's data as base64 string.
    */
   async computeFileHash(): Promise<string> {
-    if (!this.data) throw new WERR_INVALID_OPERATION(`requires defined data`);
-    return asString(Hash.sha256(asArray(this.data)), 'base64');
+    if (!this.data) throw new WERR_INVALID_OPERATION(`requires defined data`)
+    return asString(Hash.sha256(asArray(this.data)), 'base64')
   }
 
   async releaseData(): Promise<void> {
-    this.data = undefined;
+    this.data = undefined
   }
 
   toCdnInfo(): BulkHeaderFileInfo {
@@ -126,7 +128,7 @@ export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
       lastHash: this.lastHash,
       prevChainWork: this.prevChainWork,
       prevHash: this.prevHash
-    };
+    }
   }
 
   toStorageInfo(): BulkHeaderFileInfo {
@@ -143,7 +145,7 @@ export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
       validated: this.validated,
       sourceUrl: this.sourceUrl,
       fileId: this.fileId
-    };
+    }
   }
 }
 
@@ -211,7 +213,6 @@ export class BulkHeaderFileStorage extends BulkHeaderFile {
     return this.data
   }
 }
-
 
 /**
  * Describes a collection of bulk block header files.

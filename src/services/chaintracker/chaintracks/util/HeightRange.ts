@@ -1,4 +1,4 @@
-import { BlockHeader } from "../Api/BlockHeaderApi"
+import { BlockHeader } from '../Api/BlockHeaderApi'
 
 export interface HeightRangeApi {
   minHeight: number
@@ -19,7 +19,7 @@ export class HeightRange implements HeightRangeApi {
   static readonly empty = new HeightRange(0, -1)
 
   /**
-   * @param headers 
+   * @param headers
    * @returns range of height values from the given headers, or the empty range if there are no headers.
    */
   static from(headers: BlockHeader[]): HeightRange {

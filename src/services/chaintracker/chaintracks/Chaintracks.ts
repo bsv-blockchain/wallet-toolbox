@@ -173,7 +173,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   async syncBulkStorage(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
-
     if (this.synchronizing) return
 
     try {
@@ -188,23 +187,23 @@ export class Chaintracks implements ChaintracksManagementApi {
       let added = HeightRange.empty
 
       let done = false
-      for (; !done;) {
+      for (; !done; ) {
         for (const bulk of this.bulkIngestors) {
           try {
-
             const r = await bulk.synchronize(presentHeight, before, liveHeaders)
 
             liveHeaders = r.liveHeaders
             after = await this.storageEngine.getAvailableHeightRanges()
             added = after.bulk.above(before.bulk)
             before = after
-            this.log(`Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`)
+            this.log(
+              `Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`
+            )
 
             if (r.done) {
               done = true
               break
             }
-
           } catch (uerr: unknown) {
             console.log(uerr)
           }
@@ -280,7 +279,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 `)
 
         // Bring bulk storage up-to-date and initialize liveHeaders
-        if (!skipBulkSync) await this.syncBulkStorage(presentHeight, before);
+        if (!skipBulkSync) await this.syncBulkStorage(presentHeight, before)
 
         this.stopShiftLiveHeaders = false
 
@@ -372,7 +371,8 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   private checkIfClientApiIsEnabled() {
     if (this.isClientApiEnabled) return
-    if (!this.lastSynchronizePresentHeight) throw new Error('Chaintracks must be synchronized to enable the client API.')
+    if (!this.lastSynchronizePresentHeight)
+      throw new Error('Chaintracks must be synchronized to enable the client API.')
     if (!this.subscriberCallbacksEnabled)
       throw new Error('Chaintracks must be listening for new headers to enable the client API.')
   }

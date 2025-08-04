@@ -37,7 +37,7 @@ export async function sha256HashOfBinaryFile(
  * @param prevHash Required previous header hash.
  * @param prevChainWork Required previous chain work.
  * @param fetch Optional ChaintracksFetchApi instance for fetching data.
- * @returns Promise resolving to an object containing the last header hash and last chain work.
+ * @returns Validated BulkHeaderFileInfo with `validated` set to true.
  */
 export async function validateBulkFileData(
   bf: BulkHeaderFileInfo,
@@ -72,7 +72,7 @@ export async function validateBulkFileData(
     vbf.lastHash = lastHeaderHash
     vbf.lastChainWork = lastChainWork!
     if (vbf.firstHeight === 0) {
-      validateGenesisHeader(vbf.data, vbf.chain!) 
+      validateGenesisHeader(vbf.data, vbf.chain!)
     }
   }
   vbf.validated = true
@@ -104,7 +104,10 @@ export function validateBufferOfHeaders(
     const headerStart = offset + i * 80
     const headerEnd = headerStart + 80
     if (headerEnd > buffer.length) {
-      throw new WERR_INVALID_PARAMETER('buffer', `multiple of 80 bytes long. header ${i} missing bytes for header at offset ${headerStart} in buffer of length ${buffer.length}`)
+      throw new WERR_INVALID_PARAMETER(
+        'buffer',
+        `multiple of 80 bytes long. header ${i} missing bytes for header at offset ${headerStart} in buffer of length ${buffer.length}`
+      )
     }
     const header = buffer.slice(headerStart, headerEnd)
     const h = deserializeBaseBlockHeader(header)
@@ -122,25 +125,25 @@ export function validateBufferOfHeaders(
 
 /**
  * Verifies that buffer begins with valid genesis block header for the specified chain.
- * @param buffer 
- * @param chain 
+ * @param buffer
+ * @param chain
  */
-export function validateGenesisHeader( buffer: Uint8Array, chain: Chain) : void
-{
-    const header = buffer.slice(0, 80)
-    const h = deserializeBlockHeader(header, 0, 0)
-    const gh = genesisHeader(chain)
-    if (h.bits !== gh.bits
-      || h.previousHash !== gh.previousHash
-      || h.merkleRoot !== gh.merkleRoot
-      || h.time !== gh.time
-      || h.nonce !== gh.nonce
-      || h.version !== gh.version
-      || h.height !== gh.height
-      || h.hash !== gh.hash
-    ) {
-      throw new WERR_INVALID_PARAMETER('buffer', `genesis header for chain ${chain}`)
-    }
+export function validateGenesisHeader(buffer: Uint8Array, chain: Chain): void {
+  const header = buffer.slice(0, 80)
+  const h = deserializeBlockHeader(header, 0, 0)
+  const gh = genesisHeader(chain)
+  if (
+    h.bits !== gh.bits ||
+    h.previousHash !== gh.previousHash ||
+    h.merkleRoot !== gh.merkleRoot ||
+    h.time !== gh.time ||
+    h.nonce !== gh.nonce ||
+    h.version !== gh.version ||
+    h.height !== gh.height ||
+    h.hash !== gh.hash
+  ) {
+    throw new WERR_INVALID_PARAMETER('buffer', `genesis header for chain ${chain}`)
+  }
 }
 
 /**
@@ -432,6 +435,17 @@ export function serializeBaseBlockHeader(header: BaseBlockHeader, buffer?: numbe
       }
       buffer[offset + i] = data[i]
     }
+  }
+  return data
+}
+
+export function serializeBaseBlockHeaders(headers: BlockHeader[]): Uint8Array {
+  const data = new Uint8Array(headers.length * 80)
+  let i = -1
+  for (const header of headers) {
+    i++
+    const d = serializeBaseBlockHeader(header)
+    data.set(d, i * 80)
   }
   return data
 }

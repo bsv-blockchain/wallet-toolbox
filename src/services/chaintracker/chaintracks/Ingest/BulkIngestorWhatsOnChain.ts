@@ -71,8 +71,12 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     return presentHeight
   }
 
-  async fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> {
-
+  async fetchHeaders(
+    before: HeightRanges,
+    fetchRange: HeightRange,
+    bulkRange: HeightRange,
+    priorLiveHeaders: BlockHeader[]
+  ): Promise<BlockHeader[]> {
     const oldHeaders: BlockHeader[] = []
     const errors: { code: number; message: string; count: number }[] = []
     const enqueue: EnqueueHandler = header => {
@@ -83,7 +87,13 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
       return false
     }
 
-    const ok = await this.woc.listenForOldBlockHeaders(fetchRange.minHeight, fetchRange.maxHeight, enqueue, error, this.idleWait)
+    const ok = await this.woc.listenForOldBlockHeaders(
+      fetchRange.minHeight,
+      fetchRange.maxHeight,
+      enqueue,
+      error,
+      this.idleWait
+    )
 
     let liveHeaders: BlockHeader[] = []
     if (ok) {

@@ -248,11 +248,15 @@ export type InsertHeaderResult = {
   noTip: boolean
 }
 
-export interface ChaintracksStorageIngestApi {
+export interface ChaintracksStorageBulkFileApi {
   insertBulkFile(file: BulkHeaderFileInfo): Promise<number>
   updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number>
+  deleteBulkFile(fileId: number): Promise<number>
   getBulkFiles(): Promise<BulkHeaderFileInfo[]>
   getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined>
+}
+
+export interface ChaintracksStorageIngestApi {
 
   /**
    * Attempts to insert a block header into the chain.

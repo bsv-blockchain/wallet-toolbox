@@ -8,8 +8,13 @@ import { asUint8Array } from '../../../../index.client'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
-import { BulkHeaderFile, BulkHeaderFileFs, BulkHeaderFileInfo, BulkHeaderFilesInfo, BulkHeaderFileStorage } from './BulkHeaderFile'
-
+import {
+  BulkHeaderFile,
+  BulkHeaderFileFs,
+  BulkHeaderFileInfo,
+  BulkHeaderFilesInfo,
+  BulkHeaderFileStorage
+} from './BulkHeaderFile'
 
 /**
  * Breaks available bulk headers stored in multiple files into a sequence of buffers with
@@ -325,7 +330,7 @@ export class BulkFilesReaderStorage extends BulkFilesReader {
     range?: HeightRange,
     maxBufferSize?: number
   ): Promise<BulkFilesReaderStorage> {
-    const files = await storage.getBulkFiles()
+    const files = await storage.bulkManager.getBulkFiles()
     const readerFiles = files.map(file => new BulkHeaderFileStorage(file, storage, fetch))
     return new BulkFilesReaderStorage(storage, readerFiles, range, maxBufferSize)
   }

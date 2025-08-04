@@ -1,9 +1,6 @@
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
 import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
-import {
-  Chain,
-  WERR_INVALID_PARAMETER,
-} from '../../../../sdk'
+import { Chain, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { addWork, convertBitsToWork, isMoreWork, serializeBaseBlockHeader } from '../util/blockHeaderUtilities'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
@@ -19,16 +16,9 @@ interface ChaintracksNoDbData {
   hashToHeaderId: Map<string, number>
 }
 
-export interface ChaintracksStorageNoDbOptions extends ChaintracksStorageBaseOptions {
-}
+export interface ChaintracksStorageNoDbOptions extends ChaintracksStorageBaseOptions {}
 
 export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
-  static createStorageNoDbOptions(chain: Chain): ChaintracksStorageNoDbOptions {
-    const options: ChaintracksStorageNoDbOptions = {
-      ...ChaintracksStorageBase.createStorageBaseOptions(chain),
-    }
-    return options
-  }
 
   static mainData: ChaintracksNoDbData = {
     chain: 'main',
@@ -56,7 +46,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
       return ChaintracksStorageNoDb.testData
     } else {
       throw new WERR_INVALID_PARAMETER('chain', `either 'main' or 'test. '${this.chain}' is unsupported.`)
-    } 
+    }
   }
 
   override async deleteLiveBlockHeaders(): Promise<void> {
@@ -67,14 +57,10 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
     data.hashToHeaderId.clear()
   }
 
-  override async deleteBulkBlockHeaders(): Promise<void> {
-    this.bulkFiles = []
-  }
-
   override async deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number> {
     const data = await this.getData()
     let deletedCount = 0
-    
+
     // Clear previousHeaderId references
     for (const [headerId, header] of data.liveHeaders) {
       if (header.previousHeaderId) {
@@ -190,7 +176,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
 
     const bufs: Uint8Array[] = []
 
-    if (headers.length === 0 || (headers[0].height > height)) {
+    if (headers.length === 0 || headers[0].height > height) {
       const bulkCount = headers.length === 0 ? count : headers[0].height - height
       const range = new HeightRange(height, height + bulkCount - 1)
       const reader = await BulkFilesReaderStorage.fromStorage(this, new ChaintracksFetch(), range, bulkCount * 80)
@@ -221,7 +207,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
 
   override async insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult> {
     const data = await this.getData()
-    
+
     let ok = true
     let dupe = false
     let noPrev = false
@@ -247,7 +233,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
     if (!oneBack) {
       // Check if this is first live header
       if (data.liveHeaders.size === 0) {
-        const lbf = this.bulkFiles.slice(-1)[0]
+        const lbf = await this.bulkManager.getLastFile()
         if (lbf && header.previousHash === lbf.lastHash && header.height === lbf.firstHeight + lbf.count) {
           const chainWork = addWork(lbf.lastChainWork, convertBitsToWork(header.bits))
           const newHeader = {
@@ -261,10 +247,30 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
           data.liveHeaders.set(newHeader.headerId, newHeader)
           data.hashToHeaderId.set(header.hash, newHeader.headerId)
           data.tipHeaderId = newHeader.headerId
-          return { added: true, dupe, isActiveTip: true, reorgDepth, priorTip, noPrev, badPrev, noActiveAncestor, noTip }
+          return {
+            added: true,
+            dupe,
+            isActiveTip: true,
+            reorgDepth,
+            priorTip,
+            noPrev,
+            badPrev,
+            noActiveAncestor,
+            noTip
+          }
         }
         noPrev = true
-        return { added: false, dupe, isActiveTip: false, reorgDepth, priorTip, noPrev, badPrev, noActiveAncestor, noTip }
+        return {
+          added: false,
+          dupe,
+          isActiveTip: false,
+          reorgDepth,
+          priorTip,
+          noPrev,
+          badPrev,
+          noActiveAncestor,
+          noTip
+        }
       }
       noPrev = true
       return { added: false, dupe, isActiveTip: false, reorgDepth, priorTip, noPrev, badPrev, noActiveAncestor, noTip }
@@ -276,9 +282,10 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
     }
 
     const chainWork = addWork(oneBack.chainWork, convertBitsToWork(header.bits))
-    let tip = oneBack.isActive && oneBack.isChainTip 
-      ? oneBack 
-      : Array.from(data.liveHeaders.values()).find(h => h.isActive && h.isChainTip)
+    let tip =
+      oneBack.isActive && oneBack.isChainTip
+        ? oneBack
+        : Array.from(data.liveHeaders.values()).find(h => h.isActive && h.isChainTip)
 
     if (!tip) {
       noTip = true
@@ -303,7 +310,17 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
         const previousHeader = data.liveHeaders.get(activeAncestor.previousHeaderId!)
         if (!previousHeader) {
           noActiveAncestor = true
-          return { added: false, dupe, isActiveTip: false, reorgDepth, priorTip, noPrev, badPrev, noActiveAncestor, noTip }
+          return {
+            added: false,
+            dupe,
+            isActiveTip: false,
+            reorgDepth,
+            priorTip,
+            noPrev,
+            badPrev,
+            noActiveAncestor,
+            noTip
+          }
         }
         activeAncestor = previousHeader
       }
@@ -349,36 +366,5 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
       noActiveAncestor,
       noTip
     }
-  }
-
-  override async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
-    if (file.fileId === 0) delete file.fileId
-    const id = (this.bulkFiles.length > 0 ? Math.max(...this.bulkFiles.map(f => f.fileId || 0)) : 0) + 1
-    file.fileId = id
-    this.bulkFiles.push(file)
-    return id
-  }
-
-  override async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> {
-    const index = this.bulkFiles.findIndex(f => f.fileId === fileId)
-    if (index === -1) return 0
-    this.bulkFiles[index] = { ...this.bulkFiles[index], ...file }
-    return 1
-  }
-
-  override async getBulkFiles(): Promise<BulkHeaderFileInfo[]> {
-    return this.bulkFiles.sort((a, b) => a.firstHeight - b.firstHeight)
-  }
-
-  override async getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> {
-    if (!Number.isInteger(fileId)) throw new WERR_INVALID_PARAMETER('fileId', 'a valid, integer bulk_files fileId')
-    
-    const file = this.bulkFiles.find(f => f.fileId === fileId)
-    if (!file || !file.data) return undefined
-
-    if (Number.isInteger(offset) && Number.isInteger(length)) {
-      return file.data.slice(offset!, offset! + length!)
-    }
-    return file.data
   }
 }
