@@ -37,6 +37,61 @@ export interface BulkFileDataManagerMergeResult {
   dropped: BulkHeaderFileInfo[]
 }
 
+export class BulkFileDataReader {
+  readonly manager: BulkFileDataManager
+  readonly range: HeightRange
+  readonly maxBufferSize: number
+  nextHeight: number
+
+  constructor(manager: BulkFileDataManager, range: HeightRange, maxBufferSize: number) {
+    this.manager = manager
+    this.range = range
+    this.maxBufferSize = maxBufferSize
+    this.nextHeight = range.minHeight
+  }
+
+  /**
+   * Returns the Buffer of block headers from the given `file` for the given `range`.
+   * If `range` is undefined, the file's full height range is read.
+   * The returned Buffer will only contain headers in `file` and in `range`
+   * @param file
+   * @param range
+   */
+  private async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<Uint8Array | undefined> {
+    // Constrain the range to the file's contents...
+    let fileRange = new HeightRange(file.firstHeight, file.firstHeight + file.count - 1)
+    if (range) fileRange = fileRange.intersect(range)
+    if (fileRange.isEmpty) return undefined
+    const offset = (fileRange.minHeight - file.firstHeight) * 80
+    const length = fileRange.length * 80
+    return await this.manager.getDataFromFile(file, offset, length)
+  }
+
+  /**
+   * @returns an array containing the next `maxBufferSize` bytes of headers from the files.
+   */
+  async read(): Promise<Uint8Array | undefined> {
+    if (this.nextHeight === undefined || !this.range || this.range.isEmpty || this.nextHeight > this.range.maxHeight) return undefined
+    let lastHeight = this.nextHeight + this.maxBufferSize / 80 - 1
+    lastHeight = Math.min(lastHeight, this.range.maxHeight)
+    let file = await this.manager.getFileForHeight(this.nextHeight)
+    if (!file) throw new WERR_INTERNAL(`logic error`)
+    const readRange = new HeightRange(this.nextHeight, lastHeight)
+    let buffers = new Uint8Array(readRange.length * 80)
+    let offset = 0
+    while (file) {
+      const buffer = await this.readBufferFromFile(file, readRange)
+      if (!buffer) break
+      buffers.set(buffer, offset)
+      offset += buffer.length
+      file = await this.manager.getFileForHeight(file.firstHeight + file.count)
+    }
+    if (!buffers.length || offset !== readRange.length * 80) return undefined
+    this.nextHeight = lastHeight + 1
+    return buffers
+  }
+}
+
 /**
  * Manages bulk file data (typically 8MB chunks of 100,000 headers each).
  *
@@ -76,6 +131,12 @@ export class BulkFileDataManager {
     this.fetch = options.fetch
 
     this.deleteBulkFilesNoLock()
+  }
+
+  async createReader(range?: HeightRange, maxBufferSize?: number): Promise<BulkFileDataReader> {
+    range = range || await this.getHeightRange()
+    maxBufferSize = maxBufferSize || 1000000 * 80 // 100,000 headers, 8MB
+    return new BulkFileDataReader(this, range, maxBufferSize)
   }
 
   async setStorage(storage: ChaintracksStorageBulkFileApi): Promise<void> {
@@ -229,6 +290,33 @@ export class BulkFileDataManager {
     })
   }
 
+  async getDataFromFile(file: BulkHeaderFileInfo, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+    const bfd = await this.getBfdForHeight(file.firstHeight)
+    if (!bfd || bfd.count < file.count)
+      throw new WERR_INVALID_PARAMETER('file', `a match for ${file.firstHeight}, ${file.count} in the BulkFileDataManager.`)
+    return this.lock.withReadLock(async () => this.getDataFromFileNoLock(bfd, offset, length))
+  }
+
+  private async getDataFromFileNoLock(bfd: BulkFileData, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+    const fileLength = bfd.count * 80
+    offset = offset || 0
+    if (offset > fileLength - 1) return undefined
+    length = length || (bfd.count * 80 - offset)
+    length = Math.min(length, fileLength - offset)
+    let data: Uint8Array | undefined
+    if (bfd.data) {
+      data = bfd.data.slice(offset, offset + length)
+    } else if (bfd.fileId && this.storage) {
+      data = await this.storage.getBulkFileData(bfd.fileId, offset, length)
+    }
+    if (!data) {
+      await this.ensureData(bfd)
+      if (bfd.data) data = bfd.data.slice(offset, offset + length)
+    }
+    if (!data) return undefined
+    return data
+  }
+
   async findHeaderForHeightOrUndefined(height: number): Promise<BlockHeader | undefined> {
     return this.lock.withReadLock(async () => {
       if (!Number.isInteger(height) || height < 0)
@@ -236,16 +324,7 @@ export class BulkFileDataManager {
       const file = this.bfds.find(f => f.firstHeight <= height && f.firstHeight + f.count > height)
       if (!file) return undefined
       const offset = (height - file.firstHeight) * 80
-      let data: Uint8Array | undefined
-      if (file.data) {
-        data = file.data.slice(offset, offset + 80)
-      } else if (file.fileId && this.storage) {
-        data = await this.storage.getBulkFileData(file.fileId, offset, 80)
-      }
-      if (!data) {
-        await this.ensureData(file)
-        if (file.data) data = file.data.slice(offset, offset + 80)
-      }
+      const data = await this.getDataFromFileNoLock(file, offset, 80)
       if (!data) return undefined
       const header = deserializeBlockHeader(data, 0, height)
       return header
