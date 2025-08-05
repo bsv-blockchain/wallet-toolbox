@@ -19,7 +19,6 @@ interface ChaintracksNoDbData {
 export interface ChaintracksStorageNoDbOptions extends ChaintracksStorageBaseOptions {}
 
 export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
-
   static mainData: ChaintracksNoDbData = {
     chain: 'main',
     liveHeaders: new Map<number, LiveBlockHeader>(),

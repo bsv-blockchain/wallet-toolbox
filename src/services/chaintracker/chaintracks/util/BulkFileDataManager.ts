@@ -1,26 +1,23 @@
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { BlockHeader, Chain, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { Hash } from '@bsv/sdk'
-import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
-import { BulkHeaderFile, BulkHeaderFileInfo } from './BulkHeaderFile'
-import {
-  isKnownValidBulkHeaderFile,
-  validBulkHeaderFiles,
-  validBulkHeaderFilesByFileHash
-} from './validBulkHeaderFilesByFileHash'
+import { asArray, asString, asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
+import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from './BulkHeaderFile'
+import { isKnownValidBulkHeaderFile, validBulkHeaderFiles } from './validBulkHeaderFilesByFileHash'
 import { HeightRange } from './HeightRange'
 import {
+  addWork,
+  convertBitsToWork,
   deserializeBlockHeader,
   serializeBaseBlockHeaders,
   subWork,
   validateBufferOfHeaders,
-  validateBulkFileData,
   validateGenesisHeader
 } from './blockHeaderUtilities'
-import { wait } from '../../../../index.all'
 import { ChaintracksStorageBulkFileApi } from '../Api/ChaintracksStorageApi'
-import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
 import { ChaintracksFetch } from './ChaintracksFetch'
+import { logger } from '../../../../../test/utils/TestUtilsWalletStorage'
+import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 
 export interface BulkFileDataManagerOptions {
   chain: Chain
@@ -28,68 +25,6 @@ export interface BulkFileDataManagerOptions {
   maxRetained?: number
   fetch?: ChaintracksFetchApi
   fromKnownSourceUrl?: string
-}
-
-export interface BulkFileDataManagerMergeResult {
-  unchanged: BulkHeaderFileInfo[]
-  inserted: BulkHeaderFileInfo[]
-  updated: BulkHeaderFileInfo[]
-  dropped: BulkHeaderFileInfo[]
-}
-
-export class BulkFileDataReader {
-  readonly manager: BulkFileDataManager
-  readonly range: HeightRange
-  readonly maxBufferSize: number
-  nextHeight: number
-
-  constructor(manager: BulkFileDataManager, range: HeightRange, maxBufferSize: number) {
-    this.manager = manager
-    this.range = range
-    this.maxBufferSize = maxBufferSize
-    this.nextHeight = range.minHeight
-  }
-
-  /**
-   * Returns the Buffer of block headers from the given `file` for the given `range`.
-   * If `range` is undefined, the file's full height range is read.
-   * The returned Buffer will only contain headers in `file` and in `range`
-   * @param file
-   * @param range
-   */
-  private async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<Uint8Array | undefined> {
-    // Constrain the range to the file's contents...
-    let fileRange = new HeightRange(file.firstHeight, file.firstHeight + file.count - 1)
-    if (range) fileRange = fileRange.intersect(range)
-    if (fileRange.isEmpty) return undefined
-    const offset = (fileRange.minHeight - file.firstHeight) * 80
-    const length = fileRange.length * 80
-    return await this.manager.getDataFromFile(file, offset, length)
-  }
-
-  /**
-   * @returns an array containing the next `maxBufferSize` bytes of headers from the files.
-   */
-  async read(): Promise<Uint8Array | undefined> {
-    if (this.nextHeight === undefined || !this.range || this.range.isEmpty || this.nextHeight > this.range.maxHeight) return undefined
-    let lastHeight = this.nextHeight + this.maxBufferSize / 80 - 1
-    lastHeight = Math.min(lastHeight, this.range.maxHeight)
-    let file = await this.manager.getFileForHeight(this.nextHeight)
-    if (!file) throw new WERR_INTERNAL(`logic error`)
-    const readRange = new HeightRange(this.nextHeight, lastHeight)
-    let buffers = new Uint8Array(readRange.length * 80)
-    let offset = 0
-    while (file) {
-      const buffer = await this.readBufferFromFile(file, readRange)
-      if (!buffer) break
-      buffers.set(buffer, offset)
-      offset += buffer.length
-      file = await this.manager.getFileForHeight(file.firstHeight + file.count)
-    }
-    if (!buffers.length || offset !== readRange.length * 80) return undefined
-    this.nextHeight = lastHeight + 1
-    return buffers
-  }
 }
 
 /**
@@ -114,7 +49,7 @@ export class BulkFileDataManager {
 
   private bfds: BulkFileData[] = []
   private fileHashToIndex: Record<string, number> = {}
-  private lock: Lock = new Lock()
+  private lock: SingleWriterMultiReaderLock = new SingleWriterMultiReaderLock()
   private storage?: ChaintracksStorageBulkFileApi
 
   readonly chain: Chain
@@ -123,7 +58,9 @@ export class BulkFileDataManager {
   readonly maxRetained?: number
   readonly fromKnownSourceUrl?: string
 
-  constructor(options: BulkFileDataManagerOptions) {
+  constructor(options: BulkFileDataManagerOptions | Chain) {
+    if (typeof options === 'object') options = options as BulkFileDataManagerOptions
+    else options = BulkFileDataManager.createDefaultOptions(options as Chain)
     this.chain = options.chain
     this.maxPerFile = options.maxPerFile
     this.maxRetained = options.maxRetained
@@ -134,9 +71,45 @@ export class BulkFileDataManager {
   }
 
   async createReader(range?: HeightRange, maxBufferSize?: number): Promise<BulkFileDataReader> {
-    range = range || await this.getHeightRange()
+    range = range || (await this.getHeightRange())
     maxBufferSize = maxBufferSize || 1000000 * 80 // 100,000 headers, 8MB
     return new BulkFileDataReader(this, range, maxBufferSize)
+  }
+
+  async updateFromUrl(cdnUrl: string): Promise<void> {
+    if (!this.fetch) throw new WERR_INVALID_OPERATION('fetch is not defined in the BulkFileDataManager.')
+
+    const toUrl = (file: string) => this.fetch!.pathJoin(cdnUrl, file)
+    const url = toUrl(`${this.chain}NetBlockHeaders.json`)
+
+    const availableBulkFiles = (await this.fetch.fetchJson(url)) as BulkHeaderFilesInfo
+    if (!availableBulkFiles)
+      throw new WERR_INVALID_PARAMETER(`cdnUrl`, `a valid BulkHeaderFilesInfo JSON resource available from ${url}`)
+
+    const selectedFiles = selectBulkHeaderFiles(
+      availableBulkFiles.files,
+      this.chain,
+      this.maxPerFile || availableBulkFiles.headersPerFile
+    )
+    for (const bf of selectedFiles) {
+      if (!bf.fileHash) {
+        throw new WERR_INVALID_PARAMETER(`fileHash`, `valid for all files in json downloaded from ${url}`)
+      }
+      if (!bf.chain || bf.chain !== this.chain) {
+        throw new WERR_INVALID_PARAMETER(`chain`, `"${this.chain}" for all files in json downloaded from ${url}`)
+      }
+      if (!bf.sourceUrl || bf.sourceUrl !== cdnUrl) bf.sourceUrl = cdnUrl
+    }
+
+    const rangeBefore = await this.getHeightRange()
+    const r = await this.merge(selectedFiles)
+    const rangeAfter = await this.getHeightRange()
+
+    let log = 'BulkDataFileManager.updateFromUrl\n'
+    log += `  url: ${url}\n`
+    log += `  bulk range before: ${rangeBefore}\n`
+    log += `  bulk range after:  ${rangeAfter}\n`
+    logger(log)
   }
 
   async setStorage(storage: ChaintracksStorageBulkFileApi): Promise<void> {
@@ -158,13 +131,13 @@ export class BulkFileDataManager {
     }
   }
 
-  async deleteBulkFiles() : Promise<void> {
+  async deleteBulkFiles(): Promise<void> {
     return this.lock.withWriteLock(async () => this.deleteBulkFilesNoLock())
   }
 
-  private deleteBulkFilesNoLock() : void {
-      this.bfds = []
-      this.fileHashToIndex = {}
+  private deleteBulkFilesNoLock(): void {
+    this.bfds = []
+    this.fileHashToIndex = {}
 
     if (this.fromKnownSourceUrl) {
       const files = selectBulkHeaderFiles(
@@ -187,6 +160,7 @@ export class BulkFileDataManager {
     for (const file of files) {
       const vbf: BulkFileData = await this.validateFileInfo(file)
       const hbf = this.getBfdForHeight(vbf.firstHeight)
+      const lbf = this.getLastBfd()
       if (hbf) {
         if (!vbf.fileId && hbf.fileId) vbf.fileId = hbf.fileId
         if (
@@ -200,6 +174,8 @@ export class BulkFileDataManager {
         } else {
           await this.update(vbf, hbf, r)
         }
+      } else if (isBdfIncremental(vbf) && lbf && isBdfIncremental(lbf)) {
+        await this.mergeIncremental(lbf, vbf, r) 
       } else {
         const added = this.add(vbf)
         r.inserted.push(added)
@@ -213,6 +189,25 @@ export class BulkFileDataManager {
     return r
   }
 
+  private async mergeIncremental(lbf: BulkFileData, vbf: BulkFileData, r: BulkFileDataManagerMergeResult) {
+    lbf.count += vbf.count
+    lbf.lastHash = vbf.lastHash
+    lbf.lastChainWork = vbf.lastChainWork
+    await this.ensureData(lbf)
+    const newData = new Uint8Array(lbf.data!.length + vbf.data!.length)
+    newData.set(lbf.data!)
+    newData.set(vbf.data!, lbf.data!.length)
+    lbf.data = newData
+    delete this.fileHashToIndex[lbf.fileHash!]
+    lbf.fileHash = asString(Hash.sha256(asArray(newData)), 'base64')
+    this.fileHashToIndex[lbf.fileHash] = this.bfds.length - 1
+    lbf.mru = Date.now()
+    r.updated.push(bfdToInfo(lbf))
+    if (this.storage && lbf.fileId) {
+      await this.storage.updateBulkFile(lbf.fileId, lbf)
+    }
+  }
+
   toLogString(what?: BulkFileDataManagerMergeResult | BulkFileData[] | BulkHeaderFileInfo[]): string {
     let log = ''
     if (!what) {
@@ -223,7 +218,7 @@ export class BulkFileDataManager {
         { category: 'unchanged', bfds: what.unchanged },
         { category: 'dropped', bfds: what.dropped },
         { category: 'updated', bfds: what.updated },
-        { category: 'inserted', bfds: what.inserted },
+        { category: 'inserted', bfds: what.inserted }
       ]) {
         if (bfds.length > 0) {
           log += `  ${category}:\n`
@@ -238,22 +233,42 @@ export class BulkFileDataManager {
         log += `  ${i}: ${bfd.fileName} fileId=${bfd.fileId} ${bfd.firstHeight}-${bfd.firstHeight + bfd.count - 1}\n`
       }
     }
-    
+
     return log
   }
 
-  async mergeIncrementalBlockHeaders(newBulkHeaders: BlockHeader[], lastChainWork: string): Promise<void> {
+  async mergeIncrementalBlockHeaders(newBulkHeaders: BlockHeader[], lastChainWork?: string): Promise<void> {
     return this.lock.withWriteLock(async () => {
       const lbf = this.getLastFileNoLock()
-      if (!lbf || lbf.firstHeight + lbf.count !== newBulkHeaders[0].height) {
-        throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers')
+      const nextHeight = lbf ? lbf.firstHeight + lbf.count : 0
+      while (newBulkHeaders.length > 0 && newBulkHeaders[0].height < nextHeight) {
+        newBulkHeaders.shift()
       }
-      if (!lbf.lastHash) {
-        throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`)
-      }
+      if (newBulkHeaders.length === 0) return
+      if (!lbf || nextHeight !== newBulkHeaders[0].height)
+        throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers');
+      if (!lbf.lastHash)
+          throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`);
 
       const fbh = newBulkHeaders[0]
       const lbh = newBulkHeaders.slice(-1)[0]
+      if (!lastChainWork) {
+        // If lastChainWork is not provided, calculate it from the last file with basic validation.
+        lastChainWork = lbf.lastChainWork
+        let lastHeight = lbf.firstHeight + lbf.count - 1
+        let lastHash = lbf.lastHash
+        for (const h of newBulkHeaders) {
+          if (h.height !== lastHeight + 1 || h.previousHash !== lastHash) {
+            throw new WERR_INVALID_PARAMETER(
+              'headers',
+              `an extension of existing bulk headers, header with height ${h.height} is non-sequential`
+            )
+          }
+          lastChainWork = addWork(lastChainWork, convertBitsToWork(h.bits))
+          lastHeight = h.height
+          lastHash = h.hash
+        }
+      }
       const data = serializeBaseBlockHeaders(newBulkHeaders)
 
       const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
@@ -265,7 +280,7 @@ export class BulkFileDataManager {
         firstHeight: fbh.height,
         count: newBulkHeaders.length,
         prevChainWork: lbf.lastChainWork,
-        lastChainWork: lastChainWork,
+        lastChainWork,
         prevHash: lbf.lastHash,
         lastHash: lbh.hash,
         fileHash,
@@ -293,15 +308,22 @@ export class BulkFileDataManager {
   async getDataFromFile(file: BulkHeaderFileInfo, offset?: number, length?: number): Promise<Uint8Array | undefined> {
     const bfd = await this.getBfdForHeight(file.firstHeight)
     if (!bfd || bfd.count < file.count)
-      throw new WERR_INVALID_PARAMETER('file', `a match for ${file.firstHeight}, ${file.count} in the BulkFileDataManager.`)
+      throw new WERR_INVALID_PARAMETER(
+        'file',
+        `a match for ${file.firstHeight}, ${file.count} in the BulkFileDataManager.`
+      )
     return this.lock.withReadLock(async () => this.getDataFromFileNoLock(bfd, offset, length))
   }
 
-  private async getDataFromFileNoLock(bfd: BulkFileData, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+  private async getDataFromFileNoLock(
+    bfd: BulkFileData,
+    offset?: number,
+    length?: number
+  ): Promise<Uint8Array | undefined> {
     const fileLength = bfd.count * 80
     offset = offset || 0
     if (offset > fileLength - 1) return undefined
-    length = length || (bfd.count * 80 - offset)
+    length = length || bfd.count * 80 - offset
     length = Math.min(length, fileLength - offset)
     let data: Uint8Array | undefined
     if (bfd.data) {
@@ -442,6 +464,20 @@ export class BulkFileDataManager {
     return bfd
   }
 
+  async ReValidate(): Promise<void> {
+    return this.lock.withReadLock(async () => this.ReValidateNoLock())
+  }
+
+  private async ReValidateNoLock(): Promise<void> {
+    for (const file of this.bfds) {
+      await this.ensureData(file)
+      file.validated = false // Reset validation to re-validate on next access
+      const bfd = await this.validateFileInfo(file)
+      if (!bfd.validated) throw new WERR_INTERNAL(`BulkFileDataManager.ReValidate failed for file ${bfd.fileName}`)
+      file.validated = true
+    }
+  }
+
   private validateBfdForAdd(bfd: BulkFileData): void {
     if (this.bfds.length === 0 && bfd.firstHeight !== 0)
       throw new WERR_INVALID_PARAMETER('firstHeight', `0 for the first file`)
@@ -504,7 +540,7 @@ export class BulkFileDataManager {
       hbf.prevHash !== update.prevHash
     )
       throw new WERR_INVALID_PARAMETER('file', `an existing file by height, prevChainWork and prevHash`)
-    if (update.count <= hbf.count)
+    if (isBdfCdn(update) === isBdfCdn(hbf) && update.count <= hbf.count)
       throw new WERR_INVALID_PARAMETER('file.count', `greater than the current count ${hbf.count}`)
 
     const lbf = this.getLastBfd()!
@@ -525,7 +561,10 @@ export class BulkFileDataManager {
         if (isBdfCdn(lbf)) {
           // 2. An updated CDN file replaces a partial CDN file.
           if (update.count <= lbf.count)
-            throw new WERR_INVALID_PARAMETER('update.count', `CDN update must have more headers. ${update.count} <= ${lbf.count}`)
+            throw new WERR_INVALID_PARAMETER(
+              'update.count',
+              `CDN update must have more headers. ${update.count} <= ${lbf.count}`
+            )
         } else {
           // 3. A new CDN file replaces some or all of current incremental file.
           // Retain extra incremental headers if any.
@@ -621,14 +660,16 @@ export class BulkFileDataManager {
 
   /**
    * Remove work (and headers) from `truncate` that now exists in `update`.
-   * @param update the new update file which has already replaced the truncate file.
-   * @param truncate the file to truncate and add as a new file.
+   * There are two scenarios:
+   * 1. `replaced` is undefined: update is a CDN file that splits an incremental file that must be truncated.
+   * 2. `replaced` is valid: update is a CDN update that replaced an existing CDN file and splits an incremental file that must be truncated.
+   * @param update the new CDN update file.
+   * @param truncate the incremental file to be truncated (losing work which now exists in `update`).
+   * @param replaced the existing CDN file that was replaced by `update` (if any).
    */
   private async shiftWork(update: BulkFileData, truncate: BulkFileData, replaced?: BulkFileData): Promise<void> {
     const updateIndex = this.fileHashToIndex[update.fileHash]
-    if (updateIndex === undefined || updateIndex != this.bfds.length - 1)
-      throw new WERR_INTERNAL(`shiftWork requires update be the last file, already having replaced file to be truncated.`)
-    // truncateIndex will be undefined if the update replaces it and it must become the new last file.
+    // replaced will be valid if the update replaced it and it must become the new last file.
     // truncateIndex will be updateIndex + 1 if the existing last file is being truncated and update is second to last.
     const truncateIndex = this.fileHashToIndex[truncate.fileHash]
     if (truncateIndex !== undefined && truncateIndex !== updateIndex + 1)
@@ -636,22 +677,17 @@ export class BulkFileDataManager {
     if (truncateIndex !== undefined && !replaced)
       throw new WERR_INTERNAL(`shiftWork requires valid replaced when update hasn't replaced truncate`)
 
-    let work = subWork(update.lastChainWork, update.prevChainWork)
+    truncate.prevHash = update.lastHash!
+    truncate.prevChainWork = update.lastChainWork
+    // truncate.lastChainWork, truncate.lastHash remain unchanged
     let count = update.count
     if (replaced) {
-      const repWork = subWork(replaced.lastChainWork, replaced.prevChainWork)
-      work = subWork(work, repWork)
-      count += replaced.count
+      count -= replaced.count
     } else {
       // The truncated file is itself being replaced by the update and must be inserted as a new file.
       truncate.fileId = undefined
       this.bfds.push(truncate) // Add the truncated file as a new entry.
     }
-
-    truncate.prevChainWork = update.lastChainWork
-    truncate.prevHash = update.lastHash!
-
-    truncate.lastChainWork = subWork(truncate.lastChainWork, work)
     truncate.count -= count
     truncate.firstHeight += count
 
@@ -662,9 +698,9 @@ export class BulkFileDataManager {
   }
 
   /**
-   * 
-   * @param bfd 
-   * @returns 
+   *
+   * @param bfd
+   * @returns
    */
   private async ensureData(bfd: BulkFileData): Promise<Uint8Array> {
     if (bfd.data) return bfd.data
@@ -675,8 +711,15 @@ export class BulkFileDataManager {
     }
 
     if (!bfd.data && this.fetch && bfd.sourceUrl) {
+      // TODO - restore this change
       const url = this.fetch.pathJoin(bfd.sourceUrl, bfd.fileName)
-      bfd.data = await this.fetch.download(url)
+      //const url = this.fetch.pathJoin('http://localhost:8842/blockheaders', bfd.fileName)
+
+      try {
+        bfd.data = await this.fetch.download(url)
+      } catch (err) {
+        bfd.data = await this.fetch.download(url)
+      }
       if (!bfd.data) throw new WERR_INVALID_PARAMETER('sourceUrl', `data not found for sourceUrl ${url}`)
     }
 
@@ -687,7 +730,7 @@ export class BulkFileDataManager {
     // Validate retrieved data.
     const fileHash = asString(Hash.sha256(asArray(bfd.data)), 'base64')
     if (fileHash !== bfd.fileHash)
-      throw new WERR_INVALID_PARAMETER('fileHash', `does not match retrieved data for ${bfd.fileName}`)
+      throw new WERR_INVALID_PARAMETER('fileHash', `a match for retrieved data for ${bfd.fileName}`)
 
     this.ensureMaxRetained()
     return bfd.data
@@ -704,6 +747,67 @@ export class BulkFileDataManager {
       // Release the least recently used data
       oldest.data = undefined // Release the data
     }
+  }
+
+  async exportHeadersToFs(
+    toFs: ChaintracksFsApi,
+    toHeadersPerFile: number,
+    toFolder: string,
+    sourceUrl?: string,
+    maxHeight?: number
+  ): Promise<void> {
+    const chain = this.chain
+    const toFileName = (i: number) => `${chain}Net_${i}.headers`
+    const toPath = (i: number) => toFs.pathJoin(toFolder, toFileName(i))
+    const toJsonPath = () => toFs.pathJoin(toFolder, `${chain}NetBlockHeaders.json`)
+
+    const toBulkFiles: BulkHeaderFilesInfo = {
+      rootFolder: sourceUrl || toFolder,
+      jsonFilename: `${chain}NetBlockHeaders.json`,
+      headersPerFile: toHeadersPerFile,
+      files: []
+    }
+
+    let range = await this.getHeightRange()
+    if (maxHeight) range = range.intersect(new HeightRange(0, maxHeight))
+    const reader = await this.createReader(range, toHeadersPerFile * 80)
+
+    let firstHeight = 0
+    let lastHeaderHash = '00'.repeat(32)
+    let lastChainWork = '00'.repeat(32)
+
+    let i = -1
+    for (;;) {
+      i++
+      const data = await reader.read()
+      if (!data || data.length === 0) {
+        break
+      }
+
+      const last = validateBufferOfHeaders(data, lastHeaderHash, 0, undefined, lastChainWork)
+
+      await toFs.writeFile(toPath(i), data)
+
+      const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
+      const file: BulkHeaderFileInfo = {
+        chain,
+        count: data.length / 80,
+        fileHash,
+        fileName: toFileName(i),
+        firstHeight,
+        lastChainWork: last.lastChainWork!,
+        lastHash: last.lastHeaderHash,
+        prevChainWork: lastChainWork,
+        prevHash: lastHeaderHash,
+        sourceUrl
+      }
+      toBulkFiles.files.push(file)
+      firstHeight += file.count
+      lastHeaderHash = file.lastHash!
+      lastChainWork = file.lastChainWork!
+    }
+
+    await toFs.writeFile(toJsonPath(), asUint8Array(JSON.stringify(toBulkFiles), 'utf8'))
   }
 }
 
@@ -759,7 +863,7 @@ function bfdToInfo(bfd: BulkFileData): BulkHeaderFileInfo {
  * A reader-writer lock to manage concurrent access.
  * Allows multiple readers or one writer at a time.
  */
-class Lock {
+export class SingleWriterMultiReaderLock {
   private readers: number = 0
   private writerActive: boolean = false
   private readerQueue: Array<() => void> = []
@@ -807,16 +911,90 @@ class Lock {
   }
 
   async withWriteLock<T>(fn: () => Promise<T>): Promise<T> {
-    const promise = new Promise<void>(resolve => {
-      this.writerQueue.push(resolve)
-    })
-    await promise
-    this.writerActive = true
-    try {
-      return await fn()
-    } finally {
-      this.writerActive = false
-      this.checkQueues()
+    if (!this.writerActive && this.readers === 0) {
+      // Fast path: no active writer or readers, proceed immediately
+      this.writerActive = true
+      try {
+        return await fn()
+      } finally {
+        this.writerActive = false
+        this.checkQueues()
+      }
+    } else {
+      const promise = new Promise<void>(resolve => {
+        this.writerQueue.push(resolve)
+      })
+      await promise
+      this.writerActive = true
+      try {
+        return await fn()
+      } finally {
+        this.writerActive = false
+        this.checkQueues()
+      }
     }
+  }
+}
+
+export interface BulkFileDataManagerMergeResult {
+  unchanged: BulkHeaderFileInfo[]
+  inserted: BulkHeaderFileInfo[]
+  updated: BulkHeaderFileInfo[]
+  dropped: BulkHeaderFileInfo[]
+}
+
+export class BulkFileDataReader {
+  readonly manager: BulkFileDataManager
+  readonly range: HeightRange
+  readonly maxBufferSize: number
+  nextHeight: number
+
+  constructor(manager: BulkFileDataManager, range: HeightRange, maxBufferSize: number) {
+    this.manager = manager
+    this.range = range
+    this.maxBufferSize = maxBufferSize
+    this.nextHeight = range.minHeight
+  }
+
+  /**
+   * Returns the Buffer of block headers from the given `file` for the given `range`.
+   * If `range` is undefined, the file's full height range is read.
+   * The returned Buffer will only contain headers in `file` and in `range`
+   * @param file
+   * @param range
+   */
+  private async readBufferFromFile(file: BulkHeaderFileInfo, range?: HeightRange): Promise<Uint8Array | undefined> {
+    // Constrain the range to the file's contents...
+    let fileRange = new HeightRange(file.firstHeight, file.firstHeight + file.count - 1)
+    if (range) fileRange = fileRange.intersect(range)
+    if (fileRange.isEmpty) return undefined
+    const offset = (fileRange.minHeight - file.firstHeight) * 80
+    const length = fileRange.length * 80
+    return await this.manager.getDataFromFile(file, offset, length)
+  }
+
+  /**
+   * @returns an array containing the next `maxBufferSize` bytes of headers from the files.
+   */
+  async read(): Promise<Uint8Array | undefined> {
+    if (this.nextHeight === undefined || !this.range || this.range.isEmpty || this.nextHeight > this.range.maxHeight)
+      return undefined
+    let lastHeight = this.nextHeight + this.maxBufferSize / 80 - 1
+    lastHeight = Math.min(lastHeight, this.range.maxHeight)
+    let file = await this.manager.getFileForHeight(this.nextHeight)
+    if (!file) throw new WERR_INTERNAL(`logic error`)
+    const readRange = new HeightRange(this.nextHeight, lastHeight)
+    let buffers = new Uint8Array(readRange.length * 80)
+    let offset = 0
+    while (file) {
+      const buffer = await this.readBufferFromFile(file, readRange)
+      if (!buffer) break
+      buffers.set(buffer, offset)
+      offset += buffer.length
+      file = await this.manager.getFileForHeight(file.firstHeight + file.count)
+    }
+    if (!buffers.length || offset !== readRange.length * 80) return undefined
+    this.nextHeight = lastHeight + 1
+    return buffers
   }
 }

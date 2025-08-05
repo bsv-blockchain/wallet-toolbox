@@ -257,7 +257,6 @@ export interface ChaintracksStorageBulkFileApi {
 }
 
 export interface ChaintracksStorageIngestApi {
-
   /**
    * Attempts to insert a block header into the chain.
    *

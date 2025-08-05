@@ -154,7 +154,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
     const count = await this.knex(this.bulkFilesTableName).where({ fileId: fileId }).del()
     return count
   }
-  
+
   async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> {
     if (!file.fileId) delete file.fileId
     const [id] = await this.knex(this.bulkFilesTableName).insert(file)
@@ -248,8 +248,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
         const count = Number(r[0]['count(*)'])
         if (count === 0) {
           const lbf = await this.bulkManager.getLastFile()
-          if (!lbf)
-            throw new WERR_INVALID_OPERATION('bulk headers must exist before first live header can be added')
+          if (!lbf) throw new WERR_INVALID_OPERATION('bulk headers must exist before first live header can be added')
           if (header.previousHash === lbf.lastHash && header.height === lbf.firstHeight + lbf.count) {
             const chainWork = addWork(lbf.lastChainWork, convertBitsToWork(header.bits))
             const newHeader = {

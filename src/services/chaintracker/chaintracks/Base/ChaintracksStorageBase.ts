@@ -57,8 +57,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     this.bulkMigrationChunkSize = options.bulkMigrationChunkSize
     this.batchInsertLimit = options.batchInsertLimit
     this.bulkManager =
-      options.bulkFileDataManager ||
-      new BulkFileDataManager(BulkFileDataManager.createDefaultOptions(this.chain))
+      options.bulkFileDataManager || new BulkFileDataManager(BulkFileDataManager.createDefaultOptions(this.chain))
   }
 
   async shutdown(): Promise<void> {

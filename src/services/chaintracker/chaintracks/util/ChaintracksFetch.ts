@@ -30,16 +30,18 @@ export class ChaintracksFetch implements ChaintracksFetchApi {
         Accept: 'application/json'
       }
     }
-    const response = await this.httpClient.request(url, requestJsonOptions)
+    const response = await fetch(url, requestJsonOptions)
     if (!response.ok) {
       throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`)
     }
-    return response.data as R
+    const json = await response.json() as R
+    return json
   }
 
   pathJoin(baseUrl: string, subpath: string): string {
     // Ensure the subpath doesn't start with a slash to avoid issues
     const cleanSubpath = subpath.replace(/^\/+/, '')
+    if (!baseUrl.endsWith('/')) baseUrl += '/'
     // Create a new URL object and append the subpath
     const url = new URL(cleanSubpath, baseUrl)
     return url.toString()

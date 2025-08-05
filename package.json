@@ -46,6 +46,8 @@
     "@types/jest": "^29.4.0",
     "@types/jest-diff": "^20.0.1",
     "@types/node": "^20.8.2",
+    "@types/cors": "^2.8.13",
+    "cors": "^2.8.5",
     "chalk": "^4.1.2",
     "dotenv": "^16.4.7",
     "fake-indexeddb": "^6.0.0",
