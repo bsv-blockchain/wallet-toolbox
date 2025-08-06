@@ -73,6 +73,11 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     this.hasMigrated = true
   }
 
+  async dropAllData(): Promise<void> {
+    await this.bulkManager.deleteBulkFiles()
+    await this.makeAvailable()
+  }
+
   // Abstract functions to be defined by implementation classes
 
   abstract deleteLiveBlockHeaders(): Promise<void>
@@ -89,6 +94,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract liveHeadersForBulk(count: number): Promise<LiveBlockHeader[]>
   abstract getHeaders(height: number, count: number): Promise<number[]>
   abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
+  abstract destroy(): Promise<void>
 
   // BASE CLASS IMPLEMENTATIONS - MAY BE OVERRIDEN
 

@@ -13,7 +13,7 @@ interface MigrationSource<TMigrationSpec> {
   getMigration(migration: TMigrationSpec): Promise<Migration>
 }
 
-export class KnexMigrations implements MigrationSource<string> {
+export class ChaintracksKnexMigrations implements MigrationSource<string> {
   migrations: Record<string, Migration> = {}
 
   constructor(public chain: Chain) {
@@ -38,7 +38,7 @@ export class KnexMigrations implements MigrationSource<string> {
   }
 
   static async latestMigration(): Promise<string> {
-    const km = new KnexMigrations('test')
+    const km = new ChaintracksKnexMigrations('test')
     return await km.getLatestMigration()
   }
 

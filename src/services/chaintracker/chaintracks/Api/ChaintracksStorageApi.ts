@@ -334,6 +334,13 @@ export interface ChaintracksStorageIngestApi {
    */
   migrateLatest(): Promise<void>
 
+  dropAllData(): Promise<void>
+
+  /**
+   * Release all resources. Makes the instance unusable.
+   */
+  destroy(): Promise<void>
+
   /**
    * @returns min, max height range in live database or empty (0, -1)
    */

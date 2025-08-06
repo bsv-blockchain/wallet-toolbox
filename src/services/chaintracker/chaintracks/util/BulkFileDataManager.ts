@@ -123,7 +123,8 @@ export class BulkFileDataManager {
     if (sfs.length === 0) {
       // 1. Storage has no files: Update storage to reflect bfds.
       for (const bfd of this.bfds) {
-        await this.storage.insertBulkFile(bfd)
+        await this.ensureData(bfd)
+        await this.storage.insertBulkFile(bfdToInfo(bfd, true))
       }
     } else {
       // 2. bfds are a prefix of storage, including last bfd having same firstHeight but possibly fewer headers: Merge storage to bfds.
@@ -202,9 +203,10 @@ export class BulkFileDataManager {
     lbf.fileHash = asString(Hash.sha256(asArray(newData)), 'base64')
     this.fileHashToIndex[lbf.fileHash] = this.bfds.length - 1
     lbf.mru = Date.now()
-    r.updated.push(bfdToInfo(lbf))
+    const lbfInfo = bfdToInfo(lbf, true)
+    r.updated.push(lbfInfo)
     if (this.storage && lbf.fileId) {
-      await this.storage.updateBulkFile(lbf.fileId, lbf)
+      await this.storage.updateBulkFile(lbf.fileId, lbfInfo)
     }
   }
 
@@ -496,7 +498,7 @@ export class BulkFileDataManager {
     this.bfds.push(bfd)
     this.fileHashToIndex[bfd.fileHash] = index
     this.ensureMaxRetained()
-    return bfdToInfo(bfd)
+    return bfdToInfo(bfd, true)
   }
 
   private replaceBfdAtIndex(index: number, update: BulkFileData): void {
@@ -610,8 +612,8 @@ export class BulkFileDataManager {
       this.dropLastBulkFile(drop)
     }
 
-    const updateInfo = bfdToInfo(update)
-    const truncateInfo = truncate ? bfdToInfo(truncate) : undefined
+    const updateInfo = bfdToInfo(update, true)
+    const truncateInfo = truncate ? bfdToInfo(truncate, true) : undefined
 
     if (this.storage) {
       // Keep storage in sync.
@@ -707,7 +709,7 @@ export class BulkFileDataManager {
 
     if (this.storage && bfd.fileId) {
       bfd.data = await this.storage.getBulkFileData(bfd.fileId)
-      if (!bfd.data) throw new WERR_INVALID_PARAMETER('fileId', `data not found for fileId ${bfd.fileId}`)
+      if (!bfd.data) throw new WERR_INVALID_PARAMETER('fileId', `valid, data not found for fileId ${bfd.fileId}`)
     }
 
     if (!bfd.data && this.fetch && bfd.sourceUrl) {
@@ -842,7 +844,7 @@ function isBdfCdn(bfd: BulkFileData | BulkHeaderFileInfo): boolean {
   return !isBdfIncremental(bfd)
 }
 
-function bfdToInfo(bfd: BulkFileData): BulkHeaderFileInfo {
+function bfdToInfo(bfd: BulkFileData, keepData?: boolean): BulkHeaderFileInfo {
   return {
     chain: bfd.chain,
     fileHash: bfd.fileHash,
@@ -855,7 +857,8 @@ function bfdToInfo(bfd: BulkFileData): BulkHeaderFileInfo {
     firstHeight: bfd.firstHeight,
     prevHash: bfd.prevHash,
     lastHash: bfd.lastHash,
-    data: undefined
+    validated: bfd.validated || false,
+    data: keepData ? bfd.data : undefined
   }
 }
 

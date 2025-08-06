@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { KnexMigrations } from './ChaintracksKnexMigrations'
+import { ChaintracksKnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
 import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
 import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
@@ -106,8 +106,33 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
 
   override async migrateLatest(): Promise<void> {
     if (this.hasMigrated) return
-    await this.knex.migrate.latest({ migrationSource: new KnexMigrations(this.chain) })
+    await this.knex.migrate.latest({ migrationSource: new ChaintracksKnexMigrations(this.chain) })
     await super.migrateLatest()
+  }
+
+  override async dropAllData(): Promise<void> {
+    // Only using migrations to migrate down, don't need valid properties for settings table.
+    const config = {
+      migrationSource: new ChaintracksKnexMigrations('test')
+    }
+    const count = Object.keys(config.migrationSource.migrations).length
+    for (let i = 0; i < count; i++) {
+      try {
+        const r = await this.knex.migrate.down(config)
+        if (!r) {
+          console.error(`Migration returned falsy result await this.knex.migrate.down(config)`)
+          break
+        }
+      } catch (eu: unknown) {
+        break
+      }
+    }
+    this.hasMigrated = false
+    await super.dropAllData()
+  }
+
+  override async destroy(): Promise<void> {
+    await this.knex.destroy()
   }
 
   async findLiveHeightRange(): Promise<{ minHeight: number; maxHeight: number }> {

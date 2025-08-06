@@ -1,13 +1,19 @@
+import { Knex, knex as makeKnex } from 'knex'
 import { BlockHeader } from '../Api/BlockHeaderApi'
+import { ChaintracksStorageKnex } from '../Storage'
 import { deserializeBlockHeaders } from '../util/blockHeaderUtilities'
 import { BulkFileDataManager } from '../util/BulkFileDataManager'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
 import { ChaintracksFs } from '../util/ChaintracksFs'
 import { LocalCdnServer } from './LocalCdnServer'
+import { Chain } from '../../../../sdk/types'
+
+const runSlowTests = false
 
 describe('BulkFileDataManager tests', () => {
   jest.setTimeout(99999999)
 
+  const chain: Chain = 'main'
   const fs = ChaintracksFs
   const rootFolder = './src/services/chaintracker/chaintracks/__tests'
   let headers300_399: BlockHeader[] = []
@@ -55,13 +61,9 @@ describe('BulkFileDataManager tests', () => {
     }
   })
 
-  test('0 default options CDN files', async () => {
-    const options = BulkFileDataManager.createDefaultOptions('main')
-    const manager = new BulkFileDataManager(options)
-
+  async function test0Body(manager: BulkFileDataManager) {
     // Verify the default options and minimum expected files from default CDN
-
-    expect(manager.chain).toBe('main')
+    expect(manager.chain).toBe(chain)
     expect(manager.maxPerFile).toBe(100000)
     expect(manager.maxRetained).toBe(2)
     expect(manager.fromKnownSourceUrl).toBe('https://cdn.projectbabbage.com/blockheaders')
@@ -70,18 +72,32 @@ describe('BulkFileDataManager tests', () => {
     const range = await manager.getHeightRange()
     expect(range.minHeight).toBe(0)
     expect(range.maxHeight).toBeGreaterThan(800000)
-  })
+  }
 
-  test('1 headers from heights maxRetained 2', async () => {
-    const options = BulkFileDataManager.createDefaultOptions('main')
+  test('0 default options CDN files', async () => {
+    const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
-    // Verify header retrieval from different heights and data caching
+    await test0Body(manager)
+  })
 
-    expect(countDatas(manager)).toBe(0)
+  test('0a default options CDN files', async () => {
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
+    const manager = new BulkFileDataManager(options)
+    const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_0a`, false)
+
+    await test0Body(manager)
+
+    await storage.destroy()
+  })
+
+  async function test1Body(manager: BulkFileDataManager, minCount: number) {
+    // Verify header retrieval from different heights and data caching
+    expect(countDatas(manager)).toBe(minCount)
     let h0 = await manager.findHeaderForHeightOrUndefined(0)
     expect(h0?.hash).toBe('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
-    expect(countDatas(manager)).toBe(1)
+    expect(countDatas(manager)).toBe(minCount === 0 ? 1 : minCount)
     const h101010 = await manager.findHeaderForHeightOrUndefined(101010)
     expect(h101010?.hash).toBe('000000000001af33247fff33aae7c31baee4148d5a189e7353bf13bcee618202')
     expect(countDatas(manager)).toBe(2)
@@ -113,10 +129,30 @@ describe('BulkFileDataManager tests', () => {
     // Verify retrieval from cached data.
     h0 = await manager.findHeaderForHeightOrUndefined(0)
     expect(h0?.hash).toBe('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
+  }
+
+  test('1 headers from heights maxRetained 2', async () => {
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
+    const manager = new BulkFileDataManager(options)
+
+    await test1Body(manager, 0)
+  })
+
+  test('1a headers from heights maxRetained 2', async () => {
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
+    const manager = new BulkFileDataManager(options)
+    const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_1a`, true)
+
+    await test1Body(manager, 2)
+
+    await storage.destroy()
   })
 
   test('2 ReValidate', async () => {
-    const options = BulkFileDataManager.createDefaultOptions('main')
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
     // Verify full data re-validation
@@ -125,7 +161,8 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('3 exportHeadersToFs', async () => {
-    const options = BulkFileDataManager.createDefaultOptions('main')
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
     for (const i of [349, 379, 399, 402, 499]) {
@@ -134,51 +171,104 @@ describe('BulkFileDataManager tests', () => {
     }
   })
 
-  test('4 add two incremental chunks overwrite by CDN', async () => {
-    const manager = await setupManagerOnLocalServer(server349!)
-
+  async function test4Body(manager: BulkFileDataManager, maxCount: number) {
+    expect(countDatas(manager)).toBe(2)
     const range = await manager.getHeightRange()
     expect(range.maxHeight).toBe(349)
 
     await manager.mergeIncrementalBlockHeaders(headers300_399.slice(50))
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
     await manager.mergeIncrementalBlockHeaders(headers400_499)
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
 
     await updateFromLocalServer(manager, server379!)
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
     await updateFromLocalServer(manager, server399!)
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
     await updateFromLocalServer(manager, server402!)
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
     await updateFromLocalServer(manager, server499!)
     await manager.ReValidate()
+    expect(countDatas(manager)).toBe(2)
+  }
+
+  test('4 add two incremental chunks overwrite by CDN', async () => {
+    const manager = await setupManagerOnLocalServer(server349!)
+
+    await test4Body(manager, 3)
   })
+
+  test('4a add two incremental chunks overwrite by CDN', async () => {
+    const manager = await setupManagerOnLocalServer(server349!)
+    const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_4a`, true)
+
+    await test4Body(manager, 2)
+
+    await storage.destroy()
+  })
+
+  async function test5Body(manager: BulkFileDataManager, maxCount: number) {
+    expect(countDatas(manager)).toBe(2)
+    await updateFromLocalServer(manager, server379!)
+    await manager.ReValidate()
+    expect(countDatas(manager)).toBe(2)
+
+    await manager.mergeIncrementalBlockHeaders(headers300_399.slice(50))
+    await manager.ReValidate()
+    expect(countDatas(manager)).toBe(maxCount)
+
+    await updateFromLocalServer(manager, server499!)
+    await manager.ReValidate()
+    expect(countDatas(manager)).toBe(2)
+
+    await manager.mergeIncrementalBlockHeaders(headers400_499)
+    await manager.ReValidate()
+    expect(countDatas(manager)).toBe(2)
+  }
 
   test('5 add CDN incremental CDN incremental', async () => {
     const manager = await setupManagerOnLocalServer(server349!)
 
-    await updateFromLocalServer(manager, server379!)
-    await manager.ReValidate()
-
-    await manager.mergeIncrementalBlockHeaders(headers300_399.slice(50))
-    await manager.ReValidate()
-
-    await updateFromLocalServer(manager, server499!)
-    await manager.ReValidate()
-
-    await manager.mergeIncrementalBlockHeaders(headers400_499)
-    await manager.ReValidate()
+    await test5Body(manager, 3)
   })
-})
 
-async function setupManagerOnLocalServer(server: LocalCdnServer) {
-  const options = BulkFileDataManager.createDefaultOptions('main')
-  options.fromKnownSourceUrl = undefined
-  const manager = new BulkFileDataManager(options)
-  await updateFromLocalServer(manager, server)
-  return manager
-}
+  test('5a add CDN incremental CDN incremental', async () => {
+    const manager = await setupManagerOnLocalServer(server349!)
+    const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_5a`, true)
+
+    await test5Body(manager, 2)
+
+    await storage.destroy()
+  })
+
+  async function setupStorageKnex(manager: BulkFileDataManager, filename: string, dropAll: boolean) : Promise<ChaintracksStorageKnex> {
+    const localSqlite: Knex.Config = {
+      client: 'sqlite3',
+      connection: { filename: fs.pathJoin(rootFolder, `${filename}.sqlite`) },
+      useNullAsDefault: true
+    }
+    const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
+    const storage = new ChaintracksStorageKnex(knexOptions)
+    if (dropAll) await storage.dropAllData(); else await storage.makeAvailable()
+
+    await manager.setStorage(storage)
+
+    return storage
+  }
+
+  async function setupManagerOnLocalServer(server: LocalCdnServer) {
+    const options = BulkFileDataManager.createDefaultOptions(chain)
+    options.fromKnownSourceUrl = undefined
+    const manager = new BulkFileDataManager(options)
+    await updateFromLocalServer(manager, server)
+    return manager
+  }
+})
 
 async function updateFromLocalServer(manager: BulkFileDataManager, server: LocalCdnServer) {
   await manager.updateFromUrl(`http://localhost:${server.port}/blockheaders`)

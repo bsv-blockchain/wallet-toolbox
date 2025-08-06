@@ -43,7 +43,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'gAJPUfI2DfAabJTOBxT1rwy1cS4/QULaQHaQWa1RWNk=',
     lastChainWork: '000000000000000000000000000000000000000000000000004143c00b3d47b8',
     prevChainWork: '0000000000000000000000000000000000000000000000000000000000000000',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -55,7 +56,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'OIJ010bnIbFobNppJzCNE9jFI1uANz0iNGvqpoG2xq4=',
     lastChainWork: '00000000000000000000000000000000000000000000000004504f3a4e71aa13',
     prevChainWork: '000000000000000000000000000000000000000000000000004143c00b3d47b8',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -67,7 +69,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'hZXE3im7V4tE0oROWM2mGB9xPXEcpVLRIYUPaYT3VV0=',
     lastChainWork: '00000000000000000000000000000000000000000000000062378b066f9fba96',
     prevChainWork: '00000000000000000000000000000000000000000000000004504f3a4e71aa13',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -79,7 +82,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'BGZxsk/Ooa4BOaoBEMOor+B8wL9ghW5A0We2G2fmyLE=',
     lastChainWork: '0000000000000000000000000000000000000000000000040da9d61d8e129a53',
     prevChainWork: '00000000000000000000000000000000000000000000000062378b066f9fba96',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -91,7 +95,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '3DjOpFnatZ0OKrpACATfAtBITX2s8JjfYTAnDHVkGuw=',
     lastChainWork: '00000000000000000000000000000000000000000000000461063a8389300d36',
     prevChainWork: '0000000000000000000000000000000000000000000000040da9d61d8e129a53',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -103,7 +108,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'wF008GqnZzAYsOwnmyFzIOmrJthHE3bq6oUg1FvHG1Y=',
     lastChainWork: '0000000000000000000000000000000000000000000000067a8291cfec0aa549',
     prevChainWork: '00000000000000000000000000000000000000000000000461063a8389300d36',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -115,7 +121,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'uc7IW6NRXXtX3oGWwOYjtetTaZ+1zhvijNEwPbK+rAs=',
     lastChainWork: '0000000000000000000000000000000000000000000000078286c7f42f7ec693',
     prevChainWork: '0000000000000000000000000000000000000000000000067a8291cfec0aa549',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -127,7 +134,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'yfomaIGZyoW/m7YdpZYNozeNrUmJBwaF0PpLdSADWJE=',
     lastChainWork: '00000000000000000000000000000000000000000000000a551ea869597d2a74',
     prevChainWork: '0000000000000000000000000000000000000000000000078286c7f42f7ec693',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -139,7 +147,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '/AIS2PYHdMJBmRF9ECsZmCphoqhDyFWs+aO+3GIpPhg=',
     lastChainWork: '00000000000000000000000000000000000000000000000eb93c12a85efec237',
     prevChainWork: '00000000000000000000000000000000000000000000000a551ea869597d2a74',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -151,7 +160,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'lJtRGLYlMnHe6r0xuJJWauJA7DKL4ZYOqkYmUD2iwbM=',
     lastChainWork: '000000000000000000000000000000000000000000000017e96a5ada9f4a8bfb',
     prevChainWork: '00000000000000000000000000000000000000000000000eb93c12a85efec237',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -163,7 +173,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'tfWVFoIp4A6yXd2c0YietQ7hYlmLf7O884baego+D4E=',
     lastChainWork: '000000000000000000000000000000000000000000000021bf46518c698a4bc8',
     prevChainWork: '000000000000000000000000000000000000000000000017e96a5ada9f4a8bfb',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -175,7 +186,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'S0Y9WXGFFJLRsRkQRNvrtImOezjReEQ1eDdB2x5M6Mw=',
     lastChainWork: '0000000000000000000000000000000000000000000000288b285ca9b1bb8065',
     prevChainWork: '000000000000000000000000000000000000000000000021bf46518c698a4bc8',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -187,7 +199,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'eFHQB8EaSfs4EKZxVsLhX8UA79kpOI4dR6j/z9P8frI=',
     lastChainWork: '0000000000000000000000000000000000000000000000542144c6af6e9258ea',
     prevChainWork: '0000000000000000000000000000000000000000000000288b285ca9b1bb8065',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -199,7 +212,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '2MFJLBjHOBnuaDAICQFCL3y+6ejj0k92gbcmLWa1/Xc=',
     lastChainWork: '0000000000000000000000000000000000000000000000dcc85f546d353f7b08',
     prevChainWork: '0000000000000000000000000000000000000000000000542144c6af6e9258ea',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -211,7 +225,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'lWmP/pOR5ciEnu5tjIrf7OTEaiaMcfqFZQQYT7QH6qg=',
     lastChainWork: '00000000000000000000000000000000000000000000011bed7ab81a56a65cbc',
     prevChainWork: '0000000000000000000000000000000000000000000000dcc85f546d353f7b08',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -223,7 +238,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '1bCf0R0RsoadANX+6H4NH1b3jNuTPyTayoS1SpQXa2Q=',
     lastChainWork: '000000000000000000000000000000000000000000000156c3b84396da4e60b9',
     prevChainWork: '00000000000000000000000000000000000000000000011bed7ab81a56a65cbc',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -235,7 +251,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'AK1FlgOaPVFOeG2x+Tp7htOt15UaSpHXZjgx3F263x8=',
     lastChainWork: '00000000000000000000000000000000000000000000015814b641eb5d72e2ef',
     prevChainWork: '000000000000000000000000000000000000000000000156c3b84396da4e60b9',
-    chain: 'test'
+    chain: 'test',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -247,7 +264,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'DMXYETHMphmYRh5y0+qsJhj67ML5Ui4LE1eEZDYbnZE=',
     lastChainWork: '000000000000000000000000000000000000000000000000064492eaf00f2520',
     prevChainWork: '0000000000000000000000000000000000000000000000000000000000000000',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -259,7 +277,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'IID8O84Uny22i10fWHTQr6f9+9eFZ8dhVyegYPGSg+Q=',
     lastChainWork: '00000000000000000000000000000000000000000000001ac0479f335782cb80',
     prevChainWork: '000000000000000000000000000000000000000000000000064492eaf00f2520',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -271,7 +290,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'wbfV/ZuPvLKHtRJN4QlHiKlpNncuqWA1dMJ6O9mhisc=',
     lastChainWork: '000000000000000000000000000000000000000000005a795f5d6ede10bc6d60',
     prevChainWork: '00000000000000000000000000000000000000000000001ac0479f335782cb80',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -283,7 +303,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '5pklz64as2MG6y9lQiiClZaA82f6xoK1xdzkSqOZLsA=',
     lastChainWork: '0000000000000000000000000000000000000000001229fea679a4cdc26e7460',
     prevChainWork: '000000000000000000000000000000000000000000005a795f5d6ede10bc6d60',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -295,7 +316,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '2X78/S+Z/h5ELA63aC3xt6/o4G8JMcAOEiZ00ycKHsM=',
     lastChainWork: '0000000000000000000000000000000000000000007ae4707601d47bc6695487',
     prevChainWork: '0000000000000000000000000000000000000000001229fea679a4cdc26e7460',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -307,7 +329,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'Tzm60n66tIuq7wNdP6M1BH77iFzGCPbOMIl6smJ/LRg=',
     lastChainWork: '000000000000000000000000000000000000000000e8f2ea21f069a214067ed7',
     prevChainWork: '0000000000000000000000000000000000000000007ae4707601d47bc6695487',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -319,7 +342,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'O7SoyIDxhejB0Qs4rBO4OkfBK2yVZKhxra6YxZMhiIk=',
     lastChainWork: '0000000000000000000000000000000000000000012f32fb33b26aa239be0fc3',
     prevChainWork: '000000000000000000000000000000000000000000e8f2ea21f069a214067ed7',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -331,7 +355,8 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: '+0Wu2GrKgCv4o1yZfdWl60aAgvBj6Rt3xlWj8TQprUw=',
     lastChainWork: '000000000000000000000000000000000000000001483b2995af390c20b58320',
     prevChainWork: '0000000000000000000000000000000000000000012f32fb33b26aa239be0fc3',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   },
   {
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
@@ -343,6 +368,7 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     fileHash: 'ebnNDDlfPU2zpwhhcnx5gs5p7fBbmrGqfjreRxcmmAU=',
     lastChainWork: '000000000000000000000000000000000000000001663e6351740f954973bc7e',
     prevChainWork: '000000000000000000000000000000000000000001483b2995af390c20b58320',
-    chain: 'main'
+    chain: 'main',
+    validated: true
   }
 ]
