@@ -124,7 +124,7 @@ export class BulkFileDataManager {
       // 1. Storage has no files: Update storage to reflect bfds.
       for (const bfd of this.bfds) {
         await this.ensureData(bfd)
-        await this.storage.insertBulkFile(bfdToInfo(bfd, true))
+        bfd.fileId = await this.storage.insertBulkFile(bfdToInfo(bfd, true))
       }
     } else {
       // 2. bfds are a prefix of storage, including last bfd having same firstHeight but possibly fewer headers: Merge storage to bfds.
@@ -181,8 +181,7 @@ export class BulkFileDataManager {
         const added = this.add(vbf)
         r.inserted.push(added)
         if (this.storage) {
-          added.fileId = await this.storage.insertBulkFile(added)
-          vbf.fileId = added.fileId // Update vbf with the fileId
+          vbf.fileId = await this.storage.insertBulkFile(added)
         }
       }
     }
@@ -588,6 +587,7 @@ export class BulkFileDataManager {
         throw new WERR_INVALID_PARAMETER('file', `a CDN file update with more headers than the current CDN file`)
       if (!isBdfIncremental(lbf))
         throw new WERR_INVALID_PARAMETER('file', `a CDN file update followed by an incremental file`)
+      if (!update.fileId) update.fileId = lbf2.fileId // Update fileId if not provided
       if (update.count >= lbf2.count + lbf.count) {
         // The current last file is fully replaced by the CDN update.
         drop = lbf
@@ -625,8 +625,7 @@ export class BulkFileDataManager {
           await this.storage.updateBulkFile(truncate.fileId!, truncateInfo)
         } else {
           truncateInfo.fileId = undefined // Make sure truncate is a new file.
-          await this.storage.insertBulkFile(truncateInfo)
-          truncate.fileId = truncateInfo.fileId // Update truncate with the new fileId.
+          truncate.fileId = await this.storage.insertBulkFile(truncateInfo)
         }
       }
       if (drop && drop.fileId) {

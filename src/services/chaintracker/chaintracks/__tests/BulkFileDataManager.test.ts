@@ -8,7 +8,7 @@ import { ChaintracksFs } from '../util/ChaintracksFs'
 import { LocalCdnServer } from './LocalCdnServer'
 import { Chain } from '../../../../sdk/types'
 
-const runSlowTests = false
+const runSlowTests = true
 
 describe('BulkFileDataManager tests', () => {
   jest.setTimeout(99999999)
@@ -81,11 +81,22 @@ describe('BulkFileDataManager tests', () => {
     await test0Body(manager)
   })
 
-  test('0a default options CDN files', async () => {
+  test('0a default options CDN files noDropAll', async () => {
     if (!runSlowTests) return;
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
     const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_0a`, false)
+
+    await test0Body(manager)
+
+    await storage.destroy()
+  })
+
+  test('0b default options CDN files dropAll', async () => {
+    if (!runSlowTests) return;
+    const options = BulkFileDataManager.createDefaultOptions(chain)
+    const manager = new BulkFileDataManager(options)
+    const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_0b`, true)
 
     await test0Body(manager)
 
