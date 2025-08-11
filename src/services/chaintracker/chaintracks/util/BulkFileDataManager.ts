@@ -176,7 +176,7 @@ export class BulkFileDataManager {
           await this.update(vbf, hbf, r)
         }
       } else if (isBdfIncremental(vbf) && lbf && isBdfIncremental(lbf)) {
-        await this.mergeIncremental(lbf, vbf, r) 
+        await this.mergeIncremental(lbf, vbf, r)
       } else {
         const added = this.add(vbf)
         r.inserted.push(added)
@@ -247,9 +247,8 @@ export class BulkFileDataManager {
       }
       if (newBulkHeaders.length === 0) return
       if (!lbf || nextHeight !== newBulkHeaders[0].height)
-        throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers');
-      if (!lbf.lastHash)
-          throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`);
+        throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers')
+      if (!lbf.lastHash) throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`)
 
       const fbh = newBulkHeaders[0]
       const lbh = newBulkHeaders.slice(-1)[0]

@@ -82,7 +82,7 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('0a default options CDN files noDropAll', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
     const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_0a`, false)
@@ -93,7 +93,7 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('0b default options CDN files dropAll', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
     const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_0b`, true)
@@ -143,7 +143,7 @@ describe('BulkFileDataManager tests', () => {
   }
 
   test('1 headers from heights maxRetained 2', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
@@ -151,7 +151,7 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('1a headers from heights maxRetained 2', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
     const storage = await setupStorageKnex(manager, `BulkFileDataManager.test_1a`, true)
@@ -162,7 +162,7 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('2 ReValidate', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
@@ -172,7 +172,7 @@ describe('BulkFileDataManager tests', () => {
   })
 
   test('3 exportHeadersToFs', async () => {
-    if (!runSlowTests) return;
+    if (!runSlowTests) return
     const options = BulkFileDataManager.createDefaultOptions(chain)
     const manager = new BulkFileDataManager(options)
 
@@ -257,7 +257,11 @@ describe('BulkFileDataManager tests', () => {
     await storage.destroy()
   })
 
-  async function setupStorageKnex(manager: BulkFileDataManager, filename: string, dropAll: boolean) : Promise<ChaintracksStorageKnex> {
+  async function setupStorageKnex(
+    manager: BulkFileDataManager,
+    filename: string,
+    dropAll: boolean
+  ): Promise<ChaintracksStorageKnex> {
     const localSqlite: Knex.Config = {
       client: 'sqlite3',
       connection: { filename: fs.pathJoin(rootFolder, `${filename}.sqlite`) },
@@ -265,7 +269,8 @@ describe('BulkFileDataManager tests', () => {
     }
     const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
     const storage = new ChaintracksStorageKnex(knexOptions)
-    if (dropAll) await storage.dropAllData(); else await storage.makeAvailable()
+    if (dropAll) await storage.dropAllData()
+    else await storage.makeAvailable()
 
     await manager.setStorage(storage)
 

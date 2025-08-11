@@ -38,6 +38,8 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
     super(options)
   }
 
+  override async destroy(): Promise<void> {}
+
   async getData(): Promise<ChaintracksNoDbData> {
     if (this.chain === 'main') {
       return ChaintracksStorageNoDb.mainData
