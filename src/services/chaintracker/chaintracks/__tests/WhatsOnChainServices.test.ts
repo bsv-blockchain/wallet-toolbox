@@ -42,7 +42,7 @@ describe('WhatsOnChainServices tests', () => {
     expect(height > 600000).toBe(true)
 
     // Comment out this line to just wait for next new header...
-    setTimeout(() => woc.stopNewListener(), 5000)
+    //setTimeout(() => woc.stopNewListener(), 5000)
     const headersNew: BlockHeader[] = []
     const errorsNew: { code: number; message: string }[] = []
     const eh: EnqueueHandler = h => {

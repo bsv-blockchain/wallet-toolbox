@@ -359,16 +359,27 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     validated: true
   },
   {
-    sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
+    chain: 'main',
+    count: 100000,
+    fileHash: 'xKYCsMzfbWdwq6RtEos4+4w7F3FroFMXb4tk4Z2gn5s=',
     fileName: 'mainNet_8.headers',
     firstHeight: 800000,
-    prevHash: '00000000000000000b6ae23bbe9f549844c20943d8c20b8ceedbae8aa1dde8e0',
-    count: 99705,
-    lastHash: '00000000000000000452f47e1c9203092a05d381643a5b08595a1b8494aaf5d9',
-    fileHash: 'ebnNDDlfPU2zpwhhcnx5gs5p7fBbmrGqfjreRxcmmAU=',
-    lastChainWork: '000000000000000000000000000000000000000001663e6351740f954973bc7e',
+    lastChainWork: '000000000000000000000000000000000000000001664db1f2d50327928007e0',
+    lastHash: '00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087',
     prevChainWork: '000000000000000000000000000000000000000001483b2995af390c20b58320',
+    prevHash: '00000000000000000b6ae23bbe9f549844c20943d8c20b8ceedbae8aa1dde8e0',
+    sourceUrl: 'https://cdn.projectbabbage.com/blockheaders'
+  },
+  {
     chain: 'main',
-    validated: true
+    count: 7630,
+    fileHash: 'R3JNRSzpFPvKXH2myRL+m420ycjrxRTcSI3aiMOJmfo=',
+    fileName: 'mainNet_9.headers',
+    firstHeight: 900000,
+    lastChainWork: '00000000000000000000000000000000000000000167cca3f0721d58e023cf01',
+    lastHash: '00000000000000000c119d65afcc66b640e98b839414c7e66d22b428ecb24a43',
+    prevChainWork: '000000000000000000000000000000000000000001664db1f2d50327928007e0',
+    prevHash: '00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087',
+    sourceUrl: 'https://cdn.projectbabbage.com/blockheaders'
   }
 ]

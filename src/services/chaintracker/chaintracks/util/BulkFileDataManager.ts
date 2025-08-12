@@ -159,22 +159,24 @@ export class BulkFileDataManager {
   private async mergeNoLock(files: BulkHeaderFileInfo[]): Promise<BulkFileDataManagerMergeResult> {
     const r: BulkFileDataManagerMergeResult = { inserted: [], updated: [], unchanged: [], dropped: [] }
     for (const file of files) {
-      const vbf: BulkFileData = await this.validateFileInfo(file)
-      const hbf = this.getBfdForHeight(vbf.firstHeight)
+      const hbf = this.getBfdForHeight(file.firstHeight)
+      if (hbf && file.fileId) hbf.fileId = file.fileId // Always update fileId if provided
       const lbf = this.getLastBfd()
+      if (
+        hbf &&
+        hbf.fileHash === file.fileHash &&
+        hbf.count === file.count &&
+        hbf.lastHash === file.lastHash &&
+        hbf.lastChainWork === file.lastChainWork
+      ) {
+        // We already have an identical matching file...
+        r.unchanged.push(bfdToInfo(hbf))
+        continue
+      }
+      const vbf: BulkFileData = await this.validateFileInfo(file)
       if (hbf) {
-        if (!vbf.fileId && hbf.fileId) vbf.fileId = hbf.fileId
-        if (
-          hbf.fileHash === vbf.fileHash &&
-          hbf.count === vbf.count &&
-          hbf.lastHash === vbf.lastHash &&
-          hbf.lastChainWork === vbf.lastChainWork
-        ) {
-          if (vbf.fileId) hbf.fileId = vbf.fileId // Update fileId if provided
-          r.unchanged.push(bfdToInfo(hbf))
-        } else {
-          await this.update(vbf, hbf, r)
-        }
+        // We have a matching file by firstHeight but count and fileHash differ
+        await this.update(vbf, hbf, r)
       } else if (isBdfIncremental(vbf) && lbf && isBdfIncremental(lbf)) {
         await this.mergeIncremental(lbf, vbf, r)
       } else {
@@ -238,23 +240,22 @@ export class BulkFileDataManager {
     return log
   }
 
-  async mergeIncrementalBlockHeaders(newBulkHeaders: BlockHeader[], lastChainWork?: string): Promise<void> {
+  async mergeIncrementalBlockHeaders(newBulkHeaders: BlockHeader[], incrementalChainWork?: string): Promise<void> {
+    if (newBulkHeaders.length === 0) return
     return this.lock.withWriteLock(async () => {
       const lbf = this.getLastFileNoLock()
       const nextHeight = lbf ? lbf.firstHeight + lbf.count : 0
-      while (newBulkHeaders.length > 0 && newBulkHeaders[0].height < nextHeight) {
-        newBulkHeaders.shift()
-      }
-      if (newBulkHeaders.length === 0) return
       if (!lbf || nextHeight !== newBulkHeaders[0].height)
-        throw new WERR_INVALID_PARAMETER('headers', 'an extension of existing bulk headers')
+        throw new WERR_INVALID_PARAMETER('newBulkHeaders', 'an extension of existing bulk headers')
       if (!lbf.lastHash) throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`)
 
       const fbh = newBulkHeaders[0]
       const lbh = newBulkHeaders.slice(-1)[0]
-      if (!lastChainWork) {
+      let lastChainWork = lbf.lastChainWork
+      if (incrementalChainWork) {
+        lastChainWork = addWork(incrementalChainWork, lastChainWork)
+      } else {
         // If lastChainWork is not provided, calculate it from the last file with basic validation.
-        lastChainWork = lbf.lastChainWork
         let lastHeight = lbf.firstHeight + lbf.count - 1
         let lastHash = lbf.lastHash
         for (const h of newBulkHeaders) {
@@ -375,7 +376,7 @@ export class BulkFileDataManager {
   }
 
   async getLastFile(fromEnd = 1): Promise<BulkHeaderFileInfo | undefined> {
-    return this.lock.withReadLock(async () => this.getLastFile(fromEnd))
+    return this.lock.withReadLock(async () => this.getLastFileNoLock(fromEnd))
   }
 
   private getLastFileNoLock(fromEnd = 1): BulkHeaderFileInfo | undefined {
