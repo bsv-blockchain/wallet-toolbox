@@ -13,7 +13,12 @@ export async function listOutputs(
   const trx: sdk.TrxToken | undefined = undefined
   const userId = verifyId(auth.userId)
   const limit = vargs.limit
-  const offset = vargs.offset
+  let offset = vargs.offset
+  let orderBy: 'asc' | 'desc' = 'asc'
+  if (offset < 0) {
+    offset = -offset - 1
+    orderBy = 'desc'
+  }
 
   const k = dsk.toDb(trx)
 
@@ -23,14 +28,14 @@ export async function listOutputs(
   }
 
   /*
-        ListOutputsArgs {
+        ValidListOutputsArgs {
             basket: BasketStringUnder300Bytes
 
-            tags?: OutputTagStringUnder300Bytes[]
-            tagQueryMode?: 'all' | 'any' // default any
+            tags: OutputTagStringUnder300Bytes[]
+            tagQueryMode: 'all' | 'any' // default any
 
-            limit?: PositiveIntegerDefault10Max10000
-            offset?: PositiveIntegerOrZero
+            limit: PositiveIntegerDefault10Max10000 // default 10
+            offset: number // default 0
         }
     */
 
@@ -166,7 +171,7 @@ export async function listOutputs(
   // Sort order when limit and offset are possible must be ascending for determinism.
   if (!specOp || !specOp.ignoreLimit) q.limit(limit).offset(offset)
 
-  q.orderBy('outputId', 'asc')
+  q.orderBy('outputId', orderBy)
 
   let outputs: TableOutput[] = await q
 
