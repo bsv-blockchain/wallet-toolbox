@@ -8,7 +8,7 @@ import { ChaintracksFs } from '../util/ChaintracksFs'
 import { LocalCdnServer } from './LocalCdnServer'
 import { Chain } from '../../../../sdk/types'
 
-const runSlowTests = true
+const runSlowTests = false
 
 describe('BulkFileDataManager tests', () => {
   jest.setTimeout(99999999)

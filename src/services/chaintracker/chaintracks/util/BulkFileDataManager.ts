@@ -245,6 +245,18 @@ export class BulkFileDataManager {
     return this.lock.withWriteLock(async () => {
       const lbf = this.getLastFileNoLock()
       const nextHeight = lbf ? lbf.firstHeight + lbf.count : 0
+      if (nextHeight > 0 && newBulkHeaders.length > 0 && newBulkHeaders[0].height < nextHeight) {
+        // Don't modify the incoming array...
+        newBulkHeaders = [...newBulkHeaders]
+        // If we have more headers than we need, drop the incoming headers.
+        while (newBulkHeaders.length > 0 && newBulkHeaders[0].height < nextHeight) {
+          const h = newBulkHeaders.shift()
+          if (h && incrementalChainWork) {
+            incrementalChainWork = subWork(incrementalChainWork, convertBitsToWork(h.bits))
+          }
+        }
+      }
+      if (newBulkHeaders.length === 0) return
       if (!lbf || nextHeight !== newBulkHeaders[0].height)
         throw new WERR_INVALID_PARAMETER('newBulkHeaders', 'an extension of existing bulk headers')
       if (!lbf.lastHash) throw new WERR_INTERNAL(`lastHash is not defined for the last bulk file ${lbf.fileName}`)

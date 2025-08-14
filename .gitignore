@@ -43,3 +43,5 @@ data/
 src/services/chaintracker/chaintracks/__tests/BulkFileDataManager.test_0a.sqlite
 src/services/chaintracker/chaintracks/__tests/BulkFileDataManager.test_1a.sqlite
 src/services/chaintracker/chaintracks/__tests/BulkFileDataManager.test_0b.sqlite
+src/services/chaintracker/chaintracks/__tests/BulkFileDataManager.test_4a.sqlite
+src/services/chaintracker/chaintracks/__tests/BulkFileDataManager.test_5a.sqlite
