@@ -33,7 +33,7 @@ describe('ChaintracksFetch tests', () => {
     const url = `${cdnUrl}/testNet_0.headers`
     const data = await fetch.download(url)
     expect(data.length).toBe(8000000)
-    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', data))
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', Uint8Array.from(data)))
     const fileHash = asString(hash, 'base64')
     expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
   })

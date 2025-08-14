@@ -1,4 +1,4 @@
-import { TeranodeListener } from '@bsv/teranode-listener'
+//import { TeranodeListener } from '../../../../services/providers/TeranodeListener'
 import { wait } from '../../../../utility/utilityHelpers'
 
 const datas: Uint8Array[] = []
@@ -27,6 +27,8 @@ describe('ts-p2p tests', () => {
       console.log(`Subtree update from ${from}:`, data)
       // Process subtree data here
     }
+
+    const { TeranodeListener } = await import('../../../../services/providers/TeranodeListener')
 
     // Create listener with topic callbacks
     const listener = new TeranodeListener({

@@ -304,7 +304,7 @@ export async function generateChangeSdk(
     }
 
     r.size = size()
-    ;(r.fee = fee()), (r.satsPerKb = satsPerKb)
+    ;((r.fee = fee()), (r.satsPerKb = satsPerKb))
 
     const { ok, log } = validateGenerateChangeSdkResult(params, r)
     if (!ok) {

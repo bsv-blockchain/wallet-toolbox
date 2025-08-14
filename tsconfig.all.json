@@ -2,12 +2,13 @@
   "compilerOptions": {
     "rootDir": ".", // Include both src and test directories
     "outDir": "./out",
-    "target": "es2018",
+    "target": "es2022",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
     "allowJs": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
