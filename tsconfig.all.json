@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".", // Include both src and test directories
     "outDir": "./out",
-    "target": "es2022",
+    "target": "es2018",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
