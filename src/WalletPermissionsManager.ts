@@ -1044,7 +1044,6 @@ export class WalletPermissionsManager implements WalletInterface {
     }
   }
 
-
   /**
    * Ensures the originator has label usage permission.
    * If no valid (unexpired) permission token is found, triggers a permission request flow.
@@ -2909,15 +2908,15 @@ export class WalletPermissionsManager implements WalletInterface {
    * do not produce multiple user prompts.
    */
   private buildRequestKey(r: PermissionRequest): string {
-  switch (r.type) {
-    case 'protocol':
-      return `proto:${r.originator}:${!!r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
-    case 'basket':
-      return `basket:${r.originator}:${r.basket}`
-    case 'certificate':
-      return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
-    case 'spending':
-      return `spend:${r.originator}:${r.spending?.satoshis}`
-  }
+    switch (r.type) {
+      case 'protocol':
+        return `proto:${r.originator}:${!!r.privileged}:${r.protocolID?.join(',')}:${r.counterparty}`
+      case 'basket':
+        return `basket:${r.originator}:${r.basket}`
+      case 'certificate':
+        return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
+      case 'spending':
+        return `spend:${r.originator}:${r.spending?.satoshis}`
+    }
   }
 }
