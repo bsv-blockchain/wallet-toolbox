@@ -351,7 +351,7 @@ describe('listOutputs test', () => {
       let allOutputs: WalletOutput[] = []
       {
         const args: ListOutputsArgs = {
-          basket: 'default',
+          basket: 'default'
         }
         const r = await wallet.listOutputs(args)
         totalOutputs = r.totalOutputs

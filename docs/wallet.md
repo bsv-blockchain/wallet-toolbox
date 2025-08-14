@@ -5141,7 +5141,7 @@ export interface ValidListOutputsArgs extends ValidWalletSignerArgs {
     includeTags: BooleanDefaultFalse;
     includeLabels: BooleanDefaultFalse;
     limit: PositiveIntegerDefault10Max10000;
-    offset: PositiveIntegerOrZero;
+    offset: number;
     seekPermission: BooleanDefaultTrue;
     knownTxids: string[];
 }
@@ -13209,7 +13209,10 @@ Argument Details
 + **args.limit**
   + Optional limit on the number of outputs to return.
 + **args.offset**
-  + Optional. Number of outputs to skip before starting to return results.
+  + If positive or zero: Number of outputs to skip before starting to return results, oldest first.
+If negative: Outputs are returned newest first and offset of -1 is the newest output.
+When using negative offsets, caution is required as new outputs may be added between calls,
+potentially causing outputs to be duplicated across calls.
 + **args.seekPermission**
   + — Optional. Whether to seek permission from the user for this operation if required. Default true, will return an error rather than proceed if set to false.
 
