@@ -26,7 +26,7 @@ export interface ChaintracksManagementApi extends ChaintracksApi {
   /**
    * close and release all resources
    */
-  shutdown(): Promise<void>
+  destroy(): Promise<void>
 
   /**
    * Stops listening for new headers.

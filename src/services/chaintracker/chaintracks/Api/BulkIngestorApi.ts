@@ -33,7 +33,9 @@ export interface BulkIngestorApi {
   /**
    * If the bulk ingestor is capable, return the approximate
    * present height of the actual chain being tracked.
-   * Otherwise, return undefined
+   * Otherwise, return undefined.
+   * 
+   * May not assume that setStorage has been called.
    */
   getPresentHeight(): Promise<number | undefined>
 

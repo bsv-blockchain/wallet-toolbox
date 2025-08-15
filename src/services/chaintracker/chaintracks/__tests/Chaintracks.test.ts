@@ -22,7 +22,7 @@ describe('Chaintracks tests', () => {
 
     await c.stopListening()
     await listening
-    await c.shutdown()
+    await c.destroy()
   })
 
   test('1 NoDb mainnet', async () => {
@@ -49,6 +49,6 @@ describe('Chaintracks tests', () => {
 
     await c.stopListening()
     await listening
-    await c.shutdown()
+    await c.destroy()
   })
 })

@@ -2,7 +2,6 @@
  * A reader-writer lock to manage concurrent access.
  * Allows multiple readers or one writer at a time.
  */
-
 export class SingleWriterMultiReaderLock {
   private readers: number = 0
   private writerActive: boolean = false
