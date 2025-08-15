@@ -881,7 +881,7 @@ export interface ValidListOutputsArgs extends ValidWalletSignerArgs {
   includeTags: BooleanDefaultFalse
   includeLabels: BooleanDefaultFalse
   limit: PositiveIntegerDefault10Max10000
-  offset: PositiveIntegerOrZero
+  offset: number
   seekPermission: BooleanDefaultTrue
   knownTxids: string[]
 }
@@ -896,7 +896,10 @@ export interface ValidListOutputsArgs extends ValidWalletSignerArgs {
  * @param {BooleanDefaultFalse} [args.includeTags] - Optional. Whether the tags associated with the output should be returned.
  * @param {BooleanDefaultFalse} [args.includeLabels] - Optional. Whether the labels associated with the transaction containing the output should be returned.
  * @param {PositiveIntegerDefault10Max10000} [args.limit] - Optional limit on the number of outputs to return.
- * @param {PositiveIntegerOrZero} [args.offset] - Optional. Number of outputs to skip before starting to return results.
+ * @param {number} [args.offset] - If positive or zero: Number of outputs to skip before starting to return results, oldest first.
+ * If negative: Outputs are returned newest first and offset of -1 is the newest output.
+ * When using negative offsets, caution is required as new outputs may be added between calls,
+ * potentially causing outputs to be duplicated across calls.
  * @param {BooleanDefaultTrue} [args.seekPermission] — Optional. Whether to seek permission from the user for this operation if required. Default true, will return an error rather than proceed if set to false.
  */
 export function validateListOutputsArgs(args: ListOutputsArgs): ValidListOutputsArgs {
@@ -915,7 +918,7 @@ export function validateListOutputsArgs(args: ListOutputsArgs): ValidListOutputs
     includeTags: defaultFalse(args.includeTags),
     includeLabels: defaultFalse(args.includeLabels),
     limit: validateInteger(args.limit, 'limit', 10, 1, 10000),
-    offset: validateInteger(args.offset, 'offset', 0, 0),
+    offset: validateInteger(args.offset, 'offset', 0, undefined, undefined),
     seekPermission: defaultTrue(args.seekPermission),
     knownTxids: []
   }

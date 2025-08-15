@@ -1002,7 +1002,7 @@ export class WalletPermissionsManager implements WalletInterface {
       // We skip spending permission entirely
       return true
     }
-    const cacheKey = this.buildRequestKey({ type: 'spending', originator })
+    const cacheKey = this.buildRequestKey({ type: 'spending', originator, spending: { satoshis } })
     if (this.isPermissionCached(cacheKey)) {
       return true
     }
@@ -2916,7 +2916,7 @@ export class WalletPermissionsManager implements WalletInterface {
       case 'certificate':
         return `cert:${r.originator}:${!!r.privileged}:${r.certificate?.verifier}:${r.certificate?.certType}:${r.certificate?.fields.join('|')}`
       case 'spending':
-        return `spend:${r.originator}`
+        return `spend:${r.originator}:${r.spending?.satoshis}`
     }
   }
 }

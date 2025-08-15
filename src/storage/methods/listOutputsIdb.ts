@@ -3,7 +3,7 @@ import { TableOutput, TableOutputBasket, TableOutputTag } from '../index.client'
 import { asString, sdk, verifyId, verifyOne } from '../../index.client'
 import { getBasketToSpecOp, ListOutputsSpecOp } from './ListOutputsSpecOp'
 import { StorageIdb } from '../StorageIdb'
-import { TransactionStatus } from '../../sdk'
+import { TransactionStatus, WERR_NOT_IMPLEMENTED } from '../../sdk'
 
 export async function listOutputsIdb(
   storage: StorageIdb,
@@ -14,6 +14,7 @@ export async function listOutputsIdb(
   const userId = verifyId(auth.userId)
   const limit = vargs.limit
   const offset = vargs.offset
+  if (offset < 0) throw new WERR_NOT_IMPLEMENTED('Negative offset not supported in IndexedDB')
 
   const r: ListOutputsResult = {
     totalOutputs: 0,

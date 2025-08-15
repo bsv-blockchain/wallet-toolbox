@@ -3,7 +3,8 @@ import {
   Beef,
   ListOutputsArgs,
   OriginatorDomainNameStringUnder250Bytes,
-  OutputTagStringUnder300Bytes
+  OutputTagStringUnder300Bytes,
+  WalletOutput
 } from '@bsv/sdk'
 import { _tu, TestWalletProviderNoSetup } from '../../utils/TestUtilsWalletStorage'
 import path from 'path'
@@ -341,7 +342,78 @@ describe('listOutputs test', () => {
     }
   })
 
-  test('13 issue 50', async () => {
+  test('13 offsets', async () => {
+    let i = -1
+    for (const { wallet } of ctxs) {
+      i++
+      let totalOutputs: number = 0
+      const limit = 4
+      let allOutputs: WalletOutput[] = []
+      {
+        const args: ListOutputsArgs = {
+          basket: 'default'
+        }
+        const r = await wallet.listOutputs(args)
+        totalOutputs = r.totalOutputs
+      }
+      {
+        const args: ListOutputsArgs = {
+          basket: 'default',
+          offset: 0,
+          limit: totalOutputs
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(totalOutputs)
+        expect(r.outputs.length).toBe(totalOutputs)
+        expect(r.totalOutputs).toBe(totalOutputs)
+        allOutputs = r.outputs
+      }
+      {
+        const args: ListOutputsArgs = {
+          basket: 'default',
+          offset: totalOutputs - limit,
+          limit
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(totalOutputs)
+        expect(r.outputs.length).toBe(limit)
+        expect(r.outputs[0].outpoint).toBe(allOutputs[totalOutputs - limit].outpoint)
+        expect(r.outputs[1].outpoint).toBe(allOutputs[totalOutputs - limit + 1].outpoint)
+        expect(r.outputs[2].outpoint).toBe(allOutputs[totalOutputs - limit + 2].outpoint)
+        expect(r.outputs[3].outpoint).toBe(allOutputs[totalOutputs - limit + 3].outpoint)
+      }
+      if (i === 1) {
+        const args: ListOutputsArgs = {
+          basket: 'default',
+          offset: -1,
+          limit
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(totalOutputs)
+        expect(r.outputs.length).toBe(limit)
+        expect(r.outputs[0].outpoint).toBe(allOutputs[totalOutputs - 1].outpoint)
+        expect(r.outputs[1].outpoint).toBe(allOutputs[totalOutputs - 2].outpoint)
+        expect(r.outputs[2].outpoint).toBe(allOutputs[totalOutputs - 3].outpoint)
+        expect(r.outputs[3].outpoint).toBe(allOutputs[totalOutputs - 4].outpoint)
+      }
+      if (i === 1) {
+        const args: ListOutputsArgs = {
+          basket: 'default',
+          offset: -3,
+          limit
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(totalOutputs)
+        expect(r.outputs.length).toBe(limit)
+        expect(r.outputs[0].outpoint).toBe(allOutputs[totalOutputs - 3].outpoint)
+        expect(r.outputs[1].outpoint).toBe(allOutputs[totalOutputs - 4].outpoint)
+        expect(r.outputs[2].outpoint).toBe(allOutputs[totalOutputs - 5].outpoint)
+        expect(r.outputs[3].outpoint).toBe(allOutputs[totalOutputs - 6].outpoint)
+      }
+    }
+  })
+
+  test('14 issue 50', async () => {
     for (const { wallet } of ctxs) {
       {
         const args: ListOutputsArgs = {
