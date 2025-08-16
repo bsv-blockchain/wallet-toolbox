@@ -1,4 +1,5 @@
 import { BlockHeader, Chain } from '../../../../sdk'
+import { wait } from '../../../../utility/utilityHelpers'
 import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
@@ -36,7 +37,10 @@ export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions
   chainInfoMsecs: number
 }
 
-export class LiveIngestorWhatsOnChain extends LiveIngestorBase {
+/**
+ * Reports new headers by polling periodically.
+ */
+export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
   static createLiveIngestorWhatsOnChainOptions(chain: Chain): LiveIngestorWhatsOnChainOptions {
     const options: LiveIngestorWhatsOnChainOptions = {
       ...WhatsOnChainServices.createWhatsOnChainServicesOptions(chain),
@@ -48,6 +52,7 @@ export class LiveIngestorWhatsOnChain extends LiveIngestorBase {
 
   idleWait: number
   woc: WhatsOnChainServices
+  done: boolean = false
 
   constructor(options: LiveIngestorWhatsOnChainOptions) {
     super(options)
@@ -61,30 +66,42 @@ export class LiveIngestorWhatsOnChain extends LiveIngestorBase {
   }
 
   async startListening(liveHeaders: BlockHeader[]): Promise<void> {
+
+    this.done = false
+    let nextHeight = (await this.woc.getChainTipHeight()) + 1
+
     const errors: { code: number; message: string; count: number }[] = []
     const enqueue: EnqueueHandler = header => {
       liveHeaders.push(header)
+      nextHeight = Math.max(nextHeight, header.height + 1)
     }
     const error: ErrorHandler = (code, message) => {
       errors.push({ code, message, count: errors.length })
       return false
     }
 
-    for (;;) {
-      const ok = await this.woc.listenForNewBlockHeaders(enqueue, error, this.idleWait)
+    for (;!this.done;) {
+
+      const ok = await this.woc.listenForOldBlockHeaders(
+        nextHeight,
+        nextHeight + 10,
+        enqueue,
+        error,
+        this.idleWait
+      )
 
       if (!ok || errors.length > 0) {
-        console.log(`WhatsOnChain live ingestor ok=${ok} error count=${errors.length}`)
-        for (const e of errors) console.log(`WhatsOnChain error code=${e.code} count=${e.count} message=${e.message}`)
+        console.log(`WhatsOnChain polled live ingestor ok=${ok} error count=${errors.length}`)
+        for (const e of errors) console.log(`WhatsOnChain polled error code=${e.code} count=${e.count} message=${e.message}`)
       }
 
-      if (ok) break
+      await wait(60 * 1000)
 
       errors.length = 0
     }
   }
 
   stopListening(): void {
-    this.woc?.stopNewListener()
+    this.done = true
   }
 }
