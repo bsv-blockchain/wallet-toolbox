@@ -95,10 +95,9 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
   abstract getHeaders(height: number, count: number): Promise<number[]>
   /**
    * @param header Header to attempt to add to live storage.
-   * @param prev Must be valid if live storage is empty, then prev must be last bulk header.
    * @returns details of conditions found attempting to insert header
    */
-  abstract insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
+  abstract insertHeader(header: BlockHeader): Promise<InsertHeaderResult>
   abstract destroy(): Promise<void>
 
   // BASE CLASS IMPLEMENTATIONS - MAY BE OVERRIDEN

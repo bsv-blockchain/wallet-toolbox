@@ -48,15 +48,10 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   private baseHeaders: BaseBlockHeader[] = []
   private liveHeaders: BlockHeader[] = []
-  private isClientApiEnabled = false
   private addLiveRecursionLimit = 11
 
   private available = false
 
-  private lastSynchronizePresentHeight: number | undefined
-
-  private startListeningActive = false
-  private listeningCallback = () => {}
   private subscriberCallbacksEnabled = false
   private stopMainThread = true
 
@@ -293,7 +288,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 
 
   private async syncBulkStorage(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
-    this.lock.withWriteLock(async () => this.syncBulkStorageNoLock(presentHeight, initialRanges))
+    await this.lock.withWriteLock(async () => await this.syncBulkStorageNoLock(presentHeight, initialRanges))
   }
 
   private async syncBulkStorageNoLock(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
@@ -340,8 +335,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   ${added.length} headers added to bulk storage
   ${this.liveHeaders.length} headers forwarded to live header storage
 `)
-
-      this.lastSynchronizePresentHeight = presentHeight
   }
 
   private async getMissingBlockHeader(hash: string): Promise<BlockHeader | undefined> {
@@ -461,7 +454,6 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
 
       let count = 0
-      let notified = false
       let needSyncCheck = false
 
       for (; !needSyncCheck;) {
@@ -495,6 +487,7 @@ export class Chaintracks implements ChaintracksManagementApi {
             } else {
               // Header wasn't invalid and previous header is known. If it was successfully added, count it as a win.
               if (ihr.added) count++;
+              break;
             }
           }
         } else {
@@ -521,6 +514,10 @@ export class Chaintracks implements ChaintracksManagementApi {
               // Does not trigger a re-sync.
             }
           } else {
+            if (count > 0) {
+              this.log(`${count} live headers added`)
+              count = 0
+            }
             // There are no liveHeaders and no baseHeaders to add,
             needSyncCheck = Date.now() - lastSyncCheck > syncCheckRepeatMsecs
             if (!needSyncCheck)

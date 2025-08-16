@@ -12,16 +12,13 @@ describe('Chaintracks tests', () => {
   test('0 basic operation mainnet', async () => {
     const o = createDefaultChaintracksOptions('main', rootFolder)
     const c = new Chaintracks(o)
-    const listening = c.startListening()
-    await c.listening()
+    await c.makeAvailable()
 
     let done = false
     for (; !done; ) {
       await wait(10000)
     }
 
-    await c.stopListening()
-    await listening
     await c.destroy()
   })
 
@@ -31,8 +28,7 @@ describe('Chaintracks tests', () => {
     const s = new ChaintracksStorageNoDb(so)
     o.storageEngine = s
     const c = new Chaintracks(o)
-    const listening = c.startListening()
-    await c.listening()
+    await c.makeAvailable()
 
     c.subscribeHeaders(header => {
       console.log(`Header received: ${header.height} ${header.hash}`)
@@ -47,8 +43,6 @@ describe('Chaintracks tests', () => {
       await wait(10000)
     }
 
-    await c.stopListening()
-    await listening
     await c.destroy()
   })
 })

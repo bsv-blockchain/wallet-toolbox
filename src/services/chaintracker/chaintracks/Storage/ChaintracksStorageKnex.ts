@@ -237,10 +237,9 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
 
   /**
    * @param header Header to attempt to add to live storage.
-   * @param prev Must be valid if live storage is empty, then prev must be last bulk header.
    * @returns details of conditions found attempting to insert header
    */
-  async insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult> {
+  async insertHeader(header: BlockHeader): Promise<InsertHeaderResult> {
     const table = this.headerTableName
 
     let ok = true
@@ -267,10 +266,6 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
 
       // This is the existing previous header to the one being inserted...
       let [oneBack] = await trx<LiveBlockHeader>(table).where({ hash: header.previousHash })
-
-      if (!oneBack && prev && prev.hash === header.previousHash && prev.height + 1 === header.height)
-        // Previous header is in bulk storage.
-        oneBack = prev
 
       if (!oneBack) {
         // Check if this is first live header...
@@ -322,7 +317,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
 
       const newHeader = {
         ...header,
-        previousHeaderId: oneBack === prev ? null : oneBack.headerId,
+        previousHeaderId: oneBack.headerId,
         chainWork,
         isChainTip: setActiveChainTip,
         isActive: setActiveChainTip
@@ -373,7 +368,7 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
         }
       }
 
-      if (oneBack.isChainTip && oneBack !== prev) {
+      if (oneBack.isChainTip) {
         await trx<LiveBlockHeader>(table).where({ headerId: oneBack.headerId }).update({ isChainTip: false })
       }
 
