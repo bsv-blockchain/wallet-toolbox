@@ -1,13 +1,13 @@
 import { Chain } from '../../../../sdk/types'
 import { BulkIngestorApi } from './BulkIngestorApi'
-import { BulkStorageApi } from './BulkStorageApi'
 import { ChaintracksApi } from './ChaintracksClientApi'
 import { LiveIngestorApi } from './LiveIngestorApi'
-import { ChaintracksStorageApi } from './ChaintracksStorageApi'
+import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksFsApi } from './ChaintracksFsApi'
 
 export interface ChaintracksOptions {
   chain: Chain
-  storageEngine: ChaintracksStorageApi | undefined
+  storageEngine?: ChaintracksStorageBase
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
 
@@ -20,6 +20,11 @@ export interface ChaintracksOptions {
    * Event logging level
    */
   logging: undefined | 'all'
+  /**
+   * If true, this chaintracks instance will only service read requests for existing data.
+   * Shared storage only requires one readonly false instance to manage and update storage.
+   */
+  readonly: boolean
 }
 
 export interface ChaintracksManagementApi extends ChaintracksApi {
@@ -27,15 +32,6 @@ export interface ChaintracksManagementApi extends ChaintracksApi {
    * close and release all resources
    */
   destroy(): Promise<void>
-
-  /**
-   * Stops listening for new headers.
-   * Ends notifications to subscribed listeners.
-   *
-   * May have to `synchronize` before again calling `startListening` if more than
-   * `addLiveRecursionLimit` have been found while not listening.
-   */
-  stopListening(): Promise<void>
 
   /**
    * Verifies that all headers from the tip back to genesis can be retrieved, in order,
@@ -52,9 +48,11 @@ export interface ChaintracksManagementApi extends ChaintracksApi {
    *
    * Useful for bulk ingestors such as those derived from BulkIngestorCDN.
    *
-   * @param rootFolder Where the json and headers files will be written
-   * @param jsonFilename The name of the json file. Default is 'mainNet.json' or 'testNet.json'
-   * @param maxPerFile The maximum headers per file. Default is 400,000 (32MB)
+   * @param toFolder Where the json and headers files will be written
+   * @param sourceUrl Optional source URL to include in the exported files. Set if exported files will be transferred to a CDN.
+   * @param toHeadersPerFile The maximum headers per file. Default is 100,000 (8MB)
+   * @param maxHeight The maximum height to export. Default is the current bulk storage max height.
+   * @param toFs The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
    */
-  exportBulkHeaders(rootFolder: string, jsonFilename?: string, maxPerFile?: number): Promise<void>
+  exportBulkHeaders(toFolder: string, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number, toFs?: ChaintracksFsApi): Promise<void>
 }

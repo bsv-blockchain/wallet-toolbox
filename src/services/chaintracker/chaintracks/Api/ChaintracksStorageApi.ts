@@ -351,5 +351,5 @@ export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, Chain
   /**
    * Close and release all resources.
    */
-  shutdown(): Promise<void>
+  destroy(): Promise<void>
 }

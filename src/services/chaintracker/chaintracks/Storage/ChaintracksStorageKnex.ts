@@ -235,6 +235,11 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
     return data
   }
 
+  /**
+   * @param header Header to attempt to add to live storage.
+   * @param prev Must be valid if live storage is empty, then prev must be last bulk header.
+   * @returns details of conditions found attempting to insert header
+   */
   async insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult> {
     const table = this.headerTableName
 
