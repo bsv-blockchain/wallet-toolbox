@@ -39,6 +39,5 @@ backup-*.sqlite
 test/wallet/support/reqhistory.sqlite
 
 node_modules
-src/services/chaintracker/chaintracks/__tests/*.sqlite
 src/services/chaintracker/chaintracks/__tests/data/*.sqlite
 src/services/chaintracker/chaintracks/__tests/data/export*
