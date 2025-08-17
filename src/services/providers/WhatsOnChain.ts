@@ -2,12 +2,7 @@ import { Beef, HexString, Utils, WhatsOnChainConfig } from '@bsv/sdk'
 import { asArray, asString, doubleSha256BE, sdk, Services, validateScriptHash, wait } from '../../index.client'
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
-import { parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
-import {
-  convertWocToBlockHeaderHex,
-  WocChainInfo,
-  WocHeader
-} from '../chaintracker/chaintracks/Ingest/WhatsOnChainIngestorBase'
+import { Chain, parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
 import { BlockHeader } from '../chaintracker/chaintracks/Api/BlockHeaderApi'
 
 export class WhatsOnChainNoServices extends SdkWhatsOnChain {
@@ -808,4 +803,67 @@ interface WhatsOnChainUtxoStatus {
     isSpentInMempoolTx: boolean
     status: string // 'confirmed'
   }[]
+}
+
+export interface WocChainInfo {
+  chain: string // "main",
+  blocks: number // 635302,
+  headers: number // 635299,
+  bestblockhash: string // "000000000000000002a40d7410a6c08109521c14f4cf354e7b352b4eab8aa4ea",
+  difficulty: number // 287310033717.7086,
+  mediantime: number // 1589703256,
+  verificationprogress: number // 0.9999754124031851,
+  pruned: boolean // false,
+  chainwork: string // "0000000000000000000000000000000000000000010969f724913e0fe59377f4"
+}
+
+// WhatsOnChain headers looks like:
+export interface WocHeader {
+  hash: string //"00000000000000000836c9c44151acbf374c6d4a9713d43b5e95011bdbd1ff2e"
+  size: number // 71646128,
+  height: number // 760633,
+  version: number // 712441856,
+  versionHex: string // "2a770000",
+  merkleroot: string // "af80d255ca21d9ccdd2cc3576dc532adc7fcbc324ce2db3dec8d54079b56a001",
+  time: number // 1665274100,
+  mediantime: number // 1665270280,
+  nonce: number // 618555943,
+  bits: number | string // decimal of ox180dc8e5,
+  difficulty: number // 79761715531.82063,
+  chainwork: string // "0000000000000000000000000000000000000000013d02d8de0ec6cd019bb3a1",
+  previousblockhash: string // "00000000000000000272ad9db518e5eeac702f1b00ffa6dc9605f687301dda99",
+
+  confirmations: number // 3,
+  txcount: number // 45168,
+  nextblockhash: string // "000000000000000004e01d72ccb7502f0412cc12d7e50f6fafa99ac6f89fd063",
+  // coinbaseTx
+  // orphaned
+}
+
+export function convertWocToBlockHeaderHex(woc: WocHeader): BlockHeader {
+  const bits: number = typeof woc.bits === 'string' ? parseInt(woc.bits, 16) : woc.bits
+  if (!woc.previousblockhash) {
+    woc.previousblockhash = '0000000000000000000000000000000000000000000000000000000000000000' // genesis
+  }
+  return {
+    version: woc.version,
+    previousHash: woc.previousblockhash,
+    merkleRoot: woc.merkleroot,
+    time: woc.time,
+    bits,
+    nonce: woc.nonce,
+    hash: woc.hash,
+    height: woc.height
+  }
+}
+
+export async function getWhatsOnChainBlockHeaderByHash(
+  hash: string,
+  chain: Chain = 'main',
+  apiKey?: string
+): Promise<BlockHeader | undefined> {
+  const config = apiKey ? { apiKey } : {}
+  const woc = new WhatsOnChain(chain, config)
+  const header = await woc.getBlockHeaderByHash(hash)
+  return header
 }

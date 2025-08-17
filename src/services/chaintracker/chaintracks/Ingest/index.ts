@@ -1,4 +1,4 @@
 export * from './WhatsOnChainServices'
-export * from './WhatsOnChainIngestorBase'
+export * from './WhatsOnChainIngestorWs'
 export * from './BulkIngestorWhatsOnChain'
 export * from './LiveIngestorWhatsOnChainWs'

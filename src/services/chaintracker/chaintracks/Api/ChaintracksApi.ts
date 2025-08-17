@@ -54,5 +54,11 @@ export interface ChaintracksManagementApi extends ChaintracksApi {
    * @param maxHeight The maximum height to export. Default is the current bulk storage max height.
    * @param toFs The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
    */
-  exportBulkHeaders(toFolder: string, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number, toFs?: ChaintracksFsApi): Promise<void>
+  exportBulkHeaders(
+    toFolder: string,
+    sourceUrl?: string,
+    toHeadersPerFile?: number,
+    maxHeight?: number,
+    toFs?: ChaintracksFsApi
+  ): Promise<void>
 }

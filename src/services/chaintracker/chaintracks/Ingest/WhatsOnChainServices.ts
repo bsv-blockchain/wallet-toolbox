@@ -1,12 +1,11 @@
 import {
   StopListenerToken,
-  WocChainInfo,
   WocHeadersBulkListener,
   WocHeadersLiveListener
-} from './WhatsOnChainIngestorBase'
+} from './WhatsOnChainIngestorWs'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk'
-import { WhatsOnChain } from '../../../providers/WhatsOnChain'
+import { WhatsOnChain, WocChainInfo } from '../../../providers/WhatsOnChain'
 
 /**
  * return true to ignore error, false to close service connection

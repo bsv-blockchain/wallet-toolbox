@@ -66,7 +66,6 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
   }
 
   async startListening(liveHeaders: BlockHeader[]): Promise<void> {
-
     this.done = false
     let nextHeight = (await this.woc.getChainTipHeight()) + 1
 
@@ -80,19 +79,13 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
       return false
     }
 
-    for (;!this.done;) {
-
-      const ok = await this.woc.listenForOldBlockHeaders(
-        nextHeight,
-        nextHeight + 10,
-        enqueue,
-        error,
-        this.idleWait
-      )
+    for (; !this.done; ) {
+      const ok = await this.woc.listenForOldBlockHeaders(nextHeight, nextHeight + 10, enqueue, error, this.idleWait)
 
       if (!ok || errors.length > 0) {
         console.log(`WhatsOnChain polled live ingestor ok=${ok} error count=${errors.length}`)
-        for (const e of errors) console.log(`WhatsOnChain polled error code=${e.code} count=${e.count} message=${e.message}`)
+        for (const e of errors)
+          console.log(`WhatsOnChain polled error code=${e.code} count=${e.count} message=${e.message}`)
       }
 
       await wait(60 * 1000)
