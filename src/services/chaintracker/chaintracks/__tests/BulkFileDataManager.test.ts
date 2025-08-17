@@ -15,7 +15,7 @@ describe('BulkFileDataManager tests', () => {
 
   const chain: Chain = 'main'
   const fs = ChaintracksFs
-  const rootFolder = './src/services/chaintracker/chaintracks/__tests'
+  const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
   let headers300_399: BlockHeader[] = []
   let headers400_499: BlockHeader[] = []
   let server349: LocalCdnServer | undefined
