@@ -4,10 +4,11 @@ import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { BulkIngestorBase } from '../Base/BulkIngestorBase'
+import { deserializeBlockHeader } from '../util/blockHeaderUtilities'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { HeightRange, HeightRanges } from '../util/HeightRange'
-import { StopListenerToken, WocHeadersBulkListener } from './WhatsOnChainIngestorWs'
-import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
+import { StopListenerToken } from './WhatsOnChainIngestorWs'
+import { WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
 export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions, WhatsOnChainServicesOptions {
   /**
@@ -47,7 +48,7 @@ export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions
   fetch?: ChaintracksFetchApi
 }
 
-export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
+export class BulkIngestorWhatsOnChainCdn extends BulkIngestorBase {
   /**
    *
    * @param chain
@@ -87,35 +88,26 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     bulkRange: HeightRange,
     priorLiveHeaders: BlockHeader[]
   ): Promise<BlockHeader[]> {
+
     const oldHeaders: BlockHeader[] = []
-    const errors: { code: number; message: string; count: number }[] = []
-    const enqueue: EnqueueHandler = header => {
-      oldHeaders.push(header)
-    }
-    const error: ErrorHandler = (code, message) => {
-      errors.push({ code, message, count: errors.length })
-      return false
+
+    try {
+      const ranges = await this.woc.getHeaderByteFileLinks(fetchRange, this.fetch)
+      const headers: BlockHeader[] = []
+      for (const range of ranges) {
+        for (let height = range.range.minHeight; height <= range.range.maxHeight; height++) {
+          if (fetchRange.contains(height)) {
+            if (!range.data) range.data = await this.fetch.download(this.fetch.pathJoin(range.sourceUrl, range.fileName));
+            const h = deserializeBlockHeader(range.data, (height - range.range.minHeight) * 80, height)
+            oldHeaders.push(h)
+          }
+        }
+      }
+    } catch (e) {
+      logger(`Errors during WhatsOnChain ingestion:\n${e}`)
     }
 
-    const ok = await WocHeadersBulkListener(
-      fetchRange.minHeight,
-      fetchRange.maxHeight,
-      enqueue,
-      error,
-      this.stopOldListenersToken,
-      this.chain,
-      this.idleWait
-    )
-
-    let liveHeaders: BlockHeader[] = []
-    if (ok) {
-      liveHeaders = await this.storage().addBulkHeaders(oldHeaders, bulkRange, priorLiveHeaders)
-    }
-
-    if (errors.length > 0) {
-      const errorMessages = errors.map(e => `(${e.code}) ${e.message} (${e.count})`).join('\n')
-      logger(`Errors during WhatsOnChain ingestion:\n${errorMessages}`)
-    }
+    const liveHeaders = await this.storage().addBulkHeaders(oldHeaders, bulkRange, priorLiveHeaders)
 
     return liveHeaders
   }

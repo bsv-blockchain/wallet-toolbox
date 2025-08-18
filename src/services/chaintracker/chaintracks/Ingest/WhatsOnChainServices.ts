@@ -119,7 +119,7 @@ export class WhatsOnChainServices {
     for (const link of files.files) {
       const parsed = parseFileLink(link)
       if (parsed === undefined) continue; // parse error, return empty result
-      if (parsed === 'latest') {
+      if (parsed.range === 'latest') {
         if (range === undefined) continue; // should not happen on valid input
         const fromHeight = range.maxHeight + 1
         if (neededRange.maxHeight >= fromHeight) {
@@ -127,28 +127,31 @@ export class WhatsOnChainServices {
           const data = await fetch.download(link)
           range = new HeightRange(fromHeight, fromHeight + data.length / 80 - 1)
           if (!neededRange.intersect(range).isEmpty)
-            r.push({ link, range, data })
+            r.push({ sourceUrl: parsed.sourceUrl, fileName: parsed.fileName, range, data })
         }
       } else {
-        range = new HeightRange(parsed.fromHeight, parsed.toHeight)
+        range = new HeightRange(parsed.range.fromHeight, parsed.range.toHeight)
         if (!neededRange.intersect(range).isEmpty)
-          r.push({ link, range, data: undefined })
+          r.push({ sourceUrl: parsed.sourceUrl, fileName: parsed.fileName, range, data: undefined })
       }
     }
     return r
 
-    function parseFileLink(file: string): { fromHeight: number; toHeight: number } | 'latest' | undefined {
+    function parseFileLink(file: string): { range: ({ fromHeight: number; toHeight: number } | 'latest'), sourceUrl: string, fileName: string } | undefined {
       const url = new URL(file)
       const parts = url.pathname.split('/')
-      const bits = parts.slice(-1)[0]?.split('_')
+      const fileName = parts.pop()
+      if (!fileName) return undefined // no file name, invalid link
+      const sourceUrl = `${url.protocol}//${url.hostname}${parts.join('/')}`
+      const bits = fileName.split('_')
       if (bits.length === 1 && bits[0] === 'latest') {
-        return 'latest'
+        return { range: 'latest', sourceUrl, fileName }
       }
       if (bits.length === 3) {
         const fromHeight = parseInt(bits[0], 10)
         const toHeight = parseInt(bits[1], 10)
         if (Number.isInteger(fromHeight) && Number.isInteger(toHeight)) {
-          return { fromHeight, toHeight }
+          return { range: { fromHeight, toHeight }, sourceUrl, fileName }
         }
       }
       return undefined
@@ -181,7 +184,8 @@ export interface WocGetHeadersHeader {
 }
 
 export interface GetHeaderByteFileLinksResult {
-  link: string
+  sourceUrl: string
+  fileName: string
   range: HeightRange
   data: Uint8Array | undefined
 }

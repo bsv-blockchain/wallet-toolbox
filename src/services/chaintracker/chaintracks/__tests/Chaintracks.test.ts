@@ -3,6 +3,7 @@ import { Chaintracks } from '../Chaintracks'
 import { wait } from '../../../../utility/utilityHelpers'
 import { ChaintracksStorageNoDb } from '../Storage/ChaintracksStorageNoDb'
 import { ChaintracksFs } from '../util/ChaintracksFs'
+import { Chain } from '../../../../sdk'
 
 const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
 
@@ -15,7 +16,7 @@ describe('Chaintracks tests', () => {
     await c.makeAvailable()
 
     let done = false
-    for (; !done; ) {
+    for (; !done;) {
       await wait(10000)
     }
 
@@ -23,7 +24,15 @@ describe('Chaintracks tests', () => {
   })
 
   test('1 NoDb mainnet', async () => {
-    const o = createDefaultChaintracksOptions('main', rootFolder)
+    await NoDbBody('main')
+  })
+
+  test('1 NoDb testnet', async () => {
+    await NoDbBody('test')
+  })
+
+  async function NoDbBody(chain: Chain) {
+    const o = createDefaultChaintracksOptions(chain, rootFolder)
     const so = ChaintracksStorageNoDb.createStorageBaseOptions(o.chain)
     const s = new ChaintracksStorageNoDb(so)
     o.storageEngine = s
@@ -36,13 +45,13 @@ describe('Chaintracks tests', () => {
 
     //const fs = ChaintracksFs
     //await s.bulkManager.exportHeadersToFs(fs, 100000, fs.pathJoin(rootFolder, 'export_1'), 'https://cdn.projectbabbage.com/blockheaders')
-
     let done = false
-    for (; !done; ) {
+    for (; !done;) {
       const range = await s.getAvailableHeightRanges()
       await wait(10000)
     }
 
     await c.destroy()
-  })
+  }
 })
+
