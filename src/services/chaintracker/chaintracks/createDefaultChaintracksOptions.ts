@@ -5,7 +5,7 @@ import { Chaintracks } from './Chaintracks'
 import { ChaintracksFs } from './util/ChaintracksFs'
 import { ChaintracksStorageKnex } from './Storage'
 import { BulkIngestorCDNBabbage } from './BulkIngestorCDNBabbage'
-import { BulkIngestorWhatsOnChain } from './Ingest/BulkIngestorWhatsOnChain'
+import { BulkIngestorWhatsOnChainWs } from './Ingest/BulkIngestorWhatsOnChainWs'
 import { ChaintracksFetch } from './util/ChaintracksFetch'
 import { LiveIngestorWhatsOnChainWs } from './Ingest'
 import { LiveIngestorWhatsOnChainPoll } from './Ingest/LiveIngestorWhatsOnChainPoll'
@@ -43,8 +43,8 @@ export function createDefaultChaintracksOptions(
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
   options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
 
-  const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChain.createBulkIngestorWhatsOnChainOptions(chain)
-  options.bulkIngestors.push(new BulkIngestorWhatsOnChain(bulkWhatsOnChainOptions))
+  const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChainWs.createBulkIngestorWhatsOnChainOptions(chain)
+  options.bulkIngestors.push(new BulkIngestorWhatsOnChainWs(bulkWhatsOnChainOptions))
 
   const liveWhatsOnChainOptions = LiveIngestorWhatsOnChainWs.createLiveIngestorWhatsOnChainOptions(chain)
   options.liveIngestors.push(new LiveIngestorWhatsOnChainWs(liveWhatsOnChainOptions))

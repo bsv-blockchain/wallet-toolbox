@@ -1,5 +1,6 @@
 import { BlockHeader, Chain } from '../../../../sdk'
 import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
+import { StopListenerToken, WocHeadersLiveListener } from './WhatsOnChainIngestorWs'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
 export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions, WhatsOnChainServicesOptions {
@@ -48,6 +49,7 @@ export class LiveIngestorWhatsOnChainWs extends LiveIngestorBase {
 
   idleWait: number
   woc: WhatsOnChainServices
+  stopNewListenersToken: StopListenerToken = { stop: undefined }
 
   constructor(options: LiveIngestorWhatsOnChainOptions) {
     super(options)
@@ -71,7 +73,7 @@ export class LiveIngestorWhatsOnChainWs extends LiveIngestorBase {
     }
 
     for (;;) {
-      const ok = await this.woc.listenForNewBlockHeaders(enqueue, error, this.idleWait)
+      const ok = await WocHeadersLiveListener(enqueue, error, this.stopNewListenersToken, this.chain, this.idleWait)
 
       if (!ok || errors.length > 0) {
         console.log(`WhatsOnChain live ingestor ok=${ok} error count=${errors.length}`)
@@ -85,6 +87,6 @@ export class LiveIngestorWhatsOnChainWs extends LiveIngestorBase {
   }
 
   stopListening(): void {
-    this.woc?.stopNewListener()
+    this.stopNewListenersToken.stop?.()
   }
 }

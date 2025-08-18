@@ -2,8 +2,11 @@ import { Chain } from '../../../../sdk'
 import { logger } from '../../../../utility/utilityHelpers'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { BulkIngestorBase } from '../Base/BulkIngestorBase'
+import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { HeightRange, HeightRanges } from '../util/HeightRange'
+import { StopListenerToken, WocHeadersBulkListener } from './WhatsOnChainIngestorWs'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
 export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions, WhatsOnChainServicesOptions {
@@ -38,6 +41,10 @@ export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions
    * How long chainInfo is considered still valid before updating (msecs).
    */
   chainInfoMsecs: number
+  /**
+   * 
+   */
+  fetch?: ChaintracksFetchApi
 }
 
 export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
@@ -56,13 +63,16 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
     return options
   }
 
+  fetch: ChaintracksFetchApi
   idleWait: number
   woc: WhatsOnChainServices
+  stopOldListenersToken: StopListenerToken = { stop: undefined }
 
   constructor(options: BulkIngestorWhatsOnChainOptions) {
     super(options)
     this.idleWait = options.idleWait || 5000
     this.woc = new WhatsOnChainServices(options)
+    this.fetch = options.fetch || new ChaintracksFetch()
   }
 
   override async getPresentHeight(): Promise<number | undefined> {
@@ -87,11 +97,13 @@ export class BulkIngestorWhatsOnChain extends BulkIngestorBase {
       return false
     }
 
-    const ok = await this.woc.listenForOldBlockHeaders(
+    const ok = await WocHeadersBulkListener(
       fetchRange.minHeight,
       fetchRange.maxHeight,
       enqueue,
       error,
+      this.stopOldListenersToken,
+      this.chain,
       this.idleWait
     )
 

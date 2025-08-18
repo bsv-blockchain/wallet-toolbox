@@ -1,7 +1,7 @@
 import { BlockHeader, Chain } from '../../../../sdk'
 import { wait } from '../../../../utility/utilityHelpers'
 import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
-import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
+import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions, WocGetHeadersHeader } from './WhatsOnChainServices'
 
 export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions, WhatsOnChainServicesOptions {
   /**
@@ -67,30 +67,34 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
 
   async startListening(liveHeaders: BlockHeader[]): Promise<void> {
     this.done = false
-    let nextHeight = (await this.woc.getChainTipHeight()) + 1
-
-    const errors: { code: number; message: string; count: number }[] = []
-    const enqueue: EnqueueHandler = header => {
-      liveHeaders.push(header)
-      nextHeight = Math.max(nextHeight, header.height + 1)
-    }
-    const error: ErrorHandler = (code, message) => {
-      errors.push({ code, message, count: errors.length })
-      return false
-    }
+    let lastHeaders: WocGetHeadersHeader[] = []
 
     for (; !this.done; ) {
-      const ok = await this.woc.listenForOldBlockHeaders(nextHeight, nextHeight + 10, enqueue, error, this.idleWait)
+      const headers = await this.woc.getHeaders()
 
-      if (!ok || errors.length > 0) {
-        console.log(`WhatsOnChain polled live ingestor ok=${ok} error count=${errors.length}`)
-        for (const e of errors)
-          console.log(`WhatsOnChain polled error code=${e.code} count=${e.count} message=${e.message}`)
+      const newHeaders = headers.filter(h => !lastHeaders.some(lh => lh.hash === h.hash))
+
+      for (const h of newHeaders) {
+        const bits: number = typeof h.bits === 'string' ? parseInt(h.bits, 16) : h.bits
+        if (!h.previousblockhash) {
+          h.previousblockhash = '0000000000000000000000000000000000000000000000000000000000000000' // genesis
+        }
+        const bh: BlockHeader = {
+          height: h.height,
+          hash: h.hash,
+          version: h.version,
+          previousHash: h.previousblockhash,
+          merkleRoot: h.merkleroot,
+          time: h.time,
+          bits,
+          nonce: h.nonce
+        }
+        liveHeaders.push(bh)
       }
 
-      await wait(60 * 1000)
+      lastHeaders = headers
 
-      errors.length = 0
+      await wait(1000 * 60)
     }
   }
 

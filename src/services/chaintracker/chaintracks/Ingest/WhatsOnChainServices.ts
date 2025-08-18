@@ -1,11 +1,9 @@
-import {
-  StopListenerToken,
-  WocHeadersBulkListener,
-  WocHeadersLiveListener
-} from './WhatsOnChainIngestorWs'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk'
 import { WhatsOnChain, WocChainInfo } from '../../../providers/WhatsOnChain'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
+import { ChaintracksFetch } from '../util/ChaintracksFetch'
+import { HeightRange } from '../util/HeightRange'
 
 /**
  * return true to ignore error, false to close service connection
@@ -103,36 +101,87 @@ export class WhatsOnChainServices {
     return (await this.getChainInfo()).bestblockhash
   }
 
-  private stopOldListenersToken: StopListenerToken = { stop: undefined }
-  private stopNewListenersToken: StopListenerToken = { stop: undefined }
-
-  stopOldListener() {
-    this.stopOldListenersToken.stop?.()
+  /**
+   * @param fetch 
+   * @returns returns the last 10 block headers including height, size, chainwork...
+   */
+  async getHeaders(fetch?: ChaintracksFetchApi): Promise<WocGetHeadersHeader[]> {
+    fetch ||= new ChaintracksFetch()
+    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(`https://api.whatsonchain.com/v1/bsv/main/block/headers`)
+    return headers
   }
 
-  stopNewListener() {
-    this.stopNewListenersToken.stop?.()
-  }
+  async getHeaderByteFileLinks(neededRange: HeightRange, fetch?: ChaintracksFetchApi): Promise<GetHeaderByteFileLinksResult[]> {
+    fetch ||= new ChaintracksFetch()
+    const files = await fetch.fetchJson<WocGetHeaderByteFileLinks>(`https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers/resources`)
+    const r: GetHeaderByteFileLinksResult[] = []
+    let range: HeightRange | undefined = undefined
+    for (const link of files.files) {
+      const parsed = parseFileLink(link)
+      if (parsed === undefined) continue; // parse error, return empty result
+      if (parsed === 'latest') {
+        if (range === undefined) continue; // should not happen on valid input
+        const fromHeight = range.maxHeight + 1
+        if (neededRange.maxHeight >= fromHeight) {
+          // We need this range but don't know maxHeight
+          const data = await fetch.download(link)
+          range = new HeightRange(fromHeight, fromHeight + data.length / 80 - 1)
+          if (!neededRange.intersect(range).isEmpty)
+            r.push({ link, range, data })
+        }
+      } else {
+        range = new HeightRange(parsed.fromHeight, parsed.toHeight)
+        if (!neededRange.intersect(range).isEmpty)
+          r.push({ link, range, data: undefined })
+      }
+    }
+    return r
 
-  async listenForOldBlockHeaders(
-    fromHeight: number,
-    toHeight: number,
-    enqueue: EnqueueHandler,
-    error: ErrorHandler,
-    idleWait = 5000
-  ): Promise<boolean> {
-    return await WocHeadersBulkListener(
-      fromHeight,
-      toHeight,
-      enqueue,
-      error,
-      this.stopOldListenersToken,
-      this.chain,
-      idleWait
-    )
+    function parseFileLink(file: string): { fromHeight: number; toHeight: number } | 'latest' | undefined {
+      const url = new URL(file)
+      const parts = url.pathname.split('/')
+      const bits = parts.slice(-1)[0]?.split('_')
+      if (bits.length === 1 && bits[0] === 'latest') {
+        return 'latest'
+      }
+      if (bits.length === 3) {
+        const fromHeight = parseInt(bits[0], 10)
+        const toHeight = parseInt(bits[1], 10)
+        if (Number.isInteger(fromHeight) && Number.isInteger(toHeight)) {
+          return { fromHeight, toHeight }
+        }
+      }
+      return undefined
+    }
   }
+}
 
-  async listenForNewBlockHeaders(enqueue: EnqueueHandler, error: ErrorHandler, idleWait = 100000): Promise<boolean> {
-    return await WocHeadersLiveListener(enqueue, error, this.stopNewListenersToken, this.chain, idleWait)
-  }
+export interface WocGetHeaderByteFileLinks {
+  files: string[]
+}
+
+export interface WocGetHeadersHeader {
+  hash: string
+  confirmations: number
+  size: number
+  height: number
+  version: number
+  versionHex: string
+  merkleroot: string
+  time: number
+  mediantime: number
+  nonce: number
+  bits: string
+  difficulty: number
+  chainwork: string
+  previousblockhash: string
+  nextblockhash: string
+  nTx: number
+  num_tx: number
+}
+
+export interface GetHeaderByteFileLinksResult {
+  link: string
+  range: HeightRange
+  data: Uint8Array | undefined
 }
