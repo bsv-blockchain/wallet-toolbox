@@ -322,7 +322,7 @@ export class Chaintracks implements ChaintracksManagementApi {
           added = after.bulk.above(before.bulk)
           before = after
           this.log(
-            `Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${newLiveHeaders.length} live headers.`
+            `Bulk Ingestor: ${added.length} added with ${newLiveHeaders.length} live headers from ${bulk.constructor.name}`
           )
 
           if (r.done) {
@@ -356,8 +356,6 @@ export class Chaintracks implements ChaintracksManagementApi {
     return undefined
   }
 
-  private liveHeaderDupes = 0
-
   private invalidInsertHeaderResult(ihr: InsertHeaderResult): boolean {
     return ihr.noActiveAncestor || ihr.noTip || ihr.badPrev
   }
@@ -368,17 +366,6 @@ export class Chaintracks implements ChaintracksManagementApi {
 
     const ihr = await this.lock.withWriteLock(async () => {
       const ihr = await this.storageEngine.insertHeader(header)
-
-      if (ihr.dupe) this.liveHeaderDupes++
-      else {
-        // First non-dupe logs how many dupes there where in this update sequence.
-        if (this.liveHeaderDupes) this.log(`addLiveHeader ignored ${this.liveHeaderDupes} dupes`)
-        this.liveHeaderDupes = 0
-        if (this.subscriberCallbacksEnabled)
-          this.log(
-            `addLiveHeader ${header.height}${ihr.added ? ' added' : ''}${ihr.dupe ? ' dupe' : ''}${ihr.isActiveTip ? ' isActiveTip' : ''}${ihr.reorgDepth ? ' reorg depth ' + ihr.reorgDepth : ''}${ihr.noPrev ? ' noPrev' : ''}${ihr.noActiveAncestor || ihr.noTip || ihr.badPrev ? ' error' : ''}`
-          )
-      }
 
       return ihr
     })
@@ -464,7 +451,7 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
 
       let count = 0
-      this.liveHeaderDupes = 0
+      let liveHeaderDupes = 0
       let needSyncCheck = false
 
       for (; !needSyncCheck; ) {
@@ -474,10 +461,7 @@ export class Chaintracks implements ChaintracksManagementApi {
           let recursions = this.options.addLiveRecursionLimit
           for (; !needSyncCheck; ) {
             const ihr = await this.addLiveHeader(header)
-            if (ihr.dupe) {
-              this.liveHeaderDupes++
-              break;
-            } else if (this.invalidInsertHeaderResult(ihr)) {
+            if (this.invalidInsertHeaderResult(ihr)) {
               this.log(`Ignoring liveHeader ${header.height} ${header.hash} due to invalid insert result.`)
               needSyncCheck = true
             } else if (ihr.noPrev) {
@@ -503,6 +487,13 @@ export class Chaintracks implements ChaintracksManagementApi {
                 }
               }
             } else {
+              if (this.subscriberCallbacksEnabled)
+                this.log(
+                  `addLiveHeader ${header.height}${ihr.added ? ' added' : ''}${ihr.dupe ? ' dupe' : ''}${ihr.isActiveTip ? ' isActiveTip' : ''}${ihr.reorgDepth ? ' reorg depth ' + ihr.reorgDepth : ''}${ihr.noPrev ? ' noPrev' : ''}${ihr.noActiveAncestor || ihr.noTip || ihr.badPrev ? ' error' : ''}`
+                );
+              if (ihr.dupe) {
+                liveHeaderDupes++
+              }
               // Header wasn't invalid and previous header is known. If it was successfully added, count it as a win.
               if (ihr.added) {
                 count++
@@ -526,27 +517,40 @@ export class Chaintracks implements ChaintracksManagementApi {
                 hash: blockHash(bheader)
               }
               const ihr = await this.addLiveHeader(header)
-              if (ihr.dupe) {
-                this.log(`Ignoring duplicate baseHeader ${header.height} ${header.hash}.`)
-              } else if (this.invalidInsertHeaderResult(ihr)) {
+              if (this.invalidInsertHeaderResult(ihr)) {
                 this.log(`Ignoring invalid baseHeader ${header.height} ${header.hash}.`)
-              } else if (ihr.added) {
+              } else {
+                if (this.subscriberCallbacksEnabled)
+                  this.log(
+                    `addBaseHeader ${header.height}${ihr.added ? ' added' : ''}${ihr.dupe ? ' dupe' : ''}${ihr.isActiveTip ? ' isActiveTip' : ''}${ihr.reorgDepth ? ' reorg depth ' + ihr.reorgDepth : ''}${ihr.noPrev ? ' noPrev' : ''}${ihr.noActiveAncestor || ihr.noTip || ihr.badPrev ? ' error' : ''}`
+                  );
                 // baseHeader was successfully added.
-                count++
+                if (ihr.added) {
+                  count++
+
+                }
               }
             }
           } else {
             // There are no liveHeaders and no baseHeaders to add,
             if (count > 0) {
-              if (this.liveHeaderDupes > 0) {
-                this.log(`${this.liveHeaderDupes} duplicate headers ignored.`)
-                this.liveHeaderDupes = 0
+              if (liveHeaderDupes > 0) {
+                this.log(`${liveHeaderDupes} duplicate headers ignored.`)
+                liveHeaderDupes = 0
               }
               const updated = await this.storageEngine.getAvailableHeightRanges()
               this.log(`${count} live headers added: bulk ${updated.bulk}, live ${updated.live}`)
               count = 0
             }
+            if (!this.subscriberCallbacksEnabled) {
+              const live = await this.storageEngine.getLiveHeightRange()
+              if (!live.isEmpty) {
+                this.subscriberCallbacksEnabled = true
+                this.log(`listening at height of ${live.maxHeight}`)
+              }
+            }
             needSyncCheck = Date.now() - lastSyncCheck > syncCheckRepeatMsecs
+            // If we aren't going to review sync, wait before checking input queues again
             if (!needSyncCheck) await wait(1000)
           }
         }
