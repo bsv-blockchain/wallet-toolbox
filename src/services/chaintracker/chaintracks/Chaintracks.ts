@@ -244,11 +244,15 @@ export class Chaintracks implements ChaintracksManagementApi {
     return this.lock.withReadLock(async () => await this.storageEngine.findChainTipHash())
   }
 
-  async findChainWorkForBlockHash(hash: string): Promise<string | undefined> {
+  async findLiveHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | undefined> {
     await this.makeAvailable()
     const header = await this.lock.withReadLock(async () => await this.storageEngine.findLiveHeaderForBlockHash(hash))
-    if (!header) return undefined
-    return header.chainWork
+    return header || undefined
+  }
+
+  async findChainWorkForBlockHash(hash: string): Promise<string | undefined> {
+    const header = await this.findLiveHeaderForBlockHash(hash)
+    return header?.chainWork
   }
 
   /**
@@ -502,7 +506,7 @@ export class Chaintracks implements ChaintracksManagementApi {
               // Header wasn't invalid and previous header is known. If it was successfully added, count it as a win.
               if (ihr.added) {
                 count++
-              }
+              } 
               break
             }
           }
@@ -510,35 +514,26 @@ export class Chaintracks implements ChaintracksManagementApi {
           // There are no liveHeaders currently to process, check the out-of-band baseHeaders channel (`addHeader` method called by a client).
           const bheader = this.baseHeaders.shift()
           if (bheader) {
-            const ihr: InsertHeaderResult = await this.lock.withWriteLock(async () => {
-              const prev = await this.storageEngine.findLiveHeaderForBlockHash(bheader.previousHash)
-              if (!prev)
-                return {
-                  added: false,
-                  badPrev: true,
-                  dupe: false,
-                  isActiveTip: false,
-                  reorgDepth: 0,
-                  priorTip: undefined,
-                  noPrev: true,
-                  noActiveAncestor: false,
-                  noTip: false
-                }
+            const prev = await this.findLiveHeaderForBlockHash(bheader.previousHash)
+            if (!prev) {
+              // Ignoring attempt to add a baseHeader with unknown previous hash, no attempt made to find previous header(s).
+              this.log(`Ignoring header with unknown previousHash ${bheader.previousHash} in live storage.`)
+              // Does not trigger a re-sync.
+            } else {
               const header: BlockHeader = {
                 ...bheader,
                 height: prev.height + 1,
                 hash: blockHash(bheader)
               }
-              // Process a client provided block header...
-              return await this.addLiveHeader(header)
-            })
-            if (!this.invalidInsertHeaderResult(ihr) && ihr.added) {
-              // baseHeader was successfully added.
-              count++
-            } else {
-              // Ignoring attempt to add a baseHeader with unknown previous hash, no attempt made to find previous header(s).
-              this.log(`Ignoring base header with unknown previous hash ${bheader.previousHash}`)
-              // Does not trigger a re-sync.
+              const ihr = await this.addLiveHeader(header)
+              if (ihr.dupe) {
+                this.log(`Ignoring duplicate baseHeader ${header.height} ${header.hash}.`)
+              } else if (this.invalidInsertHeaderResult(ihr)) {
+                this.log(`Ignoring invalid baseHeader ${header.height} ${header.hash}.`)
+              } else if (ihr.added) {
+                // baseHeader was successfully added.
+                count++
+              }
             }
           } else {
             // There are no liveHeaders and no baseHeaders to add,
