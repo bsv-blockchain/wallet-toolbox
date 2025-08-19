@@ -300,7 +300,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   private async syncBulkStorageNoLock(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
     await this.makeAvailable()
 
-    let liveHeaders: BlockHeader[] = []
+    let newLiveHeaders: BlockHeader[] = []
 
     let bulkDone = false
     let before = initialRanges
@@ -311,14 +311,14 @@ export class Chaintracks implements ChaintracksManagementApi {
     for (; !done; ) {
       for (const bulk of this.bulkIngestors) {
         try {
-          const r = await bulk.synchronize(presentHeight, before, liveHeaders)
+          const r = await bulk.synchronize(presentHeight, before, newLiveHeaders)
 
-          liveHeaders = r.liveHeaders
+          newLiveHeaders = r.liveHeaders
           after = await this.storageEngine.getAvailableHeightRanges()
           added = after.bulk.above(before.bulk)
           before = after
           this.log(
-            `Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${liveHeaders.length} live headers.`
+            `Bulk Ingestor ${bulk.constructor.name} synchronized: ${added.length} bulk added, ${newLiveHeaders.length} live headers.`
           )
 
           if (r.done) {
@@ -331,7 +331,8 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
       if (bulkDone) break
     }
-    this.liveHeaders = liveHeaders
+
+    this.liveHeaders.unshift(...newLiveHeaders)
 
     added = after.bulk.above(initialRanges.bulk)
 
@@ -459,6 +460,7 @@ export class Chaintracks implements ChaintracksManagementApi {
       }
 
       let count = 0
+      this.liveHeaderDupes = 0
       let needSyncCheck = false
 
       for (; !needSyncCheck; ) {
@@ -468,7 +470,10 @@ export class Chaintracks implements ChaintracksManagementApi {
           let recursions = this.options.addLiveRecursionLimit
           for (; !needSyncCheck; ) {
             const ihr = await this.addLiveHeader(header)
-            if (this.invalidInsertHeaderResult(ihr)) {
+            if (ihr.dupe) {
+              this.liveHeaderDupes++
+              break;
+            } else if (this.invalidInsertHeaderResult(ihr)) {
               this.log(`Ignoring liveHeader ${header.height} ${header.hash} due to invalid insert result.`)
               needSyncCheck = true
             } else if (ihr.noPrev) {
@@ -495,7 +500,9 @@ export class Chaintracks implements ChaintracksManagementApi {
               }
             } else {
               // Header wasn't invalid and previous header is known. If it was successfully added, count it as a win.
-              if (ihr.added) count++
+              if (ihr.added) {
+                count++
+              }
               break
             }
           }
@@ -534,11 +541,16 @@ export class Chaintracks implements ChaintracksManagementApi {
               // Does not trigger a re-sync.
             }
           } else {
+            // There are no liveHeaders and no baseHeaders to add,
             if (count > 0) {
-              this.log(`${count} live headers added`)
+              if (this.liveHeaderDupes > 0) {
+                this.log(`${this.liveHeaderDupes} duplicate headers ignored.`)
+                this.liveHeaderDupes = 0
+              }
+              const updated = await this.storageEngine.getAvailableHeightRanges()
+              this.log(`${count} live headers added: bulk ${updated.bulk}, live ${updated.live}`)
               count = 0
             }
-            // There are no liveHeaders and no baseHeaders to add,
             needSyncCheck = Date.now() - lastSyncCheck > syncCheckRepeatMsecs
             if (!needSyncCheck) await wait(1000)
           }

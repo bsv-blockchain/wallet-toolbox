@@ -107,7 +107,7 @@ export class WhatsOnChainServices {
    */
   async getHeaders(fetch?: ChaintracksFetchApi): Promise<WocGetHeadersHeader[]> {
     fetch ||= new ChaintracksFetch()
-    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(`https://api.whatsonchain.com/v1/bsv/main/block/headers`)
+    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(`https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers`)
     return headers
   }
 

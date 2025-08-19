@@ -89,13 +89,14 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
           bits,
           nonce: h.nonce
         }
-        liveHeaders.push(bh)
+        liveHeaders.unshift(bh)
       }
 
       lastHeaders = headers
 
       await wait(1000 * 60)
     }
+    console.log(`LiveIngestorWhatsOnChainPoll stopped`)
   }
 
   stopListening(): void {
