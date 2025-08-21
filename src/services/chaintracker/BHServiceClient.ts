@@ -3,6 +3,7 @@ import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './cha
 import { sdk } from '../../index.client'
 import { BaseBlockHeader, BlockHeader } from './chaintracks'
 import { serializeBaseBlockHeader } from './chaintracks/util/blockHeaderUtilities'
+import { HeaderListener, ReorgListener, ChaintracksInfoApi } from './chaintracks/Api/ChaintracksClientApi'
 
 interface BHSHeader {
   hash: string
@@ -192,7 +193,20 @@ export class BHServiceClient implements ChaintracksServiceClient {
     throw new Error('Not implemented')
   }
 
-  async findChainTipHashHex(): Promise<string> {
+  async findChainTipHash(): Promise<string> {
     throw new Error('Not implemented')
+  }
+
+  async subscribeHeaders(listener: HeaderListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  async subscribeReorgs(listener: ReorgListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  async unsubscribe(subscriptionId: string): Promise<boolean> {
+    throw new Error('Method not implemented.')
+  }
+  async getInfo(): Promise<ChaintracksInfoApi> {
+    throw new Error('Method not implemented.')
   }
 }

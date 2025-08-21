@@ -168,15 +168,12 @@ export class ChaintracksService {
     appGet<BlockHeader | undefined>('/findHeaderHexForHeight', async q => {
       return await this.chaintracks.findHeaderForHeight(Number(q.height))
     })
-    appGet<string | undefined>('/findChainWorkHexForBlockHash', async q => {
-      return await this.chaintracks.findChainWorkForBlockHash(q.hash)
-    })
     appGet<BlockHeader | undefined>('/findHeaderHexForBlockHash', async q => {
       return await this.chaintracks.findLiveHeaderForBlockHash(q.hash)
     })
 
     appGet<string>('/getHeaders', async q => {
-      return await this.chaintracks.getHeadersHex(Number(q.height), Number(q.count))
+      return await this.chaintracks.getHeaders(Number(q.height), Number(q.count))
     })
 
     this.server = app.listen(this.port, () => { console.log(`ChaintracksService listening on port ${this.port}`) })

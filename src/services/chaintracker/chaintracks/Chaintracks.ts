@@ -222,6 +222,15 @@ export class Chaintracks implements ChaintracksManagementApi {
     return await this.storageEngine.findHeaderForHeightOrUndefined(height)
   }
 
+  async findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined> {
+    await this.makeAvailable()
+    return this.lock.withReadLock(async () => this.findHeaderForBlockHashNoLock(hash))
+  }
+
+  async findHeaderForBlockHashNoLock(hash: string): Promise<BlockHeader | undefined> {
+    return await this.storageEngine.findLiveHeaderForBlockHash(hash) || undefined
+  }
+
   async isValidRootForHeight(root: string, height: number): Promise<boolean> {
     const r = await this.findHeaderForHeight(height)
     if (!r) return false
@@ -248,13 +257,9 @@ export class Chaintracks implements ChaintracksManagementApi {
     return info
   }
 
-  async getHeaders(height: number, count: number): Promise<number[]> {
+  async getHeaders(height: number, count: number): Promise<string> {
     await this.makeAvailable()
-    return this.lock.withReadLock(async () => await this.storageEngine.getHeaders(height, count))
-  }
-
-  async getHeadersHex(height: number, count: number): Promise<string> {
-    return asString(await this.getHeaders(height, count))
+    return this.lock.withReadLock(async () => asString(await this.storageEngine.getHeaders(height, count)))
   }
 
   async findChainTipHeader(): Promise<BlockHeader> {

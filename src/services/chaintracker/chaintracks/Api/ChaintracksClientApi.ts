@@ -60,18 +60,9 @@ export interface ChaintracksClientApi extends ChainTracker {
    *
    * @param height of first header
    * @param count of headers, maximum
+   * @returns array of headers as serialized hex string
    */
-  getHeaders(height: number, count: number): Promise<number[]>
-
-  /**
-   * Adds headers in 80 byte serialized format to a hex string.
-   * Only adds active headers.
-   * string length divided by 160 is the actual number returned.
-   *
-   * @param height of first header
-   * @param count of headers, maximum
-   */
-  getHeadersHex(height: number, count: number): Promise<string>
+  getHeaders(height: number, count: number): Promise<string>
 
   /**
    * Returns the active chain tip header
@@ -87,6 +78,12 @@ export interface ChaintracksClientApi extends ChainTracker {
    * Returns block header for a given block height on active chain.
    */
   findHeaderForHeight(height: number): Promise<BlockHeader | undefined>
+
+  /**
+   * Returns block header for a given recent block hash or undefined.
+   * @param hash 
+   */
+  findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined>
 
   /**
    * Submit a possibly new header for adding
