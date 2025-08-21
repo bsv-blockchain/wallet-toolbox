@@ -94,12 +94,19 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
 
       lastHeaders = headers
 
-      await wait(1000 * 60)
+      for (let sec = 0; sec < 60 && !this.done; sec++) {
+        // Only wait a second at a time so we notice `done` sooner...
+        await wait(1000)
+      }
     }
     console.log(`LiveIngestorWhatsOnChainPoll stopped`)
   }
 
   stopListening(): void {
     this.done = true
+  }
+
+  override async shutdown(): Promise<void> {
+      this.stopListening()
   }
 }

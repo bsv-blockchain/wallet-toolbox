@@ -145,34 +145,57 @@ export class Chaintracks implements ChaintracksManagementApi {
     this.baseHeaders.push(header)
   }
 
+  /**
+   * If not already available, takes a writer lock to queue calls until available.
+   * Becoming available starts by initializing ingestors and main thread,
+   * and ends when main thread sets `available`.
+   * Note that the main thread continues running and takes additional write locks
+   * itself when already available.
+   * 
+   * @returns when available for client requests
+   */
   async makeAvailable(): Promise<void> {
     if (this.available) return
     await this.lock.withWriteLock(async () => {
-      await this.makeAvailableNoLock()
+      // Only the first call proceeds to initialize...
+      if (this.available) return
+      // Make sure database schema exists and is updated...
+      await this.storageEngine.migrateLatest()
+      for (const bulkIn of this.bulkIngestors) await bulkIn.setStorage(this.storageEngine)
+      for (const liveIn of this.liveIngestors) await liveIn.setStorage(this.storageEngine)
+
+      // Start all live ingestors to push new headers onto liveHeaders... each long running.
+      for (const liveIngestor of this.liveIngestors) this.promises.push(liveIngestor.startListening(this.liveHeaders))
+
+      // Start mai loop to shift out liveHeaders...once sync'd, will set `available` true.
+      this.promises.push(this.mainThreadShiftLiveHeaders())
+
+      // Wait for the main thread to finish initial sync.
+      while (!this.available) {
+        await wait(100)
+      }
     })
   }
 
-  private async makeAvailableNoLock(): Promise<void> {
-    // Make sure database schema exists and is updated...
-    await this.storageEngine.migrateLatest()
-    for (const bulkIn of this.bulkIngestors) await bulkIn.setStorage(this.storageEngine)
-    for (const liveIn of this.liveIngestors) await liveIn.setStorage(this.storageEngine)
-    await this.startPromises()
-    this.available = true
+  async startPromises(): Promise<void> {
+    if (this.promises.length > 0 || this.stopMainThread !== true) return
+
   }
+
 
   async destroy(): Promise<void> {
     if (!this.available) return
     await this.lock.withWriteLock(async () => {
+      if (!this.available || this.stopMainThread) return
       this.log('Shutting Down')
       this.stopMainThread = true
-      for (const liveIn of this.liveIngestors) liveIn.stopListening()
       for (const liveIn of this.liveIngestors) await liveIn.shutdown()
       for (const bulkIn of this.bulkIngestors) await bulkIn.shutdown()
       await Promise.all(this.promises)
       await this.storageEngine.destroy()
-      this.log('Shutdown')
       this.available = false
+      this.stopMainThread = false
+      this.log('Shutdown')
     })
   }
 
@@ -284,17 +307,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   async startListening(): Promise<void> {
-    await this.makeAvailable()
-  }
-
-  async startPromises(): Promise<void> {
-    if (this.promises.length > 0 || this.stopMainThread !== true) return
-
-    // Start all live ingestors to push new headers onto liveHeaders... each long running.
-    for (const liveIngestor of this.liveIngestors) this.promises.push(liveIngestor.startListening(this.liveHeaders))
-
-    // Start mai loop to shift out liveHeaders...
-    this.promises.push(this.mainThreadShiftLiveHeaders())
+    this.makeAvailable()
   }
 
   private async syncBulkStorage(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
@@ -302,7 +315,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   private async syncBulkStorageNoLock(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
-    await this.makeAvailable()
 
     let newLiveHeaders: BlockHeader[] = []
 
@@ -364,11 +376,9 @@ export class Chaintracks implements ChaintracksManagementApi {
     validateHeaderFormat(header)
     validateAgainstDirtyHashes(header.hash)
 
-    const ihr = await this.lock.withWriteLock(async () => {
-      const ihr = await this.storageEngine.insertHeader(header)
-
-      return ihr
-    })
+    const ihr = this.available
+      ? await this.lock.withWriteLock(async () => await this.storageEngine.insertHeader(header))
+      : await this.storageEngine.insertHeader(header)
 
     if (this.invalidInsertHeaderResult(ihr)) return ihr
 
@@ -447,19 +457,24 @@ export class Chaintracks implements ChaintracksManagementApi {
       if (!skipBulkSync) {
         // Bring bulk storage up-to-date and (re-)initialize liveHeaders
         lastBulkSync = now
-        await this.syncBulkStorage(presentHeight, before)
+        if (this.available)
+          // Once available, initial write lock is released, take a new one to update bulk storage.
+          await this.syncBulkStorage(presentHeight, before);
+        else
+          // While still not available, the makeAvailable write lock is held.
+          await this.syncBulkStorageNoLock(presentHeight, before)
       }
 
       let count = 0
       let liveHeaderDupes = 0
       let needSyncCheck = false
 
-      for (; !needSyncCheck; ) {
+      for (; !needSyncCheck && !this.stopMainThread; ) {
         let header = this.liveHeaders.shift()
         if (header) {
           // Process a "live" block header...
-          let recursions = this.options.addLiveRecursionLimit
-          for (; !needSyncCheck; ) {
+          let recursions = this.addLiveRecursionLimit
+          for (; !needSyncCheck && !this.stopMainThread; ) {
             const ihr = await this.addLiveHeader(header)
             if (this.invalidInsertHeaderResult(ihr)) {
               this.log(`Ignoring liveHeader ${header.height} ${header.hash} due to invalid insert result.`)
@@ -505,7 +520,7 @@ export class Chaintracks implements ChaintracksManagementApi {
           // There are no liveHeaders currently to process, check the out-of-band baseHeaders channel (`addHeader` method called by a client).
           const bheader = this.baseHeaders.shift()
           if (bheader) {
-            const prev = await this.findLiveHeaderForBlockHash(bheader.previousHash)
+            const prev = await this.storageEngine.findLiveHeaderForBlockHash(bheader.previousHash)
             if (!prev) {
               // Ignoring attempt to add a baseHeader with unknown previous hash, no attempt made to find previous header(s).
               this.log(`Ignoring header with unknown previousHash ${bheader.previousHash} in live storage.`)
@@ -548,6 +563,9 @@ export class Chaintracks implements ChaintracksManagementApi {
                 this.subscriberCallbacksEnabled = true
                 this.log(`listening at height of ${live.maxHeight}`)
               }
+            }
+            if (!this.available) {
+              this.available = true
             }
             needSyncCheck = Date.now() - lastSyncCheck > syncCheckRepeatMsecs
             // If we aren't going to review sync, wait before checking input queues again

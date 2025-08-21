@@ -1,4 +1,4 @@
-import { createDefaultChaintracksOptions } from '../createDefaultChaintracksOptions'
+import { createDefaultChaintracksOptions, createNoDbChaintracksOptions } from '../createDefaultChaintracksOptions'
 import { Chaintracks } from '../Chaintracks'
 import { wait } from '../../../../utility/utilityHelpers'
 import { ChaintracksStorageNoDb } from '../Storage/ChaintracksStorageNoDb'
@@ -32,10 +32,7 @@ describe('Chaintracks tests', () => {
   })
 
   async function NoDbBody(chain: Chain) {
-    const o = createDefaultChaintracksOptions(chain, rootFolder)
-    const so = ChaintracksStorageNoDb.createStorageBaseOptions(o.chain)
-    const s = new ChaintracksStorageNoDb(so)
-    o.storageEngine = s
+    const o = createNoDbChaintracksOptions(chain)
     const c = new Chaintracks(o)
     await c.makeAvailable()
 
@@ -43,11 +40,8 @@ describe('Chaintracks tests', () => {
       console.log(`Header received: ${header.height} ${header.hash}`)
     })
 
-    //const fs = ChaintracksFs
-    //await s.bulkManager.exportHeadersToFs(fs, 100000, fs.pathJoin(rootFolder, 'export_1'), 'https://cdn.projectbabbage.com/blockheaders')
     let done = false
     for (; !done;) {
-      const range = await s.getAvailableHeightRanges()
       await wait(10000)
     }
 

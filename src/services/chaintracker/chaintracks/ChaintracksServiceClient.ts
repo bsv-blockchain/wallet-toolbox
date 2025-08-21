@@ -11,7 +11,6 @@ interface FetchStatus<T> {
 }
 
 export interface ChaintracksServiceClientOptions {
-  useAuthrite: boolean
 }
 
 /**
@@ -98,10 +97,10 @@ export class ChaintracksServiceClient {
   }
 
   async startListening(): Promise<void> {
-    return await this.getJsonOrUndefined('/startListening')
+    await this.getPresentHeight()
   }
   async listening(): Promise<void> {
-    return await this.getJsonOrUndefined('/listening')
+    await this.getPresentHeight()
   }
   async getChain(): Promise<sdk.Chain> {
     return this.chain
@@ -109,10 +108,15 @@ export class ChaintracksServiceClient {
   }
 
   async isListening(): Promise<boolean> {
-    return await this.getJson('/isListening')
+    try {
+      await this.getPresentHeight()
+      return true
+    } catch {
+      return false
+    }
   }
   async isSynchronized(): Promise<boolean> {
-    return await this.getJson('/isSynchronized')
+    return await this.isListening()
   }
   async getPresentHeight(): Promise<number> {
     return await this.getJson('/getPresentHeight')

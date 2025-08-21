@@ -330,7 +330,7 @@ export class BulkFilesReaderStorage extends BulkFilesReader {
     range?: HeightRange,
     maxBufferSize?: number
   ): Promise<BulkFilesReaderStorage> {
-    const files = await storage.bulkManager.getBulkFiles()
+    const files = await storage.bulkManager.getBulkFiles(true)
     const readerFiles = files.map(file => new BulkHeaderFileStorage(file, storage, fetch))
     return new BulkFilesReaderStorage(storage, readerFiles, range, maxBufferSize)
   }

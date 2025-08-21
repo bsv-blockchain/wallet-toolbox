@@ -36,7 +36,6 @@ export class BHServiceClient implements ChaintracksServiceClient {
     this.chain = chain
     this.serviceUrl = url
     this.options = ChaintracksServiceClient.createChaintracksServiceClientOptions()
-    this.options.useAuthrite = true
     this.apiKey = apiKey
   }
 
