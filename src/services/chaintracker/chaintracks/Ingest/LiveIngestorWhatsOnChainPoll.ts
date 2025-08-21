@@ -1,7 +1,13 @@
 import { BlockHeader, Chain } from '../../../../sdk'
 import { wait } from '../../../../utility/utilityHelpers'
 import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
-import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions, WocGetHeadersHeader } from './WhatsOnChainServices'
+import {
+  EnqueueHandler,
+  ErrorHandler,
+  WhatsOnChainServices,
+  WhatsOnChainServicesOptions,
+  WocGetHeadersHeader
+} from './WhatsOnChainServices'
 
 export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions, WhatsOnChainServicesOptions {
   /**
@@ -107,6 +113,6 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
   }
 
   override async shutdown(): Promise<void> {
-      this.stopListening()
+    this.stopListening()
   }
 }

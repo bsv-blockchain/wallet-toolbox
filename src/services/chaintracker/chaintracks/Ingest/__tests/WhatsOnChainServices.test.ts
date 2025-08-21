@@ -4,11 +4,7 @@ import { deserializeBaseBlockHeader, deserializeBlockHeader } from '../../util/b
 import { ChaintracksFetch } from '../../util/ChaintracksFetch'
 import { ChaintracksFs } from '../../util/ChaintracksFs'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WocGetHeadersHeader } from '../WhatsOnChainServices'
-import {
-  StopListenerToken,
-  WocHeadersBulkListener,
-  WocHeadersLiveListener
-} from '../WhatsOnChainIngestorWs'
+import { StopListenerToken, WocHeadersBulkListener, WocHeadersLiveListener } from '../WhatsOnChainIngestorWs'
 import { Chain } from '../../../../../sdk'
 import { URL } from 'url'
 import { HeightRange } from '../../util/HeightRange'
@@ -99,7 +95,9 @@ describe('WhatsOnChainServices tests', () => {
     const fetch = new ChaintracksFetch()
 
     for (;;) {
-      const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(`https://api.whatsonchain.com/v1/bsv/main/block/headers`)
+      const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(
+        `https://api.whatsonchain.com/v1/bsv/main/block/headers`
+      )
       let log = ''
       for (const h of headers) {
         log += `${h.height} ${h.hash} ${h.confirmations} ${h.nTx}\n`

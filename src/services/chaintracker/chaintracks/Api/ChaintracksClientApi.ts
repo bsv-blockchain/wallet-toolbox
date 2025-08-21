@@ -81,7 +81,7 @@ export interface ChaintracksClientApi extends ChainTracker {
 
   /**
    * Returns block header for a given recent block hash or undefined.
-   * @param hash 
+   * @param hash
    */
   findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined>
 

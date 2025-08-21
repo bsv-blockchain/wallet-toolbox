@@ -16,7 +16,7 @@ describe('Chaintracks tests', () => {
     await c.makeAvailable()
 
     let done = false
-    for (; !done;) {
+    for (; !done; ) {
       await wait(10000)
     }
 
@@ -41,11 +41,10 @@ describe('Chaintracks tests', () => {
     })
 
     let done = false
-    for (; !done;) {
+    for (; !done; ) {
       await wait(10000)
     }
 
     await c.destroy()
   }
 })
-

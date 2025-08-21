@@ -11,8 +11,7 @@ interface FetchStatus<T> {
   value?: T
 }
 
-export interface ChaintracksServiceClientOptions {
-}
+export interface ChaintracksServiceClientOptions {}
 
 /**
  * Connects to a ChaintracksService to implement 'ChaintracksClientApi'

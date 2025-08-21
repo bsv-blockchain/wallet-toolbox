@@ -20,9 +20,5 @@ describe('ChaintracksServiceClient tests', () => {
 })
 
 function makeClient(chain: sdk.Chain) {
-  return new ChaintracksServiceClient(
-    chain,
-    `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`
-  )
+  return new ChaintracksServiceClient(chain, `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`)
 }
-

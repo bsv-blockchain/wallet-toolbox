@@ -378,6 +378,8 @@ export interface PostBeefResultForTxidApi {
 }
 ```
 
+See also: [blockHash](./services.md#function-blockhash)
+
 ###### Property alreadyKnown
 
 if true, the transaction was already known to this service. Usually treat as a success.
@@ -1083,7 +1085,7 @@ export interface TableProvenTx extends sdk.EntityTimeStamp {
 }
 ```
 
-See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
+See also: [EntityTimeStamp](./client.md#interface-entitytimestamp), [blockHash](./services.md#function-blockhash)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1936,7 +1938,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
 }
 ```
 
-See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices)
+See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices), [blockHash](./services.md#function-blockhash)
 
 ###### Property getProofAttemptsLimit
 

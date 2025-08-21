@@ -43,7 +43,7 @@ export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions
    */
   chainInfoMsecs: number
   /**
-   * 
+   *
    */
   fetch?: ChaintracksFetchApi
 }
@@ -88,7 +88,6 @@ export class BulkIngestorWhatsOnChainCdn extends BulkIngestorBase {
     bulkRange: HeightRange,
     priorLiveHeaders: BlockHeader[]
   ): Promise<BlockHeader[]> {
-
     const oldHeaders: BlockHeader[] = []
 
     try {
@@ -97,7 +96,8 @@ export class BulkIngestorWhatsOnChainCdn extends BulkIngestorBase {
       for (const range of ranges) {
         for (let height = range.range.minHeight; height <= range.range.maxHeight; height++) {
           if (fetchRange.contains(height)) {
-            if (!range.data) range.data = await this.fetch.download(this.fetch.pathJoin(range.sourceUrl, range.fileName));
+            if (!range.data)
+              range.data = await this.fetch.download(this.fetch.pathJoin(range.sourceUrl, range.fileName))
             const h = deserializeBlockHeader(range.data, (height - range.range.minHeight) * 80, height)
             oldHeaders.push(h)
           }

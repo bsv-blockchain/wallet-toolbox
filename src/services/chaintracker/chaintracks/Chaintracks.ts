@@ -151,7 +151,7 @@ export class Chaintracks implements ChaintracksManagementApi {
    * and ends when main thread sets `available`.
    * Note that the main thread continues running and takes additional write locks
    * itself when already available.
-   * 
+   *
    * @returns when available for client requests
    */
   async makeAvailable(): Promise<void> {
@@ -179,9 +179,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   async startPromises(): Promise<void> {
     if (this.promises.length > 0 || this.stopMainThread !== true) return
-
   }
-
 
   async destroy(): Promise<void> {
     if (!this.available) return
@@ -228,7 +226,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   async findHeaderForBlockHashNoLock(hash: string): Promise<BlockHeader | undefined> {
-    return await this.storageEngine.findLiveHeaderForBlockHash(hash) || undefined
+    return (await this.storageEngine.findLiveHeaderForBlockHash(hash)) || undefined
   }
 
   async isValidRootForHeight(root: string, height: number): Promise<boolean> {
@@ -320,7 +318,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   private async syncBulkStorageNoLock(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
-
     let newLiveHeaders: BlockHeader[] = []
 
     let bulkDone = false
@@ -464,7 +461,7 @@ export class Chaintracks implements ChaintracksManagementApi {
         lastBulkSync = now
         if (this.available)
           // Once available, initial write lock is released, take a new one to update bulk storage.
-          await this.syncBulkStorage(presentHeight, before);
+          await this.syncBulkStorage(presentHeight, before)
         else
           // While still not available, the makeAvailable write lock is held.
           await this.syncBulkStorageNoLock(presentHeight, before)
@@ -510,14 +507,14 @@ export class Chaintracks implements ChaintracksManagementApi {
               if (this.subscriberCallbacksEnabled)
                 this.log(
                   `addLiveHeader ${header.height}${ihr.added ? ' added' : ''}${ihr.dupe ? ' dupe' : ''}${ihr.isActiveTip ? ' isActiveTip' : ''}${ihr.reorgDepth ? ' reorg depth ' + ihr.reorgDepth : ''}${ihr.noPrev ? ' noPrev' : ''}${ihr.noActiveAncestor || ihr.noTip || ihr.badPrev ? ' error' : ''}`
-                );
+                )
               if (ihr.dupe) {
                 liveHeaderDupes++
               }
               // Header wasn't invalid and previous header is known. If it was successfully added, count it as a win.
               if (ihr.added) {
                 count++
-              } 
+              }
               break
             }
           }
@@ -543,11 +540,10 @@ export class Chaintracks implements ChaintracksManagementApi {
                 if (this.subscriberCallbacksEnabled)
                   this.log(
                     `addBaseHeader ${header.height}${ihr.added ? ' added' : ''}${ihr.dupe ? ' dupe' : ''}${ihr.isActiveTip ? ' isActiveTip' : ''}${ihr.reorgDepth ? ' reorg depth ' + ihr.reorgDepth : ''}${ihr.noPrev ? ' noPrev' : ''}${ihr.noActiveAncestor || ihr.noTip || ihr.badPrev ? ' error' : ''}`
-                  );
+                  )
                 // baseHeader was successfully added.
                 if (ihr.added) {
                   count++
-
                 }
               }
             }

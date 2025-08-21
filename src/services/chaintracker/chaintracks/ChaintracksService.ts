@@ -1,5 +1,4 @@
-import { Chaintracks } from './Chaintracks' 
-
+import { Chaintracks } from './Chaintracks'
 
 import { IncomingMessage, Server, ServerResponse } from 'http'
 import https from 'https'
@@ -20,7 +19,7 @@ export interface ChaintracksServiceOptions {
   /**
    * prepended to the path of each registered service endpoint
    */
-  routingPrefix: string,
+  routingPrefix: string
   /**
    * Defaults to default configured Chaintracks instance with NoDb storage.
    */
@@ -46,7 +45,7 @@ export class ChaintracksService {
   server?: Server<typeof IncomingMessage, typeof ServerResponse>
 
   constructor(options: ChaintracksServiceOptions) {
-    this.options = {...options}
+    this.options = { ...options }
     this.port = options.port
     this.chain = options.chain
     this.chaintracks = options.chaintracks || new Chaintracks(createNoDbChaintracksOptions(this.chain))
@@ -54,16 +53,19 @@ export class ChaintracksService {
     // Prevent recursion...
     this.services.updateFiatExchangeRateServices.remove('ChaintracksService')
     if (this.chaintracks.chain !== this.chain || this.services.chain !== this.chain) {
-      throw new WERR_INVALID_PARAMETER('chain', `All components (chaintracks and services) must be on chain ${this.chain}`)
+      throw new WERR_INVALID_PARAMETER(
+        'chain',
+        `All components (chaintracks and services) must be on chain ${this.chain}`
+      )
     }
   }
 
-  async stopJsonRpcServer() : Promise<void> {
+  async stopJsonRpcServer(): Promise<void> {
     this.server?.close()
     await this.chaintracks?.destroy()
   }
 
-  async startJsonRpcServer(port?: number) : Promise<void> {
+  async startJsonRpcServer(port?: number): Promise<void> {
     await this.chaintracks.makeAvailable()
 
     port ||= this.port || 3011
@@ -97,24 +99,26 @@ export class ChaintracksService {
     const appGetVoid = (path: string, action: (q: any) => Promise<void>, noCache = false) => {
       app['get'](this.options.routingPrefix + path, async (req, res) => {
         if (noCache) {
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          res.setHeader('Pragma', 'no-cache');
-          res.setHeader('Expires', '0');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+          res.setHeader('Pragma', 'no-cache')
+          res.setHeader('Expires', '0')
         }
         try {
           console.log(`request ${path}`)
           await action(req.query)
           res.status(200).json({ status: 'success' })
-        } catch (err) { handleErr(err, res) }
+        } catch (err) {
+          handleErr(err, res)
+        }
       })
     }
 
     const appGet = <T>(path: string, action: (q: any) => Promise<T>, noCache = false) => {
       app['get'](this.options.routingPrefix + path, async (req, res) => {
         if (noCache) {
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          res.setHeader('Pragma', 'no-cache');
-          res.setHeader('Expires', '0');
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+          res.setHeader('Pragma', 'no-cache')
+          res.setHeader('Expires', '0')
         }
         try {
           const r = await action(req.query)
@@ -133,31 +137,41 @@ export class ChaintracksService {
           console.log(`request POST ${path}`)
           await action(<T>req.body)
           res.status(200).json({ status: 'success' })
-        } catch (err) { handleErr(err, res) }
+        } catch (err) {
+          handleErr(err, res)
+        }
       })
     }
 
     appGet<Chain>('/getChain', async () => await this.chaintracks.getChain())
-    appGet<ChaintracksInfoApi>('/getInfo', async q => {
-      if (q.wait)
-        await wait(Number(q.wait))
-      const r = await this.chaintracks.getInfo()
-      if (q.wait)
-        r["wait"] = q.wait
-      return r
-    }, true)
+    appGet<ChaintracksInfoApi>(
+      '/getInfo',
+      async q => {
+        if (q.wait) await wait(Number(q.wait))
+        const r = await this.chaintracks.getInfo()
+        if (q.wait) r['wait'] = q.wait
+        return r
+      },
+      true
+    )
 
-    appGet<FiatExchangeRates>('/getFiatExchangeRates', async () => {
-      // update if needed
-      await this.services.getFiatExchangeRate('GBP')
-      // return current values
-      return this.services.options.fiatExchangeRates
-    }, true)
+    appGet<FiatExchangeRates>(
+      '/getFiatExchangeRates',
+      async () => {
+        // update if needed
+        await this.services.getFiatExchangeRate('GBP')
+        // return current values
+        return this.services.options.fiatExchangeRates
+      },
+      true
+    )
 
-    appPostVoid('/addHeaderHex', async (header: BaseBlockHeader) => { await this.chaintracks.addHeader(header) })
+    appPostVoid('/addHeaderHex', async (header: BaseBlockHeader) => {
+      await this.chaintracks.addHeader(header)
+    })
 
     appGet<number>('/getPresentHeight', async () => await this.chaintracks.getPresentHeight(), true)
-    appGet<string>('/findChainTipHashHex', async () => (await this.chaintracks.findChainTipHash() || ''), true)
+    appGet<string>('/findChainTipHashHex', async () => (await this.chaintracks.findChainTipHash()) || '', true)
     appGet<BlockHeader>('/findChainTipHeaderHex', async () => await this.chaintracks.findChainTipHeader(), true)
 
     appGet<BlockHeader | undefined>('/findHeaderHexForHeight', async q => {
@@ -171,6 +185,8 @@ export class ChaintracksService {
       return await this.chaintracks.getHeaders(Number(q.height), Number(q.count))
     })
 
-    this.server = app.listen(this.port, () => { console.log(`ChaintracksService listening on port ${this.port}`) })
+    this.server = app.listen(this.port, () => {
+      console.log(`ChaintracksService listening on port ${this.port}`)
+    })
   }
 }

@@ -89,7 +89,7 @@ export class ChaintracksKnexMigrations implements MigrationSource<string> {
           table.string('sourceUrl').nullable()
           table.binary('data', 32000000).nullable() // 32MB max size
 
-          table.index(['firstHeight','chain'])
+          table.index(['firstHeight', 'chain'])
         })
       },
       async down(knex) {

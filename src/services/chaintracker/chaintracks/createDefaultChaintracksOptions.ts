@@ -52,10 +52,7 @@ export function createDefaultChaintracksOptions(
   return options
 }
 
-export function createNoDbChaintracksOptions(
-  chain: Chain,
-): ChaintracksOptions {
-
+export function createNoDbChaintracksOptions(chain: Chain): ChaintracksOptions {
   const options = Chaintracks.createOptions(chain)
 
   const so = ChaintracksStorageNoDb.createStorageBaseOptions(chain)

@@ -1,17 +1,22 @@
-import { Chain } from "../../../../sdk/types"
-import { asUint8Array } from "../../../../utility/utilityHelpers.noBuffer"
-import { BaseBlockHeader, BlockHeader } from "../Api/BlockHeaderApi"
-import { ChaintracksClientApi } from "../Api/ChaintracksClientApi"
-import { ChaintracksStorageApi } from "../Api/ChaintracksStorageApi"
-import { Chaintracks } from "../Chaintracks"
-import { ChaintracksService } from "../ChaintracksService"
-import { ChaintracksServiceClient } from "../ChaintracksServiceClient"
-import { blockHash, deserializeBaseBlockHeaders, genesisBuffer, serializeBaseBlockHeader } from "../util/blockHeaderUtilities"
+import { Chain } from '../../../../sdk/types'
+import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
+import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
+import { ChaintracksClientApi } from '../Api/ChaintracksClientApi'
+import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
+import { Chaintracks } from '../Chaintracks'
+import { ChaintracksService } from '../ChaintracksService'
+import { ChaintracksServiceClient } from '../ChaintracksServiceClient'
+import {
+  blockHash,
+  deserializeBaseBlockHeaders,
+  genesisBuffer,
+  serializeBaseBlockHeader
+} from '../util/blockHeaderUtilities'
 
-type ClientClass = "ChaintracksSingletonClient" | "Chaintracks" | "ChaintracksServiceClient" | undefined
+type ClientClass = 'ChaintracksSingletonClient' | 'Chaintracks' | 'ChaintracksServiceClient' | undefined
 let clientClass: ClientClass = undefined
 
-clientClass = "Chaintracks"
+clientClass = 'Chaintracks'
 //clientClass = "ChaintracksSingletonClient"
 //clientClass = "ChaintracksServiceClient"
 const includeLocalServiceClient = true
@@ -21,7 +26,7 @@ const includeNpmRegistryClient = true
 describe(`ChaintracksClientApi tests`, () => {
   jest.setTimeout(999999999)
 
-  const chain: Chain = "main"
+  const chain: Chain = 'main'
 
   const clients: ChaintracksClientApi[] = []
 
@@ -51,7 +56,7 @@ describe(`ChaintracksClientApi tests`, () => {
     }
 
     const ft = await clients[0].findChainTipHeader()
-    if (!ft) throw new Error("No chain tip found");
+    if (!ft) throw new Error('No chain tip found')
     firstTip = ft
   })
 
@@ -59,14 +64,14 @@ describe(`ChaintracksClientApi tests`, () => {
     await localService?.stopJsonRpcServer()
   })
 
-  test("0 getChain", async () => {
+  test('0 getChain', async () => {
     for (const client of clients) {
       const gotChain = await client.getChain()
       expect(gotChain).toBe(chain)
     }
   })
 
-  test("1 getInfo", async () => {
+  test('1 getInfo', async () => {
     for (const client of clients) {
       const gotInfo = await client.getInfo()
       expect(gotInfo.chain).toBe(chain)
@@ -75,14 +80,14 @@ describe(`ChaintracksClientApi tests`, () => {
     }
   })
 
-  test("2 getPresentHeight", async () => {
+  test('2 getPresentHeight', async () => {
     for (const client of clients) {
       const presentHeight = await client.getPresentHeight()
       expect(presentHeight).toBeGreaterThanOrEqual(firstTip.height)
     }
   })
 
-  test("3 getHeaders", async () => {
+  test('3 getHeaders', async () => {
     for (const client of clients) {
       const info = await client.getInfo()
       const h0 = info.heightBulk + 1
@@ -107,37 +112,37 @@ describe(`ChaintracksClientApi tests`, () => {
     }
   })
 
-  test("4 findChainTipHeader", async () => {
+  test('4 findChainTipHeader', async () => {
     for (const client of clients) {
       const tipHeader = await client.findChainTipHeader()
       expect(tipHeader.height >= firstTip.height).toBe(true)
     }
   })
 
-  test("5 findChainTipHash", async () => {
+  test('5 findChainTipHash', async () => {
     for (const client of clients) {
       const hash = await client.findChainTipHash()
       expect(hash.length === 64).toBe(true)
     }
   })
 
-  test("6 findHeaderForHeight", async () => {
+  test('6 findHeaderForHeight', async () => {
     for (const client of clients) {
-    const header0 = await client.findHeaderForHeight(0)
-    expect(header0 !== undefined).toBe(true)
-    if (header0) {
-      expect(genesisBuffer(chain)).toEqual(serializeBaseBlockHeader(header0))
-    }
+      const header0 = await client.findHeaderForHeight(0)
+      expect(header0 !== undefined).toBe(true)
+      if (header0) {
+        expect(genesisBuffer(chain)).toEqual(serializeBaseBlockHeader(header0))
+      }
 
-    const header = await client.findHeaderForHeight(firstTip.height)
-    expect(header && header.height === firstTip.height).toBe(true)
+      const header = await client.findHeaderForHeight(firstTip.height)
+      expect(header && header.height === firstTip.height).toBe(true)
 
-    const missing = await client.findHeaderForHeight(1000 + firstTip.height)
-    expect(missing === undefined).toBe(true)
+      const missing = await client.findHeaderForHeight(1000 + firstTip.height)
+      expect(missing === undefined).toBe(true)
     }
   })
 
-  test("7 addHeader", async () => {
+  test('7 addHeader', async () => {
     for (const client of clients) {
       const t = await client.findChainTipHeader()
       const h: BaseBlockHeader = {
@@ -172,10 +177,7 @@ describe(`ChaintracksClientApi tests`, () => {
   })
   */
 })
-  
+
 function makeNpmRegistryClient(chain: Chain) {
-  return new ChaintracksServiceClient(
-    chain,
-    `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`
-  )
+  return new ChaintracksServiceClient(chain, `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`)
 }

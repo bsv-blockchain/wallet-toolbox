@@ -102,25 +102,32 @@ export class WhatsOnChainServices {
   }
 
   /**
-   * @param fetch 
+   * @param fetch
    * @returns returns the last 10 block headers including height, size, chainwork...
    */
   async getHeaders(fetch?: ChaintracksFetchApi): Promise<WocGetHeadersHeader[]> {
     fetch ||= new ChaintracksFetch()
-    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(`https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers`)
+    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(
+      `https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers`
+    )
     return headers
   }
 
-  async getHeaderByteFileLinks(neededRange: HeightRange, fetch?: ChaintracksFetchApi): Promise<GetHeaderByteFileLinksResult[]> {
+  async getHeaderByteFileLinks(
+    neededRange: HeightRange,
+    fetch?: ChaintracksFetchApi
+  ): Promise<GetHeaderByteFileLinksResult[]> {
     fetch ||= new ChaintracksFetch()
-    const files = await fetch.fetchJson<WocGetHeaderByteFileLinks>(`https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers/resources`)
+    const files = await fetch.fetchJson<WocGetHeaderByteFileLinks>(
+      `https://api.whatsonchain.com/v1/bsv/${this.chain}/block/headers/resources`
+    )
     const r: GetHeaderByteFileLinksResult[] = []
     let range: HeightRange | undefined = undefined
     for (const link of files.files) {
       const parsed = parseFileLink(link)
-      if (parsed === undefined) continue; // parse error, return empty result
+      if (parsed === undefined) continue // parse error, return empty result
       if (parsed.range === 'latest') {
-        if (range === undefined) continue; // should not happen on valid input
+        if (range === undefined) continue // should not happen on valid input
         const fromHeight = range.maxHeight + 1
         if (neededRange.maxHeight >= fromHeight) {
           // We need this range but don't know maxHeight
@@ -137,7 +144,9 @@ export class WhatsOnChainServices {
     }
     return r
 
-    function parseFileLink(file: string): { range: ({ fromHeight: number; toHeight: number } | 'latest'), sourceUrl: string, fileName: string } | undefined {
+    function parseFileLink(
+      file: string
+    ): { range: { fromHeight: number; toHeight: number } | 'latest'; sourceUrl: string; fileName: string } | undefined {
       const url = new URL(file)
       const parts = url.pathname.split('/')
       const fileName = parts.pop()

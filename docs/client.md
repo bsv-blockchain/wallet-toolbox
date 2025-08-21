@@ -183,6 +183,8 @@ export interface ArcMinerGetTxData {
 }
 ```
 
+See also: [blockHash](./services.md#function-blockhash)
+
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
@@ -1616,7 +1618,7 @@ export interface MonitorOptions {
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
+See also: [Chain](./client.md#type-chain), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
 
 ###### Property msecsWaitPerMerkleProofServiceReq
 
@@ -2159,6 +2161,8 @@ export interface PostBeefResultForTxidApi {
 }
 ```
 
+See also: [blockHash](./services.md#function-blockhash)
+
 ###### Property alreadyKnown
 
 if true, the transaction was already known to this service. Usually treat as a success.
@@ -2238,7 +2242,7 @@ export interface PostTxResultForTxid {
 }
 ```
 
-See also: [PostTxResultForTxidError](./client.md#interface-posttxresultfortxiderror), [ReqHistoryNote](./client.md#type-reqhistorynote)
+See also: [PostTxResultForTxidError](./client.md#interface-posttxresultfortxiderror), [ReqHistoryNote](./client.md#type-reqhistorynote), [blockHash](./services.md#function-blockhash)
 
 ###### Property alreadyKnown
 
@@ -2439,6 +2443,8 @@ export interface ProvenTransactionStatus {
     merkleRoot: string;
 }
 ```
+
+See also: [blockHash](./services.md#function-blockhash)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4183,7 +4189,7 @@ export interface TableProvenTx extends sdk.EntityTimeStamp {
 }
 ```
 
-See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
+See also: [EntityTimeStamp](./client.md#interface-entitytimestamp), [blockHash](./services.md#function-blockhash)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4800,7 +4806,7 @@ export interface UpdateProvenTxReqWithNewProvenTxArgs {
 }
 ```
 
-See also: [ProvenTxReqStatus](./client.md#type-proventxreqstatus)
+See also: [ProvenTxReqStatus](./client.md#type-proventxreqstatus), [blockHash](./services.md#function-blockhash)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5662,7 +5668,7 @@ export interface WalletServicesOptions {
 }
 ```
 
-See also: [ArcConfig](./services.md#interface-arcconfig), [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [arcGorillaPoolUrl](./services.md#function-arcgorillapoolurl)
+See also: [ArcConfig](./services.md#interface-arcconfig), [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [arcGorillaPoolUrl](./services.md#function-arcgorillapoolurl)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -6921,7 +6927,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
 }
 ```
 
-See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices)
+See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices), [blockHash](./services.md#function-blockhash)
 
 ###### Property getProofAttemptsLimit
 
@@ -7534,7 +7540,7 @@ export class Monitor {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
 
 ###### Property _otherTasks
 
@@ -11926,147 +11932,51 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [WocHeadersBulkListener](#function-wocheadersbulklistener) | [isHexString](#function-ishexstring) | [validateCreateActionArgs](#function-validatecreateactionargs) |
-| [WocHeadersBulkListener_test](#function-wocheadersbulklistener_test) | [isListActionsSpecOp](#function-islistactionsspecop) | [validateCreateActionInput](#function-validatecreateactioninput) |
-| [WocHeadersLiveListener](#function-wocheaderslivelistener) | [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
-| [WocHeadersLiveListener_test](#function-wocheaderslivelistener_test) | [isLive](#function-islive) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
-| [acquireDirectCertificate](#function-acquiredirectcertificate) | [isLiveBlockHeader](#function-isliveblockheader) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
-| [arcDefaultUrl](#function-arcdefaulturl) | [listActionsIdb](#function-listactionsidb) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
-| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [listCertificates](#function-listcertificates) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [arraysEqual](#function-arraysequal) | [listOutputsIdb](#function-listoutputsidb) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [asArray](#function-asarray) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateInteger](#function-validateinteger) |
-| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [makeAtomicBeef](#function-makeatomicbeef) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
-| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [makeChangeLock](#function-makechangelock) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
-| [asBsvSdkScript](#function-asbsvsdkscript) | [maxDate](#function-maxdate) | [validateListActionsArgs](#function-validatelistactionsargs) |
-| [asBsvSdkTx](#function-asbsvsdktx) | [offsetPubKey](#function-offsetpubkey) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
-| [asString](#function-asstring) | [optionalArraysEqual](#function-optionalarraysequal) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
-| [asUint8Array](#function-asuint8array) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateOptionalInteger](#function-validateoptionalinteger) |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
-| [buildSignableTransaction](#function-buildsignabletransaction) | [processAction](#function-processaction) | [validateOriginator](#function-validateoriginator) |
-| [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOutpointString](#function-validateoutpointstring) |
-| [convertProofToMerklePath](#function-convertprooftomerklepath) | [proveCertificate](#function-provecertificate) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
-| [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [purgeDataIdb](#function-purgedataidb) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
-| [createAction](#function-createaction) | [randomBytes](#function-randombytes) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
-| [createAction](#function-createaction) | [randomBytesBase64](#function-randombytesbase64) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
-| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytesHex](#function-randombyteshex) | [validateSatoshis](#function-validatesatoshis) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [reviewStatusIdb](#function-reviewstatusidb) | [validateScriptHash](#function-validatescripthash) |
-| [createSyncMap](#function-createsyncmap) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
-| [doubleSha256BE](#function-doublesha256be) | [sha256Hash](#function-sha256hash) | [validateSignActionArgs](#function-validatesignactionargs) |
-| [doubleSha256LE](#function-doublesha256le) | [shareReqsWithWorld](#function-sharereqswithworld) | [validateSignActionOptions](#function-validatesignactionoptions) |
-| [generateChangeSdk](#function-generatechangesdk) | [signAction](#function-signaction) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
-| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [stampLog](#function-stamplog) | [validateStringLength](#function-validatestringlength) |
-| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLogFormat](#function-stamplogformat) | [validateWalletPayment](#function-validatewalletpayment) |
-| [getBeefForTxid](#function-getbeeffortxid) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) | [varUintSize](#function-varuintsize) |
-| [getExchangeRatesIo](#function-getexchangeratesio) | [toWalletNetwork](#function-towalletnetwork) | [verifyHexString](#function-verifyhexstring) |
-| [getIdentityKey](#function-getidentitykey) | [transactionInputSize](#function-transactioninputsize) | [verifyId](#function-verifyid) |
-| [getProofs](#function-getproofs) | [transactionOutputSize](#function-transactionoutputsize) | [verifyInteger](#function-verifyinteger) |
-| [getSyncChunk](#function-getsyncchunk) | [transactionSize](#function-transactionsize) | [verifyNumber](#function-verifynumber) |
-| [getWhatsOnChainBlockHeaderByHash](#function-getwhatsonchainblockheaderbyhash) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) | [verifyOne](#function-verifyone) |
-| [getWhatsOnChainTipHeight](#function-getwhatsonchaintipheight) | [updateExchangeratesapi](#function-updateexchangeratesapi) | [verifyOneOrNone](#function-verifyoneornone) |
-| [internalizeAction](#function-internalizeaction) | [validateAbortActionArgs](#function-validateabortactionargs) | [verifyOptionalHexString](#function-verifyoptionalhexstring) |
-| [internalizeAction](#function-internalizeaction) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) | [verifyTruthy](#function-verifytruthy) |
-| [isBaseBlockHeader](#function-isbaseblockheader) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) | [verifyUnlockScripts](#function-verifyunlockscripts) |
-| [isBlockHeader](#function-isblockheader) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) | [wait](#function-wait) |
-| [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateBasketInsertion](#function-validatebasketinsertion) |  |
+| [acquireDirectCertificate](#function-acquiredirectcertificate) | [isLive](#function-islive) | [validateCreateActionInput](#function-validatecreateactioninput) |
+| [arcDefaultUrl](#function-arcdefaulturl) | [isLiveBlockHeader](#function-isliveblockheader) | [validateCreateActionOptions](#function-validatecreateactionoptions) |
+| [arcGorillaPoolUrl](#function-arcgorillapoolurl) | [listActionsIdb](#function-listactionsidb) | [validateCreateActionOutput](#function-validatecreateactionoutput) |
+| [arraysEqual](#function-arraysequal) | [listCertificates](#function-listcertificates) | [validateDiscoverByAttributesArgs](#function-validatediscoverbyattributesargs) |
+| [asArray](#function-asarray) | [listOutputsIdb](#function-listoutputsidb) | [validateDiscoverByIdentityKeyArgs](#function-validatediscoverbyidentitykeyargs) |
+| [asBsvSdkPrivateKey](#function-asbsvsdkprivatekey) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [asBsvSdkPublickKey](#function-asbsvsdkpublickkey) | [makeAtomicBeef](#function-makeatomicbeef) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [asBsvSdkScript](#function-asbsvsdkscript) | [makeChangeLock](#function-makechangelock) | [validateInteger](#function-validateinteger) |
+| [asBsvSdkTx](#function-asbsvsdktx) | [maxDate](#function-maxdate) | [validateInternalizeActionArgs](#function-validateinternalizeactionargs) |
+| [asString](#function-asstring) | [offsetPubKey](#function-offsetpubkey) | [validateInternalizeOutput](#function-validateinternalizeoutput) |
+| [asUint8Array](#function-asuint8array) | [optionalArraysEqual](#function-optionalarraysequal) | [validateListActionsArgs](#function-validatelistactionsargs) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [parseTxScriptOffsets](#function-parsetxscriptoffsets) | [validateListCertificatesArgs](#function-validatelistcertificatesargs) |
+| [buildSignableTransaction](#function-buildsignabletransaction) | [parseWalletOutpoint](#function-parsewalletoutpoint) | [validateListOutputsArgs](#function-validatelistoutputsargs) |
+| [completeSignedTransaction](#function-completesignedtransaction) | [processAction](#function-processaction) | [validateOptionalInteger](#function-validateoptionalinteger) |
+| [convertProofToMerklePath](#function-convertprooftomerklepath) | [processAction](#function-processaction) | [validateOptionalOutpointString](#function-validateoptionaloutpointstring) |
+| [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [proveCertificate](#function-provecertificate) | [validateOriginator](#function-validateoriginator) |
+| [createAction](#function-createaction) | [purgeDataIdb](#function-purgedataidb) | [validateOutpointString](#function-validateoutpointstring) |
+| [createAction](#function-createaction) | [randomBytes](#function-randombytes) | [validatePositiveIntegerOrZero](#function-validatepositiveintegerorzero) |
+| [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [randomBytesBase64](#function-randombytesbase64) | [validateProveCertificateArgs](#function-validateprovecertificateargs) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [randomBytesHex](#function-randombyteshex) | [validateRelinquishCertificateArgs](#function-validaterelinquishcertificateargs) |
+| [createSyncMap](#function-createsyncmap) | [reviewStatusIdb](#function-reviewstatusidb) | [validateRelinquishOutputArgs](#function-validaterelinquishoutputargs) |
+| [doubleSha256BE](#function-doublesha256be) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) | [validateSatoshis](#function-validatesatoshis) |
+| [doubleSha256LE](#function-doublesha256le) | [sha256Hash](#function-sha256hash) | [validateScriptHash](#function-validatescripthash) |
+| [generateChangeSdk](#function-generatechangesdk) | [shareReqsWithWorld](#function-sharereqswithworld) | [validateSecondsSinceEpoch](#function-validatesecondssinceepoch) |
+| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [signAction](#function-signaction) | [validateSignActionArgs](#function-validatesignactionargs) |
+| [getBeefForTransaction](#function-getbeeffortransaction) | [stampLog](#function-stamplog) | [validateSignActionOptions](#function-validatesignactionoptions) |
+| [getBeefForTxid](#function-getbeeffortxid) | [stampLogFormat](#function-stamplogformat) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
+| [getExchangeRatesIo](#function-getexchangeratesio) | [toBinaryBaseBlockHeader](#function-tobinarybaseblockheader) | [validateStringLength](#function-validatestringlength) |
+| [getIdentityKey](#function-getidentitykey) | [toWalletNetwork](#function-towalletnetwork) | [validateWalletPayment](#function-validatewalletpayment) |
+| [getProofs](#function-getproofs) | [transactionInputSize](#function-transactioninputsize) | [varUintSize](#function-varuintsize) |
+| [getSyncChunk](#function-getsyncchunk) | [transactionOutputSize](#function-transactionoutputsize) | [verifyHexString](#function-verifyhexstring) |
+| [getWhatsOnChainBlockHeaderByHash](#function-getwhatsonchainblockheaderbyhash) | [transactionSize](#function-transactionsize) | [verifyId](#function-verifyid) |
+| [internalizeAction](#function-internalizeaction) | [updateChaintracksFiatExchangeRates](#function-updatechaintracksfiatexchangerates) | [verifyInteger](#function-verifyinteger) |
+| [internalizeAction](#function-internalizeaction) | [updateExchangeratesapi](#function-updateexchangeratesapi) | [verifyNumber](#function-verifynumber) |
+| [isBaseBlockHeader](#function-isbaseblockheader) | [validateAbortActionArgs](#function-validateabortactionargs) | [verifyOne](#function-verifyone) |
+| [isBlockHeader](#function-isblockheader) | [validateAcquireCertificateArgs](#function-validateacquirecertificateargs) | [verifyOneOrNone](#function-verifyoneornone) |
+| [isCreateActionSpecOp](#function-iscreateactionspecop) | [validateAcquireDirectCertificateArgs](#function-validateacquiredirectcertificateargs) | [verifyOptionalHexString](#function-verifyoptionalhexstring) |
+| [isHexString](#function-ishexstring) | [validateAcquireIssuanceCertificateArgs](#function-validateacquireissuancecertificateargs) | [verifyTruthy](#function-verifytruthy) |
+| [isListActionsSpecOp](#function-islistactionsspecop) | [validateBasketInsertion](#function-validatebasketinsertion) | [verifyUnlockScripts](#function-verifyunlockscripts) |
+| [isListOutputsSpecOp](#function-islistoutputsspecop) | [validateCreateActionArgs](#function-validatecreateactionargs) | [wait](#function-wait) |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
 
-##### Function: WocHeadersBulkListener
-
-High speed WebSocket based based old block header listener
-
-```ts
-export async function WocHeadersBulkListener(fromHeight: number, toHeight: number, enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: WocChain = "main", idleWait = 5000): Promise<boolean> 
-```
-
-See also: [BlockHeader](./services.md#interface-blockheader), [StopListenerToken](./services.md#type-stoplistenertoken), [WocChain](./services.md#type-wocchain)
-
-Returns
-
-true on normal completion, false if should restart if no error received.
-
-Argument Details
-
-+ **enqueue**
-  + returns headers received from WebSocket service
-+ **error**
-  + notifies of abnormal events, return false to close websocket, true to ignore the error.
-+ **stop**
-  + an object with a stop property which gets set to a method to stop listener
-+ **chain**
-  + 'test' | 'main'
-+ **idleWait**
-  + how many milliseconds to timeout between completion checks.
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Function: WocHeadersBulkListener_test
-
-v2
-{
-"message": {
-"data": {
-  "version": 872415232,
-  "previousblockhash": "00000000000000000ea1f9ba0817a0f922ee227be306fd9097a4e76caf5ff411",
-  "merkleroot": "dcd7efb3c39e8e2d597e4757b9a49c98f52f77a6df39d1d5936ac3abb2559944",
-  "time": 1750182239,
-  "bits": 403926191,
-  "nonce": 1043732575,
-  "hash": "0000000000000000032d09ca772ca5b3bc5b90a79a5bbcc4a05c99fb6d3b23d8",
-  "height": 901658
-}
-}
-}
-
-```ts
-export async function WocHeadersBulkListener_test(): Promise<void> 
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Function: WocHeadersLiveListener
-
-High speed WebSocket based based new block header listener
-
-```ts
-export async function WocHeadersLiveListener(enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: WocChain = "main", idleWait = 100000): Promise<boolean> 
-```
-
-See also: [BlockHeader](./services.md#interface-blockheader), [StopListenerToken](./services.md#type-stoplistenertoken), [WocChain](./services.md#type-wocchain)
-
-Returns
-
-true only if exit caused by `stop`
-
-Argument Details
-
-+ **enqueue**
-  + returns headers received from WebSocket service
-+ **error**
-  + notifies of abnormal events, return false to close websocket, true to ignore the error.
-+ **stop**
-  + an object with a stop property which gets set to a method to stop listener
-+ **chain**
-  + 'test' | 'main'
-+ **idleWait**
-  + without any input, after this many milliseconds, assume dead service and exit.
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Function: WocHeadersLiveListener_test
-
-```ts
-export async function WocHeadersLiveListener_test(): Promise<void> 
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
 ##### Function: acquireDirectCertificate
 
 ```ts
@@ -12595,21 +12505,10 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: getWhatsOnChainBlockHeaderByHash
 
 ```ts
-export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: WocChain = "main", apiKey?: string): Promise<BlockHeader | undefined> 
+export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: Chain = "main", apiKey?: string): Promise<BlockHeader | undefined> 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [WocChain](./services.md#type-wocchain)
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Function: getWhatsOnChainTipHeight
-
-```ts
-export async function getWhatsOnChainTipHeight(chain: WocChain = "main", apiKey?: string): Promise<number> 
-```
-
-See also: [WocChain](./services.md#type-wocchain)
+See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -13162,7 +13061,7 @@ export function toBinaryBaseBlockHeader(header: sdk.BaseBlockHeader): number[] {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asArray](./client.md#function-asarray)
+See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asArray](./client.md#function-asarray), [writeUInt32BE](./services.md#function-writeuint32be)
 
 Returns
 
@@ -13872,16 +13771,15 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [Chain](#type-chain) | [GroupedPermissionEventHandler](#type-groupedpermissioneventhandler) | [ServicesCallHistory](#type-servicescallhistory) |
-| [DBType](#type-dbtype) | [MonitorStorage](#type-monitorstorage) | [StopListenerToken](#type-stoplistenertoken) |
-| [DescriptionString5to2000Bytes](#type-descriptionstring5to2000bytes) | [PermissionEventHandler](#type-permissioneventhandler) | [StorageProvidedBy](#type-storageprovidedby) |
-| [EntityStorage](#type-entitystorage) | [PostBeefService](#type-postbeefservice) | [SyncProtocolVersion](#type-syncprotocolversion) |
-| [GetMerklePathService](#type-getmerklepathservice) | [PostReqsToNetworkDetailsStatus](#type-postreqstonetworkdetailsstatus) | [SyncStatus](#type-syncstatus) |
-| [GetRawTxService](#type-getrawtxservice) | [PostTxsService](#type-posttxsservice) | [TransactionStatus](#type-transactionstatus) |
-| [GetScriptHashHistoryService](#type-getscripthashhistoryservice) | [ProvenTxReqStatus](#type-proventxreqstatus) | [UpdateFiatExchangeRateService](#type-updatefiatexchangerateservice) |
-| [GetStatusForTxidsService](#type-getstatusfortxidsservice) | [ReqHistoryNote](#type-reqhistorynote) | [WocChain](#type-wocchain) |
-| [GetUtxoStatusOutputFormat](#type-getutxostatusoutputformat) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |  |
-| [GetUtxoStatusService](#type-getutxostatusservice) | [ScriptHashFormat](#type-scripthashformat) |  |
+| [Chain](#type-chain) | [GetUtxoStatusService](#type-getutxostatusservice) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |
+| [DBType](#type-dbtype) | [GroupedPermissionEventHandler](#type-groupedpermissioneventhandler) | [ScriptHashFormat](#type-scripthashformat) |
+| [DescriptionString5to2000Bytes](#type-descriptionstring5to2000bytes) | [MonitorStorage](#type-monitorstorage) | [ServicesCallHistory](#type-servicescallhistory) |
+| [EntityStorage](#type-entitystorage) | [PermissionEventHandler](#type-permissioneventhandler) | [StorageProvidedBy](#type-storageprovidedby) |
+| [GetMerklePathService](#type-getmerklepathservice) | [PostBeefService](#type-postbeefservice) | [SyncProtocolVersion](#type-syncprotocolversion) |
+| [GetRawTxService](#type-getrawtxservice) | [PostReqsToNetworkDetailsStatus](#type-postreqstonetworkdetailsstatus) | [SyncStatus](#type-syncstatus) |
+| [GetScriptHashHistoryService](#type-getscripthashhistoryservice) | [PostTxsService](#type-posttxsservice) | [TransactionStatus](#type-transactionstatus) |
+| [GetStatusForTxidsService](#type-getstatusfortxidsservice) | [ProvenTxReqStatus](#type-proventxreqstatus) | [UpdateFiatExchangeRateService](#type-updatefiatexchangerateservice) |
+| [GetUtxoStatusOutputFormat](#type-getutxostatusoutputformat) | [ReqHistoryNote](#type-reqhistorynote) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -14174,17 +14072,6 @@ See also: [ServiceCallHistory](./client.md#interface-servicecallhistory)
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
-##### Type: StopListenerToken
-
-```ts
-export type StopListenerToken = {
-    stop: (() => void) | undefined;
-}
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
 ##### Type: StorageProvidedBy
 
 ```ts
@@ -14236,15 +14123,6 @@ export type UpdateFiatExchangeRateService = (targetCurrencies: string[], options
 ```
 
 See also: [FiatExchangeRates](./client.md#interface-fiatexchangerates), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Type: WocChain
-
-```ts
-export type WocChain = "main" | "test"
-```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
