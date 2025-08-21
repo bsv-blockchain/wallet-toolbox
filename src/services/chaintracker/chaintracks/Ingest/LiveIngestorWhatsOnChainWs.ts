@@ -1,41 +1,8 @@
 import { BlockHeader, Chain } from '../../../../sdk'
-import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
+import { LiveIngestorBase } from '../Base/LiveIngestorBase'
+import { LiveIngestorWhatsOnChainOptions } from './LiveIngestorWhatsOnChainPoll'
 import { StopListenerToken, WocHeadersLiveListener } from './WhatsOnChainIngestorWs'
-import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
-
-export interface LiveIngestorWhatsOnChainOptions extends LiveIngestorBaseOptions, WhatsOnChainServicesOptions {
-  /**
-   * Maximum msces of "normal" time with no ping received from connected WoC service.
-   */
-  idleWait: number | undefined
-  /**
-   * Which chain is being tracked: main, test, or stn.
-   */
-  chain: Chain
-  /**
-   * WhatsOnChain.com API Key
-   * https://docs.taal.com/introduction/get-an-api-key
-   * If unknown or empty, maximum request rate is limited.
-   * https://developers.whatsonchain.com/#rate-limits
-   */
-  apiKey?: string
-  /**
-   * Request timeout for GETs to https://api.whatsonchain.com/v1/bsv
-   */
-  timeout: number
-  /**
-   * User-Agent header value for requests to https://api.whatsonchain.com/v1/bsv
-   */
-  userAgent: string
-  /**
-   * Enable WhatsOnChain client cache option.
-   */
-  enableCache: boolean
-  /**
-   * How long chainInfo is considered still valid before updating (msecs).
-   */
-  chainInfoMsecs: number
-}
+import { EnqueueHandler, ErrorHandler, WhatsOnChainServices } from './WhatsOnChainServices'
 
 export class LiveIngestorWhatsOnChainWs extends LiveIngestorBase {
   static createLiveIngestorWhatsOnChainOptions(chain: Chain): LiveIngestorWhatsOnChainOptions {

@@ -7,7 +7,7 @@ import { ChaintracksFsApi } from './ChaintracksFsApi'
 
 export interface ChaintracksOptions {
   chain: Chain
-  storageEngine?: ChaintracksStorageBase
+  storage?: ChaintracksStorageBase
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
 

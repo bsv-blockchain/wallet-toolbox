@@ -15,7 +15,7 @@ export interface BulkIngestorBaseOptions {
    * The name of the JSON resource to request from CDN which describes currently
    * available bulk block header resources.
    */
-  jsonFilename: string | undefined
+  jsonResource: string | undefined
 
   /**
    * If true, and the bulk ingestor supports it, bypass the live database

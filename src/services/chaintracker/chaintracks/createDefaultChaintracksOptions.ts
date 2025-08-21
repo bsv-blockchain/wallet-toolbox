@@ -4,7 +4,7 @@ import { ChaintracksOptions } from './Api/ChaintracksApi'
 import { Chaintracks } from './Chaintracks'
 import { ChaintracksFs } from './util/ChaintracksFs'
 import { ChaintracksStorageKnex } from './Storage'
-import { BulkIngestorCDNBabbage } from './BulkIngestorCDNBabbage'
+import { BulkIngestorCDNBabbage } from './Ingest/BulkIngestorCDNBabbage'
 import { ChaintracksFetch } from './util/ChaintracksFetch'
 import { LiveIngestorWhatsOnChainPoll } from './Ingest/LiveIngestorWhatsOnChainPoll'
 import { BulkIngestorWhatsOnChainCdn } from './Ingest/BulkIngestorWhatsOnChainCdn'
@@ -38,7 +38,7 @@ export function createDefaultChaintracksOptions(
 
   const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain)
   knexOptions.knex = knexInstance
-  options.storageEngine = new ChaintracksStorageKnex(knexOptions)
+  options.storage = new ChaintracksStorageKnex(knexOptions)
 
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
   options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
@@ -60,7 +60,7 @@ export function createNoDbChaintracksOptions(
 
   const so = ChaintracksStorageNoDb.createStorageBaseOptions(chain)
   const s = new ChaintracksStorageNoDb(so)
-  options.storageEngine = s
+  options.storage = s
 
   const fetch = new ChaintracksFetch()
 

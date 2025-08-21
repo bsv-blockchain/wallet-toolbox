@@ -23,7 +23,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   static createOptions(chain: Chain): ChaintracksOptions {
     return {
       chain,
-      storageEngine: undefined,
+      storage: undefined,
       bulkIngestors: [],
       liveIngestors: [],
       addLiveRecursionLimit: 36,
@@ -62,14 +62,14 @@ export class Chaintracks implements ChaintracksManagementApi {
   private lock = new SingleWriterMultiReaderLock()
 
   constructor(public options: ChaintracksOptions) {
-    if (!options.storageEngine) throw new Error('storageEngine is required.')
+    if (!options.storage) throw new Error('storageEngine is required.')
     if (!options.bulkIngestors || options.bulkIngestors.length < 1)
       throw new Error('At least one bulk ingestor is required.')
     if (!options.liveIngestors || options.liveIngestors.length < 1)
       throw new Error('At least one live ingestor is required.')
     this.chain = options.chain
     this.readonly = options.readonly
-    this.storageEngine = options.storageEngine
+    this.storageEngine = options.storage
     this.bulkIngestors = options.bulkIngestors
     this.liveIngestors = options.liveIngestors
 

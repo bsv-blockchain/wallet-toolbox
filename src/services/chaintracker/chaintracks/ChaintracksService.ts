@@ -18,18 +18,15 @@ import { ChaintracksFs } from './util/ChaintracksFs'
 export interface ChaintracksServiceOptions {
   chain: Chain
   /**
+   * prepended to the path of each registered service endpoint
+   */
+  routingPrefix: string,
+  /**
    * Defaults to default configured Chaintracks instance with NoDb storage.
    */
   chaintracks?: Chaintracks
   services?: Services
-  /**
-   * prepended to the path of each registered service endpoint
-   */
-  routingPrefix: string,
-
   port?: number
-
-  fs?: ChaintracksFsApi
 }
 
 export class ChaintracksService {
@@ -47,7 +44,6 @@ export class ChaintracksService {
   chaintracks: Chaintracks
   services: Services
   server?: Server<typeof IncomingMessage, typeof ServerResponse>
-  fs: ChaintracksFsApi
 
   constructor(options: ChaintracksServiceOptions) {
     this.options = {...options}
@@ -55,7 +51,6 @@ export class ChaintracksService {
     this.chain = options.chain
     this.chaintracks = options.chaintracks || new Chaintracks(createNoDbChaintracksOptions(this.chain))
     this.services = options.services || new Services(this.chain)
-    this.fs = options.fs || ChaintracksFs
     // Prevent recursion...
     this.services.updateFiatExchangeRateServices.remove('ChaintracksService')
     if (this.chaintracks.chain !== this.chain || this.services.chain !== this.chain) {

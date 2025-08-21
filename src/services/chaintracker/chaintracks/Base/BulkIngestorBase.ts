@@ -17,7 +17,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   static createBulkIngestorBaseOptions(chain: Chain) {
     const options: BulkIngestorBaseOptions = {
       chain,
-      jsonFilename: `${chain}NetBlockHeaders.json`,
+      jsonResource: `${chain}NetBlockHeaders.json`,
       bypassLiveEnabled: true
     }
     return options
@@ -28,9 +28,9 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
   bypassLiveEnabled: boolean
 
   constructor(options: BulkIngestorBaseOptions) {
-    if (!options.jsonFilename) throw new Error('The jsonFilename options property is required.')
+    if (!options.jsonResource) throw new Error('The jsonFilename options property is required.')
     this.chain = options.chain
-    this.jsonFilename = options.jsonFilename
+    this.jsonFilename = options.jsonResource
     this.bypassLiveEnabled = options.bypassLiveEnabled
   }
 

@@ -1,6 +1,6 @@
 import { Knex, knex as makeKnex } from 'knex'
 import { Chain } from '../../../../sdk'
-import { BulkIngestorCDNBabbage } from '../BulkIngestorCDNBabbage'
+import { BulkIngestorCDNBabbage } from '../Ingest/BulkIngestorCDNBabbage'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { ChaintracksFs } from '../util/ChaintracksFs'
 import { HeightRange } from '../util/HeightRange'

@@ -1,5 +1,5 @@
-import { Chain } from '../../../sdk/types'
-import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
+import { Chain } from '../../../../sdk/types'
+import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { BulkIngestorCDN, BulkIngestorCDNOptions } from './BulkIngestorCDN'
 
 export class BulkIngestorCDNBabbage extends BulkIngestorCDN {
