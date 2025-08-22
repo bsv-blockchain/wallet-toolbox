@@ -2,23 +2,24 @@ import { Knex } from 'knex'
 import { ChaintracksKnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
 import { ChaintracksStorageBase } from './ChaintracksStorageBase'
-import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
-import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
+import { LiveBlockHeader } from '../Api/BlockHeaderApi'
+import { BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 import {
   addWork,
-  blockHash,
   convertBitsToWork,
   isMoreWork,
   serializeBaseBlockHeader
 } from '../util/blockHeaderUtilities'
 import { verifyOneOrNone } from '../../../../utility/utilityHelpers'
 import { DBType } from '../../../../storage/StorageReader'
-import { determineDBType } from '../../../../index.all'
-import { BulkHeaderFileInfo, BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
+import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
 import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
 import { ChaintracksStorageBulkFileApi } from '../Api/ChaintracksStorageApi'
+import { Chain } from '../../../../sdk/types'
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk/WERR_errors'
+import { determineDBType } from '../../../../storage/schema/KnexMigrations'
 
 export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
   /**
@@ -101,6 +102,8 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
     if (!this.isAvailable) {
       this._dbtype = await determineDBType(this.knex)
       await super.makeAvailable()
+      // Connect the bulk data file manager to the table provided by this storage class.
+      await this.bulkManager.setStorage(this)
     }
   }
 

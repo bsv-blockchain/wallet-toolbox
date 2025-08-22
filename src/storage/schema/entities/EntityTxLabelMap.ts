@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableTxLabelMap, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TableTxLabelMap } from "../tables/TableTxLabelMap"
+import { WERR_INVALID_OPERATION } from "../../../sdk/WERR_errors"
 
 export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
   constructor(api?: TableTxLabelMap) {
@@ -53,7 +54,7 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
   }
 
   override get id(): number {
-    throw new sdk.WERR_INVALID_OPERATION('entity has no "id" value')
+    throw new WERR_INVALID_OPERATION('entity has no "id" value')
   } // entity does not have its own id.
   override get entityName(): string {
     return 'txLabelMap'
@@ -80,7 +81,7 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
     userId: number,
     ei: TableTxLabelMap,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityTxLabelMap; eiId: number }> {
     const transactionId = syncMap.transaction.idMap[ei.transactionId]
     const txLabelId = syncMap.txLabel.idMap[ei.txLabelId]
@@ -97,7 +98,7 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.transactionId = syncMap.transaction.idMap[this.transactionId]
     this.txLabelId = syncMap.txLabel.idMap[this.txLabelId]
     await storage.insertTxLabelMap(this.toApi(), trx)
@@ -108,7 +109,7 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
     since: Date | undefined,
     ei: TableTxLabelMap,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

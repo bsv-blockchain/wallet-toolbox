@@ -1282,7 +1282,7 @@ export interface ChaintracksInfoApi {
     chain: Chain;
     heightBulk: number;
     heightLive: number;
-    storageEngine: string;
+    storage: string;
     bulkIngestors: string[];
     liveIngestors: string[];
     packages: ChaintracksPackageInfoApi[];
@@ -1359,7 +1359,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export interface ChaintracksOptions {
     chain: Chain;
-    storage?: ChaintracksStorageBase;
+    storage?: ChaintracksStorageApi;
     bulkIngestors: BulkIngestorApi[];
     liveIngestors: LiveIngestorApi[];
     addLiveRecursionLimit: number;
@@ -1368,7 +1368,7 @@ export interface ChaintracksOptions {
 }
 ```
 
-See also: [BulkIngestorApi](./services.md#interface-bulkingestorapi), [Chain](./client.md#type-chain), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [LiveIngestorApi](./services.md#interface-liveingestorapi)
+See also: [BulkIngestorApi](./services.md#interface-bulkingestorapi), [Chain](./client.md#type-chain), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [LiveIngestorApi](./services.md#interface-liveingestorapi)
 
 ###### Property addLiveRecursionLimit
 
@@ -1496,11 +1496,12 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, ChaintracksStorageIngestApi {
+    bulkManager: BulkFileDataManager;
     destroy(): Promise<void>;
 }
 ```
 
-See also: [ChaintracksStorageIngestApi](./services.md#interface-chaintracksstorageingestapi), [ChaintracksStorageQueryApi](./services.md#interface-chaintracksstoragequeryapi)
+See also: [BulkFileDataManager](./services.md#class-bulkfiledatamanager), [ChaintracksStorageIngestApi](./services.md#interface-chaintracksstorageingestapi), [ChaintracksStorageQueryApi](./services.md#interface-chaintracksstoragequeryapi)
 
 ###### Method destroy
 
@@ -3452,7 +3453,7 @@ export class Chaintracks implements ChaintracksManagementApi {
                 try {
                     const r = await bulk.synchronize(presentHeight, before, newLiveHeaders);
                     newLiveHeaders = r.liveHeaders;
-                    after = await this.storageEngine.getAvailableHeightRanges();
+                    after = await this.storage.getAvailableHeightRanges();
                     added = after.bulk.above(before.bulk);
                     before = after;
                     this.log(`Bulk Ingestor: ${added.length} added with ${newLiveHeaders.length} live headers from ${bulk.constructor.name}`);
@@ -3487,7 +3488,7 @@ export class Chaintracks implements ChaintracksManagementApi {
             const now = Date.now();
             lastSyncCheck = now;
             const presentHeight = await this.getPresentHeight();
-            const before = await this.storageEngine.getAvailableHeightRanges();
+            const before = await this.storage.getAvailableHeightRanges();
             let skipBulkSync = !before.live.isEmpty && before.live.maxHeight >= presentHeight - this.addLiveRecursionLimit / 2;
             if (skipBulkSync && now - lastSyncCheck > cdnSyncRepeatMsecs) {
                 skipBulkSync = false;
@@ -3551,7 +3552,7 @@ export class Chaintracks implements ChaintracksManagementApi {
                 else {
                     const bheader = this.baseHeaders.shift();
                     if (bheader) {
-                        const prev = await this.storageEngine.findLiveHeaderForBlockHash(bheader.previousHash);
+                        const prev = await this.storage.findLiveHeaderForBlockHash(bheader.previousHash);
                         if (!prev) {
                             this.log(`Ignoring header with unknown previousHash ${bheader.previousHash} in live storage.`);
                         }
@@ -3580,12 +3581,12 @@ export class Chaintracks implements ChaintracksManagementApi {
                                 this.log(`${liveHeaderDupes} duplicate headers ignored.`);
                                 liveHeaderDupes = 0;
                             }
-                            const updated = await this.storageEngine.getAvailableHeightRanges();
+                            const updated = await this.storage.getAvailableHeightRanges();
                             this.log(`${count} live headers added: bulk ${updated.bulk}, live ${updated.live}`);
                             count = 0;
                         }
                         if (!this.subscriberCallbacksEnabled) {
-                            const live = await this.storageEngine.getLiveHeightRange();
+                            const live = await this.storage.getLiveHeightRange();
                             if (!live.isEmpty) {
                                 this.subscriberCallbacksEnabled = true;
                                 this.log(`listening at height of ${live.maxHeight}`);

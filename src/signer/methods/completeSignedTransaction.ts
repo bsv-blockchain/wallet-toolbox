@@ -1,7 +1,9 @@
 import { Beef, SignActionResult, SignActionSpend, Spend, Transaction } from '@bsv/sdk'
 import { PendingSignAction, Wallet } from '../../Wallet'
-import { asBsvSdkScript, ScriptTemplateBRC29, sdk } from '../../index.client'
-import { WalletError, WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk'
+import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { asBsvSdkScript } from '../../utility/utilityHelpers'
+import { ScriptTemplateBRC29 } from '../../utility/ScriptTemplateBRC29'
+import { WalletError } from '../../sdk/WalletError'
 
 export async function completeSignedTransaction(
   prior: PendingSignAction,
@@ -16,12 +18,12 @@ export async function completeSignedTransaction(
     const createInput = prior.args.inputs[vin]
     const input = prior.tx.inputs[vin]
     if (!createInput || !input || createInput.unlockingScript || !Number.isInteger(createInput.unlockingScriptLength))
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args',
         `spend does not correspond to prior input with valid unlockingScriptLength.`
       )
     if (spend.unlockingScript.length / 2 > createInput.unlockingScriptLength!)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args',
         `spend unlockingScript length ${spend.unlockingScript.length} exceeds expected length ${createInput.unlockingScriptLength}`
       )

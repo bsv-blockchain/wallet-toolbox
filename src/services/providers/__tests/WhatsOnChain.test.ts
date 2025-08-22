@@ -1,9 +1,12 @@
-import { WhatsOnChainBroadcaster, WhatsOnChainConfig } from '@bsv/sdk'
 import { _tu } from '../../../../test/utils/TestUtilsWalletStorage'
 import { WhatsOnChain } from '../WhatsOnChain'
 import { Services } from '../../Services'
-import { sdk, StorageClient, wait } from '../../../index.client'
-import { Setup, StorageKnex } from '../../../index.all'
+import { Setup } from '../../../Setup'
+import { wait } from '../../../utility/utilityHelpers'
+import { WalletError } from '../../../sdk/WalletError'
+import { StorageKnex } from '../../../storage/StorageKnex'
+import { StorageClient } from '../../../storage/remoting/StorageClient'
+
 describe('whatsonchain tests', () => {
   jest.setTimeout(99999999)
 
@@ -131,7 +134,7 @@ describe('whatsonchain tests', () => {
       try {
         await c.wallet.abortAction({ reference: ref })
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
       }
     }
   })
@@ -178,7 +181,7 @@ describe('whatsonchain tests', () => {
       await woc.postRawTx(c.doubleSpendTx.toHex())
       expect(false)
     } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       expect(
         e.message === 'The rawTx parameter must be valid. unexpected response code 500: 258: txn-mempool-conflict' ||
           'The rawTx parameter must be valid. unexpected response code 500: Missing inputs'
@@ -204,7 +207,7 @@ describe('whatsonchain tests', () => {
         try {
           await c.wallet.abortAction({ reference: ref })
         } catch (eu: unknown) {
-          const e = sdk.WalletError.fromUnknown(eu)
+          const e = WalletError.fromUnknown(eu)
         }
       }
     }

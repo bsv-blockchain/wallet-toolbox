@@ -1,6 +1,6 @@
 import { HeightRange } from './HeightRange'
 import { deserializeBaseBlockHeader, validateBufferOfHeaders } from './blockHeaderUtilities'
-import { BaseBlockHeader } from '../Api/BlockHeaderApi'
+import { BaseBlockHeader } from '../../../../sdk/WalletServices.interfaces'
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash } from '@bsv/sdk'

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
   Transaction as BsvTransaction,
   WalletPayment,
@@ -8,19 +6,17 @@ import {
   TransactionOutput,
   Beef
 } from '@bsv/sdk'
-import {
-  EntityProvenTxReq,
-  randomBytesBase64,
-  sdk,
-  StorageProvider,
-  TableOutput,
-  TableOutputBasket,
-  TableTransaction,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone
-} from '../../index.client'
 import { shareReqsWithWorld } from './processAction'
+import { StorageProvider } from '../StorageProvider'
+import { AuthId, StorageInternalizeActionResult } from '../../sdk/WalletStorage.interfaces'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { validateInternalizeActionArgs, ValidInternalizeActionArgs } from '../../sdk/validationHelpers'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { randomBytesBase64, verifyId, verifyOne, verifyOneOrNone } from '../../utility/utilityHelpers'
+import { TransactionStatus } from '../../sdk/types'
+import { EntityProvenTxReq } from '../schema/entities/EntityProvenTxReq'
 
 /**
  * Internalize Action allows a wallet to take ownership of outputs in a pre-existing transaction.
@@ -50,9 +46,9 @@ import { shareReqsWithWorld } from './processAction'
  */
 export async function internalizeAction(
   storage: StorageProvider,
-  auth: sdk.AuthId,
+  auth: AuthId,
   args: InternalizeActionArgs
-): Promise<sdk.StorageInternalizeActionResult> {
+): Promise<StorageInternalizeActionResult> {
   const ctx = new InternalizeActionContext(storage, auth, args)
   await ctx.asyncSetup()
 
@@ -84,7 +80,7 @@ interface WalletPaymentX extends WalletPayment {
 
 class InternalizeActionContext {
   /** result to be returned */
-  r: sdk.StorageInternalizeActionResult
+  r: StorageInternalizeActionResult
   /** the parsed input AtomicBEEF */
   ab: Beef
   /** the incoming transaction extracted from AtomicBEEF */
@@ -102,14 +98,14 @@ class InternalizeActionContext {
   /** all the wallet payments from incoming outputs array */
   walletPayments: WalletPaymentX[]
   userId: number
-  vargs: sdk.ValidInternalizeActionArgs
+  vargs: ValidInternalizeActionArgs
 
   constructor(
     public storage: StorageProvider,
-    public auth: sdk.AuthId,
+    public auth: AuthId,
     public args: InternalizeActionArgs
   ) {
-    this.vargs = sdk.validateInternalizeActionArgs(args)
+    this.vargs = validateInternalizeActionArgs(args)
     this.userId = auth.userId!
     this.r = {
       accepted: true,
@@ -158,7 +154,7 @@ class InternalizeActionContext {
 
     for (const o of this.args.outputs) {
       if (o.outputIndex < 0 || o.outputIndex >= this.tx.outputs.length)
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'outputIndex',
           `a valid output index in range 0 to ${this.tx.outputs.length - 1}`
         )
@@ -167,7 +163,7 @@ class InternalizeActionContext {
         case 'basket insertion':
           {
             if (!o.insertionRemittance || o.paymentRemittance)
-              throw new sdk.WERR_INVALID_PARAMETER(
+              throw new WERR_INVALID_PARAMETER(
                 'basket insertion',
                 'valid insertionRemittance and no paymentRemittance'
               )
@@ -181,7 +177,7 @@ class InternalizeActionContext {
         case 'wallet payment':
           {
             if (o.insertionRemittance || !o.paymentRemittance)
-              throw new sdk.WERR_INVALID_PARAMETER(
+              throw new WERR_INVALID_PARAMETER(
                 'wallet payment',
                 'valid paymentRemittance and no insertionRemittance'
               )
@@ -194,7 +190,7 @@ class InternalizeActionContext {
           }
           break
         default:
-          throw new sdk.WERR_INTERNAL(`unexpected protocol ${o.protocol}`)
+          throw new WERR_INTERNAL(`unexpected protocol ${o.protocol}`)
       }
     }
 
@@ -211,7 +207,7 @@ class InternalizeActionContext {
       })
     )
     if (this.etx && !(this.etx.status == 'completed' || this.etx.status === 'unproven' || this.etx.status === 'nosend'))
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'tx',
         `target transaction of internalizeAction has invalid status ${this.etx.status}.`
       )
@@ -224,7 +220,7 @@ class InternalizeActionContext {
       for (const eo of this.eos) {
         const bi = this.basketInsertions.find(b => b.vout === eo.vout)
         const wp = this.walletPayments.find(b => b.vout === eo.vout)
-        if (bi && wp) throw new sdk.WERR_INVALID_PARAMETER('outputs', `unique outputIndex values`)
+        if (bi && wp) throw new WERR_INVALID_PARAMETER('outputs', `unique outputIndex values`)
         if (bi) bi.eo = eo
         if (wp) wp.eo = eo
       }
@@ -265,20 +261,20 @@ class InternalizeActionContext {
   async validateAtomicBeef(atomicBeef: number[]) {
     const ab = Beef.fromBinary(atomicBeef)
     const txValid = await ab.verify(await this.storage.getServices().getChainTracker(), false)
-    if (!txValid || !ab.atomicTxid) throw new sdk.WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
+    if (!txValid || !ab.atomicTxid) throw new WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
     const txid = ab.atomicTxid
     const btx = ab.findTxid(txid)
-    if (!btx) throw new sdk.WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF with newest txid of ${txid}`)
+    if (!btx) throw new WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF with newest txid of ${txid}`)
     const tx = btx.tx!
 
     /*
     for (const i of tx.inputs) {
       if (!i.sourceTXID)
-        throw new sdk.WERR_INTERNAL('beef Transactions must have sourceTXIDs')
+        throw new WERR_INTERNAL('beef Transactions must have sourceTXIDs')
       if (!i.sourceTransaction) {
         const btx = ab.findTxid(i.sourceTXID)
         if (!btx)
-          throw new sdk.WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF and contain input transaction with txid ${i.sourceTXID}`);
+          throw new WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF and contain input transaction with txid ${i.sourceTXID}`);
         i.sourceTransaction = btx.tx
       }
     }
@@ -287,7 +283,7 @@ class InternalizeActionContext {
     return { ab, tx, txid }
   }
 
-  async findOrInsertTargetTransaction(satoshis: number, status: sdk.TransactionStatus): Promise<TableTransaction> {
+  async findOrInsertTargetTransaction(satoshis: number, status: TransactionStatus): Promise<TableTransaction> {
     const now = new Date()
     const newTx: TableTransaction = {
       created_at: now,
@@ -311,7 +307,7 @@ class InternalizeActionContext {
     const tr = await this.storage.findOrInsertTransaction(newTx)
     if (!tr.isNew) {
       if (!this.isMerge)
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'tx',
           `target transaction of internalizeAction is undergoing active changes.`
         )

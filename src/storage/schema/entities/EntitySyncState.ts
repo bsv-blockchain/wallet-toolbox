@@ -1,35 +1,23 @@
-import {
-  createSyncMap,
-  EntityBase,
-  EntityCertificate,
-  EntityCertificateField,
-  EntityCommission,
-  EntityOutput,
-  EntityOutputBasket,
-  EntityOutputTag,
-  EntityOutputTagMap,
-  EntityProvenTx,
-  EntityProvenTxReq,
-  EntityStorage,
-  EntitySyncMap,
-  EntityTransaction,
-  EntityTxLabel,
-  EntityTxLabelMap,
-  EntityUser,
-  MergeEntity,
-  SyncError,
-  SyncMap
-} from '.'
-import {
-  maxDate,
-  sdk,
-  TableSettings,
-  TableSyncState,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy
-} from '../../../index.client'
+import { RequestSyncChunkArgs, SyncChunk, SyncStatus, TrxToken, WalletStorageSync } from "../../../sdk/WalletStorage.interfaces"
+import { WERR_INVALID_PARAMETER } from "../../../sdk/WERR_errors"
+import { maxDate, verifyId, verifyTruthy } from "../../../utility/utilityHelpers"
+import { TableSettings } from "../tables/TableSettings"
+import { TableSyncState } from "../tables/TableSyncState"
+import { createSyncMap, EntityBase, EntityStorage, EntitySyncMap, SyncError, SyncMap } from "./EntityBase"
+import { EntityCertificate } from "./EntityCertificate"
+import { EntityCertificateField } from "./EntityCertificateField"
+import { EntityCommission } from "./EntityCommission"
+import { EntityOutput } from "./EntityOutput"
+import { EntityOutputBasket } from "./EntityOutputBasket"
+import { EntityOutputTag } from "./EntityOutputTag"
+import { EntityOutputTagMap } from "./EntityOutputTagMap"
+import { EntityProvenTx } from "./EntityProvenTx"
+import { EntityProvenTxReq } from "./EntityProvenTxReq"
+import { EntityTransaction } from "./EntityTransaction"
+import { EntityTxLabel } from "./EntityTxLabel"
+import { EntityTxLabelMap } from "./EntityTxLabelMap"
+import { EntityUser } from "./EntityUser"
+import { MergeEntity } from "./MergeEntity"
 
 export class EntitySyncState extends EntityBase<TableSyncState> {
   constructor(api?: TableSyncState) {
@@ -66,7 +54,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
   }
 
   static async fromStorage(
-    storage: sdk.WalletStorageSync,
+    storage: WalletStorageSync,
     userIdentityKey: string,
     remoteSettings: TableSettings
   ): Promise<EntitySyncState> {
@@ -89,7 +77,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
    * @param notSyncMap if not new and true, excludes updating syncMap in storage.
    * @param trx
    */
-  async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: sdk.TrxToken) {
+  async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: TrxToken) {
     this.updated_at = new Date()
     this.updateApi(notSyncMap && this.id > 0)
     if (this.id === 0) {
@@ -151,10 +139,10 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
   get refNum() {
     return this.api.refNum
   }
-  set status(v: sdk.SyncStatus) {
+  set status(v: SyncStatus) {
     this.api.status = v
   }
-  get status(): sdk.SyncStatus {
+  get status(): SyncStatus {
     return this.api.status
   }
   set when(v: Date | undefined) {
@@ -198,7 +186,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
       const fromValue = fromMap[key]
       const toValue = toMap[key]
       if (toValue !== undefined && toValue !== fromValue)
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'syncMap',
           `an unmapped id or the same mapped id. ${key} maps to ${toValue} not equal to ${fromValue}`
         )
@@ -248,7 +236,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     storage: EntityStorage,
     userId: number,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<void> {}
 
   override async mergeExisting(
@@ -256,7 +244,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     since: Date | undefined,
     ei: TableSyncState,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     return false
   }
@@ -266,8 +254,8 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     forStorageIdentityKey: string,
     maxRoughSize?: number,
     maxItems?: number
-  ): sdk.RequestSyncChunkArgs {
-    const a: sdk.RequestSyncChunkArgs = {
+  ): RequestSyncChunkArgs {
+    const a: RequestSyncChunkArgs = {
       identityKey: forIdentityKey,
       maxRoughSize: maxRoughSize || 10000000,
       maxItems: maxItems || 1000,
@@ -296,7 +284,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     return a
   }
 
-  static syncChunkSummary(c: sdk.SyncChunk): string {
+  static syncChunkSummary(c: SyncChunk): string {
     let log = ''
     log += `SYNC CHUNK SUMMARY
   from storage: ${c.fromStorageIdentityKey}
@@ -333,8 +321,8 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
 
   async processSyncChunk(
     writer: EntityStorage,
-    args: sdk.RequestSyncChunkArgs,
-    chunk: sdk.SyncChunk
+    args: RequestSyncChunkArgs,
+    chunk: SyncChunk
   ): Promise<{
     done: boolean
     maxUpdated_at: Date | undefined

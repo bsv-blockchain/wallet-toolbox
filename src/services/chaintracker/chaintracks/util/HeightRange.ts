@@ -1,4 +1,4 @@
-import { BlockHeader } from '../Api/BlockHeaderApi'
+import { BlockHeader } from "../../../../sdk/WalletServices.interfaces"
 
 export interface HeightRangeApi {
   minHeight: number

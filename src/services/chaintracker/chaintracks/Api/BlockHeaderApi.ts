@@ -1,49 +1,6 @@
-/**
- * These are fields of 80 byte serialized header in order whose double sha256 hash is a block's hash value
- * and the next block's previousHash value.
- *
- * All block hash values and merkleRoot values are 32 byte hex string values with the byte order reversed from the serialized byte order.
- */
-export interface BaseBlockHeader {
-  /**
-   * Block header version value. Serialized length is 4 bytes.
-   */
-  version: number
-  /**
-   * Hash of previous block's block header. Serialized length is 32 bytes.
-   */
-  previousHash: string
-  /**
-   * Root hash of the merkle tree of all transactions in this block. Serialized length is 32 bytes.
-   */
-  merkleRoot: string
-  /**
-   * Block header time value. Serialized length is 4 bytes.
-   */
-  time: number
-  /**
-   * Block header bits value. Serialized length is 4 bytes.
-   */
-  bits: number
-  /**
-   * Block header nonce value. Serialized length is 4 bytes.
-   */
-  nonce: number
-}
+import { BaseBlockHeader, BlockHeader } from "../../../../sdk/WalletServices.interfaces"
 
-/**
- * A `BaseBlockHeader` extended with its computed hash and height in its chain.
- */
-export interface BlockHeader extends BaseBlockHeader {
-  /**
-   * Height of the header, starting from zero.
-   */
-  height: number
-  /**
-   * The double sha256 hash of the serialized `BaseBlockHeader` fields.
-   */
-  hash: string
-}
+export { BaseBlockHeader, BlockHeader } from "../../../../sdk/WalletServices.interfaces"
 
 /**
  * The "live" portion of the block chain is recent history that can conceivably be subject to reorganizations.

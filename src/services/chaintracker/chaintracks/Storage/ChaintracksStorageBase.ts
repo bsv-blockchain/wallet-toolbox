@@ -1,15 +1,13 @@
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER, Chain } from '../../../../sdk'
 import {
   InsertHeaderResult,
   ChaintracksStorageBaseOptions,
   ChaintracksStorageIngestApi,
-  ChaintracksStorageQueryApi as ChaintracksStorageQueryApi
+  ChaintracksStorageQueryApi
 } from '../Api/ChaintracksStorageApi'
+import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { HeightRange } from '../util/HeightRange'
 import { addWork, convertBitsToWork, isMoreWork, subWork } from '../util/blockHeaderUtilities'
-
-import { Chain } from '../../../../sdk/types'
-import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { BulkFileDataManager } from '../util/BulkFileDataManager'
 
 /**

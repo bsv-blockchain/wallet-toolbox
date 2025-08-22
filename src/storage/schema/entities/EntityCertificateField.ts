@@ -1,6 +1,8 @@
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableCertificateField, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { WERR_INVALID_OPERATION } from "../../../sdk/WERR_errors"
+import { verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { TableCertificateField } from "../tables/TableCertificateField"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 
 export class EntityCertificateField extends EntityBase<TableCertificateField> {
   constructor(api?: TableCertificateField) {
@@ -66,7 +68,7 @@ export class EntityCertificateField extends EntityBase<TableCertificateField> {
   }
 
   override get id(): number {
-    throw new sdk.WERR_INVALID_OPERATION('entity has no "id" value')
+    throw new WERR_INVALID_OPERATION('entity has no "id" value')
   }
   override get entityName(): string {
     return 'certificateField'
@@ -92,7 +94,7 @@ export class EntityCertificateField extends EntityBase<TableCertificateField> {
     userId: number,
     ei: TableCertificateField,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityCertificateField; eiId: number }> {
     const certificateId = syncMap.certificate.idMap[ei.certificateId]
     const ef = verifyOneOrNone(
@@ -108,7 +110,7 @@ export class EntityCertificateField extends EntityBase<TableCertificateField> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.certificateId = syncMap.certificate.idMap[this.certificateId]
     this.userId = userId
     await storage.insertCertificateField(this.toApi(), trx)
@@ -119,7 +121,7 @@ export class EntityCertificateField extends EntityBase<TableCertificateField> {
     since: Date | undefined,
     ei: TableCertificateField,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

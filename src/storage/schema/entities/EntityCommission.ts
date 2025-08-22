@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableCommission, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { arraysEqual, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { TableCommission } from "../tables/TableCommission"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 
 export class EntityCommission extends EntityBase<TableCommission> {
   constructor(api?: TableCommission) {
@@ -111,7 +111,7 @@ export class EntityCommission extends EntityBase<TableCommission> {
     userId: number,
     ei: TableCommission,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityCommission; eiId: number }> {
     const transactionId = syncMap.transaction.idMap[ei.transactionId]
     const ef = verifyOneOrNone(await storage.findCommissions({ partial: { transactionId, userId }, trx }))
@@ -122,7 +122,7 @@ export class EntityCommission extends EntityBase<TableCommission> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     if (this.transactionId) this.transactionId = syncMap.transaction.idMap[this.transactionId]
     this.userId = userId
     this.commissionId = 0
@@ -134,7 +134,7 @@ export class EntityCommission extends EntityBase<TableCommission> {
     since: Date | undefined,
     ei: TableCommission,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {
@@ -146,3 +146,7 @@ export class EntityCommission extends EntityBase<TableCommission> {
     return wasMerged
   }
 }
+function verifyId(commissionId: number): number {
+  throw new Error("Function not implemented.")
+}
+

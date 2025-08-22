@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import { TransactionStatus } from "../../../sdk/types"
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { optionalArraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { TableOutput } from "../tables/TableOutput"
+import { TableTransaction } from "../tables/TableTransaction"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { EntityProvenTx } from "./EntityProvenTx"
 import { Transaction as BsvTransaction, TransactionInput } from '@bsv/sdk'
-import {
-  optionalArraysEqual,
-  sdk,
-  TableOutput,
-  TableTransaction,
-  verifyId,
-  verifyOneOrNone
-} from '../../../index.client'
-import { EntityBase, EntityProvenTx, EntityStorage, SyncMap } from '.'
 
 export class EntityTransaction extends EntityBase<TableTransaction> {
   /**
@@ -35,7 +32,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
    * Uses both spentBy and rawTx inputs (if available) to locate inputs from among user's outputs.
    * Not all transaction inputs correspond to prior storage outputs.
    */
-  async getInputs(storage: EntityStorage, trx?: sdk.TrxToken): Promise<TableOutput[]> {
+  async getInputs(storage: EntityStorage, trx?: TrxToken): Promise<TableOutput[]> {
     const inputs = await storage.findOutputs({
       partial: { userId: this.userId, spentBy: this.id },
       trx
@@ -127,7 +124,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
   get status() {
     return this.api.status
   }
-  set status(v: sdk.TransactionStatus) {
+  set status(v: TransactionStatus) {
     this.api.status = v
   }
 
@@ -241,7 +238,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     userId: number,
     ei: TableTransaction,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityTransaction; eiId: number }> {
     const ef = verifyOneOrNone(
       await storage.findTransactions({
@@ -256,7 +253,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     if (this.provenTxId) this.provenTxId = syncMap.provenTx.idMap[this.provenTxId]
     this.userId = userId
     this.transactionId = 0
@@ -268,7 +265,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     since: Date | undefined,
     ei: TableTransaction,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {
@@ -295,7 +292,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     return wasMerged
   }
 
-  async getProvenTx(storage: EntityStorage, trx?: sdk.TrxToken): Promise<EntityProvenTx | undefined> {
+  async getProvenTx(storage: EntityStorage, trx?: TrxToken): Promise<EntityProvenTx | undefined> {
     if (!this.provenTxId) return undefined
     const p = verifyOneOrNone(
       await storage.findProvenTxs({

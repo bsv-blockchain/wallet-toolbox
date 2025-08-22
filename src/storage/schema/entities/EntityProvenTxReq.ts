@@ -1,35 +1,26 @@
-import { MerklePath } from '@bsv/sdk'
-import {
-  arraysEqual,
-  asString,
-  sdk,
-  StorageProvider,
-  TableProvenTxReq,
-  TableProvenTxReqDynamics,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy,
-  WalletStorageManager
-} from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
-
-import { StorageProcessActionArgs } from '../../../sdk'
+import { ProvenTxReqStatus, ProvenTxReqTerminalStatus, ReqHistoryNote } from "../../../sdk/types"
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from "../../../sdk/WERR_errors"
+import { arraysEqual, verifyId, verifyOne, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { StorageProvider } from "../../StorageProvider"
+import { WalletStorageManager } from "../../WalletStorageManager"
+import { TableProvenTxReq, TableProvenTxReqDynamics } from "../tables/TableProvenTxReq"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 
 export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
   static async fromStorageTxid(
     storage: EntityStorage,
     txid: string,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<EntityProvenTxReq | undefined> {
     const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid }, trx }))
     if (!reqApi) return undefined
     return new EntityProvenTxReq(reqApi)
   }
 
-  static async fromStorageId(storage: EntityStorage, id: number, trx?: sdk.TrxToken): Promise<EntityProvenTxReq> {
+  static async fromStorageId(storage: EntityStorage, id: number, trx?: TrxToken): Promise<EntityProvenTxReq> {
     const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { provenTxReqId: id }, trx }))
-    if (!reqApi) throw new sdk.WERR_INTERNAL(`proven_tx_reqs with id ${id} is missing.`)
+    if (!reqApi) throw new WERR_INTERNAL(`proven_tx_reqs with id ${id} is missing.`)
     return new EntityProvenTxReq(reqApi)
   }
 
@@ -103,7 +94,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     }
   }
 
-  async refreshFromStorage(storage: EntityStorage | WalletStorageManager, trx?: sdk.TrxToken): Promise<void> {
+  async refreshFromStorage(storage: EntityStorage | WalletStorageManager, trx?: TrxToken): Promise<void> {
     const newApi = verifyOne(await storage.findProvenTxReqs({ partial: { provenTxReqId: this.id }, trx }))
     this.api = newApi
     this.unpackApi()
@@ -155,7 +146,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     return log
   }
 
-  prettyNote(note: sdk.ReqHistoryNote): string {
+  prettyNote(note: ReqHistoryNote): string {
     let log = `${note.when}: ${note.what}`
     for (const [key, val] of Object.entries(note)) {
       if (key !== 'when' && key !== 'what') {
@@ -184,7 +175,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     return summary
   }
 
-  parseHistoryNote(note: sdk.ReqHistoryNote, summary?: ProvenTxReqHistorySummaryApi): string {
+  parseHistoryNote(note: ReqHistoryNote, summary?: ProvenTxReqHistorySummaryApi): string {
     const c = summary || {
       setToCompleted: false,
       setToUnmined: false,
@@ -198,7 +189,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
       switch (note.what) {
         case 'status':
           {
-            const status = <sdk.ProvenTxReqStatus>note.status_now
+            const status = <ProvenTxReqStatus>note.status_now
             switch (status) {
               case 'completed':
                 c.setToCompleted = true
@@ -233,7 +224,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
   }
 
   addNotifyTransactionId(id: number) {
-    if (!Number.isInteger(id)) throw new sdk.WERR_INVALID_PARAMETER('id', 'integer')
+    if (!Number.isInteger(id)) throw new WERR_INVALID_PARAMETER('id', 'integer')
     const s = new Set(this.notify.transactionIds || [])
     s.add(id)
     this.notify.transactionIds = [...s].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0))
@@ -246,7 +237,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
    * @param note Note to add
    * @param noDupes if true, only newest note with same `what` value is retained.
    */
-  addHistoryNote(note: sdk.ReqHistoryNote, noDupes?: boolean) {
+  addHistoryNote(note: ReqHistoryNote, noDupes?: boolean) {
     if (!this.history.notes) this.history.notes = []
     if (!note.when) note.when = new Date().toISOString()
     if (noDupes) {
@@ -266,8 +257,8 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
       if (!addNote) break
     }
     if (addNote) {
-      this.history.notes.push(note as sdk.ReqHistoryNote)
-      const k = (n: sdk.ReqHistoryNote): string => {
+      this.history.notes.push(note as ReqHistoryNote)
+      const k = (n: ReqHistoryNote): string => {
         return `${n.when} ${n.what}`
       }
       this.history.notes.sort((a, b) => (k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0))
@@ -280,7 +271,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
      * @param storage 
      * @param trx 
      */
-  async updateStorage(storage: EntityStorage, trx?: sdk.TrxToken) {
+  async updateStorage(storage: EntityStorage, trx?: TrxToken) {
     this.updated_at = new Date()
     this.updateApi()
     if (this.id === 0) {
@@ -304,7 +295,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
    * @param storage
    * @param trx
    */
-  async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: sdk.TrxToken) {
+  async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: TrxToken) {
     this.updated_at = new Date()
     this.updateApi()
     const update: Partial<TableProvenTxReqDynamics> = {
@@ -328,7 +319,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     }
   }
 
-  async insertOrMerge(storage: EntityStorage, trx?: sdk.TrxToken): Promise<EntityProvenTxReq> {
+  async insertOrMerge(storage: EntityStorage, trx?: TrxToken): Promise<EntityProvenTxReq> {
     const req = await storage.transaction<EntityProvenTxReq>(async trx => {
       let reqApi0 = this.toApi()
       const { req: reqApi1, isNew } = await storage.findOrInsertProvenTxReq(reqApi0, trx)
@@ -351,7 +342,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
   get status() {
     return this.api.status
   }
-  set status(v: sdk.ProvenTxReqStatus) {
+  set status(v: ProvenTxReqStatus) {
     if (v !== this.api.status) {
       this.addHistoryNote({ what: 'status', status_was: this.api.status, status_now: v })
       this.api.status = v
@@ -478,7 +469,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     userId: number,
     ei: TableProvenTxReq,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityProvenTxReq; eiId: number }> {
     const ef = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid: ei.txid }, trx }))
     return {
@@ -524,11 +515,11 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     }
   }
 
-  static isTerminalStatus(status: sdk.ProvenTxReqStatus): boolean {
-    return sdk.ProvenTxReqTerminalStatus.some(s => s === status)
+  static isTerminalStatus(status: ProvenTxReqStatus): boolean {
+    return ProvenTxReqTerminalStatus.some(s => s === status)
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     if (this.provenTxId) this.provenTxId = syncMap.provenTx.idMap[this.provenTxId]
     this.mapNotifyTransactionIds(syncMap)
     this.provenTxReqId = 0
@@ -552,11 +543,11 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     since: Date | undefined,
     ei: TableProvenTxReq,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     if (!this.batch && ei.batch) this.batch = ei.batch
     else if (this.batch && ei.batch && this.batch !== ei.batch)
-      throw new sdk.WERR_INTERNAL('ProvenTxReq merge batch not equal.')
+      throw new WERR_INTERNAL('ProvenTxReq merge batch not equal.')
 
     this.mergeHistory(ei, syncMap, true)
     this.mergeNotifyTransactionIds(ei, syncMap)
@@ -581,7 +572,7 @@ export interface ProvenTxReqHistory {
    * Keys are Date().toISOString()
    * Values are a description of what happened.
    */
-  notes?: sdk.ReqHistoryNote[]
+  notes?: ReqHistoryNote[]
 }
 
 export interface ProvenTxReqNotify {

@@ -1,6 +1,12 @@
+import { GetMerklePathResult, WalletServices } from "../../../sdk/WalletServices.interfaces"
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { arraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { TableProvenTx } from "../tables/TableProvenTx"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableProvenTx, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityProvenTxReq, EntityStorage, SyncMap } from '.'
+import { EntityProvenTxReq } from "./EntityProvenTxReq"
+import { WERR_INTERNAL, WERR_MISSING_PARAMETER } from "../../../sdk/WERR_errors"
+import { WalletError } from "../../../sdk/WalletError"
 
 export class EntityProvenTx extends EntityBase<TableProvenTx> {
   /**
@@ -19,7 +25,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
    * @param rawTx
    * @returns
    */
-  static async fromTxid(txid: string, services: sdk.WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> {
+  static async fromTxid(txid: string, services: WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> {
     const r: ProvenTxFromTxidResult = { proven: undefined, rawTx }
 
     const chain = services.chain
@@ -188,7 +194,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
     userId: number,
     ei: TableProvenTx,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityProvenTx; eiId: number }> {
     const ef = verifyOneOrNone(await storage.findProvenTxs({ partial: { txid: ei.txid }, trx }))
     return {
@@ -198,7 +204,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.provenTxId = 0
     // TODO: Since these records are a shared resource, the record must be validated before accepting it...
     this.provenTxId = await storage.insertProvenTx(this.toApi(), trx)
@@ -209,7 +215,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
     since: Date | undefined,
     ei: TableProvenTx,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     // ProvenTxs are never updated.
     return false
@@ -236,13 +242,13 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
    */
   static async fromReq(
     req: EntityProvenTxReq,
-    gmpResult: sdk.GetMerklePathResult,
+    gmpResult: GetMerklePathResult,
     countsAsAttempt: boolean
   ): Promise<EntityProvenTx | undefined> {
-    if (!req.txid) throw new sdk.WERR_MISSING_PARAMETER('req.txid')
-    if (!req.rawTx) throw new sdk.WERR_MISSING_PARAMETER('req.rawTx')
+    if (!req.txid) throw new WERR_MISSING_PARAMETER('req.txid')
+    if (!req.rawTx) throw new WERR_MISSING_PARAMETER('req.rawTx')
 
-    if (!req.rawTx) throw new sdk.WERR_INTERNAL('rawTx must be valid')
+    if (!req.rawTx) throw new WERR_INTERNAL('rawTx must be valid')
 
     for (const note of gmpResult.notes || []) {
       req.addHistoryNote(note, true)
@@ -281,7 +287,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
         const leaf = proof.path[0].find(leaf => leaf.txid === true && leaf.hash === req.txid)
         if (!leaf) {
           req.addHistoryNote({ what: 'getMerklePathTxidNotFound' }, true)
-          throw new sdk.WERR_INTERNAL('merkle path does not contain leaf for txid')
+          throw new WERR_INTERNAL('merkle path does not contain leaf for txid')
         }
 
         const proven = new EntityProvenTx({
@@ -299,7 +305,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
 
         return proven
       } catch (eu: unknown) {
-        const { code, description } = sdk.WalletError.fromUnknown(eu)
+        const { code, description } = WalletError.fromUnknown(eu)
         const { attempts } = req
         req.addHistoryNote({ what: 'getMerklePathProvenError', attempts, code, description }, true)
       }

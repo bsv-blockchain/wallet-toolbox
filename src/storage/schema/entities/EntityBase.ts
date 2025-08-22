@@ -1,4 +1,5 @@
-import { sdk, StorageProvider } from '../../../index.client'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { StorageProvider } from "../../StorageProvider"
 
 export type EntityStorage = StorageProvider
 
@@ -53,7 +54,7 @@ export abstract class EntityBase<T> {
    * @param userId local userId
    * @param syncMap
    */
-  abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void>
+  abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void>
 
   /**
    * Perform a 'merge' / 'convergent' equality migration of state
@@ -68,7 +69,7 @@ export abstract class EntityBase<T> {
     since: Date | undefined,
     ei: T,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean>
 
   /**

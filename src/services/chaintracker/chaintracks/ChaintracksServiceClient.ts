@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { asArray, asString, sdk } from '../../../index.client'
-
+import { Chain } from '../../../sdk/types'
+import { asString } from '../../../utility/utilityHelpers.noBuffer'
 import { BaseBlockHeader, BlockHeader } from './Api/BlockHeaderApi'
 import { ChaintracksClientApi, ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/ChaintracksClientApi'
 
@@ -28,7 +27,7 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
   options: ChaintracksServiceClientOptions
 
   constructor(
-    public chain: sdk.Chain,
+    public chain: Chain,
     public serviceUrl: string,
     options?: ChaintracksServiceClientOptions
   ) {
@@ -112,7 +111,7 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
   async listening(): Promise<void> {
     await this.getPresentHeight()
   }
-  async getChain(): Promise<sdk.Chain> {
+  async getChain(): Promise<Chain> {
     return this.chain
     //return await this.getJson('/getChain')
   }

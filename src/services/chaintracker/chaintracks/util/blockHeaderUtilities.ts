@@ -1,17 +1,15 @@
 import { validateAgainstDirtyHashes } from './dirtyHashes'
 import { BigNumber, Hash, Utils } from '@bsv/sdk'
-
 import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 import { doubleSha256BE } from '../../../../utility/utilityHelpers'
-import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ReaderUint8Array } from '../../../../utility/ReaderUint8Array'
 import { BulkHeaderFileInfo } from './BulkHeaderFile'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
-
-import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { isKnownValidBulkHeaderFile } from './validBulkHeaderFilesByFileHash'
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk/WERR_errors'
+import { BaseBlockHeader, BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 
 /**
  * Computes sha256 hash of file contents read as bytes with no encoding.

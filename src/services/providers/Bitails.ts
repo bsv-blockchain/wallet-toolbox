@@ -1,6 +1,9 @@
 import { Beef, defaultHttpClient, HexString, HttpClient, Utils } from '@bsv/sdk'
-import { convertProofToMerklePath, doubleSha256BE, sdk, wait } from '../../index.client'
-import { ReqHistoryNote } from '../../sdk'
+import { Chain, ReqHistoryNote } from '../../sdk/types'
+import { GetMerklePathResult, PostBeefResult, WalletServices } from '../../sdk/WalletServices.interfaces'
+import { doubleSha256BE } from '../../utility/utilityHelpers'
+import { WalletError } from '../../sdk/WalletError'
+import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 
 export interface BitailsConfig {
   /** Authentication token for BitTails API */
@@ -13,12 +16,12 @@ export interface BitailsConfig {
  *
  */
 export class Bitails {
-  readonly chain: sdk.Chain
+  readonly chain: Chain
   readonly apiKey: string
   readonly URL: string
   readonly httpClient: HttpClient
 
-  constructor(chain: sdk.Chain = 'main', config: BitailsConfig = {}) {
+  constructor(chain: Chain = 'main', config: BitailsConfig = {}) {
     const { apiKey, httpClient } = config
     this.chain = chain
     this.URL = chain === 'main' ? `https://api.bitails.io/` : `https://test-api.bitails.io/`
@@ -47,7 +50,7 @@ export class Bitails {
    * @param txids
    * @returns
    */
-  async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> {
+  async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> {
     const nn = () => ({
       name: 'BitailsPostBeef',
       when: new Date().toISOString()
@@ -76,8 +79,8 @@ export class Bitails {
    * @param txids Array of txids for transactions in raws for which results are requested, remaining raws are supporting only.
    * @returns
    */
-  async postRaws(raws: HexString[], txids?: string[]): Promise<sdk.PostBeefResult> {
-    const r: sdk.PostBeefResult = {
+  async postRaws(raws: HexString[], txids?: string[]): Promise<PostBeefResult> {
+    const r: PostBeefResult = {
       name: 'BitailsPostRaws',
       status: 'success',
       txidResults: [],
@@ -181,7 +184,7 @@ export class Bitails {
       }
     } catch (eu: unknown) {
       r.status = 'error'
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       const { code, description } = e
       r.notes!.push({ ...nne(), what: 'postRawsCatch', code, description })
     }
@@ -194,8 +197,8 @@ export class Bitails {
    * @param services
    * @returns
    */
-  async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> {
-    const r: sdk.GetMerklePathResult = { name: 'BitailsTsc', notes: [] }
+  async getMerklePath(txid: string, services: WalletServices): Promise<GetMerklePathResult> {
+    const r: GetMerklePathResult = { name: 'BitailsTsc', notes: [] }
 
     const url = `${this.URL}tx/${txid}/proof/tsc`
 
@@ -228,7 +231,7 @@ export class Bitails {
         }
       }
     } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       const { code, description } = e
       r.notes!.push({ ...nn(), what: 'getMerklePathCatch', code, description })
       r.error = e

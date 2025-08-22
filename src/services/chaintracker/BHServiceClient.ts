@@ -1,9 +1,9 @@
 import { BlockHeadersService, Utils } from '@bsv/sdk'
 import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './chaintracks/ChaintracksServiceClient'
-import { sdk } from '../../index.client'
-import { BaseBlockHeader, BlockHeader } from './chaintracks'
 import { serializeBaseBlockHeader } from './chaintracks/util/blockHeaderUtilities'
 import { HeaderListener, ReorgListener, ChaintracksInfoApi } from './chaintracks/Api/ChaintracksClientApi'
+import { Chain } from '../../sdk/types'
+import { BaseBlockHeader, BlockHeader } from '../../sdk/WalletServices.interfaces'
 
 interface BHSHeader {
   hash: string
@@ -26,12 +26,12 @@ interface BHSHeaderState {
 export class BHServiceClient implements ChaintracksServiceClient {
   bhs: BlockHeadersService
   cache: Record<number, string>
-  chain: sdk.Chain
+  chain: Chain
   serviceUrl: string
   options: ChaintracksServiceClientOptions
   apiKey: string
 
-  constructor(chain: sdk.Chain, url: string, apiKey: string) {
+  constructor(chain: Chain, url: string, apiKey: string) {
     this.bhs = new BlockHeadersService(url, { apiKey })
     this.cache = {}
     this.chain = chain
@@ -181,7 +181,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
     throw new Error('Not implemented')
   }
 
-  async getChain(): Promise<sdk.Chain> {
+  async getChain(): Promise<Chain> {
     return this.chain
   }
 

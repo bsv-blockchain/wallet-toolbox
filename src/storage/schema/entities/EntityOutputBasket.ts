@@ -1,6 +1,7 @@
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableOutputBasket, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { TableOutputBasket } from "../tables/TableOutputBasket"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 
 export class EntityOutputBasket extends EntityBase<TableOutputBasket> {
   constructor(api?: TableOutputBasket) {
@@ -106,7 +107,7 @@ export class EntityOutputBasket extends EntityBase<TableOutputBasket> {
     userId: number,
     ei: TableOutputBasket,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityOutputBasket; eiId: number }> {
     const ef = verifyOneOrNone(
       await storage.findOutputBaskets({
@@ -122,7 +123,7 @@ export class EntityOutputBasket extends EntityBase<TableOutputBasket> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.userId = userId
     this.name ||= 'default'
     this.basketId = 0
@@ -135,7 +136,7 @@ export class EntityOutputBasket extends EntityBase<TableOutputBasket> {
     since: Date | undefined,
     ei: TableOutputBasket,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

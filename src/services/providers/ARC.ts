@@ -9,8 +9,10 @@ import {
   Random,
   Utils
 } from '@bsv/sdk'
-import { doubleSha256BE, sdk } from '../../index.client'
-import { ReqHistoryNote } from '../../sdk'
+import { PostBeefResult, PostTxResultForTxid, PostTxResultForTxidError } from '../../sdk/WalletServices.interfaces'
+import { doubleSha256BE } from '../../utility/utilityHelpers'
+import { ReqHistoryNote } from '../../sdk/types'
+import { WalletError } from '../../sdk/WalletError'
 
 /** Configuration options for the ARC broadcaster. */
 export interface ArcConfig {
@@ -124,7 +126,7 @@ export class ARC {
    * @param txids
    * @returns
    */
-  async postRawTx(rawTx: HexString, txids?: string[]): Promise<sdk.PostTxResultForTxid> {
+  async postRawTx(rawTx: HexString, txids?: string[]): Promise<PostTxResultForTxid> {
     let txid = Utils.toHex(doubleSha256BE(Utils.toArray(rawTx, 'hex')))
     if (txids) {
       txid = txids.slice(-1)[0]
@@ -139,7 +141,7 @@ export class ARC {
       signal: AbortSignal.timeout(1000 * 30) // 30 seconds timeout, error.code will be 'ABORT_ERR'
     }
 
-    const r: sdk.PostTxResultForTxid = {
+    const r: PostTxResultForTxid = {
       txid,
       status: 'success',
       notes: []
@@ -187,7 +189,7 @@ export class ARC {
           ...nnr(),
           what: 'postRawTxError'
         }
-        const ed: sdk.PostTxResultForTxidError = {}
+        const ed: PostTxResultForTxidError = {}
         r.data = ed
         const st = typeof response.status
         if (st === 'number' || st === 'string') {
@@ -217,7 +219,7 @@ export class ARC {
         r.notes!.push(n)
       }
     } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       r.status = 'error'
       r.serviceError = true
       r.data = `${e.code} ${e.message}`
@@ -242,8 +244,8 @@ export class ARC {
    * @param txids
    * @returns
    */
-  async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> {
-    const r: sdk.PostBeefResult = {
+  async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> {
+    const r: PostBeefResult = {
       name: this.name,
       status: 'success',
       txidResults: [],
@@ -269,7 +271,7 @@ export class ARC {
     // TODO: Temporary hack...
     for (const txid of txids) {
       if (prtr.txid === txid) continue
-      const tr: sdk.PostTxResultForTxid = {
+      const tr: PostTxResultForTxid = {
         txid,
         status: 'success',
         notes: []

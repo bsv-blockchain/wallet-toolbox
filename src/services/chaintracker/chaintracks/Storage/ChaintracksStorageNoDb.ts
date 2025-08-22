@@ -1,11 +1,13 @@
-import { Chain, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { ChaintracksStorageBaseOptions, InsertHeaderResult } from '../Api/ChaintracksStorageApi'
 import { ChaintracksStorageBase } from '../Storage/ChaintracksStorageBase'
-import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
+import { LiveBlockHeader } from '../Api/BlockHeaderApi'
 import { addWork, convertBitsToWork, isMoreWork, serializeBaseBlockHeader } from '../util/blockHeaderUtilities'
 import { HeightRange } from '../util/HeightRange'
 import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'
+import { Chain } from '../../../../sdk/types'
+import { WERR_INVALID_PARAMETER } from '../../../../sdk/WERR_errors'
+import { BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 
 interface ChaintracksNoDbData {
   chain: Chain

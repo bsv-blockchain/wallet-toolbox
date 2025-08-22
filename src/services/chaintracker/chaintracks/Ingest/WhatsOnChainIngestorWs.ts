@@ -1,8 +1,8 @@
 import WebSocket from 'ws'
 import { convertWocToBlockHeaderHex, WhatsOnChain } from '../../../providers/WhatsOnChain'
-import { BlockHeader } from '../Api/BlockHeaderApi'
 import { wait } from '../../../../utility/utilityHelpers'
-import { Chain } from '../../../../sdk'
+import { Chain } from '../../../../sdk/types'
+import { BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 
 const logger = console.log.bind(console)
 

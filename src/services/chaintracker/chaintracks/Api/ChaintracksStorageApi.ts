@@ -1,5 +1,5 @@
 import { HeightRange } from '../util/HeightRange'
-import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
+import { BlockHeader, LiveBlockHeader } from './BlockHeaderApi'
 import { Chain } from '../../../../sdk/types'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
 import { BulkFileDataManager } from '../util/BulkFileDataManager'

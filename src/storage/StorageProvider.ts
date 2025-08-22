@@ -13,25 +13,6 @@ import {
   RelinquishOutputArgs,
   AbortActionArgs
 } from '@bsv/sdk'
-import {
-  asArray,
-  asString,
-  sdk,
-  TableCertificateX,
-  TableMonitorEvent,
-  TableOutput,
-  TableOutputBasket,
-  TableOutputTag,
-  TableOutputX,
-  TableProvenTxReq,
-  TableProvenTxReqDynamics,
-  TableTransaction,
-  TableTxLabel,
-  verifyId,
-  verifyOne,
-  verifyOneOrNone,
-  verifyTruthy
-} from '../index.client'
 import { getBeefForTransaction } from './methods/getBeefForTransaction'
 import { GetReqsAndBeefDetail, GetReqsAndBeefResult, processAction } from './methods/processAction'
 import { attemptToPostReqsToNetwork, PostReqsToNetworkResult } from './methods/attemptToPostReqsToNetwork'
@@ -40,25 +21,40 @@ import { createAction } from './methods/createAction'
 import { internalizeAction } from './methods/internalizeAction'
 import { StorageReaderWriter, StorageReaderWriterOptions } from './StorageReaderWriter'
 import { EntityProvenTx, EntityProvenTxReq, EntitySyncState, EntityTransaction } from './schema/entities'
-import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
+import { ServicesCallHistory, WalletServices } from '../sdk/WalletServices.interfaces'
+import { AuthId, FindCertificatesArgs, FindOutputBasketsArgs, FindOutputsArgs, ProcessSyncChunkResult, ProvenOrRawTx, PurgeParams, PurgeResults, RequestSyncChunkArgs, StorageCreateActionResult, StorageFeeModel, StorageGetBeefOptions, StorageInternalizeActionResult, StorageProcessActionArgs, StorageProcessActionResults, StorageProvenOrReq, SyncChunk, TrxToken, UpdateProvenTxReqWithNewProvenTxArgs, UpdateProvenTxReqWithNewProvenTxResult, WalletStorageProvider } from '../sdk/WalletStorage.interfaces'
+import { Chain, TransactionStatus } from '../sdk/types'
+import { TableProvenTxReq, TableProvenTxReqDynamics } from '../../src/storage/schema/tables/TableProvenTxReq'
+import { TableOutputBasket } from '../../src/storage/schema/tables/TableOutputBasket'
+import { TableTransaction } from '../../src/storage/schema/tables/TableTransaction'
+import { TableOutput, TableOutputX } from '../../src/storage/schema/tables/TableOutput'
+import { TableOutputTag } from '../../src/storage/schema/tables/TableOutputTag'
+import { TableTxLabel } from '../../src/storage/schema/tables/TableTxLabel'
+import { TableMonitorEvent } from '../../src/storage/schema/tables/TableMonitorEvent'
+import { parseWalletOutpoint, validateRelinquishCertificateArgs, validateRelinquishOutputArgs, ValidCreateActionArgs, ValidListActionsArgs, ValidListCertificatesArgs, ValidListOutputsArgs } from '../sdk/validationHelpers'
+import { TableCertificateX } from './schema/tables/TableCertificate'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_MISSING_PARAMETER, WERR_UNAUTHORIZED } from '../sdk/WERR_errors'
+import { verifyId, verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
+import { WalletError } from '../sdk/WalletError'
+import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
 
-export abstract class StorageProvider extends StorageReaderWriter implements sdk.WalletStorageProvider {
+export abstract class StorageProvider extends StorageReaderWriter implements WalletStorageProvider {
   isDirty = false
-  _services?: sdk.WalletServices
-  feeModel: sdk.StorageFeeModel
+  _services?: WalletServices
+  feeModel: StorageFeeModel
   commissionSatoshis: number
   commissionPubKeyHex?: PubKeyHex
   maxRecursionDepth?: number
 
   static defaultOptions() {
     return {
-      feeModel: <sdk.StorageFeeModel>{ model: 'sat/kb', value: 1 },
+      feeModel: <StorageFeeModel>{ model: 'sat/kb', value: 1 },
       commissionSatoshis: 0,
       commissionPubKeyHex: undefined
     }
   }
 
-  static createStorageBaseOptions(chain: sdk.Chain): StorageProviderOptions {
+  static createStorageBaseOptions(chain: Chain): StorageProviderOptions {
     const options: StorageProviderOptions = {
       ...StorageProvider.defaultOptions(),
       chain
@@ -73,9 +69,9 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     this.commissionSatoshis = options.commissionSatoshis
   }
 
-  abstract reviewStatus(args: { agedLimit: Date; trx?: sdk.TrxToken }): Promise<{ log: string }>
+  abstract reviewStatus(args: { agedLimit: Date; trx?: TrxToken }): Promise<{ log: string }>
 
-  abstract purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults>
+  abstract purgeData(params: PurgeParams, trx?: TrxToken): Promise<PurgeResults>
 
   abstract allocateChangeInput(
     userId: number,
@@ -86,26 +82,26 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     transactionId: number
   ): Promise<TableOutput | undefined>
 
-  abstract getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx>
+  abstract getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx>
   abstract getRawTxOfKnownValidTransaction(
     txid?: string,
     offset?: number,
     length?: number,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number[] | undefined>
 
-  abstract getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]>
-  abstract getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]>
+  abstract getLabelsForTransactionId(transactionId?: number, trx?: TrxToken): Promise<TableTxLabel[]>
+  abstract getTagsForOutputId(outputId: number, trx?: TrxToken): Promise<TableOutputTag[]>
 
-  abstract listActions(auth: sdk.AuthId, args: sdk.ValidListActionsArgs): Promise<ListActionsResult>
-  abstract listOutputs(auth: sdk.AuthId, args: sdk.ValidListOutputsArgs): Promise<ListOutputsResult>
+  abstract listActions(auth: AuthId, args: ValidListActionsArgs): Promise<ListActionsResult>
+  abstract listOutputs(auth: AuthId, args: ValidListOutputsArgs): Promise<ListOutputsResult>
 
   abstract countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number>
 
-  abstract findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]>
-  abstract findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]>
-  abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>
-  abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>
+  abstract findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]>
+  abstract findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]>
+  abstract findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]>
+  abstract insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number>
 
   abstract adminStats(adminIdentityKey: string): Promise<AdminStatsResult>
 
@@ -113,16 +109,16 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return true
   }
 
-  setServices(v: sdk.WalletServices) {
+  setServices(v: WalletServices) {
     this._services = v
   }
-  getServices(): sdk.WalletServices {
-    if (!this._services) throw new sdk.WERR_INVALID_OPERATION('Must setServices first.')
+  getServices(): WalletServices {
+    if (!this._services) throw new WERR_INVALID_OPERATION('Must setServices first.')
     return this._services
   }
 
-  async abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult> {
-    if (!auth.userId) throw new sdk.WERR_INVALID_PARAMETER('auth.userId', 'valid')
+  async abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult> {
+    if (!auth.userId) throw new WERR_INVALID_PARAMETER('auth.userId', 'valid')
 
     const userId = auth.userId
     let reference: string | undefined = args.reference
@@ -148,9 +144,9 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
           })
         )
       }
-      const unAbortableStatus: sdk.TransactionStatus[] = ['completed', 'failed', 'sending', 'unproven']
+      const unAbortableStatus: TransactionStatus[] = ['completed', 'failed', 'sending', 'unproven']
       if (!tx || !tx.isOutgoing || -1 < unAbortableStatus.findIndex(s => s === tx.status))
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'reference',
           'an inprocess, outgoing action that has not been signed and shared to the network.'
         )
@@ -171,7 +167,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return r
   }
 
-  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
+  async internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> {
     return await internalizeAction(this, auth, args)
   }
 
@@ -187,7 +183,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
   async getReqsAndBeefToShareWithWorld(
     txids: string[],
     knownTxids: string[],
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<GetReqsAndBeefResult> {
     const r: GetReqsAndBeefResult = {
       beef: new Beef(),
@@ -232,7 +228,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
           }
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         d.error = `${e.name}: ${e.message}`
       }
     }
@@ -243,15 +239,15 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     req: TableProvenTxReq,
     mergeToBeef: Beef,
     knownTxids: string[],
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<void> {
     const { rawTx, inputBEEF: beef } = req
-    if (!rawTx || !beef) throw new sdk.WERR_INTERNAL(`req rawTx and beef must be valid.`)
+    if (!rawTx || !beef) throw new WERR_INTERNAL(`req rawTx and beef must be valid.`)
     mergeToBeef.mergeRawTx(asArray(rawTx))
     mergeToBeef.mergeBeef(asArray(beef))
     const tx = Transaction.fromBinary(asArray(rawTx))
     for (const input of tx.inputs) {
-      if (!input.sourceTXID) throw new sdk.WERR_INTERNAL(`req all transaction inputs must have valid sourceTXID`)
+      if (!input.sourceTXID) throw new WERR_INTERNAL(`req all transaction inputs must have valid sourceTXID`)
       const txid = input.sourceTXID
       const btx = mergeToBeef.findTxid(txid)
       if (!btx) {
@@ -275,10 +271,10 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
    * @param trx
    * @returns
    */
-  async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: sdk.TrxToken): Promise<sdk.StorageProvenOrReq> {
-    if (newReq && txid !== newReq.txid) throw new sdk.WERR_INVALID_PARAMETER('newReq', `same txid`)
+  async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: TrxToken): Promise<StorageProvenOrReq> {
+    if (newReq && txid !== newReq.txid) throw new WERR_INVALID_PARAMETER('newReq', `same txid`)
 
-    const r: sdk.StorageProvenOrReq = { proven: undefined, req: undefined }
+    const r: StorageProvenOrReq = { proven: undefined, req: undefined }
 
     r.proven = verifyOneOrNone(await this.findProvenTxs({ partial: { txid }, trx }))
     if (r.proven) return r
@@ -308,8 +304,8 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
 
   async updateTransactionsStatus(
     transactionIds: number[],
-    status: sdk.TransactionStatus,
-    trx?: sdk.TrxToken
+    status: TransactionStatus,
+    trx?: TrxToken
   ): Promise<void> {
     await this.transaction(async trx => {
       for (const id of transactionIds) {
@@ -330,14 +326,14 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
    * @param trx
    */
   async updateTransactionStatus(
-    status: sdk.TransactionStatus,
+    status: TransactionStatus,
     transactionId?: number,
     userId?: number,
     reference?: string,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<void> {
     if (!transactionId && !(userId && reference))
-      throw new sdk.WERR_MISSING_PARAMETER('either transactionId or userId and reference')
+      throw new WERR_MISSING_PARAMETER('either transactionId or userId and reference')
 
     await this.transaction(async trx => {
       const where: Partial<TableTransaction> = {}
@@ -353,10 +349,10 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
 
       // Once completed, this method cannot be used to "uncomplete" transaction.
       if ((status !== 'completed' && tx.status === 'completed') || tx.provenTxId)
-        throw new sdk.WERR_INVALID_OPERATION('The status of a "completed" transaction cannot be changed.')
+        throw new WERR_INVALID_OPERATION('The status of a "completed" transaction cannot be changed.')
       // It is not possible to un-fail a transaction. Information is lost and not recoverable.
       if (status !== 'failed' && tx.status === 'failed')
-        throw new sdk.WERR_INVALID_OPERATION(`A "failed" transaction may not be un-failed by this method.`)
+        throw new WERR_INVALID_OPERATION(`A "failed" transaction may not be un-failed by this method.`)
 
       switch (status) {
         case 'failed':
@@ -380,31 +376,31 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
         case 'completed':
           break
         default:
-          throw new sdk.WERR_INVALID_PARAMETER('status', `not be ${status}`)
+          throw new WERR_INVALID_PARAMETER('status', `not be ${status}`)
       }
 
       await this.updateTransaction(tx.transactionId, { status }, trx)
     }, trx)
   }
 
-  async createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult> {
-    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+  async createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult> {
+    if (!auth.userId) throw new WERR_UNAUTHORIZED()
     return await createAction(this, auth, args)
   }
-  async processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> {
-    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+  async processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> {
+    if (!auth.userId) throw new WERR_UNAUTHORIZED()
     return await processAction(this, auth, args)
   }
 
-  async attemptToPostReqsToNetwork(reqs: EntityProvenTxReq[], trx?: sdk.TrxToken): Promise<PostReqsToNetworkResult> {
+  async attemptToPostReqsToNetwork(reqs: EntityProvenTxReq[], trx?: TrxToken): Promise<PostReqsToNetworkResult> {
     return await attemptToPostReqsToNetwork(this, reqs, trx)
   }
 
-  async listCertificates(auth: sdk.AuthId, args: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult> {
+  async listCertificates(auth: AuthId, args: ValidListCertificatesArgs): Promise<ListCertificatesResult> {
     return await listCertificates(this, auth, args)
   }
 
-  async verifyKnownValidTransaction(txid: string, trx?: sdk.TrxToken): Promise<boolean> {
+  async verifyKnownValidTransaction(txid: string, trx?: TrxToken): Promise<boolean> {
     const { proven, rawTx } = await this.getProvenOrRawTx(txid, trx)
     return proven != undefined || rawTx != undefined
   }
@@ -414,11 +410,11 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     mergeToBeef?: Beef,
     trustSelf?: TrustSelf,
     knownTxids?: string[],
-    trx?: sdk.TrxToken,
+    trx?: TrxToken,
     requiredLevels?: number
   ): Promise<Beef> {
     const beef = await this.getValidBeefForTxid(txid, mergeToBeef, trustSelf, knownTxids, trx, requiredLevels)
-    if (!beef) throw new sdk.WERR_INVALID_PARAMETER('txid', `known to storage. ${txid} is not known.`)
+    if (!beef) throw new WERR_INVALID_PARAMETER('txid', `known to storage. ${txid} is not known.`)
     return beef
   }
 
@@ -427,7 +423,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     mergeToBeef?: Beef,
     trustSelf?: TrustSelf,
     knownTxids?: string[],
-    trx?: sdk.TrxToken,
+    trx?: TrxToken,
     requiredLevels?: number
   ): Promise<Beef | undefined> {
     const beef = mergeToBeef || new Beef()
@@ -468,17 +464,17 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return beef
   }
 
-  async getBeefForTransaction(txid: string, options: sdk.StorageGetBeefOptions): Promise<Beef> {
+  async getBeefForTransaction(txid: string, options: StorageGetBeefOptions): Promise<Beef> {
     const beef = await getBeefForTransaction(this, txid, options)
     return beef
   }
 
-  async findMonitorEventById(id: number, trx?: sdk.TrxToken): Promise<TableMonitorEvent | undefined> {
+  async findMonitorEventById(id: number, trx?: TrxToken): Promise<TableMonitorEvent | undefined> {
     return verifyOneOrNone(await this.findMonitorEvents({ partial: { id }, trx }))
   }
 
-  async relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number> {
-    const vargs = sdk.validateRelinquishCertificateArgs(args)
+  async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> {
+    const vargs = validateRelinquishCertificateArgs(args)
     const cert = verifyOne(
       await this.findCertificates({
         partial: {
@@ -493,14 +489,14 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     })
   }
 
-  async relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number> {
-    const vargs = sdk.validateRelinquishOutputArgs(args)
-    const { txid, vout } = sdk.parseWalletOutpoint(vargs.output)
+  async relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number> {
+    const vargs = validateRelinquishOutputArgs(args)
+    const { txid, vout } = parseWalletOutpoint(vargs.output)
     const output = verifyOne(await this.findOutputs({ partial: { txid, vout } }))
     return await this.updateOutput(output.outputId, { basketId: undefined })
   }
 
-  async processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult> {
+  async processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult> {
     const user = verifyTruthy(await this.findUserByIdentityKey(args.identityKey))
     const ss = new EntitySyncState(
       verifyOne(
@@ -530,8 +526,8 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
    * Alterations of "typically" to handle:
    */
   async updateProvenTxReqWithNewProvenTx(
-    args: sdk.UpdateProvenTxReqWithNewProvenTxArgs
-  ): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> {
+    args: UpdateProvenTxReqWithNewProvenTxArgs
+  ): Promise<UpdateProvenTxReqWithNewProvenTxResult> {
     const req = await EntityProvenTxReq.fromStorageId(this, args.provenTxReqId)
     let proven: EntityProvenTx
     if (req.provenTxId) {
@@ -575,7 +571,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
               })
               req.addHistoryNote({ what: 'notifyTxOfProof', transactionId: id })
             } catch (eu: unknown) {
-              const { code, description } = sdk.WalletError.fromUnknown(eu)
+              const { code, description } = WalletError.fromUnknown(eu)
               const { provenTxId } = proven
               req.addHistoryNote({ what: 'notifyTxOfProofError', id, provenTxId, code, description })
             }
@@ -584,7 +580,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
         }
       }
     }
-    const r: sdk.UpdateProvenTxReqWithNewProvenTxResult = {
+    const r: UpdateProvenTxReqWithNewProvenTxResult = {
       status: req.status,
       history: req.apiHistory,
       provenTxId: proven.provenTxId
@@ -633,7 +629,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
   async updateProvenTxReqDynamics(
     id: number,
     update: Partial<TableProvenTxReqDynamics>,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     const partial: Partial<TableProvenTxReq> = {}
     if (update['updated_at']) partial['updated_at'] = update['updated_at']
@@ -652,7 +648,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     o: TableOutput,
     includeBasket = false,
     includeTags = false,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<TableOutputX> {
     const ox = o as TableOutputX
     if (includeBasket && ox.basketId) ox.basket = await this.findOutputBasketById(o.basketId!, trx)
@@ -662,7 +658,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
     return o
   }
 
-  async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> {
+  async validateOutputScript(o: TableOutput, trx?: TrxToken): Promise<void> {
     // without offset and length values return what we have (make no changes)
     if (!o.scriptLength || !o.scriptOffset || !o.txid) return
     // if there is an outputScript and its length is the expected length return what we have.
@@ -677,8 +673,8 @@ export abstract class StorageProvider extends StorageReaderWriter implements sdk
 }
 
 export interface StorageProviderOptions extends StorageReaderWriterOptions {
-  chain: sdk.Chain
-  feeModel: sdk.StorageFeeModel
+  chain: Chain
+  feeModel: StorageFeeModel
   /**
    * Transactions created by this Storage can charge a fee per transaction.
    * A value of zero disables commission fees.
@@ -692,13 +688,13 @@ export interface StorageProviderOptions extends StorageReaderWriterOptions {
   commissionPubKeyHex?: PubKeyHex
 }
 
-export function validateStorageFeeModel(v?: sdk.StorageFeeModel): sdk.StorageFeeModel {
-  const r: sdk.StorageFeeModel = {
+export function validateStorageFeeModel(v?: StorageFeeModel): StorageFeeModel {
+  const r: StorageFeeModel = {
     model: 'sat/kb',
     value: 1
   }
   if (typeof v === 'object') {
-    if (v.model !== 'sat/kb') throw new sdk.WERR_INVALID_PARAMETER('StorageFeeModel.model', `"sat/kb"`)
+    if (v.model !== 'sat/kb') throw new WERR_INVALID_PARAMETER('StorageFeeModel.model', `"sat/kb"`)
     if (typeof v.value === 'number') {
       r.value = v.value
     }

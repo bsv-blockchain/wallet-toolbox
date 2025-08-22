@@ -1,5 +1,9 @@
 import { Beef } from '@bsv/sdk'
-import { asBsvSdkTx, EntityProvenTx, sdk, StorageProvider, verifyTruthy } from '../../index.client'
+import { StorageProvider } from '../StorageProvider'
+import { ProvenOrRawTx, StorageGetBeefOptions } from '../../sdk/WalletStorage.interfaces'
+import { EntityProvenTx } from '../schema/entities/EntityProvenTx'
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { asBsvSdkTx, verifyTruthy } from '../../utility/utilityHelpers'
 
 /**
  * Creates a `Beef` to support the validity of a transaction identified by its `txid`.
@@ -22,7 +26,7 @@ import { asBsvSdkTx, EntityProvenTx, sdk, StorageProvider, verifyTruthy } from '
 export async function getBeefForTransaction(
   storage: StorageProvider,
   txid: string,
-  options: sdk.StorageGetBeefOptions
+  options: StorageGetBeefOptions
 ): Promise<Beef> {
   const beef =
     // deserialize mergeToBeef if it is an array
@@ -42,8 +46,8 @@ export async function getBeefForTransaction(
 async function getProvenOrRawTxFromServices(
   storage: StorageProvider,
   txid: string,
-  options: sdk.StorageGetBeefOptions
-): Promise<sdk.ProvenOrRawTx> {
+  options: StorageGetBeefOptions
+): Promise<ProvenOrRawTx> {
   const services = storage.getServices()
   const por = await EntityProvenTx.fromTxid(txid, await storage.getServices())
   if (por.proven && !options.ignoreStorage && !options.ignoreNewProven) {
@@ -56,12 +60,12 @@ async function mergeBeefForTransactionRecurse(
   beef: Beef,
   storage: StorageProvider,
   txid: string,
-  options: sdk.StorageGetBeefOptions,
+  options: StorageGetBeefOptions,
   recursionDepth: number
 ): Promise<Beef> {
   const maxDepth = storage.maxRecursionDepth
   if (maxDepth && maxDepth <= recursionDepth)
-    throw new sdk.WERR_INVALID_OPERATION(`Maximum BEEF depth exceeded. Limit is ${storage.maxRecursionDepth}`)
+    throw new WERR_INVALID_OPERATION(`Maximum BEEF depth exceeded. Limit is ${storage.maxRecursionDepth}`)
 
   if (options.knownTxids && options.knownTxids.indexOf(txid) > -1) {
     // This txid is one of the txids the caller claims to already know are valid...
@@ -84,7 +88,7 @@ async function mergeBeefForTransactionRecurse(
   }
 
   if (options.ignoreServices)
-    throw new sdk.WERR_INVALID_PARAMETER(`txid ${txid}`, `valid transaction on chain ${storage.chain}`)
+    throw new WERR_INVALID_PARAMETER(`txid ${txid}`, `valid transaction on chain ${storage.chain}`)
 
   // if storage doesn't know about txid, use services
   // to find it and if it has a proof, remember it.
@@ -103,7 +107,7 @@ async function mergeBeefForTransactionRecurse(
     return beef
   }
 
-  if (!r.rawTx) throw new sdk.WERR_INVALID_PARAMETER(`txid ${txid}`, `valid transaction on chain ${storage.chain}`)
+  if (!r.rawTx) throw new WERR_INVALID_PARAMETER(`txid ${txid}`, `valid transaction on chain ${storage.chain}`)
 
   // merge the raw transaction and recurse over its inputs.
   beef.mergeRawTx(r.rawTx!)

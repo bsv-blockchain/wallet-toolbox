@@ -1,37 +1,42 @@
 import { Transaction as BsvTransaction, Beef, ChainTracker, Utils } from '@bsv/sdk'
-import { asArray, asString, doubleSha256BE, sdk, sha256Hash, TableOutput, wait } from '../index.client'
 import { ServiceCollection, ServiceToCall } from './ServiceCollection'
 import { createDefaultWalletServicesOptions } from './createDefaultWalletServicesOptions'
-import { ChaintracksChainTracker } from './chaintracker'
 import { WhatsOnChain } from './providers/WhatsOnChain'
-import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './providers/echangeRates'
+import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './providers/exchangeRates'
 import { ARC } from './providers/ARC'
 import { Bitails } from './providers/Bitails'
 import { getBeefForTxid } from './providers/getBeefForTxid'
-import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
+import { BaseBlockHeader, BlockHeader, FiatExchangeRates, GetMerklePathResult, GetMerklePathService, GetRawTxResult, GetRawTxService, GetScriptHashHistoryResult, GetScriptHashHistoryService, GetStatusForTxidsResult, GetStatusForTxidsService, GetUtxoStatusOutputFormat, GetUtxoStatusResult, GetUtxoStatusService, PostBeefResult, PostBeefService, ServicesCallHistory, UpdateFiatExchangeRateService, WalletServices, WalletServicesOptions } from '../sdk/WalletServices.interfaces'
+import { Chain } from '../sdk/types'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
+import { ChaintracksChainTracker } from './chaintracker/ChaintracksChainTracker'
+import { WalletError } from '../sdk/WalletError'
+import { doubleSha256BE, sha256Hash, wait } from '../utility/utilityHelpers'
+import { TableOutput } from '../storage/schema/tables/TableOutput'
+import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
 
-export class Services implements sdk.WalletServices {
-  static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions {
+export class Services implements WalletServices {
+  static createDefaultOptions(chain: Chain): WalletServicesOptions {
     return createDefaultWalletServicesOptions(chain)
   }
 
-  options: sdk.WalletServicesOptions
+  options: WalletServicesOptions
   whatsonchain: WhatsOnChain
   arcTaal: ARC
   arcGorillaPool?: ARC
   bitails: Bitails
 
-  getMerklePathServices: ServiceCollection<sdk.GetMerklePathService>
-  getRawTxServices: ServiceCollection<sdk.GetRawTxService>
-  postBeefServices: ServiceCollection<sdk.PostBeefService>
-  getUtxoStatusServices: ServiceCollection<sdk.GetUtxoStatusService>
-  getStatusForTxidsServices: ServiceCollection<sdk.GetStatusForTxidsService>
-  getScriptHashHistoryServices: ServiceCollection<sdk.GetScriptHashHistoryService>
-  updateFiatExchangeRateServices: ServiceCollection<sdk.UpdateFiatExchangeRateService>
+  getMerklePathServices: ServiceCollection<GetMerklePathService>
+  getRawTxServices: ServiceCollection<GetRawTxService>
+  postBeefServices: ServiceCollection<PostBeefService>
+  getUtxoStatusServices: ServiceCollection<GetUtxoStatusService>
+  getStatusForTxidsServices: ServiceCollection<GetStatusForTxidsService>
+  getScriptHashHistoryServices: ServiceCollection<GetScriptHashHistoryService>
+  updateFiatExchangeRateServices: ServiceCollection<UpdateFiatExchangeRateService>
 
-  chain: sdk.Chain
+  chain: Chain
 
-  constructor(optionsOrChain: sdk.Chain | sdk.WalletServicesOptions) {
+  constructor(optionsOrChain: Chain | WalletServicesOptions) {
     this.chain = typeof optionsOrChain === 'string' ? optionsOrChain : optionsOrChain.chain
 
     this.options = typeof optionsOrChain === 'string' ? Services.createDefaultOptions(this.chain) : optionsOrChain
@@ -46,15 +51,15 @@ export class Services implements sdk.WalletServices {
     this.bitails = new Bitails(this.chain)
 
     //prettier-ignore
-    this.getMerklePathServices = new ServiceCollection<sdk.GetMerklePathService>('getMerklePath')
+    this.getMerklePathServices = new ServiceCollection<GetMerklePathService>('getMerklePath')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getMerklePath.bind(this.whatsonchain) })
       .add({ name: 'Bitails', service: this.bitails.getMerklePath.bind(this.bitails) })
 
     //prettier-ignore
-    this.getRawTxServices = new ServiceCollection<sdk.GetRawTxService>('getRawTx')
+    this.getRawTxServices = new ServiceCollection<GetRawTxService>('getRawTx')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getRawTxResult.bind(this.whatsonchain) })
 
-    this.postBeefServices = new ServiceCollection<sdk.PostBeefService>('postBeef')
+    this.postBeefServices = new ServiceCollection<PostBeefService>('postBeef')
     if (this.arcGorillaPool) {
       //prettier-ignore
       this.postBeefServices.add({ name: 'GorillaPoolArcBeef', service: this.arcGorillaPool.postBeef.bind(this.arcGorillaPool) })
@@ -67,19 +72,19 @@ export class Services implements sdk.WalletServices {
       ;
 
     //prettier-ignore
-    this.getUtxoStatusServices = new ServiceCollection<sdk.GetUtxoStatusService>('getUtxoStatus')
+    this.getUtxoStatusServices = new ServiceCollection<GetUtxoStatusService>('getUtxoStatus')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getUtxoStatus.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getStatusForTxidsServices = new ServiceCollection<sdk.GetStatusForTxidsService>('getStatusForTxids')
+    this.getStatusForTxidsServices = new ServiceCollection<GetStatusForTxidsService>('getStatusForTxids')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getStatusForTxids.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.getScriptHashHistoryServices = new ServiceCollection<sdk.GetScriptHashHistoryService>('getScriptHashHistory')
+    this.getScriptHashHistoryServices = new ServiceCollection<GetScriptHashHistoryService>('getScriptHashHistory')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getScriptHashHistory.bind(this.whatsonchain) })
 
     //prettier-ignore
-    this.updateFiatExchangeRateServices = new ServiceCollection<sdk.UpdateFiatExchangeRateService>('updateFiatExchangeRate')
+    this.updateFiatExchangeRateServices = new ServiceCollection<UpdateFiatExchangeRateService>('updateFiatExchangeRate')
       .add({ name: 'ChaintracksService', service: updateChaintracksFiatExchangeRates })
       .add({ name: 'exchangeratesapi', service: updateExchangeratesapi })
   }
@@ -99,7 +104,7 @@ export class Services implements sdk.WalletServices {
 
   async getChainTracker(): Promise<ChainTracker> {
     if (!this.options.chaintracks)
-      throw new sdk.WERR_INVALID_PARAMETER('options.chaintracks', `valid to enable 'getChainTracker' service.`)
+      throw new WERR_INVALID_PARAMETER('options.chaintracks', `valid to enable 'getChainTracker' service.`)
     return new ChaintracksChainTracker(this.chain, this.options.chaintracks)
   }
 
@@ -135,14 +140,14 @@ export class Services implements sdk.WalletServices {
     return this.getUtxoStatusServices.count
   }
 
-  async getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult> {
+  async getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult> {
     const services = this.getStatusForTxidsServices
     if (useNext) services.next()
 
-    let r0: sdk.GetStatusForTxidsResult = {
+    let r0: GetStatusForTxidsResult = {
       name: '<noservices>',
       status: 'error',
-      error: new sdk.WERR_INTERNAL('No services available.'),
+      error: new WERR_INTERNAL('No services available.'),
       results: []
     }
 
@@ -159,7 +164,7 @@ export class Services implements sdk.WalletServices {
           else services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
       }
       services.next()
@@ -179,7 +184,7 @@ export class Services implements sdk.WalletServices {
 
   async isUtxo(output: TableOutput): Promise<boolean> {
     if (!output.lockingScript) {
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'output.lockingScript',
         'validated by storage provider validateOutputScript.'
       )
@@ -191,17 +196,17 @@ export class Services implements sdk.WalletServices {
 
   async getUtxoStatus(
     output: string,
-    outputFormat?: sdk.GetUtxoStatusOutputFormat,
+    outputFormat?: GetUtxoStatusOutputFormat,
     outpoint?: string,
     useNext?: boolean
-  ): Promise<sdk.GetUtxoStatusResult> {
+  ): Promise<GetUtxoStatusResult> {
     const services = this.getUtxoStatusServices
     if (useNext) services.next()
 
-    let r0: sdk.GetUtxoStatusResult = {
+    let r0: GetUtxoStatusResult = {
       name: '<noservices>',
       status: 'error',
-      error: new sdk.WERR_INTERNAL('No services available.'),
+      error: new WERR_INTERNAL('No services available.'),
       details: []
     }
 
@@ -219,7 +224,7 @@ export class Services implements sdk.WalletServices {
             else services.addServiceCallFailure(stc)
           }
         } catch (eu: unknown) {
-          const e = sdk.WalletError.fromUnknown(eu)
+          const e = WalletError.fromUnknown(eu)
           services.addServiceCallError(stc, e)
         }
         services.next()
@@ -230,14 +235,14 @@ export class Services implements sdk.WalletServices {
     return r0
   }
 
-  async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> {
+  async getScriptHashHistory(hash: string, useNext?: boolean): Promise<GetScriptHashHistoryResult> {
     const services = this.getScriptHashHistoryServices
     if (useNext) services.next()
 
-    let r0: sdk.GetScriptHashHistoryResult = {
+    let r0: GetScriptHashHistoryResult = {
       name: '<noservices>',
       status: 'error',
-      error: new sdk.WERR_INTERNAL('No services available.'),
+      error: new WERR_INTERNAL('No services available.'),
       history: []
     }
 
@@ -253,7 +258,7 @@ export class Services implements sdk.WalletServices {
           else services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
       }
       services.next()
@@ -269,8 +274,8 @@ export class Services implements sdk.WalletServices {
    * @param chain
    * @returns
    */
-  async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> {
-    let rs: sdk.PostBeefResult[] = []
+  async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult[]> {
+    let rs: PostBeefResult[] = []
     const services = this.postBeefServices
     const stcs = services.allServicesToCall
     switch (this.postBeefMode) {
@@ -300,7 +305,7 @@ export class Services implements sdk.WalletServices {
     }
     return rs
 
-    async function callService(stc: ServiceToCall<sdk.PostBeefService>) {
+    async function callService(stc: ServiceToCall<PostBeefService>) {
       const r = await stc.service(beef, txids)
       if (r.status === 'success') {
         services.addServiceCallSuccess(stc)
@@ -315,11 +320,11 @@ export class Services implements sdk.WalletServices {
     }
   }
 
-  async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> {
+  async getRawTx(txid: string, useNext?: boolean): Promise<GetRawTxResult> {
     const services = this.getRawTxServices
     if (useNext) services.next()
 
-    const r0: sdk.GetRawTxResult = { txid }
+    const r0: GetRawTxResult = { txid }
 
     for (let tries = 0; tries < services.count; tries++) {
       const stc = services.serviceToCall
@@ -336,7 +341,7 @@ export class Services implements sdk.WalletServices {
             services.addServiceCallSuccess(stc)
             break
           }
-          r.error = new sdk.WERR_INTERNAL(`computed txid ${hash} doesn't match requested value ${txid}`)
+          r.error = new WERR_INTERNAL(`computed txid ${hash} doesn't match requested value ${txid}`)
           r.rawTx = undefined
         }
 
@@ -348,7 +353,7 @@ export class Services implements sdk.WalletServices {
           // If we have an error and didn't before...
           r0.error = r.error
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
       }
       services.next()
@@ -358,23 +363,23 @@ export class Services implements sdk.WalletServices {
 
   async invokeChaintracksWithRetry<R>(method: () => Promise<R>): Promise<R> {
     if (!this.options.chaintracks)
-      throw new sdk.WERR_INVALID_PARAMETER('options.chaintracks', 'valid for this service operation.')
+      throw new WERR_INVALID_PARAMETER('options.chaintracks', 'valid for this service operation.')
     for (let retry = 0; retry < 3; retry++) {
       try {
         const r: R = await method()
         return r
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         if (e.code != 'ECONNRESET') throw eu
       }
     }
-    throw new sdk.WERR_INVALID_OPERATION('hashToHeader service unavailable')
+    throw new WERR_INVALID_OPERATION('hashToHeader service unavailable')
   }
 
   async getHeaderForHeight(height: number): Promise<number[]> {
     const method = async () => {
       const header = await this.options.chaintracks!.findHeaderForHeight(height)
-      if (!header) throw new sdk.WERR_INVALID_PARAMETER('hash', `valid height '${height}' on mined chain ${this.chain}`)
+      if (!header) throw new WERR_INVALID_PARAMETER('hash', `valid height '${height}' on mined chain ${this.chain}`)
       return toBinaryBaseBlockHeader(header)
     }
     return this.invokeChaintracksWithRetry(method)
@@ -387,21 +392,21 @@ export class Services implements sdk.WalletServices {
     return this.invokeChaintracksWithRetry(method)
   }
 
-  async hashToHeader(hash: string): Promise<sdk.BlockHeader> {
+  async hashToHeader(hash: string): Promise<BlockHeader> {
     const method = async () => {
       const header = await this.options.chaintracks!.findHeaderForBlockHash(hash)
       if (!header)
-        throw new sdk.WERR_INVALID_PARAMETER('hash', `valid blockhash '${hash}' on mined chain ${this.chain}`)
+        throw new WERR_INVALID_PARAMETER('hash', `valid blockhash '${hash}' on mined chain ${this.chain}`)
       return header
     }
     return this.invokeChaintracksWithRetry(method)
   }
 
-  async getMerklePath(txid: string, useNext?: boolean): Promise<sdk.GetMerklePathResult> {
+  async getMerklePath(txid: string, useNext?: boolean): Promise<GetMerklePathResult> {
     const services = this.getMerklePathServices
     if (useNext) services.next()
 
-    const r0: sdk.GetMerklePathResult = { notes: [] }
+    const r0: GetMerklePathResult = { notes: [] }
 
     for (let tries = 0; tries < services.count; tries++) {
       const stc = services.serviceToCall
@@ -427,7 +432,7 @@ export class Services implements sdk.WalletServices {
           r0.error = r.error
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
       }
       services.next()
@@ -437,7 +442,7 @@ export class Services implements sdk.WalletServices {
 
   targetCurrencies = ['USD', 'GBP', 'EUR']
 
-  async updateFiatExchangeRates(rates?: sdk.FiatExchangeRates, updateMsecs?: number): Promise<sdk.FiatExchangeRates> {
+  async updateFiatExchangeRates(rates?: FiatExchangeRates, updateMsecs?: number): Promise<FiatExchangeRates> {
     updateMsecs ||= 1000 * 60 * 15
     const freshnessDate = new Date(Date.now() - updateMsecs)
     if (rates) {
@@ -449,7 +454,7 @@ export class Services implements sdk.WalletServices {
     // Make sure we always start with the first service listed (chaintracks aggregator)
     const services = this.updateFiatExchangeRateServices.clone()
 
-    let r0: sdk.FiatExchangeRates | undefined
+    let r0: FiatExchangeRates | undefined
 
     for (let tries = 0; tries < services.count; tries++) {
       const stc = services.serviceToCall
@@ -463,7 +468,7 @@ export class Services implements sdk.WalletServices {
           services.addServiceCallFailure(stc)
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         services.addServiceCallError(stc, e)
       }
       services.next()
@@ -471,7 +476,7 @@ export class Services implements sdk.WalletServices {
 
     if (!r0) {
       console.error('Failed to update fiat exchange rates.')
-      if (!rates) throw new sdk.WERR_INTERNAL()
+      if (!rates) throw new WERR_INTERNAL()
       return rates
     }
 
@@ -498,7 +503,7 @@ export class Services implements sdk.WalletServices {
         }
         nLockTime = tx.lockTime
       } else {
-        throw new sdk.WERR_INTERNAL('Should be either @bsv/sdk Transaction or babbage-bsv Transaction')
+        throw new WERR_INTERNAL('Should be either @bsv/sdk Transaction or babbage-bsv Transaction')
       }
     }
 
@@ -517,7 +522,7 @@ export class Services implements sdk.WalletServices {
   }
 }
 
-export function validateScriptHash(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat): string {
+export function validateScriptHash(output: string, outputFormat?: GetUtxoStatusOutputFormat): string {
   let b = asArray(output)
   if (!outputFormat) {
     if (b.length === 32) outputFormat = 'hashLE'
@@ -533,7 +538,7 @@ export function validateScriptHash(output: string, outputFormat?: sdk.GetUtxoSta
       b = sha256Hash(b).reverse()
       break
     default:
-      throw new sdk.WERR_INVALID_PARAMETER('outputFormat', `not be ${outputFormat}`)
+      throw new WERR_INVALID_PARAMETER('outputFormat', `not be ${outputFormat}`)
   }
   return asString(b)
 }
@@ -546,7 +551,7 @@ export function validateScriptHash(output: string, outputFormat?: sdk.GetUtxoSta
  * @returns 80 byte array
  * @publicbody
  */
-export function toBinaryBaseBlockHeader(header: sdk.BaseBlockHeader): number[] {
+export function toBinaryBaseBlockHeader(header: BaseBlockHeader): number[] {
   const writer = new Utils.Writer()
   writer.writeUInt32BE(header.version)
   writer.writeReverse(asArray(header.previousHash))

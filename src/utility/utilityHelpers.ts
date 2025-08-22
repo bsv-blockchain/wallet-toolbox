@@ -1,9 +1,9 @@
 import { HexString, PubKeyHex, WalletNetwork } from '@bsv/sdk'
 import { Beef, Hash, PrivateKey, PublicKey, Random, Script, Transaction, Utils } from '@bsv/sdk'
-import { sdk } from '../index.client'
 import { Chain } from '../sdk/types'
-import { CertOpsWallet } from '../sdk'
 import { asArray } from './utilityHelpers.noBuffer'
+import { CertOpsWallet } from '../sdk/CertOpsWallet'
+import { WERR_BAD_REQUEST, WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
 
 export async function getIdentityKey(wallet: CertOpsWallet): Promise<PubKeyHex> {
   return (await wallet.getPublicKey({ identityKey: true })).publicKey
@@ -69,7 +69,7 @@ export function asBsvSdkPublickKey(pubKey: string): PublicKey {
  * Verifies that a possibly optional value has a value.
  */
 export function verifyTruthy<T>(v: T | null | undefined, description?: string): T {
-  if (!v) throw new sdk.WERR_INTERNAL(description ?? 'A truthy value is required.')
+  if (!v) throw new WERR_INTERNAL(description ?? 'A truthy value is required.')
   return v
 }
 
@@ -79,7 +79,7 @@ export function verifyTruthy<T>(v: T | null | undefined, description?: string): 
  * Verifies that a hex string is trimmed and lower case.
  */
 export function verifyHexString(v: string): string {
-  if (typeof v !== 'string') throw new sdk.WERR_INTERNAL('A string is required.')
+  if (typeof v !== 'string') throw new WERR_INTERNAL('A string is required.')
   v = v.trim().toLowerCase()
   return v
 }
@@ -100,7 +100,7 @@ export function verifyOptionalHexString(v?: string | null): string | undefined {
  * Verifies that an optional or null number has a numeric value.
  */
 export function verifyNumber(v: number | null | undefined): number {
-  if (typeof v !== 'number') throw new sdk.WERR_INTERNAL('A number is required.')
+  if (typeof v !== 'number') throw new WERR_INTERNAL('A number is required.')
   return v
 }
 
@@ -110,7 +110,7 @@ export function verifyNumber(v: number | null | undefined): number {
  * Verifies that an optional or null number has a numeric value.
  */
 export function verifyInteger(v: number | null | undefined): number {
-  if (typeof v !== 'number' || !Number.isInteger(v)) throw new sdk.WERR_INTERNAL('An integer is required.')
+  if (typeof v !== 'number' || !Number.isInteger(v)) throw new WERR_INTERNAL('An integer is required.')
   return v
 }
 
@@ -121,7 +121,7 @@ export function verifyInteger(v: number | null | undefined): number {
  */
 export function verifyId(id: number | undefined | null): number {
   id = verifyInteger(id)
-  if (id < 1) throw new sdk.WERR_INTERNAL(`id must be valid integer greater than zero.`)
+  if (id < 1) throw new WERR_INTERNAL(`id must be valid integer greater than zero.`)
   return id
 }
 
@@ -133,7 +133,7 @@ export function verifyId(id: number | undefined | null): number {
  * @returns results[0] or undefined if length is zero.
  */
 export function verifyOneOrNone<T>(results: T[]): T | undefined {
-  if (results.length > 1) throw new sdk.WERR_BAD_REQUEST('Result must be unique.')
+  if (results.length > 1) throw new WERR_BAD_REQUEST('Result must be unique.')
   return results[0]
 }
 
@@ -145,7 +145,7 @@ export function verifyOneOrNone<T>(results: T[]): T | undefined {
  * @returns results[0].
  */
 export function verifyOne<T>(results: T[], errorDescrition?: string): T {
-  if (results.length !== 1) throw new sdk.WERR_BAD_REQUEST(errorDescrition ?? 'Result must exist and be unique.')
+  if (results.length !== 1) throw new WERR_BAD_REQUEST(errorDescrition ?? 'Result must exist and be unique.')
   return results[0]
 }
 
@@ -181,7 +181,7 @@ export function randomBytesBase64(count: number): string {
 export function validateSecondsSinceEpoch(time: number): Date {
   const date = new Date(time * 1000)
   if (date.getTime() / 1000 !== time || time < 1600000000 || time > 100000000000) {
-    throw new sdk.WERR_INVALID_PARAMETER('time', `valid "since epoch" unix time`)
+    throw new WERR_INVALID_PARAMETER('time', `valid "since epoch" unix time`)
   }
   return date
 }

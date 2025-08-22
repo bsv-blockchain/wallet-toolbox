@@ -1,4 +1,8 @@
-import { sdk, validateStorageFeeModel } from '../../index.client'
+import { validateInteger, validateOptionalInteger, validateSatoshis } from '../../sdk/validationHelpers'
+import { WalletError } from '../../sdk/WalletError'
+import { StorageFeeModel } from '../../sdk/WalletStorage.interfaces'
+import { WERR_INSUFFICIENT_FUNDS, WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { validateStorageFeeModel } from '../StorageProvider'
 import { transactionSize } from './utils'
 
 /**
@@ -72,7 +76,7 @@ export async function generateChangeSdk(
      * @returns a random integer betweenn min and max, inclussive.
      */
     const rand = (min: number, max: number): number => {
-      if (max < min) throw new sdk.WERR_INVALID_PARAMETER('max', `less than min (${min}). max is (${max})`)
+      if (max < min) throw new WERR_INVALID_PARAMETER('max', `less than min (${min}). max is (${max})`)
       return Math.floor(nextRandomVal() * (max - min + 1) + min)
     }
 
@@ -259,7 +263,7 @@ export async function generateChangeSdk(
 
     if (feeExcess() < 0 && vgcpr.hasMaxPossibleOutput !== undefined) {
       // Reduce the fixed output with satoshis of maxPossibleSatoshis to what will just fund the transaction...
-      if (fixedOutputs[vgcpr.hasMaxPossibleOutput].satoshis !== maxPossibleSatoshis) throw new sdk.WERR_INTERNAL()
+      if (fixedOutputs[vgcpr.hasMaxPossibleOutput].satoshis !== maxPossibleSatoshis) throw new WERR_INTERNAL()
       fixedOutputs[vgcpr.hasMaxPossibleOutput].satoshis += feeExcess()
       r.maxPossibleSatoshisAdjustment = {
         fixedOutputIndex: vgcpr.hasMaxPossibleOutput,
@@ -272,7 +276,7 @@ export async function generateChangeSdk(
      */
     if (feeExcess() < 0) {
       await releaseAllocatedChangeInputs()
-      throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), -feeExcessNow)
+      throw new WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), -feeExcessNow)
     }
 
     /**
@@ -280,7 +284,7 @@ export async function generateChangeSdk(
      */
     if (r.changeOutputs.length === 0 && feeExcessNow > 0) {
       await releaseAllocatedChangeInputs()
-      throw new sdk.WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), params.changeFirstSatoshis)
+      throw new WERR_INSUFFICIENT_FUNDS(spending() + feeTarget(), params.changeFirstSatoshis)
     }
 
     /**
@@ -308,7 +312,7 @@ export async function generateChangeSdk(
 
     const { ok, log } = validateGenerateChangeSdkResult(params, r)
     if (!ok) {
-      throw new sdk.WERR_INTERNAL(`generateChangeSdk error: ${log}`)
+      throw new WERR_INTERNAL(`generateChangeSdk error: ${log}`)
     }
 
     if (r.allocatedChangeInputs.length > 4 && r.changeOutputs.length > 4) {
@@ -318,7 +322,7 @@ export async function generateChangeSdk(
 
     return r
   } catch (eu: unknown) {
-    const e = sdk.WalletError.fromUnknown(eu)
+    const e = WalletError.fromUnknown(eu)
     if (e.code === 'WERR_INSUFFICIENT_FUNDS') throw eu
 
     // Capture the params in cloud run log which has a 100k text length limit per line.
@@ -373,7 +377,7 @@ export interface GenerateChangeSdkParams {
   fixedInputs: GenerateChangeSdkInput[]
   fixedOutputs: GenerateChangeSdkOutput[]
 
-  feeModel: sdk.StorageFeeModel
+  feeModel: StorageFeeModel
 
   /**
    * Target for number of new change outputs added minus number of funding change outputs consumed.
@@ -436,22 +440,22 @@ export interface ValidateGenerateChangeSdkParamsResult {
 export function validateGenerateChangeSdkParams(
   params: GenerateChangeSdkParams
 ): ValidateGenerateChangeSdkParamsResult {
-  if (!Array.isArray(params.fixedInputs)) throw new sdk.WERR_INVALID_PARAMETER('fixedInputs', 'an array of objects')
+  if (!Array.isArray(params.fixedInputs)) throw new WERR_INVALID_PARAMETER('fixedInputs', 'an array of objects')
 
   const r: ValidateGenerateChangeSdkParamsResult = {}
 
   params.fixedInputs.forEach((x, i) => {
-    sdk.validateSatoshis(x.satoshis, `fixedInputs[${i}].satoshis`)
-    sdk.validateInteger(x.unlockingScriptLength, `fixedInputs[${i}].unlockingScriptLength`, undefined, 0)
+    validateSatoshis(x.satoshis, `fixedInputs[${i}].satoshis`)
+    validateInteger(x.unlockingScriptLength, `fixedInputs[${i}].unlockingScriptLength`, undefined, 0)
   })
 
-  if (!Array.isArray(params.fixedOutputs)) throw new sdk.WERR_INVALID_PARAMETER('fixedOutputs', 'an array of objects')
+  if (!Array.isArray(params.fixedOutputs)) throw new WERR_INVALID_PARAMETER('fixedOutputs', 'an array of objects')
   params.fixedOutputs.forEach((x, i) => {
-    sdk.validateSatoshis(x.satoshis, `fixedOutputs[${i}].satoshis`)
-    sdk.validateInteger(x.lockingScriptLength, `fixedOutputs[${i}].lockingScriptLength`, undefined, 0)
+    validateSatoshis(x.satoshis, `fixedOutputs[${i}].satoshis`)
+    validateInteger(x.lockingScriptLength, `fixedOutputs[${i}].lockingScriptLength`, undefined, 0)
     if (x.satoshis === maxPossibleSatoshis) {
       if (r.hasMaxPossibleOutput !== undefined)
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           `fixedOutputs[${i}].satoshis`,
           `valid satoshis amount. Only one 'maxPossibleSatoshis' output allowed.`
         )
@@ -460,15 +464,15 @@ export function validateGenerateChangeSdkParams(
   })
 
   params.feeModel = validateStorageFeeModel(params.feeModel)
-  if (params.feeModel.model !== 'sat/kb') throw new sdk.WERR_INVALID_PARAMETER('feeModel.model', `'sat/kb'`)
+  if (params.feeModel.model !== 'sat/kb') throw new WERR_INVALID_PARAMETER('feeModel.model', `'sat/kb'`)
 
-  sdk.validateOptionalInteger(params.targetNetCount, `targetNetCount`)
+  validateOptionalInteger(params.targetNetCount, `targetNetCount`)
 
-  sdk.validateSatoshis(params.changeFirstSatoshis, 'changeFirstSatoshis', 1)
-  sdk.validateSatoshis(params.changeInitialSatoshis, 'changeInitialSatoshis', 1)
+  validateSatoshis(params.changeFirstSatoshis, 'changeFirstSatoshis', 1)
+  validateSatoshis(params.changeInitialSatoshis, 'changeInitialSatoshis', 1)
 
-  sdk.validateInteger(params.changeLockingScriptLength, `changeLockingScriptLength`)
-  sdk.validateInteger(params.changeUnlockingScriptLength, `changeUnlockingScriptLength`)
+  validateInteger(params.changeLockingScriptLength, `changeLockingScriptLength`)
+  validateInteger(params.changeUnlockingScriptLength, `changeUnlockingScriptLength`)
 
   return r
 }
@@ -539,8 +543,8 @@ export function generateChangeSdkMakeStorage(availableChange: GenerateChangeSdkC
   const releaseChangeInput = async (outputId: number): Promise<void> => {
     log += `release id ${outputId}\n`
     const c = change.find(x => x.outputId === outputId)
-    if (!c) throw new sdk.WERR_INTERNAL(`unknown outputId ${outputId}`)
-    if (c.spendable) throw new sdk.WERR_INTERNAL(`release of spendable outputId ${outputId}`)
+    if (!c) throw new WERR_INTERNAL(`unknown outputId ${outputId}`)
+    if (c.spendable) throw new WERR_INTERNAL(`release of spendable outputId ${outputId}`)
     c.spendable = true
   }
 

@@ -1,6 +1,6 @@
 import { Chain } from '../../../../sdk/types'
+import { BaseBlockHeader, BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
-import { BaseBlockHeader, BlockHeader } from '../Api/BlockHeaderApi'
 import { ChaintracksClientApi } from '../Api/ChaintracksClientApi'
 import { ChaintracksStorageApi } from '../Api/ChaintracksStorageApi'
 import { Chaintracks } from '../Chaintracks'

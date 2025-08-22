@@ -44,8 +44,8 @@ import {
   Utils,
   WalletPayment
 } from '@bsv/sdk'
-import { sdk } from '../index.client'
 import { OutPoint } from './types'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from './WERR_errors'
 
 export function parseWalletOutpoint(outpoint: string): {
   txid: string
@@ -86,8 +86,8 @@ function validateOptionalStringLength(
 
 export function validateSatoshis(v: number | undefined, name: string, min?: number): number {
   if (v === undefined || !Number.isInteger(v) || v < 0 || v > 21e14)
-    throw new sdk.WERR_INVALID_PARAMETER(name, 'a valid number of satoshis')
-  if (min !== undefined && v < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} satoshis.`)
+    throw new WERR_INVALID_PARAMETER(name, 'a valid number of satoshis')
+  if (min !== undefined && v < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} satoshis.`)
   return v
 }
 
@@ -110,12 +110,12 @@ export function validateInteger(
 ): number {
   if (v === undefined) {
     if (defaultValue !== undefined) return defaultValue
-    throw new sdk.WERR_INVALID_PARAMETER(name, 'a valid integer')
+    throw new WERR_INVALID_PARAMETER(name, 'a valid integer')
   }
-  if (!Number.isInteger(v)) throw new sdk.WERR_INVALID_PARAMETER(name, 'an integer')
+  if (!Number.isInteger(v)) throw new WERR_INVALID_PARAMETER(name, 'an integer')
   v = Number(v)
-  if (min !== undefined && v < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
-  if (max !== undefined && v > max) throw new sdk.WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
+  if (min !== undefined && v < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
+  if (max !== undefined && v > max) throw new WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
   return v
 }
 
@@ -125,8 +125,8 @@ export function validatePositiveIntegerOrZero(v: number, name: string): number {
 
 export function validateStringLength(s: string, name: string, min?: number, max?: number): string {
   const bytes = Utils.toArray(s, 'utf8').length
-  if (min !== undefined && bytes < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
-  if (max !== undefined && bytes > max) throw new sdk.WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
+  if (min !== undefined && bytes < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
+  if (max !== undefined && bytes > max) throw new WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
   return s
 }
 
@@ -150,8 +150,8 @@ function validateTag(s: string): string {
 function validateIdentifier(s: string, name: string, min?: number, max?: number): string {
   s = s.trim().toLowerCase()
   const bytes = Utils.toArray(s, 'utf8').length
-  if (min !== undefined && bytes < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
-  if (max !== undefined && bytes > max) throw new sdk.WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
+  if (min !== undefined && bytes < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
+  if (max !== undefined && bytes > max) throw new WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
   return s
 }
 
@@ -173,12 +173,12 @@ function validateBase64String(s: string, name: string, min?: number, max?: numbe
   const paddingCount = paddingMatch ? paddingMatch[0].length : 0
 
   if (paddingCount > 2 || (s.length % 4 !== 0 && paddingCount !== 0) || !base64Regex.test(s)) {
-    throw new sdk.WERR_INVALID_PARAMETER(name, `balid base64 string`)
+    throw new WERR_INVALID_PARAMETER(name, `balid base64 string`)
   }
 
   const bytes = Utils.toArray(s, 'base64').length
-  if (min !== undefined && bytes < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
-  if (max !== undefined && bytes > max) throw new sdk.WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
+  if (min !== undefined && bytes < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
+  if (max !== undefined && bytes > max) throw new WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
 
   return s
 }
@@ -202,11 +202,11 @@ function validateOptionalHexString(
  */
 function validateHexString(s: string, name: string, min?: number, max?: number): string {
   s = s.trim().toLowerCase()
-  if (s.length % 2 === 1) throw new sdk.WERR_INVALID_PARAMETER(name, `even length, not ${s.length}.`)
+  if (s.length % 2 === 1) throw new WERR_INVALID_PARAMETER(name, `even length, not ${s.length}.`)
   const hexRegex = /^[0-9A-Fa-f]+$/
-  if (!hexRegex.test(s)) throw new sdk.WERR_INVALID_PARAMETER(name, `hexadecimal string.`)
-  if (min !== undefined && s.length < min) throw new sdk.WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
-  if (max !== undefined && s.length > max) throw new sdk.WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
+  if (!hexRegex.test(s)) throw new WERR_INVALID_PARAMETER(name, `hexadecimal string.`)
+  if (min !== undefined && s.length < min) throw new WERR_INVALID_PARAMETER(name, `at least ${min} length.`)
+  if (max !== undefined && s.length > max) throw new WERR_INVALID_PARAMETER(name, `no more than ${max} length.`)
   return s
 }
 
@@ -236,11 +236,11 @@ export interface ValidCreateActionInput {
 
 export function validateCreateActionInput(i: CreateActionInput): ValidCreateActionInput {
   if (i.unlockingScript === undefined && i.unlockingScriptLength === undefined)
-    throw new sdk.WERR_INVALID_PARAMETER('unlockingScript, unlockingScriptLength', `at least one valid value.`)
+    throw new WERR_INVALID_PARAMETER('unlockingScript, unlockingScriptLength', `at least one valid value.`)
   const unlockingScript = validateOptionalHexString(i.unlockingScript, 'unlockingScript')
   const unlockingScriptLength = i.unlockingScriptLength ?? unlockingScript!.length / 2
   if (unlockingScript && unlockingScriptLength !== unlockingScript.length / 2)
-    throw new sdk.WERR_INVALID_PARAMETER('unlockingScriptLength', `length unlockingScript if both valid.`)
+    throw new WERR_INVALID_PARAMETER('unlockingScriptLength', `length unlockingScript if both valid.`)
   const vi: ValidCreateActionInput = {
     outpoint: parseWalletOutpoint(i.outpoint),
     inputDescription: validateStringLength(i.inputDescription, 'inputDescription', 5, 2000),
@@ -316,7 +316,7 @@ export interface ValidSignActionOptions extends ValidProcessActionOptions {
 }
 
 export interface ValidProcessActionArgs extends ValidWalletSignerArgs {
-  options: sdk.ValidProcessActionOptions
+  options: ValidProcessActionOptions
   // true if a batch of transactions is included for processing.
   isSendWith: boolean
   // true if there is a new transaction (not no inputs and no outputs)
@@ -332,8 +332,8 @@ export interface ValidProcessActionArgs extends ValidWalletSignerArgs {
 export interface ValidCreateActionArgs extends ValidProcessActionArgs {
   description: DescriptionString5to2000Bytes
   inputBEEF?: BEEF
-  inputs: sdk.ValidCreateActionInput[]
-  outputs: sdk.ValidCreateActionOutput[]
+  inputs: ValidCreateActionInput[]
+  outputs: ValidCreateActionOutput[]
   lockTime: number
   version: number
   labels: string[]
@@ -354,7 +354,7 @@ export interface ValidSignActionArgs extends ValidProcessActionArgs {
   spends: Record<PositiveIntegerOrZero, SignActionSpend>
   reference: Base64String
 
-  options: sdk.ValidSignActionOptions
+  options: ValidSignActionOptions
 }
 
 export function validateCreateActionArgs(args: CreateActionArgs): ValidCreateActionArgs {
@@ -475,7 +475,7 @@ export interface ValidInternalizeOutput {
 
 export function validateInternalizeOutput(args: InternalizeOutput): ValidInternalizeOutput {
   if (args.protocol !== 'basket insertion' && args.protocol !== 'wallet payment')
-    throw new sdk.WERR_INVALID_PARAMETER('protocol', `'basket insertion' or 'wallet payment'`)
+    throw new WERR_INVALID_PARAMETER('protocol', `'basket insertion' or 'wallet payment'`)
   const v: ValidInternalizeOutput = {
     outputIndex: validatePositiveIntegerOrZero(args.outputIndex, 'outputIndex'),
     protocol: args.protocol,
@@ -515,12 +515,12 @@ export function validateInternalizeActionArgs(args: InternalizeActionArgs): Vali
   try {
     const beef = Beef.fromBinary(vargs.tx)
     if (beef.txs.length < 1)
-      throw new sdk.WERR_INVALID_PARAMETER('tx', `at least one transaction to internalize an output from`)
+      throw new WERR_INVALID_PARAMETER('tx', `at least one transaction to internalize an output from`)
   } catch {
-    throw new sdk.WERR_INVALID_PARAMETER('tx', `valid with at least one transaction to internalize an output from`)
+    throw new WERR_INVALID_PARAMETER('tx', `valid with at least one transaction to internalize an output from`)
   }
   if (vargs.outputs.length < 1)
-    throw new sdk.WERR_INVALID_PARAMETER('outputs', `at least one output to internalize from the transaction`)
+    throw new WERR_INVALID_PARAMETER('outputs', `at least one output to internalize from the transaction`)
 
   return vargs
 }
@@ -533,7 +533,7 @@ export function validateOptionalOutpointString(outpoint: string | undefined, nam
 export function validateOutpointString(outpoint: string, name: string): string {
   const s = outpoint.split('.')
   if (s.length !== 2 || !Number.isInteger(Number(s[1])))
-    throw new sdk.WERR_INVALID_PARAMETER(name, `txid as hex string and numeric output index joined with '.'`)
+    throw new WERR_INVALID_PARAMETER(name, `txid as hex string and numeric output index joined with '.'`)
   const txid = validateHexString(s[0], `${name} txid`, undefined, 64)
   const vout = validatePositiveIntegerOrZero(Number(s[1]), `${name} vout`)
   return `${txid}.${vout}`
@@ -680,14 +680,14 @@ export async function validateAcquireCertificateArgs(
     privilegedReason: validateOptionalStringLength(args.privilegedReason, 'privilegedReason', 5, 50)
   }
   if (vargs.privileged && !vargs.privilegedReason)
-    throw new sdk.WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
+    throw new WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
   if (vargs.acquisitionProtocol === 'direct') {
     if (!vargs.serialNumber)
-      throw new sdk.WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
+      throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
     if (!vargs.signature)
-      throw new sdk.WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
+      throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
     if (!vargs.revocationOutpoint)
-      throw new sdk.WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
+      throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
   }
   return vargs
 }
@@ -733,20 +733,20 @@ export function validateAcquireIssuanceCertificateArgs(
   args: AcquireCertificateArgs
 ): ValidAcquireIssuanceCertificateArgs {
   if (args.acquisitionProtocol !== 'issuance')
-    throw new sdk.WERR_INTERNAL('Only acquire certificate via issuance requests allowed here.')
+    throw new WERR_INTERNAL('Only acquire certificate via issuance requests allowed here.')
   if (args.serialNumber)
-    throw new sdk.WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
-  if (args.signature) throw new sdk.WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
+  if (args.signature) throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
   if (args.revocationOutpoint)
-    throw new sdk.WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
   if (args.keyringRevealer)
-    throw new sdk.WERR_INVALID_PARAMETER('keyringRevealer', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('keyringRevealer', 'valid when acquisitionProtocol is "direct"')
   if (args.keyringForSubject)
-    throw new sdk.WERR_INVALID_PARAMETER('keyringForSubject', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('keyringForSubject', 'valid when acquisitionProtocol is "direct"')
   if (!args.certifierUrl)
-    throw new sdk.WERR_INVALID_PARAMETER('certifierUrl', 'valid when acquisitionProtocol is "issuance"')
+    throw new WERR_INVALID_PARAMETER('certifierUrl', 'valid when acquisitionProtocol is "issuance"')
   if (args.privileged && !args.privilegedReason)
-    throw new sdk.WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
+    throw new WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
 
   const vargs: ValidAcquireIssuanceCertificateArgs = {
     type: validateBase64String(args.type, 'type'),
@@ -761,18 +761,18 @@ export function validateAcquireIssuanceCertificateArgs(
 }
 export function validateAcquireDirectCertificateArgs(args: AcquireCertificateArgs): ValidAcquireDirectCertificateArgs {
   if (args.acquisitionProtocol !== 'direct')
-    throw new sdk.WERR_INTERNAL('Only acquire direct certificate requests allowed here.')
+    throw new WERR_INTERNAL('Only acquire direct certificate requests allowed here.')
   if (!args.serialNumber)
-    throw new sdk.WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
-  if (!args.signature) throw new sdk.WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
+  if (!args.signature) throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
   if (!args.revocationOutpoint)
-    throw new sdk.WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
   if (!args.keyringRevealer)
-    throw new sdk.WERR_INVALID_PARAMETER('keyringRevealer', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('keyringRevealer', 'valid when acquisitionProtocol is "direct"')
   if (!args.keyringForSubject)
-    throw new sdk.WERR_INVALID_PARAMETER('keyringForSubject', 'valid when acquisitionProtocol is "direct"')
+    throw new WERR_INVALID_PARAMETER('keyringForSubject', 'valid when acquisitionProtocol is "direct"')
   if (args.privileged && !args.privilegedReason)
-    throw new sdk.WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
+    throw new WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
 
   const vargs: ValidAcquireDirectCertificateArgs = {
     type: validateBase64String(args.type, 'type'),
@@ -806,7 +806,7 @@ export interface ValidProveCertificateArgs extends ValidWalletSignerArgs {
 
 export function validateProveCertificateArgs(args: ProveCertificateArgs): ValidProveCertificateArgs {
   if (args.privileged && !args.privilegedReason)
-    throw new sdk.WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
+    throw new WERR_INVALID_PARAMETER('privilegedReason', `valid when 'privileged' is true `)
 
   const vargs: ValidProveCertificateArgs = {
     type: validateOptionalBase64String(args.certificate.type, 'certificate.type'),
@@ -906,7 +906,7 @@ export function validateListOutputsArgs(args: ListOutputsArgs): ValidListOutputs
   let tagQueryMode: 'any' | 'all'
   if (args.tagQueryMode === undefined || args.tagQueryMode === 'any') tagQueryMode = 'any'
   else if (args.tagQueryMode === 'all') tagQueryMode = 'all'
-  else throw new sdk.WERR_INVALID_PARAMETER('tagQueryMode', `undefined, 'any', or 'all'`)
+  else throw new WERR_INVALID_PARAMETER('tagQueryMode', `undefined, 'any', or 'all'`)
 
   const vargs: ValidListOutputsArgs = {
     basket: validateStringLength(args.basket, 'basket', 1, 300),
@@ -957,7 +957,7 @@ export function validateListActionsArgs(args: ListActionsArgs): ValidListActions
   let labelQueryMode: 'any' | 'all'
   if (args.labelQueryMode === undefined || args.labelQueryMode === 'any') labelQueryMode = 'any'
   else if (args.labelQueryMode === 'all') labelQueryMode = 'all'
-  else throw new sdk.WERR_INVALID_PARAMETER('labelQueryMode', `undefined, 'any', or 'all'`)
+  else throw new WERR_INVALID_PARAMETER('labelQueryMode', `undefined, 'any', or 'all'`)
 
   const vargs: ValidListActionsArgs = {
     labels: (args.labels || []).map(t => validateLabel(t)),

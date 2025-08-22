@@ -1,5 +1,5 @@
-import { BlockHeader } from '../Api/BlockHeaderApi'
-import { Chain } from '../../../../sdk'
+import { Chain } from '../../../../sdk/types'
+import { BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 import { WhatsOnChain, WocChainInfo } from '../../../providers/WhatsOnChain'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { ChaintracksFetch } from '../util/ChaintracksFetch'

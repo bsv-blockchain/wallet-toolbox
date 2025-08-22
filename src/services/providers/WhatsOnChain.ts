@@ -1,12 +1,17 @@
 import { Beef, HexString, Utils, WhatsOnChainConfig } from '@bsv/sdk'
-import { asArray, asString, doubleSha256BE, sdk, Services, validateScriptHash, wait } from '../../index.client'
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
-import { Chain, parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
-import { BlockHeader } from '../chaintracker/chaintracks/Api/BlockHeaderApi'
+import { Chain, ReqHistoryNote } from '../../sdk/types'
+import { BlockHeader, BsvExchangeRate, GetMerklePathResult, GetRawTxResult, GetScriptHashHistoryResult, GetStatusForTxidsResult, GetUtxoStatusOutputFormat, GetUtxoStatusResult, PostBeefResult, PostTxResultForTxid, WalletServices } from '../../sdk/WalletServices.interfaces'
+import { WERR_BAD_REQUEST, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { WalletError } from '../../sdk/WalletError'
+import { doubleSha256BE, wait } from '../../utility/utilityHelpers'
+import { asArray, asString } from '../../utility/utilityHelpers.noBuffer'
+import { Services, validateScriptHash } from '../Services'
+import { parseWalletOutpoint } from '../../sdk/validationHelpers'
 
 export class WhatsOnChainNoServices extends SdkWhatsOnChain {
-  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}) {
+  constructor(chain: Chain = 'main', config: WhatsOnChainConfig = {}) {
     super(chain, config)
   }
 
@@ -31,8 +36,8 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
    * result for an unknown txid:
    *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
    */
-  async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> {
-    const r: sdk.GetStatusForTxidsResult = {
+  async getStatusForTxids(txids: string[]): Promise<GetStatusForTxidsResult> {
+    const r: GetStatusForTxidsResult = {
       name: 'WoC',
       status: 'error',
       error: undefined,
@@ -51,7 +56,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
       const response = await this.httpClient.request<WhatsOnChainTxsStatusData[]>(url, requestOptions)
 
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_OPERATION(`Unable to get status for txids at this timei.`)
+        throw new WERR_INVALID_OPERATION(`Unable to get status for txids at this timei.`)
 
       const data = response.data
       for (const txid of txids) {
@@ -65,7 +70,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
       }
       r.status = 'success'
     } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       r.error = e
     }
 
@@ -87,7 +92,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
     // response.statusText is often, but not always 'OK' on success...
     if (!response.data || !response.ok || response.status !== 200)
-      throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+      throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
 
     return 0
   }
@@ -119,21 +124,21 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
       // response.statusText is often, but not always 'OK' on success...
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+        throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
 
       return response.data
     }
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 
-  async getRawTxResult(txid: string): Promise<sdk.GetRawTxResult> {
-    const r: sdk.GetRawTxResult = { name: 'WoC', txid: asString(txid) }
+  async getRawTxResult(txid: string): Promise<GetRawTxResult> {
+    const r: GetRawTxResult = { name: 'WoC', txid: asString(txid) }
 
     try {
       const rawTxHex = await this.getRawTx(txid)
       if (rawTxHex) r.rawTx = asArray(rawTxHex)
     } catch (err: unknown) {
-      r.error = sdk.WalletError.fromUnknown(err)
+      r.error = WalletError.fromUnknown(err)
     }
 
     return r
@@ -148,8 +153,8 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
    * @param txids
    * @returns
    */
-  async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> {
-    const r: sdk.PostBeefResult = {
+  async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> {
+    const r: PostBeefResult = {
       name: 'WoC',
       status: 'success',
       txidResults: [],
@@ -192,10 +197,10 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
    * @param rawTx raw transaction to broadcast as hex string
    * @returns txid returned by transaction processor of transaction broadcast
    */
-  async postRawTx(rawTx: HexString): Promise<sdk.PostTxResultForTxid> {
+  async postRawTx(rawTx: HexString): Promise<PostTxResultForTxid> {
     let txid = Utils.toHex(doubleSha256BE(Utils.toArray(rawTx, 'hex')))
 
-    const r: sdk.PostTxResultForTxid = {
+    const r: PostTxResultForTxid = {
       txid,
       status: 'success',
       notes: []
@@ -267,7 +272,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
         }
       } catch (eu: unknown) {
         r.status = 'error'
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         r.notes!.push({
           ...nne(),
           what: 'postRawTxCatch',
@@ -289,7 +294,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
     return r
   }
 
-  async updateBsvExchangeRate(rate?: sdk.BsvExchangeRate, updateMsecs?: number): Promise<sdk.BsvExchangeRate> {
+  async updateBsvExchangeRate(rate?: BsvExchangeRate, updateMsecs?: number): Promise<BsvExchangeRate> {
     if (rate) {
       // Check if the rate we know is stale enough to update.
       updateMsecs ||= 1000 * 60 * 15
@@ -314,12 +319,12 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
       // response.statusText is often, but not always 'OK' on success...
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_OPERATION(`WoC exchangerate response ${response.statusText}`)
+        throw new WERR_INVALID_OPERATION(`WoC exchangerate response ${response.statusText}`)
 
       const wocrate = response.data
       if (wocrate.currency !== 'USD') wocrate.rate = NaN
 
-      const newRate: sdk.BsvExchangeRate = {
+      const newRate: BsvExchangeRate = {
         timestamp: new Date(),
         base: 'USD',
         rate: wocrate.rate
@@ -327,18 +332,18 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
       return newRate
     }
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 
   async getUtxoStatus(
     output: string,
-    outputFormat?: sdk.GetUtxoStatusOutputFormat,
+    outputFormat?: GetUtxoStatusOutputFormat,
     outpoint?: string
-  ): Promise<sdk.GetUtxoStatusResult> {
-    const r: sdk.GetUtxoStatusResult = {
+  ): Promise<GetUtxoStatusResult> {
+    const r: GetUtxoStatusResult = {
       name: 'WoC',
       status: 'error',
-      error: new sdk.WERR_INTERNAL(),
+      error: new WERR_INTERNAL(),
       details: []
     }
 
@@ -364,12 +369,12 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         // response.statusText is often, but not always 'OK' on success...
         if (!response.data || !response.ok || response.status !== 200)
-          throw new sdk.WERR_INVALID_OPERATION(`WoC getUtxoStatus response ${response.statusText}`)
+          throw new WERR_INVALID_OPERATION(`WoC getUtxoStatus response ${response.statusText}`)
 
         const data = response.data
 
         if (data.script !== scriptHash || !Array.isArray(data.result)) {
-          throw new sdk.WERR_INTERNAL('data. is not an array')
+          throw new WERR_INTERNAL('data. is not an array')
         }
 
         if (data.result.length === 0) {
@@ -395,10 +400,10 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         return r
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
+          r.error = new WERR_INTERNAL(
+            `service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
           )
           return r
         }
@@ -406,8 +411,8 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
     }
   }
 
-  async getScriptHashConfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
-    const r: sdk.GetScriptHashHistoryResult = {
+  async getScriptHashConfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> {
+    const r: GetScriptHashHistoryResult = {
       name: 'WoC',
       status: 'error',
       error: undefined,
@@ -440,14 +445,14 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         // response.statusText is often, but not always 'OK' on success...
         if (!response.data || !response.ok || response.status !== 200) {
-          r.error = new sdk.WERR_BAD_REQUEST(
+          r.error = new WERR_BAD_REQUEST(
             `WoC getScriptHashConfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
           )
           return r
         }
 
         if (response.data.error) {
-          r.error = new sdk.WERR_BAD_REQUEST(`WoC getScriptHashConfirmedHistory error ${response.data.error}`)
+          r.error = new WERR_BAD_REQUEST(`WoC getScriptHashConfirmedHistory error ${response.data.error}`)
           return r
         }
 
@@ -456,10 +461,10 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         return r
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `WoC getScriptHashConfirmedHistory service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
+          r.error = new WERR_INTERNAL(
+            `WoC getScriptHashConfirmedHistory service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
           )
           return r
         }
@@ -469,8 +474,8 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
     return r
   }
 
-  async getScriptHashUnconfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
-    const r: sdk.GetScriptHashHistoryResult = {
+  async getScriptHashUnconfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> {
+    const r: GetScriptHashHistoryResult = {
       name: 'WoC',
       status: 'error',
       error: undefined,
@@ -503,14 +508,14 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         // response.statusText is often, but not always 'OK' on success...
         if (!response.data || !response.ok || response.status !== 200) {
-          r.error = new sdk.WERR_BAD_REQUEST(
+          r.error = new WERR_BAD_REQUEST(
             `WoC getScriptHashUnconfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
           )
           return r
         }
 
         if (response.data.error) {
-          r.error = new sdk.WERR_BAD_REQUEST(`WoC getScriptHashUnconfirmedHistory error ${response.data.error}`)
+          r.error = new WERR_BAD_REQUEST(`WoC getScriptHashUnconfirmedHistory error ${response.data.error}`)
           return r
         }
 
@@ -519,10 +524,10 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
         return r
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `WoC getScriptHashUnconfirmedHistory service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
+          r.error = new WERR_INTERNAL(
+            `WoC getScriptHashUnconfirmedHistory service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
           )
           return r
         }
@@ -532,7 +537,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
     return r
   }
 
-  async getScriptHashHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
+  async getScriptHashHistory(hash: string): Promise<GetScriptHashHistoryResult> {
     const r1 = await this.getScriptHashConfirmedHistory(hash)
     if (r1.error || r1.status !== 'success') return r1
     const r2 = await this.getScriptHashUnconfirmedHistory(hash)
@@ -582,13 +587,13 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
       // response.statusText is often, but not always 'OK' on success...
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_PARAMETER('hash', `valid block hash. '${hash}' response ${response.statusText}`)
+        throw new WERR_INVALID_PARAMETER('hash', `valid block hash. '${hash}' response ${response.statusText}`)
 
       const header = convertWocToBlockHeaderHex(response.data)
 
       return header
     }
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 
   async getChainInfo(): Promise<WocChainInfo> {
@@ -609,11 +614,11 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 
       // response.statusText is often, but not always 'OK' on success...
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_PARAMETER('hash', `valid block hash. '${url}' response ${response.statusText}`)
+        throw new WERR_INVALID_PARAMETER('hash', `valid block hash. '${url}' response ${response.statusText}`)
 
       return response.data
     }
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 }
 
@@ -623,7 +628,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
 export class WhatsOnChain extends WhatsOnChainNoServices {
   services: Services
 
-  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
+  constructor(chain: Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
     super(chain, config)
     this.services = services || new Services(chain)
   }
@@ -632,8 +637,8 @@ export class WhatsOnChain extends WhatsOnChainNoServices {
    * @param txid
    * @returns
    */
-  async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> {
-    const r: sdk.GetMerklePathResult = { name: 'WoCTsc', notes: [] }
+  async getMerklePath(txid: string, services: WalletServices): Promise<GetMerklePathResult> {
+    const r: GetMerklePathResult = { name: 'WoCTsc', notes: [] }
 
     const headers = this.getHttpHeaders()
     const requestOptions = {
@@ -676,7 +681,7 @@ export class WhatsOnChain extends WhatsOnChainNoServices {
             status: response.status,
             statusText: response.statusText
           })
-          throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+          throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
         }
 
         if (!response.data) {
@@ -718,10 +723,10 @@ export class WhatsOnChain extends WhatsOnChainNoServices {
             status: response.status,
             statusText: response.statusText
           })
-          throw new sdk.WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
+          throw new WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         r.notes!.push({
           what: 'getMerklePathError',
           name: r.name,
@@ -733,7 +738,7 @@ export class WhatsOnChain extends WhatsOnChainNoServices {
       return r
     }
     r.notes!.push({ what: 'getMerklePathInternal', name: r.name })
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 }
 

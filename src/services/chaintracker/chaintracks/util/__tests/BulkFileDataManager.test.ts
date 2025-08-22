@@ -1,5 +1,4 @@
 import { Knex, knex as makeKnex } from 'knex'
-import { BlockHeader } from '../../Api/BlockHeaderApi'
 import { ChaintracksStorageKnex } from '../../Storage/ChaintracksStorageKnex'
 import { deserializeBlockHeaders } from '../blockHeaderUtilities'
 import { BulkFileDataManager } from '../BulkFileDataManager'
@@ -7,6 +6,7 @@ import { BulkHeaderFileInfo } from '../BulkHeaderFile'
 import { ChaintracksFs } from '../ChaintracksFs'
 import { LocalCdnServer } from '../../__tests/LocalCdnServer'
 import { Chain } from '../../../../../sdk/types'
+import { BlockHeader } from '../../../../../sdk/WalletServices.interfaces'
 
 const runSlowTests = false
 

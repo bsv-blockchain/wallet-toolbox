@@ -9,7 +9,11 @@ import { WalletInterface } from '@bsv/sdk'
 import express, { Request, Response } from 'express'
 import { AuthMiddlewareOptions, createAuthMiddleware } from '@bsv/auth-express-middleware'
 import { createPaymentMiddleware } from '@bsv/payment-express-middleware'
-import { sdk, Wallet, StorageProvider } from '../../index.all'
+import { Wallet } from '../../Wallet'
+import { StorageProvider } from '../StorageProvider'
+import { WERR_UNAUTHORIZED } from '../../sdk/WERR_errors'
+import { SyncChunk } from '../../sdk/WalletStorage.interfaces'
+import { EntityTimeStamp } from '../../sdk/types'
 
 export interface WalletStorageServerOptions {
   port: number
@@ -101,23 +105,23 @@ export class StorageServer {
             case 'findOrInsertUser':
               {
                 if (params[0] !== req.auth.identityKey)
-                  throw new sdk.WERR_UNAUTHORIZED('function may only access authenticated user.')
+                  throw new WERR_UNAUTHORIZED('function may only access authenticated user.')
               }
               break
             case 'adminStats':
               {
                 // TODO: add check for admin user
                 if (params[0] !== req.auth.identityKey)
-                  throw new sdk.WERR_UNAUTHORIZED('function may only access authenticated admin user.')
+                  throw new WERR_UNAUTHORIZED('function may only access authenticated admin user.')
                 if (!this.adminIdentityKeys || !this.adminIdentityKeys.includes(req.auth.identityKey))
-                  throw new sdk.WERR_UNAUTHORIZED('function may only be accessed by admin user.')
+                  throw new WERR_UNAUTHORIZED('function may only be accessed by admin user.')
               }
               break
             case 'processSyncChunk':
               {
                 await this.validateParam0(params, req)
-                //const args: sdk.RequestSyncChunkArgs = params[0]
-                const r: sdk.SyncChunk = params[1]
+                //const args: RequestSyncChunkArgs = params[0]
+                const r: SyncChunk = params[1]
                 if (r.certificateFields) r.certificateFields = this.validateEntities(r.certificateFields)
                 if (r.certificates) r.certificates = this.validateEntities(r.certificates)
                 if (r.commissions) r.commissions = this.validateEntities(r.commissions)
@@ -175,7 +179,7 @@ export class StorageServer {
       params = [{}]
     }
     if (params[0]['identityKey'] && params[0]['identityKey'] !== req.auth.identityKey)
-      throw new sdk.WERR_UNAUTHORIZED('identityKey does not match authentiation')
+      throw new WERR_UNAUTHORIZED('identityKey does not match authentiation')
     console.log('looking up user with identityKey:', req.auth.identityKey)
     const { user, isNew } = await this.storage.findOrInsertUser(req.auth.identityKey)
     params[0].reqAuthUserId = user.userId
@@ -199,7 +203,7 @@ export class StorageServer {
    * Helper to force uniform behavior across database engines.
    * Use to process all individual records with time stamps retreived from database.
    */
-  validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T {
+  validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T {
     entity.created_at = this.validateDate(entity.created_at)
     entity.updated_at = this.validateDate(entity.updated_at)
     if (dateFields) {
@@ -223,7 +227,7 @@ export class StorageServer {
    * Use to process all arrays of records with time stamps retreived from database.
    * @returns input `entities` array with contained values validated.
    */
-  validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] {
+  validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] {
     for (let i = 0; i < entities.length; i++) {
       entities[i] = this.validateEntity(entities[i], dateFields)
     }

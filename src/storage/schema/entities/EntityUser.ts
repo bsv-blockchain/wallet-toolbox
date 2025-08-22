@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableUser, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
+import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TableUser } from "../tables/TableUser"
+import { WERR_INTERNAL } from "../../../sdk/WERR_errors"
 
 export class EntityUser extends EntityBase<TableUser> {
   constructor(api?: TableUser) {
@@ -77,25 +78,25 @@ export class EntityUser extends EntityBase<TableUser> {
     storage: EntityStorage,
     userId: number,
     ei: TableUser,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityUser; eiId: number }> {
     const ef = verifyOneOrNone(await storage.findUsers({ partial: { identityKey: ei.identityKey }, trx }))
-    if (ef && ef.userId != userId) throw new sdk.WERR_INTERNAL('logic error, userIds don not match.')
+    if (ef && ef.userId != userId) throw new WERR_INTERNAL('logic error, userIds don not match.')
     return {
       found: !!ef,
       eo: new EntityUser(ef || { ...ei }),
       eiId: verifyId(ei.userId)
     }
   }
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
-    throw new sdk.WERR_INTERNAL('a sync chunk merge must never create a new user')
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
+    throw new WERR_INTERNAL('a sync chunk merge must never create a new user')
   }
   override async mergeExisting(
     storage: EntityStorage,
     since: Date | undefined,
     ei: TableUser,
     syncMap?: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     // The condition on activeStorage here is critical as a new user record may have just been created

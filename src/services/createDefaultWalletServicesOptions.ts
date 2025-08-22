@@ -1,19 +1,21 @@
-import { randomBytesHex, sdk } from '../index.client'
-import { ChaintracksServiceClient } from './chaintracker'
+import { Chain } from "../sdk/types"
+import { WalletServicesOptions } from "../sdk/WalletServices.interfaces"
+import { randomBytesHex } from "../utility/utilityHelpers"
+import { ChaintracksServiceClient } from "./chaintracker/chaintracks/ChaintracksServiceClient"
 
 export function createDefaultWalletServicesOptions(
-  chain: sdk.Chain,
+  chain: Chain,
   arcCallbackUrl?: string,
   arcCallbackToken?: string,
   arcApiKey?: string
-): sdk.WalletServicesOptions {
+): WalletServicesOptions {
   const deploymentId = `wallet-toolbox-${randomBytesHex(16)}`
   const taalApiKey =
     arcApiKey || chain === 'main'
       ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
       : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
 
-  const o: sdk.WalletServicesOptions = {
+  const o: WalletServicesOptions = {
     chain,
     taalApiKey,
     bsvExchangeRate: {
@@ -57,12 +59,12 @@ export function createDefaultWalletServicesOptions(
   return o
 }
 
-export function arcDefaultUrl(chain: sdk.Chain): string {
+export function arcDefaultUrl(chain: Chain): string {
   const url = chain === 'main' ? 'https://arc.taal.com' : 'https://arc-test.taal.com'
   return url
 }
 
-export function arcGorillaPoolUrl(chain: sdk.Chain): string | undefined {
+export function arcGorillaPoolUrl(chain: Chain): string | undefined {
   const url = chain === 'main' ? 'https://arc.gorillapool.io' : undefined
   return url
 }
