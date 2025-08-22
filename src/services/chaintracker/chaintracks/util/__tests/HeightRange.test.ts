@@ -1,4 +1,4 @@
-import { HeightRange } from '../util/HeightRange'
+import { HeightRange } from '../HeightRange'
 
 describe('testing HeightRange', () => {
   const hr = (a: number, b: number) => new HeightRange(a, b)

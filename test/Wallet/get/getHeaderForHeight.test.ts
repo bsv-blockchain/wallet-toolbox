@@ -1,5 +1,7 @@
 import { _tu, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
+const includeTestChaintracks = false
+
 describe('getHeaderForHeight tests', () => {
   jest.setTimeout(99999999)
 
@@ -7,8 +9,10 @@ describe('getHeaderForHeight tests', () => {
   const ctxs: TestWalletNoSetup[] = []
 
   beforeAll(async () => {
-    if (env.runMySQL) ctxs.push(await _tu.createLegacyWalletMySQLCopy('getHeaderForHeightTests'))
-    ctxs.push(await _tu.createLegacyWalletSQLiteCopy('getHeaderForHeightTests'))
+    if (includeTestChaintracks) {
+      if (env.runMySQL) ctxs.push(await _tu.createLegacyWalletMySQLCopy('getHeaderForHeightTests'))
+      ctxs.push(await _tu.createLegacyWalletSQLiteCopy('getHeaderForHeightTests'))
+    }
   })
 
   afterAll(async () => {

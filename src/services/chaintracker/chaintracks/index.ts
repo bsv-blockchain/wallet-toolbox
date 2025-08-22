@@ -15,10 +15,8 @@ export * from './ChaintracksServiceClient'
 
 export * from './createDefaultChaintracksOptions'
 
-export * from './Base/ChaintracksStorageBase'
-export * from './Base/BulkStorageBase'
-export * from './Base/BulkIngestorBase'
-export * from './Base/LiveIngestorBase'
+export * from './Ingest/BulkIngestorBase'
+export * from './Ingest/LiveIngestorBase'
 
 export * from './Ingest/BulkIngestorCDN'
 export * from './Ingest/BulkIngestorCDNBabbage'
@@ -28,6 +26,10 @@ export * from './Ingest/LiveIngestorWhatsOnChainPoll'
 export * from './Ingest/LiveIngestorWhatsOnChainWs'
 export * from './Ingest/WhatsOnChainServices'
 
+export * from './Storage/BulkStorageBase'
+export * from './Storage/ChaintracksStorageBase'
+export * from './Storage/ChaintracksStorageKnex'
+export * from './Storage/ChaintracksStorageMemory'
 export * from './Storage/ChaintracksStorageNoDb'
 
 export * from './util/BulkFilesReader'

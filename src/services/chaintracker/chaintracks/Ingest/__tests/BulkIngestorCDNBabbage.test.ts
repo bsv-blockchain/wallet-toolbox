@@ -1,11 +1,11 @@
 import { Knex, knex as makeKnex } from 'knex'
-import { Chain } from '../../../../sdk'
-import { BulkIngestorCDNBabbage } from '../Ingest/BulkIngestorCDNBabbage'
-import { ChaintracksFetch } from '../util/ChaintracksFetch'
-import { ChaintracksFs } from '../util/ChaintracksFs'
-import { HeightRange } from '../util/HeightRange'
-import { ChaintracksStorageKnex } from '../Storage'
-import { BulkFilesReaderStorage } from '../util/BulkFilesReader'
+import { Chain } from '../../../../../sdk'
+import { BulkIngestorCDNBabbage } from '../BulkIngestorCDNBabbage'
+import { ChaintracksFetch } from '../../util/ChaintracksFetch'
+import { ChaintracksFs } from '../../util/ChaintracksFs'
+import { HeightRange } from '../../util/HeightRange'
+import { ChaintracksStorageKnex } from '../../Storage/ChaintracksStorageKnex'
+import { BulkFilesReaderStorage } from '../../util/BulkFilesReader'
 
 const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
 const fs = ChaintracksFs
@@ -15,7 +15,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
   jest.setTimeout(99999999)
 
   test('0 mainNet', async () => {
-    const { cdn, r } = await testUpdateLocalCache('main')
+    const { cdn, r } = await testUpdateLocalCache('main', '0')
     expect(cdn.availableBulkFiles?.files.length).toBeGreaterThan(8)
     expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
@@ -23,7 +23,7 @@ describe('BulkIngestorCDNBabbage tests', () => {
   })
 
   test('1 testNet', async () => {
-    const { cdn, r } = await testUpdateLocalCache('test')
+    const { cdn, r } = await testUpdateLocalCache('test', '1')
     expect(cdn.availableBulkFiles?.files.length).toBeGreaterThan(15)
     expect(r.liveHeaders.length).toBe(0)
     expect(r.reader.range.minHeight).toBe(0)
@@ -31,14 +31,14 @@ describe('BulkIngestorCDNBabbage tests', () => {
   })
 })
 
-async function testUpdateLocalCache(chain: Chain) {
+async function testUpdateLocalCache(chain: Chain, test: string) {
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
 
   const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
 
   const localSqlite: Knex.Config = {
     client: 'sqlite3',
-    connection: { filename: fs.pathJoin(rootFolder, `${chain}Net_chaintracks.sqlite`) },
+    connection: { filename: fs.pathJoin(rootFolder, `BulkIngestorCDNBabbage.test_${test}.sqlite`) },
     useNullAsDefault: true
   }
   const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))

@@ -2,12 +2,12 @@ import { Chain } from '../../../../sdk/types'
 import { BulkIngestorApi } from './BulkIngestorApi'
 import { ChaintracksApi } from './ChaintracksClientApi'
 import { LiveIngestorApi } from './LiveIngestorApi'
-import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
 import { ChaintracksFsApi } from './ChaintracksFsApi'
+import { ChaintracksStorageApi } from './ChaintracksStorageApi'
 
 export interface ChaintracksOptions {
   chain: Chain
-  storage?: ChaintracksStorageBase
+  storage?: ChaintracksStorageApi
   bulkIngestors: BulkIngestorApi[]
   liveIngestors: LiveIngestorApi[]
 

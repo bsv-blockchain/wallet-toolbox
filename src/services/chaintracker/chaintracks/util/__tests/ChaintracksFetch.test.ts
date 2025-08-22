@@ -1,8 +1,8 @@
 import { Hash } from '@bsv/sdk'
-import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
-import { ChaintracksFetch } from '../util/ChaintracksFetch'
-import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
-import { validBulkHeaderFilesByFileHash } from '../util/validBulkHeaderFilesByFileHash'
+import { BulkHeaderFilesInfo } from '../BulkHeaderFile'
+import { ChaintracksFetch } from '../ChaintracksFetch'
+import { asArray, asString } from '../../../../../utility/utilityHelpers.noBuffer'
+import { validBulkHeaderFilesByFileHash } from '../validBulkHeaderFilesByFileHash'
 
 describe('ChaintracksFetch tests', () => {
   jest.setTimeout(99999999)
@@ -11,7 +11,7 @@ describe('ChaintracksFetch tests', () => {
     const fetch = new ChaintracksFetch()
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     //const jsonResource = `${cdnUrl}/testNetV2.json`
-    const jsonResource = `${cdnUrl}/testNet.json`
+    const jsonResource = `${cdnUrl}/testNetBlockHeaders.json`
     const info: BulkHeaderFilesInfo = await fetch.fetchJson(jsonResource)
     expect(info).toBeDefined()
     expect(info.files.length).toBeGreaterThan(4)
@@ -24,7 +24,7 @@ describe('ChaintracksFetch tests', () => {
     const data = await fetch.download(url)
     expect(data.length).toBe(8000000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
+    expect(validBulkHeaderFilesByFileHash()[fileHash]).toBeDefined()
   })
 
   test('2 download faster crypto.subtle sha256', async () => {
@@ -35,7 +35,7 @@ describe('ChaintracksFetch tests', () => {
     expect(data.length).toBe(8000000)
     const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', Uint8Array.from(data)))
     const fileHash = asString(hash, 'base64')
-    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
+    expect(validBulkHeaderFilesByFileHash()[fileHash]).toBeDefined()
   })
 
   test('3 download', async () => {
@@ -45,7 +45,7 @@ describe('ChaintracksFetch tests', () => {
     const data = await fetch.download(url)
     expect(data.length).toBe(80 * 100000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
+    expect(validBulkHeaderFilesByFileHash()[fileHash]).toBeDefined()
   })
 
   test('4 download', async () => {
@@ -55,6 +55,6 @@ describe('ChaintracksFetch tests', () => {
     const data = await fetch.download(url)
     expect(data.length).toBe(80 * 100000)
     const fileHash = asString(Hash.sha256(asArray(data)), 'base64')
-    expect(validBulkHeaderFilesByFileHash[fileHash]).toBeDefined()
+    expect(validBulkHeaderFilesByFileHash()[fileHash]).toBeDefined()
   })
 })

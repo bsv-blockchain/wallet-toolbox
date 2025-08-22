@@ -6,6 +6,7 @@ export interface ChaintracksStorageMemoryOptions extends ChaintracksStorageKnexO
   sqliteClient: 'sqlite3' | 'better-sqlite3' | undefined
 }
 
+/*
 export class ChaintracksStorageMemory extends ChaintracksStorageKnex {
   static createStorageMemoryOptions(chain: Chain) {
     const options: ChaintracksStorageMemoryOptions = {
@@ -25,3 +26,4 @@ export class ChaintracksStorageMemory extends ChaintracksStorageKnex {
     super(options)
   }
 }
+*/

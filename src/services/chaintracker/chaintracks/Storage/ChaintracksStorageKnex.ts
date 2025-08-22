@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 import { ChaintracksKnexMigrations } from './ChaintracksKnexMigrations'
 import { InsertHeaderResult, ChaintracksStorageBaseOptions } from '../Api/ChaintracksStorageApi'
-import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksStorageBase } from './ChaintracksStorageBase'
 import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
 import {

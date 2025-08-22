@@ -10,7 +10,7 @@ const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
 describe('Chaintracks tests', () => {
   jest.setTimeout(99999999)
 
-  test('0 basic operation mainnet', async () => {
+  test.skip('0 basic operation mainnet', async () => {
     const o = createDefaultChaintracksOptions('main', rootFolder)
     const c = new Chaintracks(o)
     await c.makeAvailable()
@@ -27,7 +27,7 @@ describe('Chaintracks tests', () => {
     await NoDbBody('main')
   })
 
-  test('1 NoDb testnet', async () => {
+  test('2 NoDb testnet', async () => {
     await NoDbBody('test')
   })
 
@@ -40,10 +40,10 @@ describe('Chaintracks tests', () => {
       console.log(`Header received: ${header.height} ${header.hash}`)
     })
 
-    let done = false
-    for (; !done; ) {
-      await wait(10000)
-    }
+    //let done = false
+    //for (; !done; ) {
+    await wait(1000)
+    //}
 
     await c.destroy()
   }

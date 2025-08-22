@@ -1,6 +1,8 @@
 import { _tu, expectToThrowWERR } from '../../utils/TestUtilsWalletStorage'
 import { sdk } from '../../../src/index.client'
 
+const includeTestChaintracks = false
+
 describe('getHeight tests', () => {
   jest.setTimeout(99999999)
 
@@ -8,9 +10,11 @@ describe('getHeight tests', () => {
   const env = _tu.getEnv('test')
 
   beforeAll(async () => {
-    ctxs.push(await _tu.createSQLiteTestWallet({ databaseName: 'getHeightTestsSQLite' }))
-    if (env.runMySQL) {
-      ctxs.push(await _tu.createMySQLTestWallet({ databaseName: 'getHeightTestsMySQL' }))
+    if (includeTestChaintracks) {
+      ctxs.push(await _tu.createSQLiteTestWallet({ databaseName: 'getHeightTestsSQLite' }))
+      if (env.runMySQL) {
+        ctxs.push(await _tu.createMySQLTestWallet({ databaseName: 'getHeightTestsMySQL' }))
+      }
     }
   })
 

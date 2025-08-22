@@ -1,7 +1,7 @@
 import { Chain } from '../../../../sdk'
 import { logger } from '../../../../utility/utilityHelpers'
 import { BlockHeader } from '../Api/BlockHeaderApi'
-import { BulkIngestorBase } from '../Base/BulkIngestorBase'
+import { BulkIngestorBase } from './BulkIngestorBase'
 import { HeightRange, HeightRanges } from '../util/HeightRange'
 import { BulkIngestorWhatsOnChainOptions } from './BulkIngestorWhatsOnChainCdn'
 import { StopListenerToken, WocHeadersBulkListener } from './WhatsOnChainIngestorWs'

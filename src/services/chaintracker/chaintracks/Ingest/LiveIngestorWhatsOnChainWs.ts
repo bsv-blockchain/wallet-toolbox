@@ -1,5 +1,5 @@
 import { BlockHeader, Chain } from '../../../../sdk'
-import { LiveIngestorBase } from '../Base/LiveIngestorBase'
+import { LiveIngestorBase } from './LiveIngestorBase'
 import { LiveIngestorWhatsOnChainOptions } from './LiveIngestorWhatsOnChainPoll'
 import { StopListenerToken, WocHeadersLiveListener } from './WhatsOnChainIngestorWs'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices } from './WhatsOnChainServices'

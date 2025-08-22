@@ -1,12 +1,12 @@
 import { Knex, knex as makeKnex } from 'knex'
-import { BlockHeader } from '../Api/BlockHeaderApi'
-import { ChaintracksStorageKnex } from '../Storage'
-import { deserializeBlockHeaders } from '../util/blockHeaderUtilities'
-import { BulkFileDataManager } from '../util/BulkFileDataManager'
-import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
-import { ChaintracksFs } from '../util/ChaintracksFs'
-import { LocalCdnServer } from './LocalCdnServer'
-import { Chain } from '../../../../sdk/types'
+import { BlockHeader } from '../../Api/BlockHeaderApi'
+import { ChaintracksStorageKnex } from '../../Storage/ChaintracksStorageKnex'
+import { deserializeBlockHeaders } from '../blockHeaderUtilities'
+import { BulkFileDataManager } from '../BulkFileDataManager'
+import { BulkHeaderFileInfo } from '../BulkHeaderFile'
+import { ChaintracksFs } from '../ChaintracksFs'
+import { LocalCdnServer } from '../../__tests/LocalCdnServer'
+import { Chain } from '../../../../../sdk/types'
 
 const runSlowTests = false
 

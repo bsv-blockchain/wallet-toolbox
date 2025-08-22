@@ -4,25 +4,13 @@ import {
   ChaintracksStorageIngestApi,
   ChaintracksStorageQueryApi as ChaintracksStorageQueryApi
 } from '../Api/ChaintracksStorageApi'
-import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
 import { HeightRange } from '../util/HeightRange'
-import {
-  addWork,
-  convertBitsToWork,
-  deserializeBlockHeader,
-  deserializeBlockHeaders,
-  isMoreWork,
-  serializeBaseBlockHeader,
-  subWork
-} from '../util/blockHeaderUtilities'
+import { addWork, convertBitsToWork, isMoreWork, subWork } from '../util/blockHeaderUtilities'
 
 import { Chain } from '../../../../sdk/types'
-import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
-import { Hash } from '@bsv/sdk'
-import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
-import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
+import { BlockHeader, LiveBlockHeader } from '../Api/BlockHeaderApi'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { BulkFileDataManager } from '../util/BulkFileDataManager'
-import { ChaintracksFetch } from '../util/ChaintracksFetch'
 
 /**
  * Required interface methods of a Chaintracks Storage Engine implementation.

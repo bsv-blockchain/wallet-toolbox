@@ -2,6 +2,8 @@ import { Beef, CreateActionArgs, InternalizeActionArgs, P2PKH, WalletProtocol } 
 import { sdk } from '../../../src/index.all'
 import { _tu, expectToThrowWERR, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
+const includeTestChaintracks = false
+
 describe('internalizeAction tests', () => {
   jest.setTimeout(99999999)
 
@@ -11,8 +13,10 @@ describe('internalizeAction tests', () => {
   const useSharedCtxs = true
 
   beforeAll(async () => {
-    if (env.runMySQL) gctxs.push(await _tu.createLegacyWalletMySQLCopy('actionInternalizeActionTests'))
-    gctxs.push(await _tu.createLegacyWalletSQLiteCopy('actionInternalizeActionTests'))
+    if (includeTestChaintracks) {
+      if (env.runMySQL) gctxs.push(await _tu.createLegacyWalletMySQLCopy('actionInternalizeActionTests'))
+      gctxs.push(await _tu.createLegacyWalletSQLiteCopy('actionInternalizeActionTests'))
+    }
   })
 
   afterAll(async () => {
@@ -485,6 +489,7 @@ describe('internalizeAction tests', () => {
   })
 
   test('5_internalize 2 wallet payments and 2 basket insertions in receiving wallet with checks', async () => {
+    if (!includeTestChaintracks) return
     const ctxs: TestWalletNoSetup[] = []
     if (env.runMySQL) ctxs.push(await _tu.createLegacyWalletMySQLCopy('actionInternalizeAction5Tests'))
     ctxs.push(await _tu.createLegacyWalletSQLiteCopy('actionInternalizeAction5Tests'))

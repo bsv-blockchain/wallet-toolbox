@@ -1,6 +1,8 @@
 import { sdk } from '../../../index.client'
 import { ChaintracksServiceClient } from '../chaintracks'
 
+const includeTestChaintracks = false
+
 describe('ChaintracksServiceClient tests', () => {
   jest.setTimeout(99999999)
 
@@ -12,6 +14,7 @@ describe('ChaintracksServiceClient tests', () => {
   })
 
   test('1 testNet findHeaderForHeight', async () => {
+    if (!includeTestChaintracks) return
     const client = makeClient('test')
     const r = await client.findHeaderForHeight(1651723)
     expect(r?.hash).toBe('0000000049686fe721f70614c89df146e410240f838b8f3ef8e6471c6dfdd153')

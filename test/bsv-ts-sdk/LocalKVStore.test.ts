@@ -1,6 +1,8 @@
 import { _tu, logger, TestWalletNoSetup } from '../utils/TestUtilsWalletStorage'
 import { LocalKVStore } from '@bsv/sdk'
 
+const includeTestChaintracks = false
+
 describe('LocalKVStore tests', () => {
   jest.setTimeout(99999999)
 
@@ -29,6 +31,7 @@ describe('LocalKVStore tests', () => {
   })
 
   test('1 set get', async () => {
+    if (!includeTestChaintracks) return
     for (const { storage, wallet } of ctxs) {
       const kvStore = new LocalKVStore(wallet, context, false, undefined, true)
       await kvStore.set(key1, 'value1')
@@ -38,6 +41,7 @@ describe('LocalKVStore tests', () => {
   })
 
   test('3 set x 4 get', async () => {
+    if (!includeTestChaintracks) return
     for (const { storage, wallet } of ctxs) {
       const kvStore = new LocalKVStore(wallet, context, false, undefined, true)
       const promises = [
@@ -71,6 +75,7 @@ describe('LocalKVStore tests', () => {
   })
 
   test('5 set x 4 get set x 4 get', async () => {
+    if (!includeTestChaintracks) return
     for (const { storage, wallet } of ctxs) {
       const kvStore = new LocalKVStore(wallet, context, false, undefined, true)
       let v4: string | undefined

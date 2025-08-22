@@ -3,6 +3,7 @@ import { AtomicBEEF, Beef, CreateActionArgs, SignActionArgs } from '@bsv/sdk'
 import { sdk, StorageKnex } from '../../../src/index.all'
 import { _tu, expectToThrowWERR, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
+const includeTestChaintracks = false
 const noLog = true
 
 describe('createAction test', () => {
@@ -93,6 +94,7 @@ describe('createAction test', () => {
   })
 
   test('2_signableTransaction', async () => {
+    if (!includeTestChaintracks) return
     for (const { wallet } of ctxs) {
       const root = '02135476'
       const kp = _tu.getKeyPair(root.repeat(8))

@@ -3,7 +3,7 @@ import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../
 import { HeightRange } from './HeightRange'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
-import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksStorageBase } from '../Storage/ChaintracksStorageBase'
 import { Hash } from '@bsv/sdk'
 
 /**

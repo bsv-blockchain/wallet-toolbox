@@ -23,23 +23,24 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ArcConfig](#interface-arcconfig) | [ChaintracksApi](#interface-chaintracksapi) | [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) |
-| [BaseBlockHeader](#interface-baseblockheader) | [ChaintracksClientApi](#interface-chaintracksclientapi) | [ExchangeRatesIoApi](#interface-exchangeratesioapi) |
-| [BitailsConfig](#interface-bitailsconfig) | [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [GetHeaderByteFileLinksResult](#interface-getheaderbytefilelinksresult) |
-| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [ChaintracksFsApi](#interface-chaintracksfsapi) | [HeightRangeApi](#interface-heightrangeapi) |
-| [BlockHeader](#interface-blockheader) | [ChaintracksInfoApi](#interface-chaintracksinfoapi) | [HeightRanges](#interface-heightranges) |
-| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [LiveBlockHeader](#interface-liveblockheader) |
-| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [ChaintracksOptions](#interface-chaintracksoptions) | [LiveIngestorApi](#interface-liveingestorapi) |
-| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) |
-| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) |
-| [BulkIngestorApi](#interface-bulkingestorapi) | [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [ServiceCall](#interface-servicecall) |
-| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [ChaintracksServiceOptions](#interface-chaintracksserviceoptions) | [ServiceToCall](#interface-servicetocall) |
-| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [WhatsOnChainServicesOptions](#interface-whatsonchainservicesoptions) |
-| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [WocChainInfo](#interface-wocchaininfo) |
-| [BulkStorageApi](#interface-bulkstorageapi) | [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [WocGetHeaderByteFileLinks](#interface-wocgetheaderbytefilelinks) |
-| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [WocGetHeadersHeader](#interface-wocgetheadersheader) |
-| [BulkSyncResult](#interface-bulksyncresult) | [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) | [WocHeader](#interface-wocheader) |
+| [ArcConfig](#interface-arcconfig) | [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [ChaintracksClientApi](#interface-chaintracksclientapi) | [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) |
+| [BaseBlockHeader](#interface-baseblockheader) | [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [ExchangeRatesIoApi](#interface-exchangeratesioapi) |
+| [BitailsConfig](#interface-bitailsconfig) | [ChaintracksFsApi](#interface-chaintracksfsapi) | [GetHeaderByteFileLinksResult](#interface-getheaderbytefilelinksresult) |
+| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [ChaintracksInfoApi](#interface-chaintracksinfoapi) | [HeightRangeApi](#interface-heightrangeapi) |
+| [BlockHeader](#interface-blockheader) | [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [HeightRanges](#interface-heightranges) |
+| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [ChaintracksOptions](#interface-chaintracksoptions) | [LiveBlockHeader](#interface-liveblockheader) |
+| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [LiveIngestorApi](#interface-liveingestorapi) |
+| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) |
+| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) |
+| [BulkIngestorApi](#interface-bulkingestorapi) | [ChaintracksServiceOptions](#interface-chaintracksserviceoptions) | [ServiceCall](#interface-servicecall) |
+| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [ServiceToCall](#interface-servicetocall) |
+| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [WhatsOnChainServicesOptions](#interface-whatsonchainservicesoptions) |
+| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [WocChainInfo](#interface-wocchaininfo) |
+| [BulkStorageApi](#interface-bulkstorageapi) | [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [WocGetHeaderByteFileLinks](#interface-wocgetheaderbytefilelinks) |
+| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [ChaintracksStorageKnexOptions](#interface-chaintracksstorageknexoptions) | [WocGetHeadersHeader](#interface-wocgetheadersheader) |
+| [BulkSyncResult](#interface-bulksyncresult) | [ChaintracksStorageMemoryOptions](#interface-chaintracksstoragememoryoptions) | [WocHeader](#interface-wocheader) |
+| [ChaintracksApi](#interface-chaintracksapi) | [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1758,6 +1759,75 @@ Argument Details
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: ChaintracksStorageKnexOptions
+
+```ts
+export interface ChaintracksStorageKnexOptions extends ChaintracksStorageBaseOptions {
+    knex: Knex | undefined;
+    headerTableName: string;
+    bulkBlockHashTableName: string;
+    bulkMerkleRootTableName: string;
+}
+```
+
+See also: [ChaintracksStorageBaseOptions](./services.md#interface-chaintracksstoragebaseoptions)
+
+###### Property bulkBlockHashTableName
+
+Required.
+
+The table name for the block header hash to height index.
+
+```ts
+bulkBlockHashTableName: string
+```
+
+###### Property bulkMerkleRootTableName
+
+Required.
+
+The table name for the block header merkleRoot to height index.
+
+```ts
+bulkMerkleRootTableName: string
+```
+
+###### Property headerTableName
+
+Required.
+
+The table name for live block headers.
+
+```ts
+headerTableName: string
+```
+
+###### Property knex
+
+Required.
+
+Knex.js database interface initialized with valid connection configuration.
+
+```ts
+knex: Knex | undefined
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: ChaintracksStorageMemoryOptions
+
+```ts
+export interface ChaintracksStorageMemoryOptions extends ChaintracksStorageKnexOptions {
+    sqliteClient: "sqlite3" | "better-sqlite3" | undefined;
+}
+```
+
+See also: [ChaintracksStorageKnexOptions](./services.md#interface-chaintracksstorageknexoptions)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Interface: ChaintracksStorageNoDbOptions
 
 ```ts
@@ -2590,19 +2660,20 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ARC](#class-arc) | [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksWritableFile](#class-chaintrackswritablefile) |
-| [Bitails](#class-bitails) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [HeightRange](#class-heightrange) |
-| [BulkFileDataManager](#class-bulkfiledatamanager) | [BulkIngestorWhatsOnChainWs](#class-bulkingestorwhatsonchainws) | [LiveIngestorBase](#class-liveingestorbase) |
-| [BulkFileDataReader](#class-bulkfiledatareader) | [BulkStorageBase](#class-bulkstoragebase) | [LiveIngestorWhatsOnChainPoll](#class-liveingestorwhatsonchainpoll) |
-| [BulkFilesReader](#class-bulkfilesreader) | [Chaintracks](#class-chaintracks) | [LiveIngestorWhatsOnChainWs](#class-liveingestorwhatsonchainws) |
-| [BulkFilesReaderFs](#class-bulkfilesreaderfs) | [ChaintracksAppendableFile](#class-chaintracksappendablefile) | [SdkWhatsOnChain](#class-sdkwhatsonchain) |
-| [BulkFilesReaderStorage](#class-bulkfilesreaderstorage) | [ChaintracksFetch](#class-chaintracksfetch) | [ServiceCollection](#class-servicecollection) |
-| [BulkHeaderFile](#class-bulkheaderfile) | [ChaintracksFsStatics](#class-chaintracksfsstatics) | [Services](#class-services) |
+| [ARC](#class-arc) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [ChaintracksWritableFile](#class-chaintrackswritablefile) |
+| [Bitails](#class-bitails) | [BulkIngestorWhatsOnChainWs](#class-bulkingestorwhatsonchainws) | [HeightRange](#class-heightrange) |
+| [BulkFileDataManager](#class-bulkfiledatamanager) | [BulkStorageBase](#class-bulkstoragebase) | [LiveIngestorBase](#class-liveingestorbase) |
+| [BulkFileDataReader](#class-bulkfiledatareader) | [Chaintracks](#class-chaintracks) | [LiveIngestorWhatsOnChainPoll](#class-liveingestorwhatsonchainpoll) |
+| [BulkFilesReader](#class-bulkfilesreader) | [ChaintracksAppendableFile](#class-chaintracksappendablefile) | [LiveIngestorWhatsOnChainWs](#class-liveingestorwhatsonchainws) |
+| [BulkFilesReaderFs](#class-bulkfilesreaderfs) | [ChaintracksFetch](#class-chaintracksfetch) | [SdkWhatsOnChain](#class-sdkwhatsonchain) |
+| [BulkFilesReaderStorage](#class-bulkfilesreaderstorage) | [ChaintracksFsStatics](#class-chaintracksfsstatics) | [ServiceCollection](#class-servicecollection) |
+| [BulkHeaderFile](#class-bulkheaderfile) | [ChaintracksKnexMigrations](#class-chaintracksknexmigrations) | [Services](#class-services) |
 | [BulkHeaderFileFs](#class-bulkheaderfilefs) | [ChaintracksReadableFile](#class-chaintracksreadablefile) | [SingleWriterMultiReaderLock](#class-singlewritermultireaderlock) |
 | [BulkHeaderFileStorage](#class-bulkheaderfilestorage) | [ChaintracksService](#class-chaintracksservice) | [WhatsOnChain](#class-whatsonchain) |
 | [BulkHeaderFiles](#class-bulkheaderfiles) | [ChaintracksServiceClient](#class-chaintracksserviceclient) | [WhatsOnChainNoServices](#class-whatsonchainnoservices) |
 | [BulkIngestorBase](#class-bulkingestorbase) | [ChaintracksStorageBase](#class-chaintracksstoragebase) | [WhatsOnChainServices](#class-whatsonchainservices) |
-| [BulkIngestorCDN](#class-bulkingestorcdn) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |  |
+| [BulkIngestorCDN](#class-bulkingestorcdn) | [ChaintracksStorageKnex](#class-chaintracksstorageknex) |  |
+| [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3643,6 +3714,26 @@ See also: [ChaintracksAppendableFileApi](./services.md#interface-chaintracksappe
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Class: ChaintracksKnexMigrations
+
+```ts
+export class ChaintracksKnexMigrations implements MigrationSource<string> {
+    migrations: Record<string, Migration> = {};
+    constructor(public chain: Chain) 
+    async getMigrations(): Promise<string[]> 
+    getMigrationName(migration: string) 
+    async getMigration(migration: string): Promise<Migration> 
+    async getLatestMigration(): Promise<string> 
+    static async latestMigration(): Promise<string> 
+    setupMigrations(): Record<string, Migration> 
+}
+```
+
+See also: [Chain](./client.md#type-chain)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Class: ChaintracksReadableFile
 
 ```ts
@@ -3787,6 +3878,78 @@ See also: [BlockHeader](./services.md#interface-blockheader), [BulkFileDataManag
 
 ```ts
 abstract insertHeader(header: BlockHeader): Promise<InsertHeaderResult>
+```
+See also: [BlockHeader](./services.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
+
+Returns
+
+details of conditions found attempting to insert header
+
+Argument Details
+
++ **header**
+  + Header to attempt to add to live storage.
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: ChaintracksStorageKnex
+
+Implements the ChaintracksStorageApi using Knex.js for both MySql and Sqlite support.
+Also see `chaintracksStorageMemory` which leverages Knex support for an in memory database.
+
+```ts
+export class ChaintracksStorageKnex extends ChaintracksStorageBase implements ChaintracksStorageBulkFileApi {
+    static createStorageKnexOptions(chain: Chain, knex?: Knex): ChaintracksStorageKnexOptions 
+    knex: Knex;
+    _dbtype?: DBType;
+    headerTableName: string;
+    bulkFilesTableName: string = "bulk_files";
+    bulkBlockHashTableName: string;
+    bulkMerkleRootTableName: string;
+    constructor(options: ChaintracksStorageKnexOptions) 
+    get dbtype(): DBType 
+    override async shutdown(): Promise<void> 
+    override async makeAvailable(): Promise<void> 
+    override async migrateLatest(): Promise<void> 
+    override async dropAllData(): Promise<void> 
+    override async destroy(): Promise<void> 
+    async findLiveHeightRange(): Promise<{
+        minHeight: number;
+        maxHeight: number;
+    }> 
+    async findLiveHeaderForHeaderId(headerId: number): Promise<LiveBlockHeader> 
+    async findChainTipHeader(): Promise<LiveBlockHeader> 
+    async findChainTipHeaderOrUndefined(): Promise<LiveBlockHeader | undefined> 
+    async findLiveHeaderForHeight(height: number): Promise<LiveBlockHeader | null> 
+    async findLiveHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | null> 
+    async findLiveHeaderForMerkleRoot(merkleRoot: string): Promise<LiveBlockHeader | null> 
+    async deleteBulkFile(fileId: number): Promise<number> 
+    async insertBulkFile(file: BulkHeaderFileInfo): Promise<number> 
+    async updateBulkFile(fileId: number, file: BulkHeaderFileInfo): Promise<number> 
+    async getBulkFiles(): Promise<BulkHeaderFileInfo[]> 
+    dbTypeSubstring(source: string, fromOffset: number, forLength?: number) 
+    async getBulkFileData(fileId: number, offset?: number, length?: number): Promise<Uint8Array | undefined> 
+    async insertHeader(header: BlockHeader): Promise<InsertHeaderResult> 
+    async findMaxHeaderId(): Promise<number> 
+    async getLiveHeightRange(): Promise<HeightRange> 
+    async appendToIndexTable(table: string, index: string, buffers: string[], minHeight: number): Promise<void> 
+    async appendToIndexTableChunked(table: string, index: string, buffers: string[], minHeight: number, chunkSize: number): Promise<void> 
+    override async deleteLiveBlockHeaders(): Promise<void> 
+    override async deleteBulkBlockHeaders(): Promise<void> 
+    async deleteOlderLiveBlockHeaders(maxHeight: number): Promise<number> 
+    async getHeaders(height: number, count: number): Promise<number[]> 
+    concatSerializedHeaders(bufs: number[][]): number[] 
+    async liveHeadersForBulk(count: number): Promise<LiveBlockHeader[]> 
+}
+```
+
+See also: [BlockHeader](./services.md#interface-blockheader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [Chain](./client.md#type-chain), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [ChaintracksStorageBulkFileApi](./services.md#interface-chaintracksstoragebulkfileapi), [ChaintracksStorageKnexOptions](./services.md#interface-chaintracksstorageknexoptions), [DBType](./storage.md#type-dbtype), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+
+###### Method insertHeader
+
+```ts
+async insertHeader(header: BlockHeader): Promise<InsertHeaderResult> 
 ```
 See also: [BlockHeader](./services.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
 

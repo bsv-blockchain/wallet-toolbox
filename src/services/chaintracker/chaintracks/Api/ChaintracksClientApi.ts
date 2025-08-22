@@ -27,7 +27,7 @@ export interface ChaintracksInfoApi {
   chain: Chain
   heightBulk: number
   heightLive: number
-  storageEngine: string
+  storage: string
   bulkIngestors: string[]
   liveIngestors: string[]
   packages: ChaintracksPackageInfoApi[]

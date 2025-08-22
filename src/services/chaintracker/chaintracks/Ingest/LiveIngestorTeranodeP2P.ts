@@ -1,5 +1,5 @@
 import { BlockHeader, Chain } from '../../../../sdk'
-import { LiveIngestorBase, LiveIngestorBaseOptions } from '../Base/LiveIngestorBase'
+import { LiveIngestorBase, LiveIngestorBaseOptions } from './LiveIngestorBase'
 import { EnqueueHandler, ErrorHandler, WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChainServices'
 
 export interface LiveIngestorTeranodeP2POptions extends LiveIngestorBaseOptions {

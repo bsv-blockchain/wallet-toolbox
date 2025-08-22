@@ -1,9 +1,8 @@
 import { Knex, knex as makeKnex } from 'knex'
-import { Chaintracks } from '../Chaintracks'
-import { ChaintracksFs } from '../util/ChaintracksFs'
-import { Chain } from '../../../../sdk'
-import { ChaintracksStorageKnex } from '../Storage/ChaintracksStorageKnex'
-import { deserializeBaseBlockHeader, deserializeBlockHeader, genesisHeader } from '../util/blockHeaderUtilities'
+import { ChaintracksFs } from '../../util/ChaintracksFs'
+import { Chain } from '../../../../../sdk'
+import { ChaintracksStorageKnex } from '../ChaintracksStorageKnex'
+import { deserializeBaseBlockHeader, genesisHeader } from '../../util/blockHeaderUtilities'
 
 describe('ChaintracksStorageKnex tests', () => {
   jest.setTimeout(99999999)

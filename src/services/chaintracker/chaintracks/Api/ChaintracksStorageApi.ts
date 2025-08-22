@@ -348,6 +348,8 @@ export interface ChaintracksStorageIngestApi {
 }
 
 export interface ChaintracksStorageApi extends ChaintracksStorageQueryApi, ChaintracksStorageIngestApi {
+  bulkManager: BulkFileDataManager
+
   /**
    * Close and release all resources.
    */

@@ -6,7 +6,7 @@ import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Hash } from '@bsv/sdk'
 import { asUint8Array } from '../../../../index.client'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
-import { ChaintracksStorageBase } from '../Base/ChaintracksStorageBase'
+import { ChaintracksStorageBase } from '../Storage/ChaintracksStorageBase'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import {
   BulkHeaderFile,

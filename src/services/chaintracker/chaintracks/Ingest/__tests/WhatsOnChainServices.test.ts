@@ -31,7 +31,8 @@ describe('WhatsOnChainServices tests', () => {
     stopOldListenersToken.stop?.()
   }
 
-  test('0 listenForOldBlockHeaders', async () => {
+  test.skip('0 listenForOldBlockHeaders', async () => {
+    // The service this depends on appears to be deprecated...
     const height = await woc.getChainTipHeight()
     expect(height > 600000).toBe(true)
 
@@ -55,7 +56,8 @@ describe('WhatsOnChainServices tests', () => {
 
   const stopNewListenersToken: StopListenerToken = { stop: undefined }
 
-  test('1 listenForNewBlockHeaders', async () => {
+  test.skip('1 listenForNewBlockHeaders', async () => {
+    // The service this depends on appears to be deprecated...
     const height = await woc.getChainTipHeight()
     expect(height > 600000).toBe(true)
 
@@ -81,30 +83,30 @@ describe('WhatsOnChainServices tests', () => {
   test('2 get latest header bytes', async () => {
     const fetch = new ChaintracksFetch()
 
-    for (;;) {
-      const bytes = await fetch.download(`https://api.whatsonchain.com/v1/bsv/main/block/headers/latest`)
-      console.log(`headers: ${bytes.length / 80}`)
-      const latest = await fetch.download(`https://api.whatsonchain.com/v1/bsv/main/block/headers/latest?count=1`)
-      const bh = deserializeBlockHeader(latest, 0, 0)
-      console.log(`latest hash: ${bh.hash} at ${new Date().toISOString()}`)
-      await wait(60 * 1000)
-    }
+    //for (;;) {
+    const bytes = await fetch.download(`https://api.whatsonchain.com/v1/bsv/main/block/headers/latest`)
+    console.log(`headers: ${bytes.length / 80}`)
+    const latest = await fetch.download(`https://api.whatsonchain.com/v1/bsv/main/block/headers/latest?count=1`)
+    const bh = deserializeBlockHeader(latest, 0, 0)
+    console.log(`latest hash: ${bh.hash} at ${new Date().toISOString()}`)
+    //  await wait(60 * 1000)
+    //}
   })
 
   test('3 get headers', async () => {
     const fetch = new ChaintracksFetch()
 
-    for (;;) {
-      const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(
-        `https://api.whatsonchain.com/v1/bsv/main/block/headers`
-      )
-      let log = ''
-      for (const h of headers) {
-        log += `${h.height} ${h.hash} ${h.confirmations} ${h.nTx}\n`
-      }
-      console.log(`${new Date().toISOString()}\n${log}`)
-      await wait(60 * 1000)
+    //for (;;) {
+    const headers = await fetch.fetchJson<WocGetHeadersHeader[]>(
+      `https://api.whatsonchain.com/v1/bsv/main/block/headers`
+    )
+    let log = ''
+    for (const h of headers) {
+      log += `${h.height} ${h.hash} ${h.confirmations} ${h.nTx}\n`
     }
+    console.log(`${new Date().toISOString()}\n${log}`)
+    //await wait(60 * 1000)
+    //}
   })
 
   test('4 get header byte file links', async () => {

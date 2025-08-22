@@ -21,8 +21,9 @@ describe('LiveIngestorWhatsOnChainPoll tests', () => {
         if (log) {
           console.log(`LiveIngestorWhatsOnChain received ${count} headers:\n${log}`)
           log = ''
+          break
         }
-        if (count >= 11) break
+        //if (count >= 11) break
         await wait(100)
       }
     }

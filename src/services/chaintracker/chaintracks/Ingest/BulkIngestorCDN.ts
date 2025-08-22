@@ -1,7 +1,7 @@
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
 import { BulkIngestorBaseOptions } from '../Api/BulkIngestorApi'
-import { BulkIngestorBase } from '../Base/BulkIngestorBase'
+import { BulkIngestorBase } from './BulkIngestorBase'
 import { BulkHeaderFileInfo } from '../util/BulkHeaderFile'
 import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange, HeightRanges } from '../util/HeightRange'

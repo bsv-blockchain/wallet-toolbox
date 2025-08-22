@@ -5,7 +5,7 @@ import { BulkHeaderFilesInfo } from '../util/BulkHeaderFile'
 import { HeightRange, HeightRanges } from '../util/HeightRange'
 import { Chain } from '../../../../sdk/types'
 import { BlockHeader } from '../Api/BlockHeaderApi'
-import { ChaintracksStorageBase } from './ChaintracksStorageBase'
+import { ChaintracksStorageBase } from '../Storage/ChaintracksStorageBase'
 
 export abstract class BulkIngestorBase implements BulkIngestorApi {
   /**
