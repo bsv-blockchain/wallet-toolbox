@@ -1,14 +1,18 @@
 import { Beef, ListOutputsResult, OriginatorDomainNameStringUnder250Bytes, WalletOutput } from '@bsv/sdk'
-import { TableOutput, TableOutputBasket, TableOutputTag } from '../index.client'
-import { asString, sdk, verifyId, verifyOne } from '../../index.client'
 import { getBasketToSpecOp, ListOutputsSpecOp } from './ListOutputsSpecOp'
 import { StorageIdb } from '../StorageIdb'
-import { TransactionStatus, WERR_NOT_IMPLEMENTED } from '../../sdk'
+import { AuthId, FindOutputsArgs } from '../../sdk/WalletStorage.interfaces'
+import { ValidListOutputsArgs } from '../../sdk/validationHelpers'
+import { verifyId } from '../../utility/utilityHelpers'
+import { WERR_NOT_IMPLEMENTED } from '../../sdk/WERR_errors'
+import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
+import { TransactionStatus } from '../../sdk/types'
+import { asString } from '../../utility/utilityHelpers.noBuffer'
 
 export async function listOutputsIdb(
   storage: StorageIdb,
-  auth: sdk.AuthId,
-  vargs: sdk.ValidListOutputsArgs,
+  auth: AuthId,
+  vargs: ValidListOutputsArgs,
   originator?: OriginatorDomainNameStringUnder250Bytes
 ): Promise<ListOutputsResult> {
   const userId = verifyId(auth.userId)
@@ -103,7 +107,7 @@ export async function listOutputsIdb(
 
   const stati: TransactionStatus[] = ['completed', 'unproven', 'nosend']
 
-  const args: sdk.FindOutputsArgs = {
+  const args: FindOutputsArgs = {
     partial: {
       userId,
       basketId,

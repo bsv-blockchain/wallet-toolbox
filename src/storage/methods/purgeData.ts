@@ -1,15 +1,20 @@
 import { Beef } from '@bsv/sdk'
 import { Knex } from 'knex'
-import { TableCommission, TableOutput, TableOutputTagMap, TableTransaction, TableTxLabelMap } from '../index.client'
-import { sdk } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
+import { PurgeParams, PurgeResults, StorageGetBeefOptions, TrxToken } from '../../sdk/WalletStorage.interfaces'
+import { WalletError } from '../../sdk/WalletError'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { TableOutputTagMap } from '../schema/tables/TableOutputTagMap'
+import { TableTxLabelMap } from '../schema/tables/TableTxLabelMap'
+import { TableCommission } from '../schema/tables/TableCommission'
 
 export async function purgeData(
   storage: StorageKnex,
-  params: sdk.PurgeParams,
-  trx?: sdk.TrxToken
-): Promise<sdk.PurgeResults> {
-  const r: sdk.PurgeResults = { count: 0, log: '' }
+  params: PurgeParams,
+  trx?: TrxToken
+): Promise<PurgeResults> {
+  const r: PurgeResults = { count: 0, log: '' }
   const defaultAge = 1000 * 60 * 60 * 24 * 14
 
   const runPurgeQuery = async <T extends object>(pq: PurgeQuery): Promise<void> => {
@@ -22,7 +27,7 @@ export async function purgeData(
       }
     } catch (eu: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       throw eu
     }
   }
@@ -125,7 +130,7 @@ export async function purgeData(
     })
     for (const utxo of utxos) {
       // Figure out all the txids required to prove the validity of this utxo and merge proofs into beef.
-      const options: sdk.StorageGetBeefOptions = {
+      const options: StorageGetBeefOptions = {
         mergeToBeef: beef,
         ignoreServices: true
       }

@@ -1,16 +1,21 @@
 import { Beef, ListOutputsResult, OriginatorDomainNameStringUnder250Bytes, WalletOutput } from '@bsv/sdk'
-import { TableOutput, TableOutputBasket, TableOutputTag } from '../index.client'
-import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
 import { getBasketToSpecOp, ListOutputsSpecOp } from './ListOutputsSpecOp'
+import { AuthId, TrxToken } from '../../sdk/WalletStorage.interfaces'
+import { ValidListOutputsArgs } from '../../sdk/validationHelpers'
+import { verifyId, verifyOne } from '../../utility/utilityHelpers'
+import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
+import { TableOutputTag } from '../schema/tables/TableOutputTag'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { asString } from '../../utility/utilityHelpers.noBuffer'
 
 export async function listOutputs(
   dsk: StorageKnex,
-  auth: sdk.AuthId,
-  vargs: sdk.ValidListOutputsArgs,
+  auth: AuthId,
+  vargs: ValidListOutputsArgs,
   originator?: OriginatorDomainNameStringUnder250Bytes
 ): Promise<ListOutputsResult> {
-  const trx: sdk.TrxToken | undefined = undefined
+  const trx: TrxToken | undefined = undefined
   const userId = verifyId(auth.userId)
   const limit = vargs.limit
   let offset = vargs.offset
