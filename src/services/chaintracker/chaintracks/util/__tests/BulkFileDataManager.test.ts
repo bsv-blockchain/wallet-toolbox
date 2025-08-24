@@ -260,19 +260,24 @@ describe('BulkFileDataManager tests', () => {
   async function setupStorageKnex(
     manager: BulkFileDataManager,
     filename: string,
-    dropAll: boolean
+    deleteSqliteFile: boolean
   ): Promise<ChaintracksStorageKnex> {
+    const path = fs.pathJoin(rootFolder, `${filename}.sqlite`)
     const localSqlite: Knex.Config = {
       client: 'sqlite3',
-      connection: { filename: fs.pathJoin(rootFolder, `${filename}.sqlite`) },
+      connection: { filename: path },
       useNullAsDefault: true
     }
-    const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
+    if (deleteSqliteFile) {
+      const fs = ChaintracksFs
+      try { await fs.delete(path) } catch {}
+    }
+    const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(
+      chain, makeKnex(localSqlite)
+    )
+    knexOptions.bulkFileDataManager = manager
     const storage = new ChaintracksStorageKnex(knexOptions)
-    if (dropAll) await storage.dropAllData()
-    else await storage.makeAvailable()
-
-    await manager.setStorage(storage)
+    await storage.makeAvailable()
 
     return storage
   }

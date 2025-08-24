@@ -4,7 +4,6 @@ import {
   _tu,
   expectToThrowWERR,
   TestSetup1,
-  TestWalletNoSetup,
   TestWalletProviderNoSetup
 } from '../../utils/TestUtilsWalletStorage'
 import path from 'path'

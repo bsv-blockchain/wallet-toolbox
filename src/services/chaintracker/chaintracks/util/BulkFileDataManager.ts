@@ -746,10 +746,7 @@ export class BulkFileDataManager {
     if (fileHash !== bfd.fileHash)
       throw new WERR_INVALID_PARAMETER('fileHash', `a match for retrieved data for ${bfd.fileName}`)
 
-    // To avoid having read lock access having to worry about data being dropped, only ensureMaxRetained
-    // on inherently write operations (add, update).
-    // This means there should be a method to call to force the count back down periodically (more often than add/update only): TODO.
-    //this.ensureMaxRetained()
+    this.ensureMaxRetained()
     return bfd.data
   }
 

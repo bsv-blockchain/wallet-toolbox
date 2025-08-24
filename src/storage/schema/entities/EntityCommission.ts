@@ -1,5 +1,5 @@
 import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { arraysEqual, verifyOneOrNone } from "../../../utility/utilityHelpers"
+import { arraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
 import { TableCommission } from "../tables/TableCommission"
 import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
 
@@ -145,8 +145,5 @@ export class EntityCommission extends EntityBase<TableCommission> {
     }
     return wasMerged
   }
-}
-function verifyId(commissionId: number): number {
-  throw new Error("Function not implemented.")
 }
 
