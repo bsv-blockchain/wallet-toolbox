@@ -1,7 +1,12 @@
 # wallet-toolbox Significant Changes History
 
-This document captures the history of significant changes to the wallet-toolbox repository. The git commit history contains the details but is unable to draw
+This document captures the history of significant changes to the wallet-toolbox repository.
+The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
+
+## wallet-toolbox 1.6.1
+
+- Add initial port/re-implementation of Chaintracks
 
 ## wallet-toolbox 1.5.21
 
@@ -30,6 +35,10 @@ attention to changes that materially alter behavior or extend functionality.
 - update to bsv/sdk 1.6.5
 - add BHSServiceClient which allows for leaning on BlockHeadersService for chain tracking.
 - add ARC callbackURL and callbackToken to createDefaultWalletServiceOptions
+
+## wallet-toolbox 1.4.?
+
+- Only check for proofs when TaskNewHeader sets checkNow, tightens up control of required delay.
 
 ## wallet-toolbox 1.4.3
 

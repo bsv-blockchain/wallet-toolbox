@@ -1,6 +1,6 @@
 {
   "name": "@bsv/wallet-toolbox-mobile",
-  "version": "1.5.21",
+  "version": "1.6.1",
   "description": "Client only Wallet Storage",
   "main": "./out/src/index.mobile.js",
   "types": "./out/src/index.mobile.d.ts",
@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/bsv-blockchain/wallet-toolbox#readme",
   "dependencies": {
-    "@bsv/sdk": "^1.6.23"
+    "@bsv/sdk": "^1.6.24"
   }
 }

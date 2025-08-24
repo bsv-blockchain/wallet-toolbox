@@ -33,7 +33,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export interface MonitorDaemonSetup {
-    chain?: sdk.Chain;
+    chain?: Chain;
     sqliteFilename?: string;
     mySQLConnection?: string;
     knexConfig?: Knex.Config;
@@ -41,7 +41,7 @@ export interface MonitorDaemonSetup {
     storageKnexOptions?: StorageKnexOptions;
     storageProvider?: StorageProvider;
     storageManager?: WalletStorageManager;
-    servicesOptions?: sdk.WalletServicesOptions;
+    servicesOptions?: WalletServicesOptions;
     services?: Services;
     monitor?: Monitor;
 }
@@ -56,7 +56,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export interface MonitorOptions {
-    chain: sdk.Chain;
+    chain: Chain;
     services: Services;
     storage: MonitorStorage;
     chaintracks: ChaintracksServiceClient;
@@ -65,12 +65,12 @@ export interface MonitorOptions {
     abandonedMsecs: number;
     unprovenAttemptsLimitTest: number;
     unprovenAttemptsLimitMain: number;
-    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
-    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
+    onTransactionBroadcasted?: (broadcastResult: ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: ProvenTransactionStatus) => Promise<void>;
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
+See also: [Chain](./client.md#type-chain), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services)
 
 ###### Property msecsWaitPerMerkleProofServiceReq
 
@@ -85,7 +85,7 @@ msecsWaitPerMerkleProofServiceReq: number
 These are hooks for a wallet-toolbox client to get transaction updates.
 
 ```ts
-onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
+onTransactionBroadcasted?: (broadcastResult: ReviewActionResult) => Promise<void>
 ```
 See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
 
@@ -151,14 +151,14 @@ and potentially that reorgs update proofs that were already received.
 
 ```ts
 export class Monitor {
-    static createDefaultWalletMonitorOptions(chain: sdk.Chain, storage: MonitorStorage, services?: Services): MonitorOptions 
+    static createDefaultWalletMonitorOptions(chain: Chain, storage: MonitorStorage, services?: Services): MonitorOptions 
     options: MonitorOptions;
     services: Services;
-    chain: sdk.Chain;
+    chain: Chain;
     storage: MonitorStorage;
     chaintracks: ChaintracksServiceClient;
-    onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>;
-    onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>;
+    onTransactionBroadcasted?: (broadcastResult: ReviewActionResult) => Promise<void>;
+    onTransactionProven?: (txStatus: ProvenTransactionStatus) => Promise<void>;
     constructor(options: MonitorOptions) 
     oneSecond = 1000;
     oneMinute = 60 * this.oneSecond;
@@ -191,13 +191,13 @@ export class Monitor {
     lastNewHeader: BlockHeader | undefined;
     lastNewHeaderWhen: Date | undefined;
     processNewBlockHeader(header: BlockHeader): void 
-    callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
-    callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+    callOnBroadcastedTransaction(broadcastResult: ReviewActionResult): void 
+    callOnProvenTransaction(txStatus: ProvenTransactionStatus): void 
     processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [MonitorOptions](./monitor.md#interface-monitoroptions), [MonitorStorage](./monitor.md#type-monitorstorage), [ProvenTransactionStatus](./client.md#interface-proventransactionstatus), [ReviewActionResult](./client.md#interface-reviewactionresult), [Services](./services.md#class-services), [TaskPurgeParams](./monitor.md#interface-taskpurgeparams), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
 
 ###### Property _otherTasks
 
@@ -242,7 +242,7 @@ This is a function run from a TaskSendWaiting Monitor task.
 This allows the user of wallet-toolbox to 'subscribe' for transaction broadcast updates.
 
 ```ts
-callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void 
+callOnBroadcastedTransaction(broadcastResult: ReviewActionResult): void 
 ```
 See also: [ReviewActionResult](./client.md#interface-reviewactionresult)
 
@@ -253,7 +253,7 @@ This is a function run from a TaskCheckForProofs Monitor task.
 This allows the user of wallet-toolbox to 'subscribe' for transaction updates.
 
 ```ts
-callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void 
+callOnProvenTransaction(txStatus: ProvenTransactionStatus): void 
 ```
 See also: [ProvenTransactionStatus](./client.md#interface-proventransactionstatus)
 
@@ -266,7 +266,7 @@ Kicks processing 'unconfirmed' and 'unmined' request processing.
 ```ts
 processNewBlockHeader(header: BlockHeader): void 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method processReorg
 
@@ -282,7 +282,7 @@ Coinbase transactions always become invalid.
 ```ts
 processReorg(depth: number, oldTip: BlockHeader, newTip: BlockHeader): void 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -489,8 +489,10 @@ export class TaskNewHeader extends WalletMonitorTask {
     static taskName = "NewHeader";
     header?: BlockHeader;
     queuedHeader?: BlockHeader;
+    queuedHeaderWhen?: Date;
     constructor(monitor: Monitor, public triggerMsecs = 1 * monitor.oneMinute) 
     async getHeader(): Promise<BlockHeader> 
+    override async asyncSetup(): Promise<void> 
     trigger(nowMsecsSinceEpoch: number): {
         run: boolean;
     } 
@@ -498,7 +500,7 @@ export class TaskNewHeader extends WalletMonitorTask {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Monitor](./monitor.md#class-monitor), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
+See also: [BlockHeader](./client.md#interface-blockheader), [Monitor](./monitor.md#class-monitor), [WalletMonitorTask](./monitor.md#class-walletmonitortask)
 
 ###### Property header
 
@@ -507,7 +509,7 @@ This is always the most recent chain tip header returned from the chaintracker.
 ```ts
 header?: BlockHeader
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Property queuedHeader
 
@@ -517,7 +519,25 @@ when a cycle without a new header occurs and `processNewBlockHeader` is called.
 ```ts
 queuedHeader?: BlockHeader
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
+
+###### Method asyncSetup
+
+TODO: This is a temporary incomplete solution for which a full chaintracker
+with new header and reorg event notification is required.
+
+New header events drive retrieving merklePaths for newly mined transactions.
+This implementation performs this function.
+
+Reorg events are needed to know when previously retrieved mekrlePaths need to be
+updated in the proven_txs table (and ideally notifications delivered to users).
+Note that in-general, a reorg only shifts where in the block a transaction is mined,
+and sometimes which block. In the case of coinbase transactions, a transaction may
+also fail after a reorg.
+
+```ts
+override async asyncSetup(): Promise<void> 
+```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

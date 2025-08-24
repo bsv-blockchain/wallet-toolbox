@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableCertificate, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableCertificate } from '../tables/TableCertificate'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityCertificate extends EntityBase<TableCertificate> {
   constructor(api?: TableCertificate) {
@@ -137,7 +138,7 @@ export class EntityCertificate extends EntityBase<TableCertificate> {
     userId: number,
     ei: TableCertificate,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityCertificate; eiId: number }> {
     const ef = verifyOneOrNone(
       await storage.findCertificates({
@@ -156,7 +157,7 @@ export class EntityCertificate extends EntityBase<TableCertificate> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.userId = userId
     this.certificateId = 0
     this.certificateId = await storage.insertCertificate(this.toApi(), trx)
@@ -167,7 +168,7 @@ export class EntityCertificate extends EntityBase<TableCertificate> {
     since: Date | undefined,
     ei: TableCertificate,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

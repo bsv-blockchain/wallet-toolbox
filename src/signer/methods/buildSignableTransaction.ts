@@ -1,11 +1,19 @@
 import { Beef, Script, Transaction, TransactionInput, TransactionOutput } from '@bsv/sdk'
-import { asBsvSdkScript, sdk, verifyTruthy } from '../../index.client'
 import { Wallet, PendingStorageInput } from '../../Wallet'
-import { makeChangeLock } from './createAction'
+import {
+  StorageCreateActionResult,
+  StorageCreateTransactionSdkInput,
+  StorageCreateTransactionSdkOutput
+} from '../../sdk/WalletStorage.interfaces'
+import { ValidCreateActionArgs, ValidCreateActionInput } from '../../sdk/validationHelpers'
+import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { asBsvSdkScript, verifyTruthy } from '../../utility/utilityHelpers'
+import { KeyPair } from '../../sdk/types'
+import { ScriptTemplateBRC29 } from '../../utility/ScriptTemplateBRC29'
 
 export function buildSignableTransaction(
-  dctr: sdk.StorageCreateActionResult,
-  args: sdk.ValidCreateActionArgs,
+  dctr: StorageCreateActionResult,
+  args: ValidCreateActionArgs,
   wallet: Wallet
 ): {
   tx: Transaction
@@ -29,7 +37,7 @@ export function buildSignableTransaction(
   const voutToIndex = Array<number>(storageOutputs.length)
   for (let vout = 0; vout < storageOutputs.length; vout++) {
     const i = storageOutputs.findIndex(o => o.vout === vout)
-    if (i < 0) throw new sdk.WERR_INVALID_PARAMETER('output.vout', `sequential. ${vout} is missing`)
+    if (i < 0) throw new WERR_INVALID_PARAMETER('output.vout', `sequential. ${vout} is missing`)
     voutToIndex[vout] = i
   }
 
@@ -40,7 +48,7 @@ export function buildSignableTransaction(
     const i = voutToIndex[vout]
     const out = storageOutputs[i]
     if (vout !== out.vout)
-      throw new sdk.WERR_INVALID_PARAMETER('output.vout', `equal to array index. ${out.vout} !== ${vout}`)
+      throw new WERR_INVALID_PARAMETER('output.vout', `equal to array index. ${out.vout} !== ${vout}`)
 
     const change = out.providedBy === 'storage' && out.purpose === 'change'
 
@@ -70,8 +78,8 @@ export function buildSignableTransaction(
   // Merge and sort INPUTS info by vin order.
   /////////////
   const inputs: {
-    argsInput: sdk.ValidCreateActionInput | undefined
-    storageInput: sdk.StorageCreateTransactionSdkInput
+    argsInput: ValidCreateActionInput | undefined
+    storageInput: StorageCreateTransactionSdkInput
   }[] = []
   for (const storageInput of storageInputs) {
     const argsInput =
@@ -111,7 +119,7 @@ export function buildSignableTransaction(
     } else {
       // Type2: SABPPP protocol inputs which are signed using ScriptTemplateBRC29.
       if (storageInput.type !== 'P2PKH')
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'type',
           `vin ${storageInput.vin}, "${storageInput.type}" is not a supported unlocking script type.`
         )
@@ -152,4 +160,25 @@ export function buildSignableTransaction(
     pdi: pendingStorageInputs,
     log: ''
   }
+}
+
+/**
+ * Derive a change output locking script
+ */
+export function makeChangeLock(
+  out: StorageCreateTransactionSdkOutput,
+  dctr: StorageCreateActionResult,
+  args: ValidCreateActionArgs,
+  changeKeys: KeyPair,
+  wallet: Wallet
+): Script {
+  const derivationPrefix = dctr.derivationPrefix
+  const derivationSuffix = verifyTruthy(out.derivationSuffix)
+  const sabppp = new ScriptTemplateBRC29({
+    derivationPrefix,
+    derivationSuffix,
+    keyDeriver: wallet.keyDeriver
+  })
+  const lockingScript = sabppp.lock(changeKeys.privateKey, changeKeys.publicKey)
+  return lockingScript
 }

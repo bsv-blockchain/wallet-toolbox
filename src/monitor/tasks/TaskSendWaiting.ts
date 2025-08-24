@@ -1,11 +1,12 @@
-import { EntityProvenTxReq, TableProvenTxReq } from '../../storage/index.client'
-import { verifyTruthy } from '../../utility/index.client'
+import { ReviewActionResult, SendWithResult } from '@bsv/sdk'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 import { attemptToPostReqsToNetwork } from '../../storage/methods/attemptToPostReqsToNetwork'
-import { ProvenTxReqStatus, WERR_INTERNAL } from '../../sdk'
-import { ReviewActionResult, SendWithResult } from '@bsv/sdk'
 import { aggregateActionResults } from '../../utility/aggregateResults'
+import { ProvenTxReqStatus } from '../../sdk/types'
+import { verifyTruthy } from '../../utility/utilityHelpers'
+import { TableProvenTxReq } from '../../storage/schema/tables/TableProvenTxReq'
+import { EntityProvenTxReq } from '../../storage/schema/entities/EntityProvenTxReq'
 
 export class TaskSendWaiting extends WalletMonitorTask {
   static taskName = 'SendWaiting'

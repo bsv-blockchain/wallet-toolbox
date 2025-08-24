@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableOutputTagMap, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { WERR_INVALID_OPERATION } from '../../../sdk/WERR_errors'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutputTagMap } from '../tables/TableOutputTagMap'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
   constructor(api?: TableOutputTagMap) {
@@ -53,7 +54,7 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
   }
 
   override get id(): number {
-    throw new sdk.WERR_INVALID_OPERATION('entity has no "id" value')
+    throw new WERR_INVALID_OPERATION('entity has no "id" value')
   }
   override get entityName(): string {
     return 'outputTagMap'
@@ -80,7 +81,7 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
     userId: number,
     ei: TableOutputTagMap,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityOutputTagMap; eiId: number }> {
     const outputId = syncMap.output.idMap[ei.outputId]
     const outputTagId = syncMap.outputTag.idMap[ei.outputTagId]
@@ -97,7 +98,7 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.outputId = syncMap.output.idMap[this.outputId]
     this.outputTagId = syncMap.outputTag.idMap[this.outputTagId]
     await storage.insertOutputTagMap(this.toApi(), trx)
@@ -108,7 +109,7 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
     since: Date | undefined,
     ei: TableOutputTagMap,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

@@ -112,7 +112,7 @@ async function pbkdf2NativeOrJs(
       )
       return Array.from(new Uint8Array(bits))
     } catch (err) {
-      console.warn('[pbkdf2] WebCrypto path failed → falling back to JS implementation', err)
+      //console.warn('[pbkdf2] WebCrypto path failed → falling back to JS implementation', err)
       /* fall through */
     }
   }

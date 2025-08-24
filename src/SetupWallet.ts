@@ -1,7 +1,10 @@
 import { PrivateKey, KeyDeriver, PublicKey, KeyDeriverApi } from '@bsv/sdk'
-import { WalletStorageManager, Monitor, sdk } from './index.client'
-import { Services } from './services'
 import { Wallet } from './Wallet'
+import { Chain } from './sdk/types'
+import { WalletStorageManager } from './storage/WalletStorageManager'
+import { Services } from './services/Services'
+import { Monitor } from './monitor/Monitor'
+import { WalletStorageProvider } from './sdk/WalletStorage.interfaces'
 
 /**
  * When creating a BRC-100 compatible `Wallet`, many components come into play.
@@ -27,7 +30,7 @@ export interface SetupWallet {
   /**
    * The chain ('main' or 'test') which the wallet accesses.
    */
-  chain: sdk.Chain
+  chain: Chain
   /**
    * The `WalletStorageManager` that manages all the configured storage providers (active and backups)
    * accessed by the wallet.
@@ -70,7 +73,7 @@ export interface KeyPairAddress {
  */
 
 export interface SetupClientWalletArgs {
-  chain: sdk.Chain
+  chain: Chain
   /**
    * The non-privileged private key used to initialize the `KeyDeriver` and determine the `identityKey`.
    */
@@ -83,11 +86,11 @@ export interface SetupClientWalletArgs {
   /**
    * Optional. Active wallet storage. Can be added later.
    */
-  active?: sdk.WalletStorageProvider
+  active?: WalletStorageProvider
   /**
    * Optional. One or more storage providers managed as backup destinations. Can be added later.
    */
-  backups?: sdk.WalletStorageProvider[]
+  backups?: WalletStorageProvider[]
 
   taalApiKey?: string
 }

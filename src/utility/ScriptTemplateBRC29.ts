@@ -1,7 +1,5 @@
-import { asBsvSdkPrivateKey, verifyTruthy } from './index.client'
 import {
   HexString,
-  KeyDeriver,
   KeyDeriverApi,
   WalletProtocol,
   ScriptTemplate,
@@ -12,6 +10,7 @@ import {
   Script,
   CachedKeyDeriver
 } from '@bsv/sdk'
+import { asBsvSdkPrivateKey, verifyTruthy } from './utilityHelpers'
 
 export const brc29ProtocolID: WalletProtocol = [2, '3241645161d8']
 

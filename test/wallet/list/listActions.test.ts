@@ -1,12 +1,6 @@
 import { ListActionsArgs } from '@bsv/sdk'
 import { sdk, StorageProvider } from '../../../src/index.client'
-import {
-  _tu,
-  expectToThrowWERR,
-  TestSetup1,
-  TestWalletNoSetup,
-  TestWalletProviderNoSetup
-} from '../../utils/TestUtilsWalletStorage'
+import { _tu, expectToThrowWERR, TestSetup1, TestWalletProviderNoSetup } from '../../utils/TestUtilsWalletStorage'
 import path from 'path'
 
 import 'fake-indexeddb/auto'

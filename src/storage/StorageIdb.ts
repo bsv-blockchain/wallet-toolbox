@@ -19,16 +19,41 @@ import {
   TableTxLabelMap,
   TableUser
 } from './schema/tables'
-import * as sdk from '../sdk/index'
 import { verifyOne, verifyOneOrNone } from '../utility/utilityHelpers'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
-import { TransactionStatus } from '../sdk'
 import { listActionsIdb } from './methods/listActionsIdb'
 import { listOutputsIdb } from './methods/listOutputsIdb'
 import { reviewStatusIdb } from './methods/reviewStatusIdb'
 import { purgeDataIdb } from './methods/purgeDataIdb'
+import {
+  AuthId,
+  FindCertificateFieldsArgs,
+  FindCertificatesArgs,
+  FindCommissionsArgs,
+  FindForUserSincePagedArgs,
+  FindMonitorEventsArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindOutputTagMapsArgs,
+  FindOutputTagsArgs,
+  FindProvenTxReqsArgs,
+  FindProvenTxsArgs,
+  FindSyncStatesArgs,
+  FindTransactionsArgs,
+  FindTxLabelMapsArgs,
+  FindTxLabelsArgs,
+  FindUsersArgs,
+  ProvenOrRawTx,
+  PurgeParams,
+  PurgeResults,
+  TrxToken,
+  WalletStorageProvider
+} from '../sdk/WalletStorage.interfaces'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_UNAUTHORIZED } from '../sdk/WERR_errors'
+import { EntityTimeStamp, TransactionStatus } from '../sdk/types'
+import { ValidListActionsArgs, ValidListOutputsArgs } from '../sdk/validationHelpers'
 
 export interface StorageIdbOptions extends StorageProviderOptions {}
 
@@ -36,7 +61,7 @@ export interface StorageIdbOptions extends StorageProviderOptions {}
  * This class implements the `StorageProvider` interface using IndexedDB,
  * via the promises wrapper package `idb`.
  */
-export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
+export class StorageIdb extends StorageProvider implements WalletStorageProvider {
   dbName: string
   db?: IDBPDatabase<StorageIdbSchema>
 
@@ -86,7 +111,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   toDbTrx(
     stores: string[],
     mode: 'readonly' | 'readwrite',
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'> {
     if (trx) {
       const t = trx as IDBPTransaction<StorageIdbSchema, string[], 'readwrite' | 'readonly'>
@@ -109,7 +134,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    *
    * @param trx
    */
-  async readSettings(trx?: sdk.TrxToken): Promise<TableSettings> {
+  async readSettings(trx?: TrxToken): Promise<TableSettings> {
     await this.verifyDB()
     return this._settings!
   }
@@ -186,8 +211,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
             autoIncrement: true
           })
           transactionsStore.createIndex('userId', 'userId')
-          transactionsStore.createIndex('status', 'status'),
-            transactionsStore.createIndex('status_userId', ['status', 'userId'])
+          ;(transactionsStore.createIndex('status', 'status'),
+            transactionsStore.createIndex('status_userId', ['status', 'userId']))
           transactionsStore.createIndex('provenTxId', 'provenTxId')
           transactionsStore.createIndex('reference', 'reference', { unique: true })
         }
@@ -274,7 +299,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
 
         if (!db.objectStoreNames.contains('settings')) {
           if (!storageName || !storageIdentityKey) {
-            throw new sdk.WERR_INVALID_OPERATION('migrate must be called before first access')
+            throw new WERR_INVALID_OPERATION('migrate must be called before first access')
           }
           const settings = db.createObjectStore('settings', {
             keyPath: 'storageIdentityKey'
@@ -299,11 +324,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   // StorageProvider abstract methods
   //
 
-  async reviewStatus(args: { agedLimit: Date; trx?: sdk.TrxToken }): Promise<{ log: string }> {
+  async reviewStatus(args: { agedLimit: Date; trx?: TrxToken }): Promise<{ log: string }> {
     return await reviewStatusIdb(this, args)
   }
 
-  async purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> {
+  async purgeData(params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> {
     return await purgeDataIdb(this, params, trx)
   }
 
@@ -337,7 +362,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     try {
       const txStatus: TransactionStatus[] = ['completed', 'unproven']
       if (!excludeSending) txStatus.push('sending')
-      const args: sdk.FindOutputsArgs = {
+      const args: FindOutputsArgs = {
         partial: { userId, basketId, spendable: true },
         txStatus,
         trx: dbTrx
@@ -379,8 +404,8 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
   }
 
-  async getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx> {
-    const r: sdk.ProvenOrRawTx = {
+  async getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx> {
+    const r: ProvenOrRawTx = {
       proven: undefined,
       rawTx: undefined,
       inputBEEF: undefined
@@ -402,7 +427,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     txid?: string,
     offset?: number,
     length?: number,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number[] | undefined> {
     if (!txid) return undefined
     if (!this.isAvailable()) await this.makeAvailable()
@@ -417,7 +442,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return rawTx
   }
 
-  async getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]> {
+  async getLabelsForTransactionId(transactionId?: number, trx?: TrxToken): Promise<TableTxLabel[]> {
     const maps = await this.findTxLabelMaps({ partial: { transactionId, isDeleted: false }, trx })
     const labelIds = maps.map(m => m.txLabelId)
     const labels: TableTxLabel[] = []
@@ -428,7 +453,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return labels
   }
 
-  async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> {
+  async getTagsForOutputId(outputId: number, trx?: TrxToken): Promise<TableOutputTag[]> {
     const maps = await this.findOutputTagMaps({ partial: { outputId, isDeleted: false }, trx })
     const tagIds = maps.map(m => m.outputTagId)
     const tags: TableOutputTag[] = []
@@ -439,20 +464,20 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return tags
   }
 
-  async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> {
-    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+  async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> {
+    if (!auth.userId) throw new WERR_UNAUTHORIZED()
     return await listActionsIdb(this, auth, vargs)
   }
 
-  async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> {
-    if (!auth.userId) throw new sdk.WERR_UNAUTHORIZED()
+  async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> {
+    if (!auth.userId) throw new WERR_UNAUTHORIZED()
     return await listOutputsIdb(this, auth, vargs)
   }
 
   async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> {
-    const txStatus: sdk.TransactionStatus[] = ['completed', 'unproven']
+    const txStatus: TransactionStatus[] = ['completed', 'unproven']
     if (!excludeSending) txStatus.push('sending')
-    const args: sdk.FindOutputsArgs = { partial: { userId, basketId }, txStatus }
+    const args: FindOutputsArgs = { partial: { userId, basketId }, txStatus }
     let count = 0
     await this.filterOutputs(args, r => {
       count++
@@ -460,24 +485,24 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return count
   }
 
-  async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
-    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+  async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> {
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new WERR_UNAUTHORIZED()
     args.partial.userId = auth.userId
     return await this.findCertificates(args)
   }
-  async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
-    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+  async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new WERR_UNAUTHORIZED()
     args.partial.userId = auth.userId
     return await this.findOutputBaskets(args)
   }
-  async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
-    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+  async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> {
+    if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new WERR_UNAUTHORIZED()
     args.partial.userId = auth.userId
     return await this.findOutputs(args)
   }
 
-  async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> {
-    if (!auth.userId || (certificate.userId && certificate.userId !== auth.userId)) throw new sdk.WERR_UNAUTHORIZED()
+  async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> {
+    if (!auth.userId || (certificate.userId && certificate.userId !== auth.userId)) throw new WERR_UNAUTHORIZED()
     certificate.userId = auth.userId
     return await this.insertCertificate(certificate)
   }
@@ -491,7 +516,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterOutputTagMaps(
-    args: sdk.FindOutputTagMapsArgs,
+    args: FindOutputTagMapsArgs,
     filtered: (v: TableOutputTagMap) => void,
     userId?: number
   ): Promise<void> {
@@ -541,7 +566,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
+  async findOutputTagMaps(args: FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> {
     const results: TableOutputTagMap[] = []
     await this.filterOutputTagMaps(args, r => {
       results.push(this.validateEntity(r))
@@ -550,17 +575,14 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterProvenTxReqs(
-    args: sdk.FindProvenTxReqsArgs,
+    args: FindProvenTxReqsArgs,
     filtered: (v: TableProvenTxReq) => void,
     userId?: number
   ): Promise<void> {
     if (args.partial.rawTx)
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxReqs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxReqs may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
         `undefined. ProvenTxReqs may not be found by inputBEEF value.`
       )
@@ -623,7 +645,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
+  async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
     const results: TableProvenTxReq[] = []
     await this.filterProvenTxReqs(args, r => {
       results.push(this.validateEntity(r))
@@ -631,18 +653,11 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterProvenTxs(
-    args: sdk.FindProvenTxsArgs,
-    filtered: (v: TableProvenTx) => void,
-    userId?: number
-  ): Promise<void> {
+  async filterProvenTxs(args: FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> {
     if (args.partial.rawTx)
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxs may not be found by rawTx value.`)
     if (args.partial.merklePath)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args.partial.merklePath',
         `undefined. ProvenTxs may not be found by merklePath value.`
       )
@@ -693,7 +708,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> {
+  async findProvenTxs(args: FindProvenTxsArgs): Promise<TableProvenTx[]> {
     const results: TableProvenTx[] = []
     await this.filterProvenTxs(args, r => {
       results.push(this.validateEntity(r))
@@ -702,7 +717,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterTxLabelMaps(
-    args: sdk.FindTxLabelMapsArgs,
+    args: FindTxLabelMapsArgs,
     filtered: (v: TableTxLabelMap) => void,
     userId?: number
   ): Promise<void> {
@@ -751,7 +766,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> {
+  async findTxLabelMaps(args: FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> {
     const results: TableTxLabelMap[] = []
     await this.filterTxLabelMaps(args, r => {
       results.push(this.validateEntity(r))
@@ -759,28 +774,28 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async countOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<number> {
+  async countOutputTagMaps(args: FindOutputTagMapsArgs): Promise<number> {
     let count = 0
     await this.filterOutputTagMaps(args, () => {
       count++
     })
     return count
   }
-  async countProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<number> {
+  async countProvenTxReqs(args: FindProvenTxReqsArgs): Promise<number> {
     let count = 0
     await this.filterProvenTxReqs(args, () => {
       count++
     })
     return count
   }
-  async countProvenTxs(args: sdk.FindProvenTxsArgs): Promise<number> {
+  async countProvenTxs(args: FindProvenTxsArgs): Promise<number> {
     let count = 0
     await this.filterProvenTxs(args, () => {
       count++
     })
     return count
   }
-  async countTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<number> {
+  async countTxLabelMaps(args: FindTxLabelMapsArgs): Promise<number> {
     let count = 0
     await this.filterTxLabelMaps(args, () => {
       count++
@@ -788,7 +803,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return count
   }
 
-  async insertCertificate(certificate: TableCertificateX, trx?: sdk.TrxToken): Promise<number> {
+  async insertCertificate(certificate: TableCertificateX, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(certificate, trx, undefined, ['isDeleted'])
     const fields = e.fields
     if (e.fields) delete e.fields
@@ -813,7 +828,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return certificate.certificateId
   }
 
-  async insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void> {
+  async insertCertificateField(certificateField: TableCertificateField, trx?: TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(certificateField, trx)
     const dbTrx = this.toDbTrx(['certificate_fields'], 'readwrite', trx)
     const store = dbTrx.objectStore('certificate_fields')
@@ -824,7 +839,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
   }
 
-  async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> {
+  async insertCommission(commission: TableCommission, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(commission, trx)
     if (e.commissionId === 0) delete e.commissionId
     const dbTrx = this.toDbTrx(['commissions'], 'readwrite', trx)
@@ -837,7 +852,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return commission.commissionId
   }
-  async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> {
+  async insertMonitorEvent(event: TableMonitorEvent, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(event, trx)
     if (e.id === 0) delete e.id
     const dbTrx = this.toDbTrx(['monitor_events'], 'readwrite', trx)
@@ -850,7 +865,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return event.id
   }
-  async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> {
+  async insertOutput(output: TableOutput, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(output, trx)
     if (e.outputId === 0) delete e.outputId
     const dbTrx = this.toDbTrx(['outputs'], 'readwrite', trx)
@@ -863,7 +878,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return output.outputId
   }
-  async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> {
+  async insertOutputBasket(basket: TableOutputBasket, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(basket, trx, undefined, ['isDeleted'])
     if (e.basketId === 0) delete e.basketId
     const dbTrx = this.toDbTrx(['output_baskets'], 'readwrite', trx)
@@ -876,7 +891,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return basket.basketId
   }
-  async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> {
+  async insertOutputTag(tag: TableOutputTag, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tag, trx, undefined, ['isDeleted'])
     if (e.outputTagId === 0) delete e.outputTagId
     const dbTrx = this.toDbTrx(['output_tags'], 'readwrite', trx)
@@ -889,7 +904,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return tag.outputTagId
   }
-  async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> {
+  async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(tagMap, trx, undefined, ['isDeleted'])
     const dbTrx = this.toDbTrx(['output_tags_map'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_tags_map')
@@ -899,7 +914,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       if (!trx) await dbTrx.done
     }
   }
-  async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> {
+  async insertProvenTx(tx: TableProvenTx, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxId === 0) delete e.provenTxId
     const dbTrx = this.toDbTrx(['proven_txs'], 'readwrite', trx)
@@ -912,7 +927,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return tx.provenTxId
   }
-  async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> {
+  async insertProvenTxReq(tx: TableProvenTxReq, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.provenTxReqId === 0) delete e.provenTxReqId
     const dbTrx = this.toDbTrx(['proven_tx_reqs'], 'readwrite', trx)
@@ -925,7 +940,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return tx.provenTxReqId
   }
-  async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> {
+  async insertSyncState(syncState: TableSyncState, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(syncState, trx, ['when'], ['init'])
     if (e.syncStateId === 0) delete e.syncStateId
     const dbTrx = this.toDbTrx(['sync_states'], 'readwrite', trx)
@@ -938,7 +953,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return syncState.syncStateId
   }
-  async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> {
+  async insertTransaction(tx: TableTransaction, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(tx, trx)
     if (e.transactionId === 0) delete e.transactionId
     const dbTrx = this.toDbTrx(['transactions'], 'readwrite', trx)
@@ -951,7 +966,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return tx.transactionId
   }
-  async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> {
+  async insertTxLabel(label: TableTxLabel, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(label, trx, undefined, ['isDeleted'])
     if (e.txLabelId === 0) delete e.txLabelId
     const dbTrx = this.toDbTrx(['tx_labels'], 'readwrite', trx)
@@ -964,7 +979,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     }
     return label.txLabelId
   }
-  async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> {
+  async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: TrxToken): Promise<void> {
     const e = await this.validateEntityForInsert(labelMap, trx, undefined, ['isDeleted'])
     const dbTrx = this.toDbTrx(['tx_labels_map'], 'readwrite', trx)
     const store = dbTrx.objectStore('tx_labels_map')
@@ -974,7 +989,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       if (!trx) await dbTrx.done
     }
   }
-  async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> {
+  async insertUser(user: TableUser, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(user, trx)
     if (e.userId === 0) delete e.userId
     const dbTrx = this.toDbTrx(['users'], 'readwrite', trx)
@@ -993,10 +1008,10 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     update: Partial<T>,
     keyProp: string,
     storeName: string,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     if (update[keyProp] !== undefined && (Array.isArray(id) || update[keyProp] !== id)) {
-      throw new sdk.WERR_INVALID_PARAMETER(`update.${keyProp}`, `undefined`)
+      throw new WERR_INVALID_PARAMETER(`update.${keyProp}`, `undefined`)
     }
     const u = this.validatePartialForUpdate(update)
     const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
@@ -1005,13 +1020,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     try {
       for (const i of ids) {
         const e = await store.get(i)
-        if (!e) throw new sdk.WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`)
+        if (!e) throw new WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`)
         const v: T = {
           ...e,
           ...u
         }
         const uid = await store.put!(v)
-        if (uid !== i) throw new sdk.WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
+        if (uid !== i) throw new WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
       }
     } finally {
       if (!trx) await dbTrx.done
@@ -1024,13 +1039,13 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     update: Partial<T>,
     keyProps: string[],
     storeName: string,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     if (key.length !== keyProps.length)
-      throw new sdk.WERR_INTERNAL(`key.length ${key.length} !== keyProps.length ${keyProps.length}`)
+      throw new WERR_INTERNAL(`key.length ${key.length} !== keyProps.length ${keyProps.length}`)
     for (let i = 0; i < key.length; i++) {
       if (update[keyProps[i]] !== undefined && update[keyProps[i]] !== key[i]) {
-        throw new sdk.WERR_INVALID_PARAMETER(`update.${keyProps[i]}`, `undefined`)
+        throw new WERR_INVALID_PARAMETER(`update.${keyProps[i]}`, `undefined`)
       }
     }
     const u = this.validatePartialForUpdate(update)
@@ -1039,7 +1054,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     try {
       const e = await store.get(key)
       if (!e)
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'key',
           `an existing record to update ${keyProps.join(',')} ${key.join(',')} not found`
         )
@@ -1049,7 +1064,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
       }
       const uid = await store.put!(v)
       for (let i = 0; i < key.length; i++) {
-        if (uid[i] !== key[i]) throw new sdk.WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`)
+        if (uid[i] !== key[i]) throw new WERR_INTERNAL(`updated key ${uid[i]} does not match original ${key[i]}`)
       }
     } finally {
       if (!trx) await dbTrx.done
@@ -1058,7 +1073,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return 1
   }
 
-  async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> {
+  async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'certificateId', 'certificates', trx)
   }
 
@@ -1066,7 +1081,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     certificateId: number,
     fieldName: string,
     update: Partial<TableCertificateField>,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     return this.updateIdbKey(
       [certificateId, fieldName],
@@ -1077,52 +1092,44 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     )
   }
 
-  async updateCommission(id: number, update: Partial<TableCommission>, trx?: sdk.TrxToken): Promise<number> {
+  async updateCommission(id: number, update: Partial<TableCommission>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'commissionId', 'commissions', trx)
   }
-  async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: sdk.TrxToken): Promise<number> {
+  async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'id', 'monitor_events', trx)
   }
-  async updateOutput(id: number, update: Partial<TableOutput>, trx?: sdk.TrxToken): Promise<number> {
+  async updateOutput(id: number, update: Partial<TableOutput>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'outputId', 'outputs', trx)
   }
-  async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: sdk.TrxToken): Promise<number> {
+  async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'basketId', 'output_baskets', trx)
   }
-  async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: sdk.TrxToken): Promise<number> {
+  async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'outputTagId', 'output_tags', trx)
   }
-  async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: sdk.TrxToken): Promise<number> {
+  async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'provenTxId', 'proven_txs', trx)
   }
-  async updateProvenTxReq(
-    id: number | number[],
-    update: Partial<TableProvenTxReq>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
+  async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'provenTxReqId', 'proven_tx_reqs', trx)
   }
-  async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: sdk.TrxToken): Promise<number> {
+  async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'syncStateId', 'sync_states', trx)
   }
-  async updateTransaction(
-    id: number | number[],
-    update: Partial<TableTransaction>,
-    trx?: sdk.TrxToken
-  ): Promise<number> {
+  async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'transactionId', 'transactions', trx)
   }
-  async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: sdk.TrxToken): Promise<number> {
+  async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'txLabelId', 'tx_labels', trx)
   }
-  async updateUser(id: number, update: Partial<TableUser>, trx?: sdk.TrxToken): Promise<number> {
+  async updateUser(id: number, update: Partial<TableUser>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'userId', 'users', trx)
   }
   async updateOutputTagMap(
     outputId: number,
     tagId: number,
     update: Partial<TableOutputTagMap>,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     return this.updateIdbKey([tagId, outputId], update, ['outputTagId', 'outputId'], 'output_tags_map', trx)
   }
@@ -1130,7 +1137,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     transactionId: number,
     txLabelId: number,
     update: Partial<TableTxLabelMap>,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<number> {
     return this.updateIdbKey([txLabelId, transactionId], update, ['txLabelId', 'transactionId'], 'tx_labels_map', trx)
   }
@@ -1170,7 +1177,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * @param trx
    * @returns
    */
-  async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> {
+  async transaction<T>(scope: (trx: TrxToken) => Promise<T>, trx?: TrxToken): Promise<T> {
     if (trx) return await scope(trx)
 
     const stores = this.allStores
@@ -1179,7 +1186,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     const tx = db.transaction(stores, 'readwrite')
 
     try {
-      const r = await scope(tx as sdk.TrxToken)
+      const r = await scope(tx as TrxToken)
       await tx.done
       return r
     } catch (err) {
@@ -1190,7 +1197,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterCertificateFields(
-    args: sdk.FindCertificateFieldsArgs,
+    args: FindCertificateFieldsArgs,
     filtered: (v: TableCertificateField) => void
   ): Promise<void> {
     const offset = args.paged?.offset || 0
@@ -1239,7 +1246,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
+  async findCertificateFields(args: FindCertificateFieldsArgs): Promise<TableCertificateField[]> {
     const result: TableCertificateField[] = []
     await this.filterCertificateFields(args, r => {
       result.push(this.validateEntity(r))
@@ -1247,7 +1254,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterCertificates(args: sdk.FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> {
+  async filterCertificates(args: FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1311,7 +1318,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
+  async findCertificates(args: FindCertificatesArgs): Promise<TableCertificateX[]> {
     const result: TableCertificateX[] = []
     await this.filterCertificates(args, r => {
       result.push(this.validateEntity(r))
@@ -1325,9 +1332,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterCommissions(args: sdk.FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> {
+  async filterCommissions(args: FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> {
     if (args.partial.lockingScript)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'partial.lockingScript',
         `undefined. Commissions may not be found by lockingScript value.`
       )
@@ -1377,7 +1384,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> {
+  async findCommissions(args: FindCommissionsArgs): Promise<TableCommission[]> {
     const result: TableCommission[] = []
     await this.filterCommissions(args, r => {
       result.push(this.validateEntity(r))
@@ -1385,7 +1392,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterMonitorEvents(args: sdk.FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> {
+  async filterMonitorEvents(args: FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1427,7 +1434,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> {
+  async findMonitorEvents(args: FindMonitorEventsArgs): Promise<TableMonitorEvent[]> {
     const result: TableMonitorEvent[] = []
     await this.filterMonitorEvents(args, r => {
       result.push(this.validateEntity(r))
@@ -1435,7 +1442,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterOutputBaskets(args: sdk.FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> {
+  async filterOutputBaskets(args: FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1495,7 +1502,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
+  async findOutputBaskets(args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
     const result: TableOutputBasket[] = []
     await this.filterOutputBaskets(args, r => {
       result.push(this.validateEntity(r))
@@ -1504,7 +1511,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterOutputs(
-    args: sdk.FindOutputsArgs,
+    args: FindOutputsArgs,
     filtered: (v: TableOutput) => void,
     tagIds?: number[],
     isQueryModeAll?: boolean
@@ -1512,7 +1519,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     // args.txStatus
     // args.noScript
     if (args.partial.lockingScript)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args.partial.lockingScript',
         `undefined. Outputs may not be found by lockingScript value.`
       )
@@ -1631,7 +1638,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> {
+  async findOutputs(args: FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> {
     const results: TableOutput[] = []
     await this.filterOutputs(
       args,
@@ -1651,7 +1658,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterOutputTags(args: sdk.FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> {
+  async filterOutputTags(args: FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1701,7 +1708,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> {
+  async findOutputTags(args: FindOutputTagsArgs): Promise<TableOutputTag[]> {
     const result: TableOutputTag[] = []
     await this.filterOutputTags(args, r => {
       result.push(this.validateEntity(r))
@@ -1709,9 +1716,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterSyncStates(args: sdk.FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> {
+  async filterSyncStates(args: FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> {
     if (args.partial.syncMap)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args.partial.syncMap',
         `undefined. SyncStates may not be found by syncMap value.`
       )
@@ -1769,7 +1776,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> {
+  async findSyncStates(args: FindSyncStatesArgs): Promise<TableSyncState[]> {
     const result: TableSyncState[] = []
     await this.filterSyncStates(args, r => {
       result.push(this.validateEntity(r))
@@ -1778,18 +1785,15 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async filterTransactions(
-    args: sdk.FindTransactionsArgs,
+    args: FindTransactionsArgs,
     filtered: (v: TableTransaction) => void,
     labelIds?: number[],
     isQueryModeAll?: boolean
   ): Promise<void> {
     if (args.partial.rawTx)
-      throw new sdk.WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. Transactions may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. Transactions may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
-      throw new sdk.WERR_INVALID_PARAMETER(
+      throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
         `undefined. Transactions may not be found by inputBEEF value.`
       )
@@ -1880,7 +1884,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
   }
 
   async findTransactions(
-    args: sdk.FindTransactionsArgs,
+    args: FindTransactionsArgs,
     labelIds?: number[],
     isQueryModeAll?: boolean
   ): Promise<TableTransaction[]> {
@@ -1904,7 +1908,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async filterTxLabels(args: sdk.FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> {
+  async filterTxLabels(args: FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1954,7 +1958,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> {
+  async findTxLabels(args: FindTxLabelsArgs): Promise<TableTxLabel[]> {
     const result: TableTxLabel[] = []
     await this.filterTxLabels(args, r => {
       result.push(this.validateEntity(r))
@@ -1962,7 +1966,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async filterUsers(args: sdk.FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> {
+  async filterUsers(args: FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> {
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1993,7 +1997,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     if (!args.trx) await dbTrx.done
   }
 
-  async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> {
+  async findUsers(args: FindUsersArgs): Promise<TableUser[]> {
     const result: TableUser[] = []
     await this.filterUsers(args, r => {
       result.push(this.validateEntity(r))
@@ -2001,42 +2005,42 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return result
   }
 
-  async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> {
+  async countCertificateFields(args: FindCertificateFieldsArgs): Promise<number> {
     let count = 0
     await this.filterCertificateFields(args, () => {
       count++
     })
     return count
   }
-  async countCertificates(args: sdk.FindCertificatesArgs): Promise<number> {
+  async countCertificates(args: FindCertificatesArgs): Promise<number> {
     let count = 0
     await this.filterCertificates(args, () => {
       count++
     })
     return count
   }
-  async countCommissions(args: sdk.FindCommissionsArgs): Promise<number> {
+  async countCommissions(args: FindCommissionsArgs): Promise<number> {
     let count = 0
     await this.filterCommissions(args, () => {
       count++
     })
     return count
   }
-  async countMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<number> {
+  async countMonitorEvents(args: FindMonitorEventsArgs): Promise<number> {
     let count = 0
     await this.filterMonitorEvents(args, () => {
       count++
     })
     return count
   }
-  async countOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<number> {
+  async countOutputBaskets(args: FindOutputBasketsArgs): Promise<number> {
     let count = 0
     await this.filterOutputBaskets(args, () => {
       count++
     })
     return count
   }
-  async countOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> {
+  async countOutputs(args: FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
     await this.filterOutputs(
       { ...args, noScript: true },
@@ -2048,25 +2052,21 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     )
     return count
   }
-  async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> {
+  async countOutputTags(args: FindOutputTagsArgs): Promise<number> {
     let count = 0
     await this.filterOutputTags(args, () => {
       count++
     })
     return count
   }
-  async countSyncStates(args: sdk.FindSyncStatesArgs): Promise<number> {
+  async countSyncStates(args: FindSyncStatesArgs): Promise<number> {
     let count = 0
     await this.filterSyncStates(args, () => {
       count++
     })
     return count
   }
-  async countTransactions(
-    args: sdk.FindTransactionsArgs,
-    labelIds?: number[],
-    isQueryModeAll?: boolean
-  ): Promise<number> {
+  async countTransactions(args: FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
     await this.filterTransactions(
       { ...args, noRawTx: true },
@@ -2078,14 +2078,14 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     )
     return count
   }
-  async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> {
+  async countTxLabels(args: FindTxLabelsArgs): Promise<number> {
     let count = 0
     await this.filterTxLabels(args, () => {
       count++
     })
     return count
   }
-  async countUsers(args: sdk.FindUsersArgs): Promise<number> {
+  async countUsers(args: FindUsersArgs): Promise<number> {
     let count = 0
     await this.filterUsers(args, () => {
       count++
@@ -2093,9 +2093,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return count
   }
 
-  async getProvenTxsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTx[]> {
+  async getProvenTxsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTx[]> {
     const results: TableProvenTx[] = []
-    const fargs: sdk.FindProvenTxsArgs = {
+    const fargs: FindProvenTxsArgs = {
       partial: {},
       since: args.since,
       paged: args.paged,
@@ -2111,9 +2111,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async getProvenTxReqsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> {
+  async getProvenTxReqsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> {
     const results: TableProvenTxReq[] = []
-    const fargs: sdk.FindProvenTxReqsArgs = {
+    const fargs: FindProvenTxReqsArgs = {
       partial: {},
       since: args.since,
       paged: args.paged,
@@ -2129,9 +2129,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async getTxLabelMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> {
+  async getTxLabelMapsForUser(args: FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> {
     const results: TableTxLabelMap[] = []
-    const fargs: sdk.FindTxLabelMapsArgs = {
+    const fargs: FindTxLabelMapsArgs = {
       partial: {},
       since: args.since,
       paged: args.paged,
@@ -2147,9 +2147,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> {
+  async getOutputTagMapsForUser(args: FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> {
     const results: TableOutputTagMap[] = []
-    const fargs: sdk.FindOutputTagMapsArgs = {
+    const fargs: FindOutputTagMapsArgs = {
       partial: {},
       since: args.since,
       paged: args.paged,
@@ -2165,7 +2165,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return results
   }
 
-  async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> {
+  async verifyReadyForDatabaseAccess(trx?: TrxToken): Promise<DBType> {
     if (!this._settings) {
       this._settings = await this.readSettings()
     }
@@ -2177,7 +2177,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Helper to force uniform behavior across database engines.
    * Use to process all individual records with time stamps or number[] retreived from database.
    */
-  validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T {
+  validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T {
     entity.created_at = this.validateDate(entity.created_at)
     entity.updated_at = this.validateDate(entity.updated_at)
     if (dateFields) {
@@ -2206,7 +2206,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Use to process all arrays of records with time stamps retreived from database.
    * @returns input `entities` array with contained values validated.
    */
-  validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] {
+  validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] {
     for (let i = 0; i < entities.length; i++) {
       entities[i] = this.validateEntity(entities[i], dateFields, booleanFields)
     }
@@ -2216,12 +2216,12 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Helper to force uniform behavior across database engines.
    * Use to process the update template for entities being updated.
    */
-  validatePartialForUpdate<T extends sdk.EntityTimeStamp>(
+  validatePartialForUpdate<T extends EntityTimeStamp>(
     update: Partial<T>,
     dateFields?: string[],
     booleanFields?: string[]
   ): Partial<T> {
-    if (!this.dbtype) throw new sdk.WERR_INTERNAL('must call verifyReadyForDatabaseAccess first')
+    if (!this.dbtype) throw new WERR_INTERNAL('must call verifyReadyForDatabaseAccess first')
     const v: any = { ...update }
     if (v.created_at) v.created_at = this.validateEntityDate(v.created_at)
     if (v.updated_at) v.updated_at = this.validateEntityDate(v.updated_at)
@@ -2254,9 +2254,9 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
    * Helper to force uniform behavior across database engines.
    * Use to process new entities being inserted into the database.
    */
-  async validateEntityForInsert<T extends sdk.EntityTimeStamp>(
+  async validateEntityForInsert<T extends EntityTimeStamp>(
     entity: T,
-    trx?: sdk.TrxToken,
+    trx?: TrxToken,
     dateFields?: string[],
     booleanFields?: string[]
   ): Promise<any> {
@@ -2288,7 +2288,7 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
     return v
   }
 
-  async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> {
+  async validateRawTransaction(t: TableTransaction, trx?: TrxToken): Promise<void> {
     // if there is no txid or there is a rawTransaction return what we have.
     if (t.rawTx || !t.txid) return
 

@@ -40,6 +40,7 @@ describe('storage adminStats tests', () => {
     console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
     expect(r.usersTotal).toBeGreaterThan(0)
+    await storage.destroy()
   })
 
   test('1 adminStats StorageServer via RPC', async () => {
@@ -81,6 +82,7 @@ describe('storage adminStats tests', () => {
     }
 
     const r = json.result as StorageAdminStats
+    console.log(Format.toLogStringAdminStats(r))
     expect(r.requestedBy).toBe(env.identityKey)
     expect(r.usersTotal).toBeGreaterThan(0)
   })

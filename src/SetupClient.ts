@@ -11,11 +11,19 @@ import {
   P2PKH,
   PrivateKey,
   PublicKey,
+  ScriptTemplateUnlock,
   WalletInterface
 } from '@bsv/sdk'
-import { Monitor, randomBytesHex, sdk, Services, StorageClient, Wallet, WalletStorageManager } from './index.client'
 import { KeyPairAddress, SetupClientWalletArgs, SetupWallet, SetupWalletClient } from './SetupWallet'
 import { StorageIdb } from './storage/StorageIdb'
+import { WalletStorageManager } from './storage/WalletStorageManager'
+import { Services } from './services/Services'
+import { Monitor } from './monitor/Monitor'
+import { PrivilegedKeyManager } from './sdk/PrivilegedKeyManager'
+import { Wallet } from './Wallet'
+import { Chain } from './sdk/types'
+import { randomBytesHex } from './utility/utilityHelpers'
+import { StorageClient } from './storage/remoting/StorageClient'
 
 /**
  * The 'Setup` class provides static setup functions to construct BRC-100 compatible
@@ -46,7 +54,7 @@ export abstract class SetupClient {
     const monitor = new Monitor(monopts)
     monitor.addDefaultTasks()
     const privilegedKeyManager = args.privilegedKeyGetter
-      ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+      ? new PrivilegedKeyManager(args.privilegedKeyGetter)
       : undefined
     const wallet = new Wallet({
       chain,
@@ -78,7 +86,7 @@ export abstract class SetupClient {
    * @param args.privilegedKeyGetter - Optional. Method that will return the privileged `PrivateKey`, on demand.
    */
   static async createWalletClientNoEnv(args: {
-    chain: sdk.Chain
+    chain: Chain
     rootKeyHex: string
     storageUrl?: string
     privilegedKeyGetter?: () => Promise<PrivateKey>
@@ -90,7 +98,7 @@ export abstract class SetupClient {
     const storage = new WalletStorageManager(keyDeriver.identityKey)
     const services = new Services(chain)
     const privilegedKeyManager = args.privilegedKeyGetter
-      ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+      ? new PrivilegedKeyManager(args.privilegedKeyGetter)
       : undefined
     const wallet = new Wallet({
       chain,
@@ -146,7 +154,7 @@ export abstract class SetupClient {
   /**
    * @publicbody
    */
-  static getUnlockP2PKH(priv: PrivateKey, satoshis: number): sdk.ScriptTemplateUnlock {
+  static getUnlockP2PKH(priv: PrivateKey, satoshis: number): ScriptTemplateUnlock {
     const p2pkh = new P2PKH()
     const lock = SetupClient.getLockP2PKH(SetupClient.getKeyPair(priv).address)
     // Prepare to pay with SIGHASH_ALL and without ANYONE_CAN_PAY.
@@ -293,7 +301,7 @@ export interface SetupWalletIdb extends SetupWallet {
   rootKey: PrivateKey
   identityKey: string
   keyDeriver: KeyDeriverApi
-  chain: sdk.Chain
+  chain: Chain
   storage: WalletStorageManager
   services: Services
   monitor: Monitor

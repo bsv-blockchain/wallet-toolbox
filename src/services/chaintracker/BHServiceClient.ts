@@ -1,8 +1,9 @@
 import { BlockHeadersService, Utils } from '@bsv/sdk'
 import { ChaintracksServiceClient, ChaintracksServiceClientOptions } from './chaintracks/ChaintracksServiceClient'
-import { sdk } from '../../index.client'
-import { BaseBlockHeader, BlockHeader } from './chaintracks'
-import { serializeBlockHeader } from './chaintracks/util/blockHeaderUtilities'
+import { serializeBaseBlockHeader } from './chaintracks/util/blockHeaderUtilities'
+import { HeaderListener, ReorgListener, ChaintracksInfoApi } from './chaintracks/Api/ChaintracksClientApi'
+import { Chain } from '../../sdk/types'
+import { BaseBlockHeader, BlockHeader } from '../../sdk/WalletServices.interfaces'
 
 interface BHSHeader {
   hash: string
@@ -25,18 +26,17 @@ interface BHSHeaderState {
 export class BHServiceClient implements ChaintracksServiceClient {
   bhs: BlockHeadersService
   cache: Record<number, string>
-  chain: sdk.Chain
+  chain: Chain
   serviceUrl: string
   options: ChaintracksServiceClientOptions
   apiKey: string
 
-  constructor(chain: sdk.Chain, url: string, apiKey: string) {
+  constructor(chain: Chain, url: string, apiKey: string) {
     this.bhs = new BlockHeadersService(url, { apiKey })
     this.cache = {}
     this.chain = chain
     this.serviceUrl = url
     this.options = ChaintracksServiceClient.createChaintracksServiceClientOptions()
-    this.options.useAuthrite = true
     this.apiKey = apiKey
   }
 
@@ -106,7 +106,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
         bits: response.difficultyTarget,
         nonce: response.nonce
       }
-      return serializeBlockHeader(header)
+      return serializeBaseBlockHeader(header)
     })
     return headers.reduce((str: string, arr: number[]) => str + Utils.toHex(arr), '')
   }
@@ -181,7 +181,7 @@ export class BHServiceClient implements ChaintracksServiceClient {
     throw new Error('Not implemented')
   }
 
-  async getChain(): Promise<sdk.Chain> {
+  async getChain(): Promise<Chain> {
     return this.chain
   }
 
@@ -193,7 +193,20 @@ export class BHServiceClient implements ChaintracksServiceClient {
     throw new Error('Not implemented')
   }
 
-  async findChainTipHashHex(): Promise<string> {
+  async findChainTipHash(): Promise<string> {
     throw new Error('Not implemented')
+  }
+
+  async subscribeHeaders(listener: HeaderListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  async subscribeReorgs(listener: ReorgListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  async unsubscribe(subscriptionId: string): Promise<boolean> {
+    throw new Error('Method not implemented.')
+  }
+  async getInfo(): Promise<ChaintracksInfoApi> {
+    throw new Error('Method not implemented.')
   }
 }

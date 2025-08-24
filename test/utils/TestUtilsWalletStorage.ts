@@ -1,3 +1,7 @@
+import * as dotenv from 'dotenv'
+import path from 'path'
+import { promises as fsp } from 'fs'
+import { Knex, knex as makeKnex } from 'knex'
 import {
   Beef,
   CachedKeyDeriver,
@@ -5,7 +9,6 @@ import {
   CreateActionOutput,
   CreateActionResult,
   HexString,
-  KeyDeriver,
   KeyDeriverApi,
   P2PKH,
   PrivateKey,
@@ -21,60 +24,54 @@ import {
   WalletCertificate,
   WalletInterface
 } from '@bsv/sdk'
-import path from 'path'
-import { promises as fsp } from 'fs'
-import {
-  asArray,
-  randomBytesBase64,
-  randomBytesHex,
-  sdk,
-  StorageProvider,
-  StorageKnex,
-  StorageSyncReader,
-  verifyTruthy,
-  Wallet,
-  Monitor,
-  Services,
-  WalletStorageManager,
-  verifyOne,
-  StorageClient,
-  TableOutputBasket,
-  TableOutput,
-  TableMonitorEvent,
-  TableProvenTxReq,
-  TableProvenTx,
-  TableCommission,
-  TableTransaction,
-  TableTxLabelMap,
-  TableTxLabel,
-  TableUser,
-  TableSyncState,
-  TableCertificate,
-  TableCertificateField,
-  TableOutputTagMap,
-  TableOutputTag,
-  ScriptTemplateBRC29,
-  Setup
-} from '../../src/index.all'
-
-import { Knex, knex as makeKnex } from 'knex'
-
-import * as dotenv from 'dotenv'
-import { TrxToken, WalletServicesOptions } from '../../src/sdk'
 import { StorageIdb } from '../../src/storage/StorageIdb'
+import { Chain, TransactionStatus } from '../../src/sdk/types'
+import { Setup } from '../../src/Setup'
+import { StorageKnex } from '../../src/storage/StorageKnex'
+import { Services } from '../../src/services/Services'
+import { WERR_INSUFFICIENT_FUNDS, WERR_INVALID_PARAMETER } from '../../src/sdk/WERR_errors'
+import { TrxToken, WalletStorageProvider } from '../../src/sdk/WalletStorage.interfaces'
+import { WalletStorageManager } from '../../src/storage/WalletStorageManager'
+import { GetMerklePathResult, PostBeefResult, WalletServicesOptions } from '../../src/sdk/WalletServices.interfaces'
+import { Monitor } from '../../src/monitor/Monitor'
+import { PrivilegedKeyManager } from '../../src/sdk/PrivilegedKeyManager'
+import { Wallet } from '../../src/Wallet'
+import { StorageClient } from '../../src/storage/remoting/StorageClient'
+import { randomBytesBase64, randomBytesHex, verifyOne, verifyTruthy } from '../../src/utility/utilityHelpers'
+import { WalletError } from '../../src/sdk/WalletError'
+import { StorageSyncReader } from '../../src/storage/StorageSyncReader'
+import { StorageProvider } from '../../src/storage/StorageProvider'
+import { TableProvenTx } from '../../src/storage/schema/tables/TableProvenTx'
+import { TableProvenTxReq } from '../../src/storage/schema/tables/TableProvenTxReq'
+import { TableUser } from '../../src/storage/schema/tables/TableUser'
+import { TableCertificate } from '../../src/storage/schema/tables/TableCertificate'
+import { TableCertificateField } from '../../src/storage/schema/tables/TableCertificateField'
+import { TableOutputBasket } from '../../src/storage/schema/tables/TableOutputBasket'
+import { TableTransaction } from '../../src/storage/schema/tables/TableTransaction'
+import { TableOutput } from '../../src/storage/schema/tables/TableOutput'
+import { TableOutputTag } from '../../src/storage/schema/tables/TableOutputTag'
+import { TableOutputTagMap } from '../../src/storage/schema/tables/TableOutputTagMap'
+import { TableTxLabel } from '../../src/storage/schema/tables/TableTxLabel'
+import { TableTxLabelMap } from '../../src/storage/schema/tables/TableTxLabelMap'
+import { TableSyncState } from '../../src/storage/schema/tables/TableSyncState'
+import { TableMonitorEvent } from '../../src/storage/schema/tables/TableMonitorEvent'
+import { TableCommission } from '../../src/storage/schema/tables/TableCommission'
+import { asArray } from '../../src/utility/utilityHelpers.noBuffer'
+import { ScriptTemplateBRC29 } from '../../src/utility/ScriptTemplateBRC29'
+
 dotenv.config()
 
 const localMySqlConnection = process.env.MYSQL_CONNECTION || ''
 
 export interface TuEnvFlags {
-  chain: sdk.Chain
+  chain: Chain
   runMySQL: boolean
   runSlowTests: boolean
   logTests: boolean
 }
 
 export interface TuEnv extends TuEnvFlags {
-  chain: sdk.Chain
+  chain: Chain
   identityKey: string
   identityKey2: string
   taalApiKey: string
@@ -101,7 +98,7 @@ export abstract class TestUtilsWalletStorage {
    * @param chain
    * @returns true if .env has truthy idenityKey, idenityKey2 values for chain
    */
-  static noEnv(chain: sdk.Chain): boolean {
+  static noEnv(chain: Chain): boolean {
     try {
       Setup.getEnv(chain)
       return false
@@ -114,7 +111,7 @@ export abstract class TestUtilsWalletStorage {
    * @param chain
    * @returns true if .env is not valid for chain or testIdentityKey or testFilePath are undefined or empty.
    */
-  static noTestEnv(chain: sdk.Chain): boolean {
+  static noTestEnv(chain: Chain): boolean {
     try {
       const env = _tu.getEnv(chain)
       return !env.testIdentityKey || !env.testFilePath
@@ -123,7 +120,7 @@ export abstract class TestUtilsWalletStorage {
     }
   }
 
-  static getEnvFlags(chain: sdk.Chain): TuEnvFlags {
+  static getEnvFlags(chain: Chain): TuEnvFlags {
     const logTests = !!process.env.LOGTESTS
     const runMySQL = !!process.env.RUNMYSQL
     const runSlowTests = !!process.env.RUNSLOWTESTS
@@ -135,7 +132,7 @@ export abstract class TestUtilsWalletStorage {
     }
   }
 
-  static getEnv(chain: sdk.Chain): TuEnv {
+  static getEnv(chain: Chain): TuEnv {
     const flagsEnv = _tu.getEnvFlags(chain)
     // Identity keys of the lead maintainer of this repo...
     const identityKey = (chain === 'main' ? process.env.MY_MAIN_IDENTITY : process.env.MY_TEST_IDENTITY) || ''
@@ -171,7 +168,7 @@ export abstract class TestUtilsWalletStorage {
     services: Services
   }> {
     const env = _tu.getEnv('main')
-    if (!env.cloudMySQLConnection) throw new sdk.WERR_INVALID_PARAMETER('env.cloudMySQLConnection', 'valid')
+    if (!env.cloudMySQLConnection) throw new WERR_INVALID_PARAMETER('env.cloudMySQLConnection', 'valid')
     const knex = Setup.createMySQLKnex(env.cloudMySQLConnection)
     const storage = new StorageKnex({
       chain: env.chain,
@@ -301,10 +298,10 @@ export abstract class TestUtilsWalletStorage {
   }
 
   static async createWalletOnly(args: {
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
-    active?: sdk.WalletStorageProvider
-    backups?: sdk.WalletStorageProvider[]
+    active?: WalletStorageProvider
+    backups?: WalletStorageProvider[]
     privKeyHex?: string
   }): Promise<TestWalletOnly> {
     args.chain ||= 'test'
@@ -325,10 +322,10 @@ export abstract class TestUtilsWalletStorage {
     const monopts = Monitor.createDefaultWalletMonitorOptions(chain, storage, services)
     const monitor = new Monitor(monopts)
     monitor.addDefaultTasks()
-    let privilegedKeyManager: sdk.PrivilegedKeyManager | undefined = undefined
+    let privilegedKeyManager: PrivilegedKeyManager | undefined = undefined
     if (args.privKeyHex) {
       const privKey = PrivateKey.fromString(args.privKeyHex)
-      privilegedKeyManager = new sdk.PrivilegedKeyManager(async () => privKey)
+      privilegedKeyManager = new PrivilegedKeyManager(async () => privKey)
     }
     const wallet = new Wallet({
       chain,
@@ -363,8 +360,8 @@ export abstract class TestUtilsWalletStorage {
    *
    * @returns {TestWalletNoSetup}
    */
-  static async createTestWallet(args: sdk.Chain | CreateTestWalletArgs): Promise<TestWalletNoSetup> {
-    let chain: sdk.Chain
+  static async createTestWallet(args: Chain | CreateTestWalletArgs): Promise<TestWalletNoSetup> {
+    let chain: Chain
     let rootKeyHex: string
     let filePath: string
     let addLocalBackup = false
@@ -374,7 +371,7 @@ export abstract class TestUtilsWalletStorage {
       chain = args
       const env = _tu.getEnv(chain)
       if (!env.testIdentityKey || !env.testFilePath) {
-        throw new sdk.WERR_INVALID_PARAMETER('env.testIdentityKey and env.testFilePath', 'valid')
+        throw new WERR_INVALID_PARAMETER('env.testIdentityKey and env.testFilePath', 'valid')
       }
       rootKeyHex = env.devKeys[env.testIdentityKey!]
       filePath = env.testFilePath
@@ -396,10 +393,10 @@ export abstract class TestUtilsWalletStorage {
     })
     setup.localStorageIdentityKey = setup.storage.getActiveStore()
 
-    let client: sdk.WalletStorageProvider
+    let client: WalletStorageProvider
     if (useMySQLConnectionForClient) {
       const env = _tu.getEnv(chain)
-      if (!env.cloudMySQLConnection) throw new sdk.WERR_INVALID_PARAMETER('env.cloundMySQLConnection', 'valid')
+      if (!env.cloudMySQLConnection) throw new WERR_INVALID_PARAMETER('env.cloundMySQLConnection', 'valid')
       const connection = JSON.parse(env.cloudMySQLConnection)
       client = new StorageKnex({
         ...StorageKnex.defaultOptions(),
@@ -459,7 +456,7 @@ export abstract class TestUtilsWalletStorage {
     const balance = await setup.wallet.balanceAndUtxos()
 
     if (balance.total < 1000) {
-      throw new sdk.WERR_INSUFFICIENT_FUNDS(1000, 1000 - balance.total)
+      throw new WERR_INSUFFICIENT_FUNDS(1000, 1000 - balance.total)
     }
 
     if (balance.utxos.length <= 10) {
@@ -481,7 +478,7 @@ export abstract class TestUtilsWalletStorage {
   static async createTestWalletWithStorageClient(args: {
     rootKeyHex?: string
     endpointUrl?: string
-    chain?: sdk.Chain
+    chain?: Chain
   }): Promise<TestWalletOnly> {
     args.chain ||= 'test'
     const wo = await _tu.createWalletOnly({
@@ -499,7 +496,7 @@ export abstract class TestUtilsWalletStorage {
   static async createKnexTestWalletWithSetup<T>(args: {
     knex: Knex<any, any[]>
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
     privKeyHex?: string
@@ -568,7 +565,7 @@ export abstract class TestUtilsWalletStorage {
       try {
         await fsp.unlink(dstPath)
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         if (e.name !== 'ENOENT') {
           throw e
         }
@@ -625,7 +622,7 @@ export abstract class TestUtilsWalletStorage {
 
   static async createMySQLTestWallet(args: {
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
   }): Promise<TestWallet<{}>> {
@@ -637,7 +634,7 @@ export abstract class TestUtilsWalletStorage {
 
   static async createMySQLTestSetup1Wallet(args: {
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
   }): Promise<TestWallet<TestSetup1>> {
     return await this.createKnexTestSetup1Wallet({
@@ -650,7 +647,7 @@ export abstract class TestUtilsWalletStorage {
   static async createMySQLTestSetup2Wallet(args: {
     databaseName: string
     mockData: MockData
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
   }): Promise<TestWallet<TestSetup2>> {
     return await this.createKnexTestSetup2Wallet({
@@ -663,7 +660,7 @@ export abstract class TestUtilsWalletStorage {
   static async createSQLiteTestWallet(args: {
     filePath?: string
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
     privKeyHex?: string
@@ -677,7 +674,7 @@ export abstract class TestUtilsWalletStorage {
 
   static async createSQLiteTestSetup1Wallet(args: {
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
   }): Promise<TestWallet<TestSetup1>> {
     const localSQLiteFile = await _tu.newTmpFile(`${args.databaseName}.sqlite`, false, false, true)
@@ -691,7 +688,7 @@ export abstract class TestUtilsWalletStorage {
   static async createSQLiteTestSetup2Wallet(args: {
     databaseName: string
     mockData: MockData
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
   }): Promise<TestWallet<TestSetup2>> {
     const localSQLiteFile = await _tu.newTmpFile(`${args.databaseName}.sqlite`, false, false, true)
@@ -705,7 +702,7 @@ export abstract class TestUtilsWalletStorage {
   static async createKnexTestWallet(args: {
     knex: Knex<any, any[]>
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
     privKeyHex?: string
@@ -719,7 +716,7 @@ export abstract class TestUtilsWalletStorage {
   static async createKnexTestSetup1Wallet(args: {
     knex: Knex<any, any[]>
     databaseName: string
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
   }): Promise<TestWallet<TestSetup1>> {
@@ -733,7 +730,7 @@ export abstract class TestUtilsWalletStorage {
     knex: Knex<any, any[]>
     databaseName: string
     mockData: MockData
-    chain?: sdk.Chain
+    chain?: Chain
     rootKeyHex?: string
     dropAll?: boolean
   }): Promise<TestWallet<TestSetup2>> {
@@ -805,7 +802,7 @@ export abstract class TestUtilsWalletStorage {
       //console.log('USING FILE COPY INSTEAD OF SOURCE DB SYNC')
       useReader = false
     }
-    const chain: sdk.Chain = 'test'
+    const chain: Chain = 'test'
     const rootKeyHex = _tu.legacyRootKeyHex
     const identityKey = '03ac2d10bdb0023f4145cc2eba2fcd2ad3070cb2107b0b48170c46a9440e4cc3fe'
     const rootKey = PrivateKey.fromHex(rootKeyHex)
@@ -963,7 +960,7 @@ export abstract class TestUtilsWalletStorage {
   }
 
   static async createIdbLegacyWalletCopy(databaseName: string): Promise<TestWalletProviderNoSetup> {
-    const chain: sdk.Chain = 'test'
+    const chain: Chain = 'test'
 
     const readerFile = await _tu.existingDataFile(`walletLegacyTestData.sqlite`)
     const readerKnex = _tu.createLocalSQLite(readerFile)
@@ -1458,7 +1455,7 @@ export abstract class TestUtilsWalletStorage {
           const { tx: transaction } = await _tu.insertTestTransaction(storage, user, false, {
             txid: input.sourceOutpoint.split('.')[0],
             satoshis: input.sourceSatoshis,
-            status: 'confirmed' as sdk.TransactionStatus,
+            status: 'confirmed' as TransactionStatus,
             description: 'Generated transaction for input',
             lockTime: 0,
             version: 1,
@@ -1503,7 +1500,7 @@ export abstract class TestUtilsWalletStorage {
       const { tx: transaction } = await _tu.insertTestTransaction(storage, user, false, {
         txid: `${action.txid}` || `tx_${action.satoshis}_${Date.now()}`,
         satoshis: action.satoshis,
-        status: action.status as sdk.TransactionStatus,
+        status: action.status as TransactionStatus,
         description: action.description,
         lockTime: action.lockTime,
         version: action.version,
@@ -1617,17 +1614,17 @@ export abstract class TestUtilsWalletStorage {
 
   static mockMerklePathServicesAsCallback(
     ctxs: TestWalletOnly[],
-    callback: (txid: string) => Promise<sdk.GetMerklePathResult>
+    callback: (txid: string) => Promise<GetMerklePathResult>
   ): void {
     for (const { services } of ctxs) {
-      services.getMerklePath = jest.fn().mockImplementation(async (txid: string): Promise<sdk.GetMerklePathResult> => {
+      services.getMerklePath = jest.fn().mockImplementation(async (txid: string): Promise<GetMerklePathResult> => {
         const r = await callback(txid)
         return r
       })
     }
   }
 
-  static async createWalletSetupEnv(chain: sdk.Chain): Promise<TestWalletOnly> {
+  static async createWalletSetupEnv(chain: Chain): Promise<TestWalletOnly> {
     const env = Setup.getEnv(chain)
     const rootKeyHex = env.devKeys[env.identityKey]
 
@@ -1660,7 +1657,7 @@ export abstract class TestUtilsWalletStorage {
    * @returns { txidDo: string, txidUndo: string, beef: Beef, doubleSpendTx: transaction }
    */
   static async createNoSendTxPair(
-    wallet: Wallet | sdk.Chain,
+    wallet: Wallet | Chain,
     satoshis = 41
   ): Promise<{
     txidDo: string
@@ -1838,7 +1835,7 @@ export interface TestWalletProvider<T> extends TestWalletOnly {
   rootKey: PrivateKey
   identityKey: string
   keyDeriver: KeyDeriverApi
-  chain: sdk.Chain
+  chain: Chain
   storage: WalletStorageManager
   services: Services
   monitor: Monitor
@@ -1856,7 +1853,7 @@ export interface TestWallet<T> extends TestWalletOnly {
   rootKey: PrivateKey
   identityKey: string
   keyDeriver: KeyDeriverApi
-  chain: sdk.Chain
+  chain: Chain
   storage: WalletStorageManager
   services: Services
   monitor: Monitor
@@ -1870,7 +1867,7 @@ export interface TestWalletOnly {
   rootKey: PrivateKey
   identityKey: string
   keyDeriver: KeyDeriverApi
-  chain: sdk.Chain
+  chain: Chain
   storage: WalletStorageManager
   services: Services
   monitor: Monitor
@@ -1894,7 +1891,7 @@ export async function expectToThrowWERR<R>(
   try {
     await fn()
   } catch (eu: unknown) {
-    const e = sdk.WalletError.fromUnknown(eu)
+    const e = WalletError.fromUnknown(eu)
     if (e.name !== expectedClass.name || !e.isError)
       console.log(`Error name ${e.name} vs class name ${expectedClass.name}\n${e.stack}\n`)
     // The output above may help debugging this situation or put a breakpoint
@@ -1919,9 +1916,9 @@ function mockPostServices(
 ): void {
   for (const { services } of ctxs) {
     // Mock the services postBeef to avoid actually broadcasting new transactions.
-    services.postBeef = jest.fn().mockImplementation((beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> => {
+    services.postBeef = jest.fn().mockImplementation((beef: Beef, txids: string[]): Promise<PostBeefResult[]> => {
       status = !callback ? status : callback(beef, txids)
-      const r: sdk.PostBeefResult = {
+      const r: PostBeefResult = {
         name: 'mock',
         status: 'success',
         txidResults: txids.map(txid => ({ txid, status }))
@@ -1935,7 +1932,8 @@ function mockPostServices(
 let logEnabled: boolean = false
 
 /**
- * Centralized logging function to handle logging based on the `logEnabled` flag.
+ * Centralized logging function to handle logging based on running in jest "single test" mode,
+ * or when `logEnabled` is true.
  *
  * @param {string} message - The main message to log.
  * @param {...any} optionalParams - Additional parameters to log (optional).
@@ -2294,13 +2292,13 @@ export const triggerForeignKeyConstraintError = async (
  *
  * @param {Wallet} wallet - The wallet instance used to abort actions.
  * @param {StorageKnex} storage - The storage instance to query transactions from.
- * @param {sdk.TransactionStatus} status - The transaction status used to filter transactions.
+ * @param {TransactionStatus} status - The transaction status used to filter transactions.
  * @returns {Promise<boolean>} - Resolves to `true` if all matching transactions were successfully aborted.
  */
 async function cleanTransactionsUsingAbort(
   wallet: Wallet,
   storage: StorageKnex,
-  status: sdk.TransactionStatus
+  status: TransactionStatus
 ): Promise<boolean> {
   const transactions = await storage.findTransactions({ partial: { status } })
 
@@ -2515,7 +2513,7 @@ export function logBasket(basket: TableOutputBasket): string {
 }
 
 export interface CreateTestWalletArgs {
-  chain: sdk.Chain
+  chain: Chain
   rootKeyHex: string
   filePath: string
   addLocalBackup?: boolean

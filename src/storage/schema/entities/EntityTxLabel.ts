@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, sdk, TableTxLabel, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
+import { TableTxLabel } from '../tables/TableTxLabel'
 
 export class EntityTxLabel extends EntityBase<TableTxLabel> {
   constructor(api?: TableTxLabel) {
@@ -86,7 +86,7 @@ export class EntityTxLabel extends EntityBase<TableTxLabel> {
     userId: number,
     ei: TableTxLabel,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityTxLabel; eiId: number }> {
     const ef = verifyOneOrNone(await storage.findTxLabels({ partial: { label: ei.label, userId }, trx }))
     return {
@@ -96,7 +96,7 @@ export class EntityTxLabel extends EntityBase<TableTxLabel> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.userId = userId
     this.txLabelId = 0
     this.txLabelId = await storage.insertTxLabel(this.toApi(), trx)
@@ -107,7 +107,7 @@ export class EntityTxLabel extends EntityBase<TableTxLabel> {
     since: Date | undefined,
     ei: TableTxLabel,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

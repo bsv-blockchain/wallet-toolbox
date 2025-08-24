@@ -1,7 +1,11 @@
 import { ListOutputsResult } from '@bsv/sdk'
-import { StorageProvider, TableOutput } from '../index.client'
-import { asString, sdk, verifyId, verifyInteger, verifyOne } from '../../index.client'
 import { ValidListOutputsArgs } from '../../sdk/validationHelpers'
+import { StorageProvider } from '../StorageProvider'
+import { AuthId } from '../../sdk/WalletStorage.interfaces'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { specOpInvalidChange, specOpSetWalletChangeParams, specOpWalletBalance } from '../../sdk/types'
+import { verifyId, verifyInteger, verifyOne } from '../../utility/utilityHelpers'
+import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 
 export interface ListOutputsSpecOp {
   name: string
@@ -11,20 +15,20 @@ export interface ListOutputsSpecOp {
   includeSpent?: boolean
   resultFromTags?: (
     s: StorageProvider,
-    auth: sdk.AuthId,
+    auth: AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[]
   ) => Promise<ListOutputsResult>
   resultFromOutputs?: (
     s: StorageProvider,
-    auth: sdk.AuthId,
+    auth: AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[],
     outputs: TableOutput[]
   ) => Promise<ListOutputsResult>
   filterOutputs?: (
     s: StorageProvider,
-    auth: sdk.AuthId,
+    auth: AuthId,
     vargs: ValidListOutputsArgs,
     specOpTags: string[],
     outputs: TableOutput[]
@@ -43,13 +47,13 @@ export interface ListOutputsSpecOp {
 
 export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => {
   return {
-    [sdk.specOpWalletBalance]: {
+    [specOpWalletBalance]: {
       name: 'totalOutputsIsWalletBalance',
       useBasket: 'default',
       ignoreLimit: true,
       resultFromOutputs: async (
         s: StorageProvider,
-        auth: sdk.AuthId,
+        auth: AuthId,
         vargs: ValidListOutputsArgs,
         specOpTags: string[],
         outputs: TableOutput[]
@@ -59,7 +63,7 @@ export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => 
         return { totalOutputs, outputs: [] }
       }
     },
-    [sdk.specOpInvalidChange]: {
+    [specOpInvalidChange]: {
       name: 'invalidChangeOutputs',
       useBasket: 'default',
       ignoreLimit: true,
@@ -68,7 +72,7 @@ export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => 
       tagsToIntercept: ['release', 'all'],
       filterOutputs: async (
         s: StorageProvider,
-        auth: sdk.AuthId,
+        auth: AuthId,
         vargs: ValidListOutputsArgs,
         specOpTags: string[],
         outputs: TableOutput[]
@@ -96,17 +100,17 @@ export const getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => 
         return filteredOutputs
       }
     },
-    [sdk.specOpSetWalletChangeParams]: {
+    [specOpSetWalletChangeParams]: {
       name: 'setWalletChangeParams',
       tagsParamsCount: 2,
       resultFromTags: async (
         s: StorageProvider,
-        auth: sdk.AuthId,
+        auth: AuthId,
         vargs: ValidListOutputsArgs,
         specOpTags: string[]
       ): Promise<ListOutputsResult> => {
         if (specOpTags.length !== 2)
-          throw new sdk.WERR_INVALID_PARAMETER('numberOfDesiredUTXOs and minimumDesiredUTXOValue', 'valid')
+          throw new WERR_INVALID_PARAMETER('numberOfDesiredUTXOs and minimumDesiredUTXOValue', 'valid')
         const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]))
         const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]))
         const basket = verifyOne(

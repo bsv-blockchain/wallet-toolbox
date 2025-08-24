@@ -1,7 +1,4 @@
-import * as sdk from '../sdk'
-import { Services } from '../services'
 import { wait } from '../utility/utilityHelpers'
-import { BlockHeader, ChaintracksServiceClient } from '../services/chaintracker'
 
 import { WalletMonitorTask } from './tasks/WalletMonitorTask'
 import { WalletStorageManager } from '../storage/WalletStorageManager'
@@ -18,11 +15,18 @@ import { TaskMonitorCallHistory } from './tasks/TaskMonitorCallHistory'
 import { TaskSendWaiting } from './tasks/TaskSendWaiting'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
 import { TaskUnFail } from './tasks/TaskUnFail'
+import { Chain, ProvenTransactionStatus } from '../sdk/types'
+import { ChaintracksServiceClient } from '../services/chaintracker/chaintracks/ChaintracksServiceClient'
+import { ReviewActionResult } from '../sdk/WalletStorage.interfaces'
+import { WERR_BAD_REQUEST, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
+import { WalletError } from '../sdk/WalletError'
+import { BlockHeader } from '../sdk/WalletServices.interfaces'
+import { Services } from '../services/Services'
 
 export type MonitorStorage = WalletStorageManager
 
 export interface MonitorOptions {
-  chain: sdk.Chain
+  chain: Chain
 
   services: Services
 
@@ -46,8 +50,8 @@ export interface MonitorOptions {
   /**
    * These are hooks for a wallet-toolbox client to get transaction updates.
    */
-  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
-  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
+  onTransactionBroadcasted?: (broadcastResult: ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: ProvenTransactionStatus) => Promise<void>
 }
 
 /**
@@ -55,13 +59,9 @@ export interface MonitorOptions {
  * and potentially that reorgs update proofs that were already received.
  */
 export class Monitor {
-  static createDefaultWalletMonitorOptions(
-    chain: sdk.Chain,
-    storage: MonitorStorage,
-    services?: Services
-  ): MonitorOptions {
+  static createDefaultWalletMonitorOptions(chain: Chain, storage: MonitorStorage, services?: Services): MonitorOptions {
     services ||= new Services(chain)
-    if (!services.options.chaintracks) throw new sdk.WERR_INVALID_PARAMETER('services.options.chaintracks', 'valid')
+    if (!services.options.chaintracks) throw new WERR_INVALID_PARAMETER('services.options.chaintracks', 'valid')
     const o: MonitorOptions = {
       chain,
       services,
@@ -78,11 +78,11 @@ export class Monitor {
 
   options: MonitorOptions
   services: Services
-  chain: sdk.Chain
+  chain: Chain
   storage: MonitorStorage
   chaintracks: ChaintracksServiceClient
-  onTransactionBroadcasted?: (broadcastResult: sdk.ReviewActionResult) => Promise<void>
-  onTransactionProven?: (txStatus: sdk.ProvenTransactionStatus) => Promise<void>
+  onTransactionBroadcasted?: (broadcastResult: ReviewActionResult) => Promise<void>
+  onTransactionProven?: (txStatus: ProvenTransactionStatus) => Promise<void>
 
   constructor(options: MonitorOptions) {
     this.options = { ...options }
@@ -169,7 +169,7 @@ export class Monitor {
 
   addTask(task: WalletMonitorTask): void {
     if (this._tasks.some(t => t.name === task.name))
-      throw new sdk.WERR_BAD_REQUEST(`task ${task.name} has already been added.`)
+      throw new WERR_BAD_REQUEST(`task ${task.name} has already been added.`)
     this._tasks.push(task)
   }
 
@@ -202,7 +202,7 @@ export class Monitor {
         try {
           await t.asyncSetup()
         } catch (eu: unknown) {
-          const e = sdk.WalletError.fromUnknown(eu)
+          const e = WalletError.fromUnknown(eu)
           const details = `monitor task ${t.name} asyncSetup error ${e.code} ${e.description}`
           console.log(details)
           await this.logEvent('error0', details)
@@ -219,7 +219,7 @@ export class Monitor {
         try {
           if (t.trigger(now).run) tasksToRun.push(t)
         } catch (eu: unknown) {
-          const e = sdk.WalletError.fromUnknown(eu)
+          const e = WalletError.fromUnknown(eu)
           const details = `monitor task ${t.name} trigger error ${e.code} ${e.description}`
           console.log(details)
           await this.logEvent('error0', details)
@@ -236,7 +236,7 @@ export class Monitor {
             }
           }
         } catch (eu: unknown) {
-          const e = sdk.WalletError.fromUnknown(eu)
+          const e = WalletError.fromUnknown(eu)
           const details = `monitor task ${ttr.name} runTask error ${e.code} ${e.description}\n${e.stack}`
           console.log(details)
           await this.logEvent('error1', details)
@@ -250,7 +250,7 @@ export class Monitor {
   _runAsyncSetup: boolean = true
 
   async startTasks(): Promise<void> {
-    if (this._tasksRunning) throw new sdk.WERR_BAD_REQUEST('monitor tasks are already runnining.')
+    if (this._tasksRunning) throw new WERR_BAD_REQUEST('monitor tasks are already runnining.')
 
     this._tasksRunning = true
     for (; this._tasksRunning; ) {
@@ -291,7 +291,7 @@ export class Monitor {
     const h = header
     this.lastNewHeader = h
     this.lastNewHeaderWhen = new Date()
-    console.log(`WalletMonitor notified of new block header ${h.height}`)
+    // console.log(`WalletMonitor notified of new block header ${h.height}`)
     // Nudge the proof checker to try again.
     TaskCheckForProofs.checkNow = true
   }
@@ -303,7 +303,7 @@ export class Monitor {
    *
    * @param broadcastResult
    */
-  callOnBroadcastedTransaction(broadcastResult: sdk.ReviewActionResult): void {
+  callOnBroadcastedTransaction(broadcastResult: ReviewActionResult): void {
     if (this.onTransactionBroadcasted) {
       this.onTransactionBroadcasted(broadcastResult)
     }
@@ -316,7 +316,7 @@ export class Monitor {
    *
    * @param txStatus
    */
-  callOnProvenTransaction(txStatus: sdk.ProvenTransactionStatus): void {
+  callOnProvenTransaction(txStatus: ProvenTransactionStatus): void {
     if (this.onTransactionProven) {
       this.onTransactionProven(txStatus)
     }

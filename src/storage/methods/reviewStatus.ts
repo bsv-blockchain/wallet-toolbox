@@ -1,8 +1,9 @@
-import { Beef } from '@bsv/sdk'
 import { Knex } from 'knex'
-import { TableOutput, TableTransaction } from '../index.client'
-import { sdk } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
+import { TrxToken } from '../../sdk/WalletStorage.interfaces'
+import { WalletError } from '../../sdk/WalletError'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { TableOutput } from '../schema/tables/TableOutput'
 
 /**
  * Looks for unpropagated state:
@@ -17,7 +18,7 @@ import { StorageKnex } from '../StorageKnex'
  */
 export async function reviewStatus(
   storage: StorageKnex,
-  args: { agedLimit: Date; trx?: sdk.TrxToken }
+  args: { agedLimit: Date; trx?: TrxToken }
 ): Promise<{ log: string }> {
   const r: { log: string } = { log: '' }
 
@@ -30,7 +31,7 @@ export async function reviewStatus(
       }
     } catch (eu: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       throw eu
     }
   }

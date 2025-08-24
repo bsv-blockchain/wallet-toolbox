@@ -12,15 +12,38 @@ import {
   AuthFetch
 } from '@bsv/sdk'
 import {
-  sdk,
-  TableCertificateX,
-  TableOutput,
-  TableOutputBasket,
-  TableProvenTxReq,
-  TableSettings,
-  TableSyncState,
-  TableUser
-} from '../../index.client'
+  AuthId,
+  FindCertificatesArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindProvenTxReqsArgs,
+  ProcessSyncChunkResult,
+  RequestSyncChunkArgs,
+  StorageCreateActionResult,
+  StorageInternalizeActionResult,
+  StorageProcessActionArgs,
+  StorageProcessActionResults,
+  SyncChunk,
+  UpdateProvenTxReqWithNewProvenTxArgs,
+  UpdateProvenTxReqWithNewProvenTxResult,
+  WalletStorageProvider
+} from '../../sdk/WalletStorage.interfaces'
+import { TableSettings } from '../schema/tables/TableSettings'
+import { WERR_INVALID_OPERATION } from '../../sdk/WERR_errors'
+import { WalletServices } from '../../sdk/WalletServices.interfaces'
+import {
+  ValidCreateActionArgs,
+  ValidListActionsArgs,
+  ValidListCertificatesArgs,
+  ValidListOutputsArgs
+} from '../../sdk/validationHelpers'
+import { TableUser } from '../schema/tables/TableUser'
+import { TableSyncState } from '../schema/tables/TableSyncState'
+import { TableCertificateX } from '../schema/tables/TableCertificate'
+import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { TableProvenTxReq } from '../schema/tables/TableProvenTxReq'
+import { EntityTimeStamp } from '../../sdk/types'
 
 /**
  * `StorageClient` implements the `WalletStorageProvider` interface which allows it to
@@ -36,7 +59,7 @@ import {
  *
  * For details of the API implemented, follow the "See also" link for the `WalletStorageProvider` interface.
  */
-export class StorageClient implements sdk.WalletStorageProvider {
+export class StorageClient implements WalletStorageProvider {
   readonly endpointUrl: string
   private readonly authClient: AuthFetch
   private nextId = 1
@@ -123,7 +146,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    */
   getSettings(): TableSettings {
     if (!this.settings) {
-      throw new sdk.WERR_INVALID_OPERATION('call makeAvailable at least once before getSettings')
+      throw new WERR_INVALID_OPERATION('call makeAvailable at least once before getSettings')
     }
     return this.settings
   }
@@ -170,10 +193,10 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * Remote storage does not offer `Services` to remote clients.
    * @throws WERR_INVALID_OPERATION
    */
-  getServices(): sdk.WalletServices {
+  getServices(): WalletServices {
     // Typically, the client would not store or retrieve "Services" from a remote server.
     // The "services" in local in-memory usage is a no-op or your own approach:
-    throw new sdk.WERR_INVALID_OPERATION(
+    throw new WERR_INVALID_OPERATION(
       'getServices() not implemented in remote client. This method typically is not used remotely.'
     )
   }
@@ -181,7 +204,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
   /**
    * Ignored. Remote storage cannot share `Services` with remote clients.
    */
-  setServices(v: sdk.WalletServices): void {
+  setServices(v: WalletServices): void {
     // Typically no-op for remote client
     // Because "services" are usually local definitions to the Storage.
   }
@@ -195,8 +218,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Original wallet `internalizeAction` arguments.
    * @returns `internalizeAction` results
    */
-  async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> {
-    return this.rpcCall<sdk.StorageInternalizeActionResult>('internalizeAction', [auth, args])
+  async internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> {
+    return this.rpcCall<StorageInternalizeActionResult>('internalizeAction', [auth, args])
   }
 
   /**
@@ -206,8 +229,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Validated extension of original wallet `createAction` arguments.
    * @returns `StorageCreateActionResults` supporting additional wallet processing to yield `createAction` results.
    */
-  async createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult> {
-    return this.rpcCall<sdk.StorageCreateActionResult>('createAction', [auth, args])
+  async createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult> {
+    return this.rpcCall<StorageCreateActionResult>('createAction', [auth, args])
   }
 
   /**
@@ -220,8 +243,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args `StorageProcessActionArgs` convey completed signed transaction to storage.
    * @returns `StorageProcessActionResults` supporting final wallet processing to yield `createAction` or `signAction` results.
    */
-  async processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> {
-    return this.rpcCall<sdk.StorageProcessActionResults>('processAction', [auth, args])
+  async processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> {
+    return this.rpcCall<StorageProcessActionResults>('processAction', [auth, args])
   }
 
   /**
@@ -231,7 +254,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args original wallet `abortAction` args.
    * @returns `abortAction` result.
    */
-  async abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult> {
+  async abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult> {
     return this.rpcCall<AbortActionResult>('abortAction', [auth, args])
   }
 
@@ -254,7 +277,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @returns `TableSyncState` and whether a new record was created.
    */
   async findOrInsertSyncStateAuth(
-    auth: sdk.AuthId,
+    auth: AuthId,
     storageIdentityKey: string,
     storageName: string
   ): Promise<{ syncState: TableSyncState; isNew: boolean }> {
@@ -274,7 +297,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param certificate the certificate to insert.
    * @returns record Id of the inserted `TableCertificate` record.
    */
-  async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> {
+  async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> {
     const r = await this.rpcCall<number>('insertCertificateAuth', [auth, certificate])
     return r
   }
@@ -286,7 +309,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Validated extension of original wallet `listActions` arguments.
    * @returns `listActions` results.
    */
-  async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> {
+  async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> {
     const r = await this.rpcCall<ListActionsResult>('listActions', [auth, vargs])
     return r
   }
@@ -298,7 +321,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Validated extension of original wallet `listOutputs` arguments.
    * @returns `listOutputs` results.
    */
-  async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> {
+  async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> {
     const r = await this.rpcCall<ListOutputsResult>('listOutputs', [auth, vargs])
     return r
   }
@@ -310,7 +333,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args Validated extension of original wallet `listCertificates` arguments.
    * @returns `listCertificates` results.
    */
-  async listCertificates(auth: sdk.AuthId, vargs: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult> {
+  async listCertificates(auth: AuthId, vargs: ValidListCertificatesArgs): Promise<ListCertificatesResult> {
     const r = await this.rpcCall<ListCertificatesResult>('listCertificates', [auth, vargs])
     return r
   }
@@ -326,7 +349,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args `FindCertificatesArgs` determines which certificates to retrieve and whether to include fields.
    * @returns array of certificates matching args.
    */
-  async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> {
+  async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> {
     const r = await this.rpcCall<TableCertificateX[]>('findCertificatesAuth', [auth, args])
     this.validateEntities(r)
     if (args.includeFields) {
@@ -347,7 +370,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args `FindOutputBasketsArgs` determines which baskets to retrieve.
    * @returns array of output baskets matching args.
    */
-  async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
+  async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
     const r = await this.rpcCall<TableOutputBasket[]>('findOutputBaskets', [auth, args])
     this.validateEntities(r)
     return r
@@ -363,7 +386,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args `FindOutputsArgs` determines which outputs to retrieve.
    * @returns array of outputs matching args.
    */
-  async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> {
+  async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> {
     const r = await this.rpcCall<TableOutput[]>('findOutputsAuth', [auth, args])
     this.validateEntities(r)
     return r
@@ -379,7 +402,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args `FindProvenTxReqsArgs` determines which proof requests to retrieve.
    * @returns array of proof requests matching args.
    */
-  async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
+  async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> {
     const r = await this.rpcCall<TableProvenTxReq[]>('findProvenTxReqs', [args])
     this.validateEntities(r)
     return r
@@ -395,7 +418,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * This must match the `AuthFetch` identity securing the remote conneciton.
    * @param args original wallet `relinquishCertificate` args.
    */
-  async relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number> {
+  async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> {
     return this.rpcCall<number>('relinquishCertificate', [auth, args])
   }
 
@@ -408,7 +431,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * This must match the `AuthFetch` identity securing the remote conneciton.
    * @param args original wallet `relinquishOutput` args.
    */
-  async relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number> {
+  async relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number> {
     return this.rpcCall<number>('relinquishOutput', [auth, args])
   }
 
@@ -421,8 +444,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param chunk the current data chunk to process.
    * @returns whether processing is done, counts of inserts and udpates, and related progress tracking properties.
    */
-  async processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult> {
-    const r = await this.rpcCall<sdk.ProcessSyncChunkResult>('processSyncChunk', [args, chunk])
+  async processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult> {
+    const r = await this.rpcCall<ProcessSyncChunkResult>('processSyncChunk', [args, chunk])
     return r
   }
 
@@ -435,8 +458,8 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @param args that identify the non-active storage which will receive replication data and constrains the replication process.
    * @returns the next "chunk" of replication data
    */
-  async getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> {
-    const r = await this.rpcCall<sdk.SyncChunk>('getSyncChunk', [args])
+  async getSyncChunk(args: RequestSyncChunkArgs): Promise<SyncChunk> {
+    const r = await this.rpcCall<SyncChunk>('getSyncChunk', [args])
     if (r.certificateFields) r.certificateFields = this.validateEntities(r.certificateFields)
     if (r.certificates) r.certificates = this.validateEntities(r.certificates)
     if (r.commissions) r.commissions = this.validateEntities(r.commissions)
@@ -464,9 +487,9 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * @returns results of updates
    */
   async updateProvenTxReqWithNewProvenTx(
-    args: sdk.UpdateProvenTxReqWithNewProvenTxArgs
-  ): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> {
-    const r = await this.rpcCall<sdk.UpdateProvenTxReqWithNewProvenTxResult>('updateProvenTxReqWithNewProvenTx', [args])
+    args: UpdateProvenTxReqWithNewProvenTxArgs
+  ): Promise<UpdateProvenTxReqWithNewProvenTxResult> {
+    const r = await this.rpcCall<UpdateProvenTxReqWithNewProvenTxResult>('updateProvenTxReqWithNewProvenTx', [args])
     return r
   }
 
@@ -479,7 +502,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * This must match the `AuthFetch` identity securing the remote conneciton.
    * @param newActiveStorageIdentityKey which must be a currently configured backup storage provider.
    */
-  async setActive(auth: sdk.AuthId, newActiveStorageIdentityKey: string): Promise<number> {
+  async setActive(auth: AuthId, newActiveStorageIdentityKey: string): Promise<number> {
     return this.rpcCall<number>('setActive', [auth, newActiveStorageIdentityKey])
   }
 
@@ -494,7 +517,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * Helper to force uniform behavior across database engines.
    * Use to process all individual records with time stamps retreived from database.
    */
-  validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T {
+  validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T {
     entity.created_at = this.validateDate(entity.created_at)
     entity.updated_at = this.validateDate(entity.updated_at)
     if (dateFields) {
@@ -518,7 +541,7 @@ export class StorageClient implements sdk.WalletStorageProvider {
    * Use to process all arrays of records with time stamps retreived from database.
    * @returns input `entities` array with contained values validated.
    */
-  validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] {
+  validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] {
     for (let i = 0; i < entities.length; i++) {
       entities[i] = this.validateEntity(entities[i], dateFields)
     }

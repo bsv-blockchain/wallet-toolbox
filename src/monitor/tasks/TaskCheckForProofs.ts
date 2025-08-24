@@ -39,9 +39,9 @@ export class TaskCheckForProofs extends WalletMonitorTask {
    */
   trigger(nowMsecsSinceEpoch: number): { run: boolean } {
     return {
-      run:
-        TaskCheckForProofs.checkNow ||
-        (this.triggerMsecs > 0 && nowMsecsSinceEpoch - this.lastRunMsecsSinceEpoch > this.triggerMsecs)
+      run: TaskCheckForProofs.checkNow
+      // Check only when checkNow flag is set.
+      // || (this.triggerMsecs > 0 && nowMsecsSinceEpoch - this.lastRunMsecsSinceEpoch > this.triggerMsecs)
     }
   }
 

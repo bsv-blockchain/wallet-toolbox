@@ -1,20 +1,19 @@
-import {
-  sdk,
-  TableCertificate,
-  TableCertificateField,
-  TableCommission,
-  TableOutput,
-  TableOutputBasket,
-  TableOutputTag,
-  TableOutputTagMap,
-  TableProvenTx,
-  TableProvenTxReq,
-  TableTransaction,
-  TableTxLabel,
-  TableTxLabelMap,
-  verifyTruthy
-} from '../../index.client'
 import { StorageReader } from '../StorageReader'
+import { TableProvenTx } from '../schema/tables/TableProvenTx'
+import { TableProvenTxReq } from '../schema/tables/TableProvenTxReq'
+import { TableCertificate } from '../schema/tables/TableCertificate'
+import { TableCertificateField } from '../schema/tables/TableCertificateField'
+import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { TableOutputTag } from '../schema/tables/TableOutputTag'
+import { TableOutputTagMap } from '../schema/tables/TableOutputTagMap'
+import { TableTxLabel } from '../schema/tables/TableTxLabel'
+import { TableTxLabelMap } from '../schema/tables/TableTxLabelMap'
+import { TableCommission } from '../schema/tables/TableCommission'
+import { FindForUserSincePagedArgs, RequestSyncChunkArgs, SyncChunk } from '../../sdk/WalletStorage.interfaces'
+import { verifyTruthy } from '../../utility/utilityHelpers'
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 
 /**
  * Gets the next sync chunk of updated data from un-remoted storage (could be using a remote DB connection).
@@ -22,8 +21,8 @@ import { StorageReader } from '../StorageReader'
  * @param args
  * @returns
  */
-export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> {
-  const r: sdk.SyncChunk = {
+export async function getSyncChunk(storage: StorageReader, args: RequestSyncChunkArgs): Promise<SyncChunk> {
+  const r: SyncChunk = {
     fromStorageIdentityKey: args.fromStorageIdentityKey,
     toStorageIdentityKey: args.toStorageIdentityKey,
     userIdentityKey: args.identityKey
@@ -47,7 +46,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableProvenTx) => {
         r.provenTxs!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.getProvenTxsForUser(args)
       }
     },
@@ -60,7 +59,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableOutputBasket) => {
         r.outputBaskets!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findOutputBaskets({
           partial: { userId: args.userId },
           since: args.since,
@@ -77,7 +76,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableOutputTag) => {
         r.outputTags!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findOutputTags({
           partial: { userId: args.userId },
           since: args.since,
@@ -94,7 +93,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableTxLabel) => {
         r.txLabels!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findTxLabels({
           partial: { userId: args.userId },
           since: args.since,
@@ -111,7 +110,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableTransaction) => {
         r.transactions!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findTransactions({
           partial: { userId: args.userId },
           since: args.since,
@@ -128,7 +127,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableOutput) => {
         r.outputs!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findOutputs({
           partial: { userId: args.userId },
           since: args.since,
@@ -145,7 +144,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableTxLabelMap) => {
         r.txLabelMaps!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.getTxLabelMapsForUser(args)
       }
     },
@@ -158,7 +157,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableOutputTagMap) => {
         r.outputTagMaps!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.getOutputTagMapsForUser(args)
       }
     },
@@ -171,7 +170,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableCertificate) => {
         r.certificates!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findCertificates({
           partial: { userId: args.userId },
           since: args.since,
@@ -188,7 +187,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableCertificateField) => {
         r.certificateFields!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findCertificateFields({
           partial: { userId: args.userId },
           since: args.since,
@@ -205,7 +204,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableCommission) => {
         r.commissions!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.findCommissions({
           partial: { userId: args.userId },
           since: args.since,
@@ -222,7 +221,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
       addItem: (i: TableProvenTxReq) => {
         r.provenTxReqs!.push(i)
       },
-      findItems: async (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => {
+      findItems: async (storage: StorageReader, args: FindForUserSincePagedArgs) => {
         return await storage.getProvenTxReqsForUser(args)
       }
     }
@@ -235,7 +234,7 @@ export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSync
     }
     let { offset, name: oname } = args.offsets[i++]
     if (a.name !== oname)
-      throw new sdk.WERR_INVALID_PARAMETER('offsets', `in dependency order. '${a.name}' expected, found ${oname}.`)
+      throw new WERR_INVALID_PARAMETER('offsets', `in dependency order. '${a.name}' expected, found ${oname}.`)
     let preAddCalled = false
     for (; !done; ) {
       const limit = Math.min(itemCount, Math.max(10, args.maxItems / a.maxDivider))
@@ -278,17 +277,17 @@ type ChunkerArgs = {
   maxDivider: number
   preAdd: () => void
   addItem: (i: any) => void
-  findItems: (storage: StorageReader, args: sdk.FindForUserSincePagedArgs) => Promise<any[]>
+  findItems: (storage: StorageReader, args: FindForUserSincePagedArgs) => Promise<any[]>
 }
 
 function checkIsDate(v: any) {
-  if (!(v instanceof Date)) throw new sdk.WERR_INVALID_OPERATION('bad date')
+  if (!(v instanceof Date)) throw new WERR_INVALID_OPERATION('bad date')
 }
 
 function checkEntityValues(es: object[]) {
   for (const e of es) {
     checkIsDate(e['created_at'])
     checkIsDate(e['updated_at'])
-    for (const key of Object.keys(e)) if (e[key] === null) throw new sdk.WERR_INVALID_OPERATION()
+    for (const key of Object.keys(e)) if (e[key] === null) throw new WERR_INVALID_OPERATION()
   }
 }

@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { MerklePath } from '@bsv/sdk'
-import { arraysEqual, optionalArraysEqual, sdk, TableOutput, verifyId, verifyOneOrNone } from '../../../index.client'
-import { EntityBase, EntityStorage, SyncMap } from '.'
+import { StorageProvidedBy, TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { optionalArraysEqual, verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutput } from '../tables/TableOutput'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityOutput extends EntityBase<TableOutput> {
   constructor(api?: TableOutput) {
@@ -129,7 +129,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
   get providedBy() {
     return this.api.providedBy
   }
-  set providedBy(v: sdk.StorageProvidedBy) {
+  set providedBy(v: StorageProvidedBy) {
     this.api.providedBy = v
   }
   get purpose() {
@@ -233,7 +233,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
     userId: number,
     ei: TableOutput,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityOutput; eiId: number }> {
     const transactionId = syncMap.transaction.idMap[ei.transactionId]
     const basketId = ei.basketId ? syncMap.outputBasket.idMap[ei.basketId] : null
@@ -250,7 +250,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
     }
   }
 
-  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> {
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {
     this.userId = userId
     this.basketId = this.basketId ? syncMap.outputBasket.idMap[this.basketId] : undefined
     this.transactionId = syncMap.transaction.idMap[this.transactionId]
@@ -264,7 +264,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
     since: Date | undefined,
     ei: TableOutput,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<boolean> {
     let wasMerged = false
     if (ei.updated_at > this.updated_at) {

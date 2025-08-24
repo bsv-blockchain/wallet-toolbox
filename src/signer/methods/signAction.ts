@@ -1,10 +1,10 @@
 import { AtomicBEEF, Beef, SendWithResult, SignActionArgs, SignActionResult, TXIDHexString } from '@bsv/sdk'
-import { sdk, Wallet } from '../../index.client'
 import { processAction } from './createAction'
-import { ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
-import { validateSignActionArgs } from '../../sdk'
+import { AuthId, ReviewActionResult } from '../../sdk/WalletStorage.interfaces'
 import { completeSignedTransaction, verifyUnlockScripts } from './completeSignedTransaction'
-import { makeAtomicBeef } from '../../utility/utilityHelpers'
+import { Wallet } from '../../Wallet'
+import { WERR_INTERNAL, WERR_NOT_IMPLEMENTED } from '../../sdk/WERR_errors'
+import { validateSignActionArgs, ValidCreateActionArgs, ValidSignActionArgs } from '../../sdk/validationHelpers'
 
 export interface SignActionResultX extends SignActionResult {
   txid?: TXIDHexString
@@ -13,11 +13,11 @@ export interface SignActionResultX extends SignActionResult {
   notDelayedResults?: ReviewActionResult[]
 }
 
-export async function signAction(wallet: Wallet, auth: sdk.AuthId, args: SignActionArgs): Promise<SignActionResultX> {
+export async function signAction(wallet: Wallet, auth: AuthId, args: SignActionArgs): Promise<SignActionResultX> {
   const prior = wallet.pendingSignActions[args.reference]
   if (!prior)
-    throw new sdk.WERR_NOT_IMPLEMENTED('recovery of out-of-session signAction reference data is not yet implemented.')
-  if (!prior.dcr.inputBeef) throw new sdk.WERR_INTERNAL('prior.dcr.inputBeef must be valid')
+    throw new WERR_NOT_IMPLEMENTED('recovery of out-of-session signAction reference data is not yet implemented.')
+  if (!prior.dcr.inputBeef) throw new WERR_INTERNAL('prior.dcr.inputBeef must be valid')
 
   const vargs = mergePriorOptions(prior.args, args)
 
@@ -41,7 +41,7 @@ export async function signAction(wallet: Wallet, auth: sdk.AuthId, args: SignAct
   return r
 }
 
-function mergePriorOptions(caVargs: sdk.ValidCreateActionArgs, saArgs: SignActionArgs): sdk.ValidSignActionArgs {
+function mergePriorOptions(caVargs: ValidCreateActionArgs, saArgs: SignActionArgs): ValidSignActionArgs {
   const saOptions = (saArgs.options ||= {})
   if (saOptions.acceptDelayedBroadcast === undefined)
     saOptions.acceptDelayedBroadcast = caVargs.options.acceptDelayedBroadcast

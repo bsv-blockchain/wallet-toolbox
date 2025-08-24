@@ -1,3 +1,4 @@
+import { Knex, knex as makeKnex } from 'knex'
 import { KeyPairAddress, SetupWallet, SetupWalletClient } from './SetupWallet'
 import {
   BEEF,
@@ -12,24 +13,25 @@ import {
   P2PKH,
   PrivateKey,
   PublicKey,
+  ScriptTemplateUnlock,
   WalletInterface
 } from '@bsv/sdk'
-import {
-  Monitor,
-  randomBytesHex,
-  sdk,
-  Services,
-  StorageClient,
-  StorageKnex,
-  verifyTruthy,
-  Wallet,
-  WalletStorageManager
-} from './index.all'
-import { Knex, knex as makeKnex } from 'knex'
+import { Chain } from './sdk/types'
+import { verifyTruthy } from './utility/utilityHelpers'
+import { WERR_INVALID_OPERATION } from './sdk/WERR_errors'
+import { WalletStorageManager } from './storage/WalletStorageManager'
+import { Services } from './services/Services'
+import { Monitor } from './monitor/Monitor'
+import { PrivilegedKeyManager } from './sdk/PrivilegedKeyManager'
+import { Wallet } from './Wallet'
+import { StorageClient } from './storage/remoting/StorageClient'
+import { StorageKnex } from './storage/StorageKnex'
+import { WalletStorageProvider } from './sdk/WalletStorage.interfaces'
 
-import * as dotenv from 'dotenv'
 // To rely on your own headers service, uncomment the following line:
 // import { BHServiceClient } from './services/chaintracker'
+
+import * as dotenv from 'dotenv'
 dotenv.config()
 
 /**
@@ -43,7 +45,7 @@ export abstract class Setup {
    * @param chain
    * @returns true if .env is not valid for chain
    */
-  static noEnv(chain: sdk.Chain): boolean {
+  static noEnv(chain: Chain): boolean {
     try {
       Setup.getEnv(chain)
       return false
@@ -105,7 +107,7 @@ DEV_KEYS = '{
    *
    * @publicbody
    */
-  static getEnv(chain: sdk.Chain): SetupEnv {
+  static getEnv(chain: Chain): SetupEnv {
     // Identity keys of the lead maintainer of this repo...
     const identityKey = chain === 'main' ? process.env.MY_MAIN_IDENTITY : process.env.MY_TEST_IDENTITY
     const identityKey2 = chain === 'main' ? process.env.MY_MAIN_IDENTITY2 : process.env.MY_TEST_IDENTITY2
@@ -117,8 +119,7 @@ DEV_KEYS = '{
       `.env value for '${chain.toUpperCase()}_TAAL_API_KEY' is required.`
     )
 
-    if (!identityKey || !identityKey2)
-      throw new sdk.WERR_INVALID_OPERATION('.env is not a valid SetupEnv configuration.')
+    if (!identityKey || !identityKey2) throw new WERR_INVALID_OPERATION('.env is not a valid SetupEnv configuration.')
 
     return {
       chain,
@@ -158,7 +159,7 @@ DEV_KEYS = '{
     const monitor = new Monitor(monopts)
     monitor.addDefaultTasks()
     const privilegedKeyManager = args.privilegedKeyGetter
-      ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+      ? new PrivilegedKeyManager(args.privilegedKeyGetter)
       : undefined
     const wallet = new Wallet({
       chain,
@@ -190,7 +191,7 @@ DEV_KEYS = '{
    * @param args.privilegedKeyGetter - Optional. Method that will return the privileged `PrivateKey`, on demand.
    */
   static async createWalletClientNoEnv(args: {
-    chain: sdk.Chain
+    chain: Chain
     rootKeyHex: string
     storageUrl?: string
     privilegedKeyGetter?: () => Promise<PrivateKey>
@@ -202,7 +203,7 @@ DEV_KEYS = '{
     const storage = new WalletStorageManager(keyDeriver.identityKey)
     const services = new Services(chain)
     const privilegedKeyManager = args.privilegedKeyGetter
-      ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+      ? new PrivilegedKeyManager(args.privilegedKeyGetter)
       : undefined
     const wallet = new Wallet({
       chain,
@@ -259,7 +260,7 @@ DEV_KEYS = '{
   /**
    * @publicbody
    */
-  static getUnlockP2PKH(priv: PrivateKey, satoshis: number): sdk.ScriptTemplateUnlock {
+  static getUnlockP2PKH(priv: PrivateKey, satoshis: number): ScriptTemplateUnlock {
     const p2pkh = new P2PKH()
     const lock = Setup.getLockP2PKH(Setup.getKeyPair(priv).address)
     // Prepare to pay with SIGHASH_ALL and without ANYONE_CAN_PAY.
@@ -475,11 +476,11 @@ export interface SetupWalletArgs {
   /**
    * Optional. Active wallet storage. Can be added later.
    */
-  active?: sdk.WalletStorageProvider
+  active?: WalletStorageProvider
   /**
    * Optional. One or more storage providers managed as backup destinations. Can be added later.
    */
-  backups?: sdk.WalletStorageProvider[]
+  backups?: WalletStorageProvider[]
 }
 
 /**
@@ -515,7 +516,7 @@ export interface SetupWalletKnex extends SetupWallet {
   rootKey: PrivateKey
   identityKey: string
   keyDeriver: KeyDeriverApi
-  chain: sdk.Chain
+  chain: Chain
   storage: WalletStorageManager
   services: Services
   monitor: Monitor
@@ -533,7 +534,7 @@ export interface SetupEnv {
   /**
    * The chan being accessed: 'main' for mainnet, 'test' for 'testnet'.
    */
-  chain: sdk.Chain
+  chain: Chain
   /**
    * The user's primary identity key (public key).
    */
@@ -572,4 +573,7 @@ export interface SetupWalletClientArgs extends SetupWalletArgs {
    * the active storage provider of the newly created wallet.
    */
   endpointUrl?: string
+}
+function randomBytesHex(arg0: number): string {
+  throw new Error('Function not implemented.')
 }

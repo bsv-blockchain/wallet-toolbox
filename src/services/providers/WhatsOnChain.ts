@@ -1,18 +1,30 @@
 import { Beef, HexString, Utils, WhatsOnChainConfig } from '@bsv/sdk'
-import { asArray, asString, doubleSha256BE, sdk, Services, validateScriptHash, wait } from '../../index.client'
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
-import { parseWalletOutpoint, ReqHistoryNote } from '../../sdk'
+import { Chain, ReqHistoryNote } from '../../sdk/types'
+import {
+  BlockHeader,
+  BsvExchangeRate,
+  GetMerklePathResult,
+  GetRawTxResult,
+  GetScriptHashHistoryResult,
+  GetStatusForTxidsResult,
+  GetUtxoStatusOutputFormat,
+  GetUtxoStatusResult,
+  PostBeefResult,
+  PostTxResultForTxid,
+  WalletServices
+} from '../../sdk/WalletServices.interfaces'
+import { WERR_BAD_REQUEST, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
+import { WalletError } from '../../sdk/WalletError'
+import { doubleSha256BE, wait } from '../../utility/utilityHelpers'
+import { asArray, asString } from '../../utility/utilityHelpers.noBuffer'
+import { Services, validateScriptHash } from '../Services'
+import { parseWalletOutpoint } from '../../sdk/validationHelpers'
 
-/**
- *
- */
-export class WhatsOnChain extends SdkWhatsOnChain {
-  services: Services
-
-  constructor(chain: sdk.Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
+export class WhatsOnChainNoServices extends SdkWhatsOnChain {
+  constructor(chain: Chain = 'main', config: WhatsOnChainConfig = {}) {
     super(chain, config)
-    this.services = services || new Services(chain)
   }
 
   /**
@@ -36,8 +48,8 @@ export class WhatsOnChain extends SdkWhatsOnChain {
    * result for an unknown txid:
    *     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
    */
-  async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> {
-    const r: sdk.GetStatusForTxidsResult = {
+  async getStatusForTxids(txids: string[]): Promise<GetStatusForTxidsResult> {
+    const r: GetStatusForTxidsResult = {
       name: 'WoC',
       status: 'error',
       error: undefined,
@@ -56,7 +68,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
       const response = await this.httpClient.request<WhatsOnChainTxsStatusData[]>(url, requestOptions)
 
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_OPERATION(`Unable to get status for txids at this timei.`)
+        throw new WERR_INVALID_OPERATION(`Unable to get status for txids at this timei.`)
 
       const data = response.data
       for (const txid of txids) {
@@ -70,7 +82,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
       }
       r.status = 'success'
     } catch (eu: unknown) {
-      const e = sdk.WalletError.fromUnknown(eu)
+      const e = WalletError.fromUnknown(eu)
       r.error = e
     }
 
@@ -92,7 +104,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
 
     // response.statusText is often, but not always 'OK' on success...
     if (!response.data || !response.ok || response.status !== 200)
-      throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+      throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
 
     return 0
   }
@@ -124,21 +136,21 @@ export class WhatsOnChain extends SdkWhatsOnChain {
 
       // response.statusText is often, but not always 'OK' on success...
       if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+        throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
 
       return response.data
     }
-    throw new sdk.WERR_INTERNAL()
+    throw new WERR_INTERNAL()
   }
 
-  async getRawTxResult(txid: string): Promise<sdk.GetRawTxResult> {
-    const r: sdk.GetRawTxResult = { name: 'WoC', txid: asString(txid) }
+  async getRawTxResult(txid: string): Promise<GetRawTxResult> {
+    const r: GetRawTxResult = { name: 'WoC', txid: asString(txid) }
 
     try {
       const rawTxHex = await this.getRawTx(txid)
       if (rawTxHex) r.rawTx = asArray(rawTxHex)
     } catch (err: unknown) {
-      r.error = sdk.WalletError.fromUnknown(err)
+      r.error = WalletError.fromUnknown(err)
     }
 
     return r
@@ -153,8 +165,8 @@ export class WhatsOnChain extends SdkWhatsOnChain {
    * @param txids
    * @returns
    */
-  async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> {
-    const r: sdk.PostBeefResult = {
+  async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> {
+    const r: PostBeefResult = {
       name: 'WoC',
       status: 'success',
       txidResults: [],
@@ -197,10 +209,10 @@ export class WhatsOnChain extends SdkWhatsOnChain {
    * @param rawTx raw transaction to broadcast as hex string
    * @returns txid returned by transaction processor of transaction broadcast
    */
-  async postRawTx(rawTx: HexString): Promise<sdk.PostTxResultForTxid> {
+  async postRawTx(rawTx: HexString): Promise<PostTxResultForTxid> {
     let txid = Utils.toHex(doubleSha256BE(Utils.toArray(rawTx, 'hex')))
 
-    const r: sdk.PostTxResultForTxid = {
+    const r: PostTxResultForTxid = {
       txid,
       status: 'success',
       notes: []
@@ -272,7 +284,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
         }
       } catch (eu: unknown) {
         r.status = 'error'
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         r.notes!.push({
           ...nne(),
           what: 'postRawTxCatch',
@@ -294,12 +306,349 @@ export class WhatsOnChain extends SdkWhatsOnChain {
     return r
   }
 
+  async updateBsvExchangeRate(rate?: BsvExchangeRate, updateMsecs?: number): Promise<BsvExchangeRate> {
+    if (rate) {
+      // Check if the rate we know is stale enough to update.
+      updateMsecs ||= 1000 * 60 * 15
+      if (new Date(Date.now() - updateMsecs) < rate.timestamp) return rate
+    }
+
+    const requestOptions = {
+      method: 'GET',
+      headers: this.getHttpHeaders()
+    }
+
+    for (let retry = 0; retry < 2; retry++) {
+      const response = await this.httpClient.request<{
+        rate: number
+        time: number
+        currency: string
+      }>(`${this.URL}/exchangerate`, requestOptions)
+      if (response.statusText === 'Too Many Requests' && retry < 2) {
+        await wait(2000)
+        continue
+      }
+
+      // response.statusText is often, but not always 'OK' on success...
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new WERR_INVALID_OPERATION(`WoC exchangerate response ${response.statusText}`)
+
+      const wocrate = response.data
+      if (wocrate.currency !== 'USD') wocrate.rate = NaN
+
+      const newRate: BsvExchangeRate = {
+        timestamp: new Date(),
+        base: 'USD',
+        rate: wocrate.rate
+      }
+
+      return newRate
+    }
+    throw new WERR_INTERNAL()
+  }
+
+  async getUtxoStatus(
+    output: string,
+    outputFormat?: GetUtxoStatusOutputFormat,
+    outpoint?: string
+  ): Promise<GetUtxoStatusResult> {
+    const r: GetUtxoStatusResult = {
+      name: 'WoC',
+      status: 'error',
+      error: new WERR_INTERNAL(),
+      details: []
+    }
+
+    for (let retry = 0; ; retry++) {
+      let url: string = ''
+
+      try {
+        const scriptHash = validateScriptHash(output, outputFormat)
+
+        const requestOptions = {
+          method: 'GET',
+          headers: this.getHttpHeaders()
+        }
+
+        const response = await this.httpClient.request<WhatsOnChainUtxoStatus>(
+          `${this.URL}/script/${scriptHash}/unspent/all`,
+          requestOptions
+        )
+        if (response.statusText === 'Too Many Requests' && retry < 2) {
+          await wait(2000)
+          continue
+        }
+
+        // response.statusText is often, but not always 'OK' on success...
+        if (!response.data || !response.ok || response.status !== 200)
+          throw new WERR_INVALID_OPERATION(`WoC getUtxoStatus response ${response.statusText}`)
+
+        const data = response.data
+
+        if (data.script !== scriptHash || !Array.isArray(data.result)) {
+          throw new WERR_INTERNAL('data. is not an array')
+        }
+
+        if (data.result.length === 0) {
+          r.status = 'success'
+          r.error = undefined
+          r.isUtxo = false
+        } else {
+          r.status = 'success'
+          r.error = undefined
+          for (const s of data.result) {
+            r.details.push({
+              txid: s.tx_hash,
+              satoshis: s.value,
+              height: s.height,
+              index: s.tx_pos
+            })
+          }
+          if (outpoint) {
+            const { txid, vout } = parseWalletOutpoint(outpoint)
+            r.isUtxo = r.details.find(d => d.txid === txid && d.index === vout) !== undefined
+          } else r.isUtxo = r.details.length > 0
+        }
+
+        return r
+      } catch (eu: unknown) {
+        const e = WalletError.fromUnknown(eu)
+        if (e.code !== 'ECONNRESET' || retry > 2) {
+          r.error = new WERR_INTERNAL(`service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`)
+          return r
+        }
+      }
+    }
+  }
+
+  async getScriptHashConfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> {
+    const r: GetScriptHashHistoryResult = {
+      name: 'WoC',
+      status: 'error',
+      error: undefined,
+      history: []
+    }
+
+    // reverse hash from LE to BE for Woc
+    hash = Utils.toHex(Utils.toArray(hash, 'hex').reverse())
+
+    const url = `${this.URL}/script/${hash}/confirmed/history`
+
+    for (let retry = 0; ; retry++) {
+      try {
+        const requestOptions = {
+          method: 'GET',
+          headers: this.getHttpHeaders()
+        }
+
+        const response = await this.httpClient.request<WhatsOnChainScriptHashHistoryData>(url, requestOptions)
+        if (response.statusText === 'Too Many Requests' && retry < 2) {
+          await wait(2000)
+          continue
+        }
+
+        if (!response.ok && response.status === 404) {
+          // There is no history for this script hash...
+          r.status = 'success'
+          return r
+        }
+
+        // response.statusText is often, but not always 'OK' on success...
+        if (!response.data || !response.ok || response.status !== 200) {
+          r.error = new WERR_BAD_REQUEST(
+            `WoC getScriptHashConfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
+          )
+          return r
+        }
+
+        if (response.data.error) {
+          r.error = new WERR_BAD_REQUEST(`WoC getScriptHashConfirmedHistory error ${response.data.error}`)
+          return r
+        }
+
+        r.history = response.data.result.map(d => ({ txid: d.tx_hash, height: d.height }))
+        r.status = 'success'
+
+        return r
+      } catch (eu: unknown) {
+        const e = WalletError.fromUnknown(eu)
+        if (e.code !== 'ECONNRESET' || retry > 2) {
+          r.error = new WERR_INTERNAL(
+            `WoC getScriptHashConfirmedHistory service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
+          )
+          return r
+        }
+      }
+    }
+
+    return r
+  }
+
+  async getScriptHashUnconfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> {
+    const r: GetScriptHashHistoryResult = {
+      name: 'WoC',
+      status: 'error',
+      error: undefined,
+      history: []
+    }
+
+    // reverse hash from LE to BE for Woc
+    hash = Utils.toHex(Utils.toArray(hash, 'hex').reverse())
+
+    const url = `${this.URL}/script/${hash}/unconfirmed/history`
+
+    for (let retry = 0; ; retry++) {
+      try {
+        const requestOptions = {
+          method: 'GET',
+          headers: this.getHttpHeaders()
+        }
+
+        const response = await this.httpClient.request<WhatsOnChainScriptHashHistoryData>(url, requestOptions)
+        if (response.statusText === 'Too Many Requests' && retry < 2) {
+          await wait(2000)
+          continue
+        }
+
+        if (!response.ok && response.status === 404) {
+          // There is no history for this script hash...
+          r.status = 'success'
+          return r
+        }
+
+        // response.statusText is often, but not always 'OK' on success...
+        if (!response.data || !response.ok || response.status !== 200) {
+          r.error = new WERR_BAD_REQUEST(
+            `WoC getScriptHashUnconfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
+          )
+          return r
+        }
+
+        if (response.data.error) {
+          r.error = new WERR_BAD_REQUEST(`WoC getScriptHashUnconfirmedHistory error ${response.data.error}`)
+          return r
+        }
+
+        r.history = response.data.result.map(d => ({ txid: d.tx_hash, height: d.height }))
+        r.status = 'success'
+
+        return r
+      } catch (eu: unknown) {
+        const e = WalletError.fromUnknown(eu)
+        if (e.code !== 'ECONNRESET' || retry > 2) {
+          r.error = new WERR_INTERNAL(
+            `WoC getScriptHashUnconfirmedHistory service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
+          )
+          return r
+        }
+      }
+    }
+
+    return r
+  }
+
+  async getScriptHashHistory(hash: string): Promise<GetScriptHashHistoryResult> {
+    const r1 = await this.getScriptHashConfirmedHistory(hash)
+    if (r1.error || r1.status !== 'success') return r1
+    const r2 = await this.getScriptHashUnconfirmedHistory(hash)
+    if (r2.error || r2.status !== 'success') return r2
+    r1.history = r1.history.concat(r2.history)
+    return r1
+  }
+
+  /**
+    {
+      "hash": "000000000000000004a288072ebb35e37233f419918f9783d499979cb6ac33eb",
+      "confirmations": 328433,
+      "size": 14421,
+      "height": 575045,
+      "version": 536928256,
+      "versionHex": "2000e000",
+      "merkleroot": "4ebcba09addd720991d03473f39dce4b9a72cc164e505cd446687a54df9b1585",
+      "time": 1553416668,
+      "mediantime": 1553414858,
+      "nonce": 87914848,
+      "bits": "180997ee",
+      "difficulty": 114608607557.4425,
+      "chainwork": "000000000000000000000000000000000000000000ddf5d385546872bab7dc01",
+      "previousblockhash": "00000000000000000988156c7075dc9147a5b62922f1310862e8b9000d46dd9b",
+      "nextblockhash": "00000000000000000112b36a37c10235fa0c991f680bc5482ba9692e0ae697db",
+      "nTx": 0,
+      "num_tx": 5
+    }
+   */
+  async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> {
+    const headers = this.getHttpHeaders()
+    const requestOptions = {
+      method: 'GET',
+      headers
+    }
+
+    const url = `${this.URL}/block/${hash}/header`
+
+    for (let retry = 0; retry < 2; retry++) {
+      const response = await this.httpClient.request<WocHeader>(url, requestOptions)
+      if (response.statusText === 'Too Many Requests' && retry < 2) {
+        await wait(2000)
+        continue
+      }
+
+      if (response.status === 404 && response.statusText === 'Not Found') return undefined
+
+      // response.statusText is often, but not always 'OK' on success...
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new WERR_INVALID_PARAMETER('hash', `valid block hash. '${hash}' response ${response.statusText}`)
+
+      const header = convertWocToBlockHeaderHex(response.data)
+
+      return header
+    }
+    throw new WERR_INTERNAL()
+  }
+
+  async getChainInfo(): Promise<WocChainInfo> {
+    const headers = this.getHttpHeaders()
+    const requestOptions = {
+      method: 'GET',
+      headers
+    }
+
+    const url = `${this.URL}/chain/info`
+
+    for (let retry = 0; retry < 2; retry++) {
+      const response = await this.httpClient.request<WocChainInfo>(url, requestOptions)
+      if (response.statusText === 'Too Many Requests' && retry < 2) {
+        await wait(2000)
+        continue
+      }
+
+      // response.statusText is often, but not always 'OK' on success...
+      if (!response.data || !response.ok || response.status !== 200)
+        throw new WERR_INVALID_PARAMETER('hash', `valid block hash. '${url}' response ${response.statusText}`)
+
+      return response.data
+    }
+    throw new WERR_INTERNAL()
+  }
+}
+
+/**
+ *
+ */
+export class WhatsOnChain extends WhatsOnChainNoServices {
+  services: Services
+
+  constructor(chain: Chain = 'main', config: WhatsOnChainConfig = {}, services?: Services) {
+    super(chain, config)
+    this.services = services || new Services(chain)
+  }
+
   /**
    * @param txid
    * @returns
    */
-  async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> {
-    const r: sdk.GetMerklePathResult = { name: 'WoCTsc', notes: [] }
+  async getMerklePath(txid: string, services: WalletServices): Promise<GetMerklePathResult> {
+    const r: GetMerklePathResult = { name: 'WoCTsc', notes: [] }
 
     const headers = this.getHttpHeaders()
     const requestOptions = {
@@ -342,7 +691,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
             status: response.status,
             statusText: response.statusText
           })
-          throw new sdk.WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
+          throw new WERR_INVALID_PARAMETER('txid', `valid transaction. '${txid}' response ${response.statusText}`)
         }
 
         if (!response.data) {
@@ -384,10 +733,10 @@ export class WhatsOnChain extends SdkWhatsOnChain {
             status: response.status,
             statusText: response.statusText
           })
-          throw new sdk.WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
+          throw new WERR_INVALID_PARAMETER('blockhash', 'a valid on-chain block hash')
         }
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         r.notes!.push({
           what: 'getMerklePathError',
           name: r.name,
@@ -399,259 +748,7 @@ export class WhatsOnChain extends SdkWhatsOnChain {
       return r
     }
     r.notes!.push({ what: 'getMerklePathInternal', name: r.name })
-    throw new sdk.WERR_INTERNAL()
-  }
-
-  async updateBsvExchangeRate(rate?: sdk.BsvExchangeRate, updateMsecs?: number): Promise<sdk.BsvExchangeRate> {
-    if (rate) {
-      // Check if the rate we know is stale enough to update.
-      updateMsecs ||= 1000 * 60 * 15
-      if (new Date(Date.now() - updateMsecs) < rate.timestamp) return rate
-    }
-
-    const requestOptions = {
-      method: 'GET',
-      headers: this.getHttpHeaders()
-    }
-
-    for (let retry = 0; retry < 2; retry++) {
-      const response = await this.httpClient.request<{
-        rate: number
-        time: number
-        currency: string
-      }>(`${this.URL}/exchangerate`, requestOptions)
-      if (response.statusText === 'Too Many Requests' && retry < 2) {
-        await wait(2000)
-        continue
-      }
-
-      // response.statusText is often, but not always 'OK' on success...
-      if (!response.data || !response.ok || response.status !== 200)
-        throw new sdk.WERR_INVALID_OPERATION(`WoC exchangerate response ${response.statusText}`)
-
-      const wocrate = response.data
-      if (wocrate.currency !== 'USD') wocrate.rate = NaN
-
-      const newRate: sdk.BsvExchangeRate = {
-        timestamp: new Date(),
-        base: 'USD',
-        rate: wocrate.rate
-      }
-
-      return newRate
-    }
-    throw new sdk.WERR_INTERNAL()
-  }
-
-  async getUtxoStatus(
-    output: string,
-    outputFormat?: sdk.GetUtxoStatusOutputFormat,
-    outpoint?: string
-  ): Promise<sdk.GetUtxoStatusResult> {
-    const r: sdk.GetUtxoStatusResult = {
-      name: 'WoC',
-      status: 'error',
-      error: new sdk.WERR_INTERNAL(),
-      details: []
-    }
-
-    for (let retry = 0; ; retry++) {
-      let url: string = ''
-
-      try {
-        const scriptHash = validateScriptHash(output, outputFormat)
-
-        const requestOptions = {
-          method: 'GET',
-          headers: this.getHttpHeaders()
-        }
-
-        const response = await this.httpClient.request<WhatsOnChainUtxoStatus>(
-          `${this.URL}/script/${scriptHash}/unspent/all`,
-          requestOptions
-        )
-        if (response.statusText === 'Too Many Requests' && retry < 2) {
-          await wait(2000)
-          continue
-        }
-
-        // response.statusText is often, but not always 'OK' on success...
-        if (!response.data || !response.ok || response.status !== 200)
-          throw new sdk.WERR_INVALID_OPERATION(`WoC getUtxoStatus response ${response.statusText}`)
-
-        const data = response.data
-
-        if (data.script !== scriptHash || !Array.isArray(data.result)) {
-          throw new sdk.WERR_INTERNAL('data. is not an array')
-        }
-
-        if (data.result.length === 0) {
-          r.status = 'success'
-          r.error = undefined
-          r.isUtxo = false
-        } else {
-          r.status = 'success'
-          r.error = undefined
-          for (const s of data.result) {
-            r.details.push({
-              txid: s.tx_hash,
-              satoshis: s.value,
-              height: s.height,
-              index: s.tx_pos
-            })
-          }
-          if (outpoint) {
-            const { txid, vout } = parseWalletOutpoint(outpoint)
-            r.isUtxo = r.details.find(d => d.txid === txid && d.index === vout) !== undefined
-          } else r.isUtxo = r.details.length > 0
-        }
-
-        return r
-      } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
-        if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
-          )
-          return r
-        }
-      }
-    }
-  }
-
-  async getScriptHashConfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
-    const r: sdk.GetScriptHashHistoryResult = {
-      name: 'WoC',
-      status: 'error',
-      error: undefined,
-      history: []
-    }
-
-    // reverse hash from LE to BE for Woc
-    hash = Utils.toHex(Utils.toArray(hash, 'hex').reverse())
-
-    const url = `${this.URL}/script/${hash}/confirmed/history`
-
-    for (let retry = 0; ; retry++) {
-      try {
-        const requestOptions = {
-          method: 'GET',
-          headers: this.getHttpHeaders()
-        }
-
-        const response = await this.httpClient.request<WhatsOnChainScriptHashHistoryData>(url, requestOptions)
-        if (response.statusText === 'Too Many Requests' && retry < 2) {
-          await wait(2000)
-          continue
-        }
-
-        if (!response.ok && response.status === 404) {
-          // There is no history for this script hash...
-          r.status = 'success'
-          return r
-        }
-
-        // response.statusText is often, but not always 'OK' on success...
-        if (!response.data || !response.ok || response.status !== 200) {
-          r.error = new sdk.WERR_BAD_REQUEST(
-            `WoC getScriptHashConfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
-          )
-          return r
-        }
-
-        if (response.data.error) {
-          r.error = new sdk.WERR_BAD_REQUEST(`WoC getScriptHashConfirmedHistory error ${response.data.error}`)
-          return r
-        }
-
-        r.history = response.data.result.map(d => ({ txid: d.tx_hash, height: d.height }))
-        r.status = 'success'
-
-        return r
-      } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
-        if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `WoC getScriptHashConfirmedHistory service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
-          )
-          return r
-        }
-      }
-    }
-
-    return r
-  }
-
-  async getScriptHashUnconfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
-    const r: sdk.GetScriptHashHistoryResult = {
-      name: 'WoC',
-      status: 'error',
-      error: undefined,
-      history: []
-    }
-
-    // reverse hash from LE to BE for Woc
-    hash = Utils.toHex(Utils.toArray(hash, 'hex').reverse())
-
-    const url = `${this.URL}/script/${hash}/unconfirmed/history`
-
-    for (let retry = 0; ; retry++) {
-      try {
-        const requestOptions = {
-          method: 'GET',
-          headers: this.getHttpHeaders()
-        }
-
-        const response = await this.httpClient.request<WhatsOnChainScriptHashHistoryData>(url, requestOptions)
-        if (response.statusText === 'Too Many Requests' && retry < 2) {
-          await wait(2000)
-          continue
-        }
-
-        if (!response.ok && response.status === 404) {
-          // There is no history for this script hash...
-          r.status = 'success'
-          return r
-        }
-
-        // response.statusText is often, but not always 'OK' on success...
-        if (!response.data || !response.ok || response.status !== 200) {
-          r.error = new sdk.WERR_BAD_REQUEST(
-            `WoC getScriptHashUnconfirmedHistory response ${response.ok} ${response.status} ${response.statusText}`
-          )
-          return r
-        }
-
-        if (response.data.error) {
-          r.error = new sdk.WERR_BAD_REQUEST(`WoC getScriptHashUnconfirmedHistory error ${response.data.error}`)
-          return r
-        }
-
-        r.history = response.data.result.map(d => ({ txid: d.tx_hash, height: d.height }))
-        r.status = 'success'
-
-        return r
-      } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
-        if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new sdk.WERR_INTERNAL(
-            `WoC getScriptHashUnconfirmedHistory service failure: ${url}, error: ${JSON.stringify(sdk.WalletError.fromUnknown(eu))}`
-          )
-          return r
-        }
-      }
-    }
-
-    return r
-  }
-
-  async getScriptHashHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> {
-    const r1 = await this.getScriptHashConfirmedHistory(hash)
-    if (r1.error || r1.status !== 'success') return r1
-    const r2 = await this.getScriptHashUnconfirmedHistory(hash)
-    if (r2.error || r2.status !== 'success') return r2
-    r1.history = r1.history.concat(r2.history)
-    return r1
+    throw new WERR_INTERNAL()
   }
 }
 
@@ -721,4 +818,67 @@ interface WhatsOnChainUtxoStatus {
     isSpentInMempoolTx: boolean
     status: string // 'confirmed'
   }[]
+}
+
+export interface WocChainInfo {
+  chain: string // "main",
+  blocks: number // 635302,
+  headers: number // 635299,
+  bestblockhash: string // "000000000000000002a40d7410a6c08109521c14f4cf354e7b352b4eab8aa4ea",
+  difficulty: number // 287310033717.7086,
+  mediantime: number // 1589703256,
+  verificationprogress: number // 0.9999754124031851,
+  pruned: boolean // false,
+  chainwork: string // "0000000000000000000000000000000000000000010969f724913e0fe59377f4"
+}
+
+// WhatsOnChain headers looks like:
+export interface WocHeader {
+  hash: string //"00000000000000000836c9c44151acbf374c6d4a9713d43b5e95011bdbd1ff2e"
+  size: number // 71646128,
+  height: number // 760633,
+  version: number // 712441856,
+  versionHex: string // "2a770000",
+  merkleroot: string // "af80d255ca21d9ccdd2cc3576dc532adc7fcbc324ce2db3dec8d54079b56a001",
+  time: number // 1665274100,
+  mediantime: number // 1665270280,
+  nonce: number // 618555943,
+  bits: number | string // decimal of ox180dc8e5,
+  difficulty: number // 79761715531.82063,
+  chainwork: string // "0000000000000000000000000000000000000000013d02d8de0ec6cd019bb3a1",
+  previousblockhash: string // "00000000000000000272ad9db518e5eeac702f1b00ffa6dc9605f687301dda99",
+
+  confirmations: number // 3,
+  txcount: number // 45168,
+  nextblockhash: string // "000000000000000004e01d72ccb7502f0412cc12d7e50f6fafa99ac6f89fd063",
+  // coinbaseTx
+  // orphaned
+}
+
+export function convertWocToBlockHeaderHex(woc: WocHeader): BlockHeader {
+  const bits: number = typeof woc.bits === 'string' ? parseInt(woc.bits, 16) : woc.bits
+  if (!woc.previousblockhash) {
+    woc.previousblockhash = '0000000000000000000000000000000000000000000000000000000000000000' // genesis
+  }
+  return {
+    version: woc.version,
+    previousHash: woc.previousblockhash,
+    merkleRoot: woc.merkleroot,
+    time: woc.time,
+    bits,
+    nonce: woc.nonce,
+    hash: woc.hash,
+    height: woc.height
+  }
+}
+
+export async function getWhatsOnChainBlockHeaderByHash(
+  hash: string,
+  chain: Chain = 'main',
+  apiKey?: string
+): Promise<BlockHeader | undefined> {
+  const config = apiKey ? { apiKey } : {}
+  const woc = new WhatsOnChain(chain, config)
+  const header = await woc.getBlockHeaderByHash(hash)
+  return header
 }

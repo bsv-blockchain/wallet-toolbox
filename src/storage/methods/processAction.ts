@@ -1,38 +1,42 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Beef, Transaction as BsvTransaction, SendWithResult, SendWithResultStatus } from '@bsv/sdk'
+import { aggregateActionResults } from '../../utility/aggregateResults'
+import { StorageProvider } from '../StorageProvider'
 import {
-  asArray,
-  asString,
-  EntityProvenTxReq,
-  parseTxScriptOffsets,
+  AuthId,
+  ReviewActionResult,
+  StorageProcessActionArgs,
+  StorageProcessActionResults
+} from '../../sdk/WalletStorage.interfaces'
+import { stampLog } from '../../utility/stampLog'
+import {
   randomBytesBase64,
-  sdk,
-  stampLog,
-  StorageProvider,
-  TableCommission,
-  TableOutput,
-  TableProvenTx,
-  TableProvenTxReq,
-  TableTransaction,
-  TxScriptOffsets,
   verifyId,
   verifyInteger,
   verifyOne,
   verifyOneOrNone,
   verifyTruthy
-} from '../../index.client'
-import { ReviewActionResult } from '../../sdk'
-import { aggregateActionResults } from '../../utility/aggregateResults'
+} from '../../utility/utilityHelpers'
+import { EntityProvenTxReq } from '../schema/entities/EntityProvenTxReq'
+import { WERR_INTERNAL, WERR_INVALID_OPERATION } from '../../sdk/WERR_errors'
+import { TableProvenTxReq } from '../schema/tables/TableProvenTxReq'
+import { TableProvenTx } from '../schema/tables/TableProvenTx'
+import { ProvenTxReqStatus, TransactionStatus } from '../../sdk/types'
+import { parseTxScriptOffsets, TxScriptOffsets } from '../../utility/parseTxScriptOffsets'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { TableOutput } from '../schema/tables/TableOutput'
+import { TableCommission } from '../schema/tables/TableCommission'
+import { asArray, asString } from '../../utility/utilityHelpers.noBuffer'
 
 export async function processAction(
   storage: StorageProvider,
-  auth: sdk.AuthId,
-  args: sdk.StorageProcessActionArgs
-): Promise<sdk.StorageProcessActionResults> {
+  auth: AuthId,
+  args: StorageProcessActionArgs
+): Promise<StorageProcessActionResults> {
   stampLog(args.log, `start storage processActionSdk`)
 
   const userId = verifyId(auth.userId)
-  const r: sdk.StorageProcessActionResults = {
+  const r: StorageProcessActionResults = {
     sendWithResults: undefined
   }
 
@@ -42,7 +46,7 @@ export async function processAction(
   if (args.isNewTx) {
     const vargs = await validateCommitNewTxToStorageArgs(storage, userId, args)
     ;({ req, log: args.log } = await commitNewTxToStorage(storage, userId, vargs))
-    if (!req) throw new sdk.WERR_INTERNAL()
+    if (!req) throw new WERR_INTERNAL()
     // Add the new txid to sendWith unless there are no others to send and the noSend option is set.
     if (args.isNoSend && !args.isSendWith) stampLog(args.log, `... storage processActionSdk newTx committed noSend`)
     else {
@@ -142,7 +146,7 @@ export async function shareReqsWithWorld(
     const beefIsValid = await r.beef.verify(await storage.getServices().getChainTracker())
     if (!beefIsValid) {
       console.log(`VERIFY FALSE BEEF: ${r.beef.toLogString()}`)
-      throw new sdk.WERR_INTERNAL(`merged Beef failed validation.`)
+      throw new WERR_INTERNAL(`merged Beef failed validation.`)
     }
   }
 
@@ -180,8 +184,8 @@ export async function shareReqsWithWorld(
 }
 
 interface ReqTxStatus {
-  req: sdk.ProvenTxReqStatus
-  tx: sdk.TransactionStatus
+  req: ProvenTxReqStatus
+  tx: TransactionStatus
 }
 
 interface ValidCommitNewTxToStorageArgs {
@@ -215,20 +219,20 @@ interface ValidCommitNewTxToStorageArgs {
 async function validateCommitNewTxToStorageArgs(
   storage: StorageProvider,
   userId: number,
-  params: sdk.StorageProcessActionArgs
+  params: StorageProcessActionArgs
 ): Promise<ValidCommitNewTxToStorageArgs> {
   if (!params.reference || !params.txid || !params.rawTx)
-    throw new sdk.WERR_INVALID_OPERATION('One or more expected params are undefined.')
+    throw new WERR_INVALID_OPERATION('One or more expected params are undefined.')
   let tx: BsvTransaction
   try {
     tx = BsvTransaction.fromBinary(params.rawTx)
   } catch (e: unknown) {
-    throw new sdk.WERR_INVALID_OPERATION('Parsing serialized transaction failed.')
+    throw new WERR_INVALID_OPERATION('Parsing serialized transaction failed.')
   }
   if (params.txid !== tx.id('hex'))
-    throw new sdk.WERR_INVALID_OPERATION(`Hash of serialized transaction doesn't match expected txid`)
+    throw new WERR_INVALID_OPERATION(`Hash of serialized transaction doesn't match expected txid`)
   if (!(await storage.getServices()).nLockTimeIsFinal(tx)) {
-    throw new sdk.WERR_INVALID_OPERATION(`This transaction is not final.
+    throw new WERR_INVALID_OPERATION(`This transaction is not final.
          Ensure that the transaction meets the rules for being a finalized
          which can be found at https://wiki.bitcoinsv.io/index.php/NLocktime_and_nSequence`)
   }
@@ -238,13 +242,13 @@ async function validateCommitNewTxToStorageArgs(
       partial: { userId, reference: params.reference }
     })
   )
-  if (!transaction.isOutgoing) throw new sdk.WERR_INVALID_OPERATION('isOutgoing is not true')
-  if (!transaction.inputBEEF) throw new sdk.WERR_INVALID_OPERATION()
+  if (!transaction.isOutgoing) throw new WERR_INVALID_OPERATION('isOutgoing is not true')
+  if (!transaction.inputBEEF) throw new WERR_INVALID_OPERATION()
   const beef = Beef.fromBinary(asArray(transaction.inputBEEF))
   // TODO: Could check beef validates transaction inputs...
   // Transaction must have unsigned or unprocessed status
   if (transaction.status !== 'unsigned' && transaction.status !== 'unprocessed')
-    throw new sdk.WERR_INVALID_OPERATION(`invalid transaction status ${transaction.status}`)
+    throw new WERR_INVALID_OPERATION(`invalid transaction status ${transaction.status}`)
   const transactionId = verifyId(transaction.transactionId)
   const outputOutputs = await storage.findOutputs({
     partial: { userId, transactionId }
@@ -256,12 +260,12 @@ async function validateCommitNewTxToStorageArgs(
   const commission = verifyOneOrNone(await storage.findCommissions({ partial: { transactionId, userId } }))
   if (storage.commissionSatoshis > 0) {
     // A commission is required...
-    if (!commission) throw new sdk.WERR_INTERNAL()
+    if (!commission) throw new WERR_INTERNAL()
     const commissionValid = tx.outputs.some(
       x => x.satoshis === commission.satoshis && x.lockingScript.toHex() === asString(commission.lockingScript!)
     )
     if (!commissionValid)
-      throw new sdk.WERR_INVALID_OPERATION('Transaction did not include an output to cover service fee.')
+      throw new WERR_INVALID_OPERATION('Transaction did not include an output to cover service fee.')
   }
 
   const req = EntityProvenTxReq.fromTxid(params.txid, params.rawTx, transaction.inputBEEF)
@@ -286,7 +290,7 @@ async function validateCommitNewTxToStorageArgs(
   else if (!params.isNoSend && !params.isDelayed) {
     status = { req: 'unprocessed', tx: 'unprocessed' }
     postStatus = { req: 'unmined', tx: 'unproven' }
-  } else throw new sdk.WERR_INTERNAL('logic error')
+  } else throw new WERR_INTERNAL('logic error')
 
   req.status = status.req
   const vargs: ValidCommitNewTxToStorageArgs = {
@@ -325,11 +329,11 @@ async function validateCommitNewTxToStorageArgs(
     const offset = vargs.txScriptOffsets.outputs[vout]
     const rawTxScript = asString(vargs.rawTx.slice(offset.offset, offset.offset + offset.length))
     if (o.lockingScript && rawTxScript !== asString(o.lockingScript))
-      throw new sdk.WERR_INVALID_OPERATION(
+      throw new WERR_INVALID_OPERATION(
         `rawTx output locking script for vout ${vout} not equal to expected output script.`
       )
     if (tx.outputs[vout].lockingScript.toHex() !== rawTxScript)
-      throw new sdk.WERR_INVALID_OPERATION(
+      throw new WERR_INVALID_OPERATION(
         `parsed transaction output locking script for vout ${vout} not equal to expected output script.`
       )
     const update: Partial<TableOutput> = {

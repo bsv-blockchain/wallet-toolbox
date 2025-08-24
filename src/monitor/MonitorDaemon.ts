@@ -1,27 +1,23 @@
-import {
-  Monitor,
-  sdk,
-  Services,
-  StorageKnex,
-  StorageKnexOptions,
-  StorageProvider,
-  wait,
-  WalletStorageManager
-} from '../index.all'
-
-// This task is not "client" compatible as it imports StorageKnex
-import { TaskUnFail } from './tasks/TaskUnFail'
-
 import { Knex, knex as makeKnex } from 'knex'
 
 import dotenv from 'dotenv'
+import { Chain } from '../sdk/types'
+import { StorageKnex, StorageKnexOptions } from '../storage/StorageKnex'
+import { StorageProvider } from '../storage/StorageProvider'
+import { WalletStorageManager } from '../storage/WalletStorageManager'
+import { WalletServicesOptions } from '../sdk/WalletServices.interfaces'
+import { Services } from '../services/Services'
+import { Monitor } from './Monitor'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
+import { wait } from '../utility/utilityHelpers'
+import { WalletError } from '../sdk/WalletError'
 dotenv.config()
 
 const mainDojoConnection = process.env.MAIN_DOJO_CONNECTION || ''
 const testDojoConnection = process.env.TEST_DOJO_CONNECTION || ''
 
 export interface MonitorDaemonSetup {
-  chain?: sdk.Chain
+  chain?: Chain
   sqliteFilename?: string
   mySQLConnection?: string
   knexConfig?: Knex.Config
@@ -29,7 +25,7 @@ export interface MonitorDaemonSetup {
   storageKnexOptions?: StorageKnexOptions
   storageProvider?: StorageProvider
   storageManager?: WalletStorageManager
-  servicesOptions?: sdk.WalletServicesOptions
+  servicesOptions?: WalletServicesOptions
   services?: Services
   monitor?: Monitor
 }
@@ -94,7 +90,7 @@ export class MonitorDaemon {
         a.storageManager = new WalletStorageManager(settings.storageIdentityKey, a.storageProvider)
         await a.storageManager.makeAvailable()
       } else if (!a.storageManager) {
-        throw new sdk.WERR_INVALID_PARAMETER(
+        throw new WERR_INVALID_PARAMETER(
           'storageManager',
           'valid or one of mySQLConnection, knexConfig, knex, storageKnexOptions, or storageProvider'
         )
@@ -102,7 +98,7 @@ export class MonitorDaemon {
 
       if (a.servicesOptions) {
         if (a.servicesOptions.chain != a.chain)
-          throw new sdk.WERR_INVALID_PARAMETER('serviceOptions.chain', 'same as args.chain')
+          throw new WERR_INVALID_PARAMETER('serviceOptions.chain', 'same as args.chain')
         a.services = new Services(a.servicesOptions)
       }
 
@@ -123,7 +119,7 @@ export class MonitorDaemon {
 
   async start(): Promise<void> {
     if (!this.setup) await this.createSetup()
-    if (!this.setup?.monitor) throw new sdk.WERR_INTERNAL('createSetup failed to initialize setup')
+    if (!this.setup?.monitor) throw new WERR_INTERNAL('createSetup failed to initialize setup')
 
     const { monitor } = this.setup
 
@@ -137,7 +133,7 @@ export class MonitorDaemon {
     console.log('start of stop')
 
     if (!this.setup || (!this.doneTasks && !this.noRunTasks) || !this.doneListening)
-      throw new sdk.WERR_INTERNAL('call start or createSetup first')
+      throw new WERR_INTERNAL('call start or createSetup first')
 
     const { monitor } = this.setup
 
@@ -176,7 +172,7 @@ export class MonitorDaemon {
 
         console.log('done')
       } catch (eu: unknown) {
-        const e = sdk.WalletError.fromUnknown(eu)
+        const e = WalletError.fromUnknown(eu)
         console.log(`\n\nrunWatchman Main Error Handler\n\ncode: ${e.code}\nDescription: ${e.description}\n\n\n`)
       }
     }

@@ -1,22 +1,23 @@
-import { sdk } from '../../index.client'
+import { FiatExchangeRates, WalletServicesOptions } from '../../sdk/WalletServices.interfaces'
+import { WERR_BAD_REQUEST, WERR_MISSING_PARAMETER } from '../../sdk/WERR_errors'
 
 export async function updateChaintracksFiatExchangeRates(
   targetCurrencies: string[],
-  options: sdk.WalletServicesOptions
-): Promise<sdk.FiatExchangeRates> {
+  options: WalletServicesOptions
+): Promise<FiatExchangeRates> {
   const url = options.chaintracksFiatExchangeRatesUrl
 
-  if (!url) throw new sdk.WERR_MISSING_PARAMETER('options.chaintracksFiatExchangeRatesUrl')
+  if (!url) throw new WERR_MISSING_PARAMETER('options.chaintracksFiatExchangeRatesUrl')
 
   const response = await fetch(url)
   const data = await response.json()
   const r = { status: response.status, data }
 
   if (r.status !== 200 || !r.data || r.data.status != 'success') {
-    throw new sdk.WERR_BAD_REQUEST(`${url} returned status ${r.status}`)
+    throw new WERR_BAD_REQUEST(`${url} returned status ${r.status}`)
   }
 
-  const rates = <sdk.FiatExchangeRates>r.data.value
+  const rates = <FiatExchangeRates>r.data.value
   rates.timestamp = new Date(rates.timestamp)
 
   return rates
@@ -24,18 +25,18 @@ export async function updateChaintracksFiatExchangeRates(
 
 export async function updateExchangeratesapi(
   targetCurrencies: string[],
-  options: sdk.WalletServicesOptions
-): Promise<sdk.FiatExchangeRates> {
-  if (!options.exchangeratesapiKey) throw new sdk.WERR_MISSING_PARAMETER('options.exchangeratesapiKey')
+  options: WalletServicesOptions
+): Promise<FiatExchangeRates> {
+  if (!options.exchangeratesapiKey) throw new WERR_MISSING_PARAMETER('options.exchangeratesapiKey')
 
   const iorates = await getExchangeRatesIo(options.exchangeratesapiKey)
 
-  if (!iorates.success) throw new sdk.WERR_BAD_REQUEST(`getExchangeRatesIo returned success ${iorates.success}`)
+  if (!iorates.success) throw new WERR_BAD_REQUEST(`getExchangeRatesIo returned success ${iorates.success}`)
 
   if (!iorates.rates['USD'] || !iorates.rates[iorates.base])
-    throw new sdk.WERR_BAD_REQUEST(`getExchangeRatesIo missing rates for 'USD' or base`)
+    throw new WERR_BAD_REQUEST(`getExchangeRatesIo missing rates for 'USD' or base`)
 
-  const r: sdk.FiatExchangeRates = {
+  const r: FiatExchangeRates = {
     timestamp: new Date(iorates.timestamp * 1000),
     base: 'USD',
     rates: {}
@@ -52,7 +53,7 @@ export async function updateExchangeratesapi(
   }
 
   if (updates !== targetCurrencies.length)
-    throw new sdk.WERR_BAD_REQUEST(`getExchangeRatesIo failed to update all target currencies`)
+    throw new WERR_BAD_REQUEST(`getExchangeRatesIo failed to update all target currencies`)
 
   //console.log(`new fiat rates=${JSON.stringify(r)}`)
 
@@ -75,7 +76,7 @@ export async function getExchangeRatesIo(key: string): Promise<ExchangeRatesIoAp
   const r = { status: response.status, data }
 
   if (r.status !== 200 || !r.data) {
-    throw new sdk.WERR_BAD_REQUEST(`getExchangeRatesIo returned status ${r.status}`)
+    throw new WERR_BAD_REQUEST(`getExchangeRatesIo returned status ${r.status}`)
   }
 
   const rates = <ExchangeRatesIoApi>r.data

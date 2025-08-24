@@ -1,5 +1,7 @@
-import { sdk } from '../../index.client'
-import { TableTransaction } from '../index.client'
+import { specOpFailedActions, specOpNoSendActions, TransactionStatus } from '../../sdk/types'
+import { ValidListActionsArgs } from '../../sdk/validationHelpers'
+import { AuthId } from '../../sdk/WalletStorage.interfaces'
+import { TableTransaction } from '../schema/tables/TableTransaction'
 import { StorageProvider } from '../StorageProvider'
 
 export interface ListActionsSpecOp {
@@ -10,11 +12,11 @@ export interface ListActionsSpecOp {
    * or an explicit array of labels to intercept.
    */
   labelsToIntercept?: string[]
-  setStatusFilter?: () => sdk.TransactionStatus[]
+  setStatusFilter?: () => TransactionStatus[]
   postProcess?: (
     s: StorageProvider,
-    auth: sdk.AuthId,
-    vargs: sdk.ValidListActionsArgs,
+    auth: AuthId,
+    vargs: ValidListActionsArgs,
     specOpLabels: string[],
     txs: Partial<TableTransaction>[]
   ) => Promise<void>
@@ -22,14 +24,14 @@ export interface ListActionsSpecOp {
 
 export const getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
   return {
-    [sdk.specOpNoSendActions]: {
+    [specOpNoSendActions]: {
       name: 'noSendActions',
       labelsToIntercept: ['abort'],
       setStatusFilter: () => ['nosend'],
       postProcess: async (
         s: StorageProvider,
-        auth: sdk.AuthId,
-        vargs: sdk.ValidListActionsArgs,
+        auth: AuthId,
+        vargs: ValidListActionsArgs,
         specOpLabels: string[],
         txs: Partial<TableTransaction>[]
       ): Promise<void> => {
@@ -43,14 +45,14 @@ export const getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
         }
       }
     },
-    [sdk.specOpFailedActions]: {
+    [specOpFailedActions]: {
       name: 'failedActions',
       labelsToIntercept: ['unfail'],
       setStatusFilter: () => ['failed'],
       postProcess: async (
         s: StorageProvider,
-        auth: sdk.AuthId,
-        vargs: sdk.ValidListActionsArgs,
+        auth: AuthId,
+        vargs: ValidListActionsArgs,
         specOpLabels: string[],
         txs: Partial<TableTransaction>[]
       ): Promise<void> => {

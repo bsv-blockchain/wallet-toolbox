@@ -1,7 +1,10 @@
-import { sdk, wait } from '../../index.client'
 import { ChainTracker } from '@bsv/sdk'
-import { BlockHeader } from './chaintracks'
 import { ChaintracksServiceClient } from './chaintracks/ChaintracksServiceClient'
+import { Chain } from '../../sdk/types'
+import { WalletError } from '../../sdk/WalletError'
+import { wait } from '../../utility/utilityHelpers'
+import { WERR_INTERNAL } from '../../sdk/WERR_errors'
+import { BlockHeader } from '../../sdk/WalletServices.interfaces'
 
 export interface ChaintracksChainTrackerOptions {
   maxRetries?: number
@@ -12,7 +15,7 @@ export class ChaintracksChainTracker implements ChainTracker {
   cache: Record<number, string>
   options: ChaintracksChainTrackerOptions
 
-  constructor(chain?: sdk.Chain, chaintracks?: ChaintracksServiceClient, options?: ChaintracksChainTrackerOptions) {
+  constructor(chain?: Chain, chaintracks?: ChaintracksServiceClient, options?: ChaintracksChainTrackerOptions) {
     chain ||= 'main'
     this.chaintracks =
       chaintracks ??
@@ -35,7 +38,7 @@ export class ChaintracksChainTracker implements ChainTracker {
 
     const retries = this.options.maxRetries || 3
 
-    let error: sdk.WalletError | undefined = undefined
+    let error: WalletError | undefined = undefined
 
     for (let tryCount = 1; tryCount <= retries; tryCount++) {
       try {
@@ -47,7 +50,7 @@ export class ChaintracksChainTracker implements ChainTracker {
 
         break
       } catch (eu: unknown) {
-        error = sdk.WalletError.fromUnknown(eu)
+        error = WalletError.fromUnknown(eu)
         if (tryCount > retries) {
           throw error
         }
@@ -55,7 +58,7 @@ export class ChaintracksChainTracker implements ChainTracker {
       }
     }
 
-    if (!header) throw new sdk.WERR_INTERNAL('no header should have returned false or thrown an error.')
+    if (!header) throw new WERR_INTERNAL('no header should have returned false or thrown an error.')
 
     this.cache[height] = header.merkleRoot
 

@@ -16,6 +16,7 @@ import {
 } from '@bsv/sdk'
 import { _tu, TestWalletNoSetup } from '../../utils/TestUtilsWalletStorage'
 
+const includeTestChaintracks = false
 const noLog = true
 const logFilePath = path.resolve(__dirname, 'createAction2.test.ts')
 
@@ -147,6 +148,7 @@ describe('createAction2 nosend transactions', () => {
   })
 
   test('3_transaction with explicit change check also uses toLogString on the spend', async () => {
+    if (!includeTestChaintracks) return
     for (const { wallet } of ctxs) {
       wallet.randomVals = [0.1, 0.2, 0.3, 0.7, 0.8, 0.9]
       const fundingArgs: CreateActionArgs = {

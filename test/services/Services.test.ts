@@ -2,6 +2,8 @@ import { Beef, Utils } from '@bsv/sdk'
 import { sdk, Services, sha256Hash, wait } from '../../src/index.all'
 import { _tu, TestSetup1Wallet } from '../utils/TestUtilsWalletStorage'
 
+const includeTestChaintracks = false
+
 describe('Wallet services tests', () => {
   jest.setTimeout(99999999)
 
@@ -15,13 +17,15 @@ describe('Wallet services tests', () => {
         rootKeyHex: '3'.repeat(64)
       })
     )
-    ctxs.push(
-      await _tu.createSQLiteTestSetup1Wallet({
-        databaseName: 'walletServicesTest',
-        chain: 'test',
-        rootKeyHex: '3'.repeat(64)
-      })
-    )
+    if (includeTestChaintracks) {
+      ctxs.push(
+        await _tu.createSQLiteTestSetup1Wallet({
+          databaseName: 'walletServicesTest',
+          chain: 'test',
+          rootKeyHex: '3'.repeat(64)
+        })
+      )
+    }
   })
 
   afterAll(async () => {

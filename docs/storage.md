@@ -170,7 +170,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export interface GenerateChangeSdkParams {
     fixedInputs: GenerateChangeSdkInput[];
     fixedOutputs: GenerateChangeSdkOutput[];
-    feeModel: sdk.StorageFeeModel;
+    feeModel: StorageFeeModel;
     targetNetCount?: number;
     changeInitialSatoshis: number;
     changeFirstSatoshis: number;
@@ -305,8 +305,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export interface ListActionsSpecOp {
     name: string;
     labelsToIntercept?: string[];
-    setStatusFilter?: () => sdk.TransactionStatus[];
-    postProcess?: (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]) => Promise<void>;
+    setStatusFilter?: () => TransactionStatus[];
+    postProcess?: (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]) => Promise<void>;
 }
 ```
 
@@ -334,9 +334,9 @@ export interface ListOutputsSpecOp {
     ignoreLimit?: boolean;
     includeOutputScripts?: boolean;
     includeSpent?: boolean;
-    resultFromTags?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]) => Promise<ListOutputsResult>;
-    resultFromOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<ListOutputsResult>;
-    filterOutputs?: (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<TableOutput[]>;
+    resultFromTags?: (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]) => Promise<ListOutputsResult>;
+    resultFromOutputs?: (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<ListOutputsResult>;
+    filterOutputs?: (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]) => Promise<TableOutput[]>;
     tagsToIntercept?: string[];
     tagsParamsCount?: number;
 }
@@ -377,6 +377,8 @@ export interface PostBeefResultForTxidApi {
     merklePath?: string;
 }
 ```
+
+See also: [blockHash](./services.md#function-blockhash)
 
 ###### Property alreadyKnown
 
@@ -457,7 +459,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export interface ProvenTxReqHistory {
-    notes?: sdk.ReqHistoryNote[];
+    notes?: ReqHistoryNote[];
 }
 ```
 
@@ -469,7 +471,7 @@ Keys are Date().toISOString()
 Values are a description of what happened.
 
 ```ts
-notes?: sdk.ReqHistoryNote[]
+notes?: ReqHistoryNote[]
 ```
 See also: [ReqHistoryNote](./client.md#type-reqhistorynote)
 
@@ -773,8 +775,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export interface StorageProviderOptions extends StorageReaderWriterOptions {
-    chain: sdk.Chain;
-    feeModel: sdk.StorageFeeModel;
+    chain: Chain;
+    feeModel: StorageFeeModel;
     commissionSatoshis: number;
     commissionPubKeyHex?: PubKeyHex;
 }
@@ -1083,7 +1085,7 @@ export interface TableProvenTx extends sdk.EntityTimeStamp {
 }
 ```
 
-See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
+See also: [EntityTimeStamp](./client.md#interface-entitytimestamp), [blockHash](./services.md#function-blockhash)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1443,9 +1445,9 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Interface: XValidCreateActionOutput
 
 ```ts
-export interface XValidCreateActionOutput extends sdk.ValidCreateActionOutput {
+export interface XValidCreateActionOutput extends ValidCreateActionOutput {
     vout: number;
-    providedBy: sdk.StorageProvidedBy;
+    providedBy: StorageProvidedBy;
     purpose?: string;
     derivationSuffix?: string;
     keyOffset?: string;
@@ -1486,8 +1488,8 @@ export abstract class EntityBase<T> {
     abstract get entityTable(): string;
     abstract updateApi(): void;
     abstract equals(ei: T, syncMap?: SyncMap): boolean;
-    abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void>;
-    abstract mergeExisting(storage: EntityStorage, since: Date | undefined, ei: T, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean>;
+    abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void>;
+    abstract mergeExisting(storage: EntityStorage, since: Date | undefined, ei: T, syncMap: SyncMap, trx?: TrxToken): Promise<boolean>;
     toApi(): T 
 }
 ```
@@ -1511,7 +1513,7 @@ Perform a 'merge' / 'convergent' equality migration of state
 from external `ei` to this existing local EntityUser
 
 ```ts
-abstract mergeExisting(storage: EntityStorage, since: Date | undefined, ei: T, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean>
+abstract mergeExisting(storage: EntityStorage, since: Date | undefined, ei: T, syncMap: SyncMap, trx?: TrxToken): Promise<boolean>
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [SyncMap](./storage.md#interface-syncmap), [TrxToken](./client.md#interface-trxtoken)
 
@@ -1526,7 +1528,7 @@ to this new local entity which was constructed
 as a copy of the external object.
 
 ```ts
-abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void>
+abstract mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void>
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [SyncMap](./storage.md#interface-syncmap), [TrxToken](./client.md#interface-trxtoken)
 
@@ -1602,13 +1604,13 @@ export class EntityCertificate extends EntityBase<TableCertificate> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableCertificate, syncMap?: SyncMap): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCertificate, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCertificate, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityCertificate;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCertificate, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCertificate, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1641,13 +1643,13 @@ export class EntityCertificateField extends EntityBase<TableCertificateField> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableCertificateField, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCertificateField, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCertificateField, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityCertificateField;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCertificateField, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCertificateField, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1685,13 +1687,13 @@ export class EntityCommission extends EntityBase<TableCommission> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableCommission, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCommission, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableCommission, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityCommission;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCommission, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableCommission, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1735,7 +1737,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
     get type() 
     set type(v: string) 
     get providedBy() 
-    set providedBy(v: sdk.StorageProvidedBy) 
+    set providedBy(v: StorageProvidedBy) 
     get purpose() 
     set purpose(v: string) 
     get spendingDescription() 
@@ -1759,13 +1761,13 @@ export class EntityOutput extends EntityBase<TableOutput> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableOutput, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutput, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutput, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityOutput;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutput, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutput, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1801,13 +1803,13 @@ export class EntityOutputBasket extends EntityBase<TableOutputBasket> {
     override get entityTable(): string 
     override updateApi(): void 
     override equals(ei: TableOutputBasket, syncMap?: SyncMap): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputBasket, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputBasket, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityOutputBasket;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputBasket, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputBasket, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1839,13 +1841,13 @@ export class EntityOutputTag extends EntityBase<TableOutputTag> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableOutputTag, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputTag, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputTag, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityOutputTag;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputTag, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputTag, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1874,13 +1876,13 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableOutputTagMap, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputTagMap, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableOutputTagMap, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityOutputTagMap;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputTagMap, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableOutputTagMap, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -1893,7 +1895,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export class EntityProvenTx extends EntityBase<TableProvenTx> {
-    static async fromTxid(txid: string, services: sdk.WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> 
+    static async fromTxid(txid: string, services: WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> 
     constructor(api?: TableProvenTx) 
     override updateApi(): void 
     getMerklePath(): MerklePath 
@@ -1923,20 +1925,20 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableProvenTx, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableProvenTx, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableProvenTx, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityProvenTx;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTx, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTx, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
     static getProofAttemptsLimit = 8;
     static getProofMinutes = 60;
-    static async fromReq(req: EntityProvenTxReq, gmpResult: sdk.GetMerklePathResult, countsAsAttempt: boolean): Promise<EntityProvenTx | undefined> 
+    static async fromReq(req: EntityProvenTxReq, gmpResult: GetMerklePathResult, countsAsAttempt: boolean): Promise<EntityProvenTx | undefined> 
 }
 ```
 
-See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices)
+See also: [EntityBase](./storage.md#class-entitybase), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [EntityStorage](./storage.md#type-entitystorage), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [SyncMap](./storage.md#interface-syncmap), [TableProvenTx](./storage.md#interface-tableproventx), [TrxToken](./client.md#interface-trxtoken), [WalletServices](./client.md#interface-walletservices), [blockHash](./services.md#function-blockhash)
 
 ###### Property getProofAttemptsLimit
 
@@ -1961,7 +1963,7 @@ Try to create a new ProvenTx from a ProvenTxReq and GetMerkleProofResultApi
 Otherwise it returns undefined and updates req.status to either 'unknown', 'invalid', or 'unconfirmed'
 
 ```ts
-static async fromReq(req: EntityProvenTxReq, gmpResult: sdk.GetMerklePathResult, countsAsAttempt: boolean): Promise<EntityProvenTx | undefined> 
+static async fromReq(req: EntityProvenTxReq, gmpResult: GetMerklePathResult, countsAsAttempt: boolean): Promise<EntityProvenTx | undefined> 
 ```
 See also: [EntityProvenTx](./storage.md#class-entityproventx), [EntityProvenTxReq](./storage.md#class-entityproventxreq), [GetMerklePathResult](./client.md#interface-getmerklepathresult)
 
@@ -1978,7 +1980,7 @@ The returned ProvenTx and ProvenTxReq objects have not been added to the storage
 this is optional and can be done by the caller if appropriate.
 
 ```ts
-static async fromTxid(txid: string, services: sdk.WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> 
+static async fromTxid(txid: string, services: WalletServices, rawTx?: number[]): Promise<ProvenTxFromTxidResult> 
 ```
 See also: [ProvenTxFromTxidResult](./storage.md#interface-proventxfromtxidresult), [WalletServices](./client.md#interface-walletservices)
 
@@ -1999,8 +2001,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
-    static async fromStorageTxid(storage: EntityStorage, txid: string, trx?: sdk.TrxToken): Promise<EntityProvenTxReq | undefined> 
-    static async fromStorageId(storage: EntityStorage, id: number, trx?: sdk.TrxToken): Promise<EntityProvenTxReq> 
+    static async fromStorageTxid(storage: EntityStorage, txid: string, trx?: TrxToken): Promise<EntityProvenTxReq | undefined> 
+    static async fromStorageId(storage: EntityStorage, id: number, trx?: TrxToken): Promise<EntityProvenTxReq> 
     static fromTxid(txid: string, rawTx: number[], inputBEEF?: number[]): EntityProvenTxReq 
     history: ProvenTxReqHistory;
     notify: ProvenTxReqNotify;
@@ -2014,20 +2016,20 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     set apiNotify(v: string) 
     updateApi(): void 
     unpackApi(): void 
-    async refreshFromStorage(storage: EntityStorage | WalletStorageManager, trx?: sdk.TrxToken): Promise<void> 
+    async refreshFromStorage(storage: EntityStorage | WalletStorageManager, trx?: TrxToken): Promise<void> 
     constructor(api?: TableProvenTxReq) 
     historySince(since: Date): ProvenTxReqHistory 
     historyPretty(since?: Date, indent = 0): string 
-    prettyNote(note: sdk.ReqHistoryNote): string 
+    prettyNote(note: ReqHistoryNote): string 
     getHistorySummary(): ProvenTxReqHistorySummaryApi 
-    parseHistoryNote(note: sdk.ReqHistoryNote, summary?: ProvenTxReqHistorySummaryApi): string 
+    parseHistoryNote(note: ReqHistoryNote, summary?: ProvenTxReqHistorySummaryApi): string 
     addNotifyTransactionId(id: number) 
-    addHistoryNote(note: sdk.ReqHistoryNote, noDupes?: boolean) 
-    async updateStorage(storage: EntityStorage, trx?: sdk.TrxToken) 
-    async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: sdk.TrxToken) 
-    async insertOrMerge(storage: EntityStorage, trx?: sdk.TrxToken): Promise<EntityProvenTxReq> 
+    addHistoryNote(note: ReqHistoryNote, noDupes?: boolean) 
+    async updateStorage(storage: EntityStorage, trx?: TrxToken) 
+    async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: TrxToken) 
+    async insertOrMerge(storage: EntityStorage, trx?: TrxToken): Promise<EntityProvenTxReq> 
     get status() 
-    set status(v: sdk.ProvenTxReqStatus) 
+    set status(v: ProvenTxReqStatus) 
     get provenTxReqId() 
     set provenTxReqId(v: number) 
     get created_at() 
@@ -2053,7 +2055,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableProvenTxReq, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableProvenTxReq, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableProvenTxReq, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityProvenTxReq;
         eiId: number;
@@ -2061,9 +2063,9 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     mapNotifyTransactionIds(syncMap: SyncMap): void 
     mergeNotifyTransactionIds(ei: TableProvenTxReq, syncMap?: SyncMap): void 
     mergeHistory(ei: TableProvenTxReq, syncMap?: SyncMap, noDupes?: boolean): void 
-    static isTerminalStatus(status: sdk.ProvenTxReqStatus): boolean 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTxReq, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    static isTerminalStatus(status: ProvenTxReqStatus): boolean 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTxReq, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -2075,7 +2077,7 @@ Adds a note to history.
 Notes with identical property values to an existing note are ignored.
 
 ```ts
-addHistoryNote(note: sdk.ReqHistoryNote, noDupes?: boolean) 
+addHistoryNote(note: ReqHistoryNote, noDupes?: boolean) 
 ```
 See also: [ReqHistoryNote](./client.md#type-reqhistorynote)
 
@@ -2118,7 +2120,7 @@ passing through `notifying`. Thus a full convergent merge passes through these s
 On terminal failure: `doubleSpend` trumps `invalid` as it contains more data.
 
 ```ts
-override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTxReq, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableProvenTxReq, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [SyncMap](./storage.md#interface-syncmap), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TrxToken](./client.md#interface-trxtoken)
 
@@ -2127,7 +2129,7 @@ See also: [EntityStorage](./storage.md#type-entitystorage), [SyncMap](./storage.
 Updates database record with current state of this EntityUser
 
 ```ts
-async updateStorage(storage: EntityStorage, trx?: sdk.TrxToken) 
+async updateStorage(storage: EntityStorage, trx?: TrxToken) 
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [TrxToken](./client.md#interface-trxtoken)
 
@@ -2144,7 +2146,7 @@ Update storage with changes to non-static properties:
   batch
 
 ```ts
-async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: sdk.TrxToken) 
+async updateStorageDynamicProperties(storage: WalletStorageManager | StorageProvider, trx?: TrxToken) 
 ```
 See also: [StorageProvider](./storage.md#class-storageprovider), [TrxToken](./client.md#interface-trxtoken), [WalletStorageManager](./storage.md#class-walletstoragemanager)
 
@@ -2157,8 +2159,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export class EntitySyncState extends EntityBase<TableSyncState> {
     constructor(api?: TableSyncState) 
     validateSyncMap(sm: SyncMap) 
-    static async fromStorage(storage: sdk.WalletStorageSync, userIdentityKey: string, remoteSettings: TableSettings): Promise<EntitySyncState> 
-    async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: sdk.TrxToken) 
+    static async fromStorage(storage: WalletStorageSync, userIdentityKey: string, remoteSettings: TableSettings): Promise<EntitySyncState> 
+    async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: TrxToken) 
     override updateApi(notSyncMap?: boolean): void 
     set created_at(v: Date) 
     get created_at() 
@@ -2174,8 +2176,8 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     get init() 
     set refNum(v: string) 
     get refNum() 
-    set status(v: sdk.SyncStatus) 
-    get status(): sdk.SyncStatus 
+    set status(v: SyncStatus) 
+    get status(): SyncStatus 
     set when(v: Date | undefined) 
     get when() 
     set satoshis(v: number | undefined) 
@@ -2193,10 +2195,10 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     errorOther: SyncError | undefined;
     syncMap: SyncMap;
     override equals(ei: TableSyncState, syncMap?: SyncMap | undefined): boolean 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableSyncState, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
-    makeRequestSyncChunkArgs(forIdentityKey: string, forStorageIdentityKey: string, maxRoughSize?: number, maxItems?: number): sdk.RequestSyncChunkArgs 
-    static syncChunkSummary(c: sdk.SyncChunk): string {
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableSyncState, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
+    makeRequestSyncChunkArgs(forIdentityKey: string, forStorageIdentityKey: string, maxRoughSize?: number, maxItems?: number): RequestSyncChunkArgs 
+    static syncChunkSummary(c: SyncChunk): string {
         let log = "";
         log += `SYNC CHUNK SUMMARY
   from storage: ${c.fromStorageIdentityKey}
@@ -2231,7 +2233,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
         }
         return log;
     }
-    async processSyncChunk(writer: EntityStorage, args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<{
+    async processSyncChunk(writer: EntityStorage, args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<{
         done: boolean;
         maxUpdated_at: Date | undefined;
         updates: number;
@@ -2256,7 +2258,7 @@ See also: [SyncMap](./storage.md#interface-syncmap)
 Handles both insert and update based on id value: zero indicates insert.
 
 ```ts
-async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: sdk.TrxToken) 
+async updateStorage(storage: EntityStorage, notSyncMap?: boolean, trx?: TrxToken) 
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [TrxToken](./client.md#interface-trxtoken)
 
@@ -2274,7 +2276,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export class EntityTransaction extends EntityBase<TableTransaction> {
     getBsvTx(): BsvTransaction | undefined 
     getBsvTxIns(): TransactionInput[] 
-    async getInputs(storage: EntityStorage, trx?: sdk.TrxToken): Promise<TableOutput[]> 
+    async getInputs(storage: EntityStorage, trx?: TrxToken): Promise<TableOutput[]> 
     constructor(api?: TableTransaction) 
     override updateApi(): void 
     get transactionId() 
@@ -2290,7 +2292,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     get isOutgoing() 
     set isOutgoing(v: boolean) 
     get status() 
-    set status(v: sdk.TransactionStatus) 
+    set status(v: TransactionStatus) 
     get userId() 
     set userId(v: number) 
     get provenTxId() 
@@ -2312,14 +2314,14 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableTransaction, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTransaction, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTransaction, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityTransaction;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTransaction, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
-    async getProvenTx(storage: EntityStorage, trx?: sdk.TrxToken): Promise<EntityProvenTx | undefined> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTransaction, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
+    async getProvenTx(storage: EntityStorage, trx?: TrxToken): Promise<EntityProvenTx | undefined> 
 }
 ```
 
@@ -2342,7 +2344,7 @@ Uses both spentBy and rawTx inputs (if available) to locate inputs from among us
 Not all transaction inputs correspond to prior storage outputs.
 
 ```ts
-async getInputs(storage: EntityStorage, trx?: sdk.TrxToken): Promise<TableOutput[]> 
+async getInputs(storage: EntityStorage, trx?: TrxToken): Promise<TableOutput[]> 
 ```
 See also: [EntityStorage](./storage.md#type-entitystorage), [TableOutput](./storage.md#interface-tableoutput), [TrxToken](./client.md#interface-trxtoken)
 
@@ -2372,13 +2374,13 @@ export class EntityTxLabel extends EntityBase<TableTxLabel> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableTxLabel, syncMap?: SyncMap): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTxLabel, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTxLabel, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityTxLabel;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTxLabel, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTxLabel, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -2407,13 +2409,13 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableTxLabelMap, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTxLabelMap, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableTxLabelMap, syncMap: SyncMap, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityTxLabelMap;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTxLabelMap, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableTxLabelMap, syncMap: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -2443,13 +2445,13 @@ export class EntityUser extends EntityBase<TableUser> {
     override get entityName(): string 
     override get entityTable(): string 
     override equals(ei: TableUser, syncMap?: SyncMap | undefined): boolean 
-    static async mergeFind(storage: EntityStorage, userId: number, ei: TableUser, trx?: sdk.TrxToken): Promise<{
+    static async mergeFind(storage: EntityStorage, userId: number, ei: TableUser, trx?: TrxToken): Promise<{
         found: boolean;
         eo: EntityUser;
         eiId: number;
     }> 
-    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<void> 
-    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableUser, syncMap?: SyncMap, trx?: sdk.TrxToken): Promise<boolean> 
+    override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> 
+    override async mergeExisting(storage: EntityStorage, since: Date | undefined, ei: TableUser, syncMap?: SyncMap, trx?: TrxToken): Promise<boolean> 
 }
 ```
 
@@ -2463,47 +2465,22 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export class KnexMigrations implements MigrationSource<string> {
     migrations: Record<string, Migration> = {};
-    constructor(public chain: sdk.Chain, public storageName: string, public storageIdentityKey: string, public maxOutputScriptLength: number) 
+    constructor(public chain: Chain, public storageName: string, public storageIdentityKey: string, public maxOutputScriptLength: number) 
     async getMigrations(): Promise<string[]> 
     getMigrationName(migration: string) 
     async getMigration(migration: string): Promise<Migration> 
     async getLatestMigration(): Promise<string> 
     static async latestMigration(): Promise<string> 
     setupMigrations(chain: string, storageName: string, storageIdentityKey: string, maxOutputScriptLength: number): Record<string, Migration> 
-    static async dbtype(knex: Knex<any, any[]>): Promise<DBType> {
-        try {
-            const q = `SELECT 
-    CASE 
-        WHEN (SELECT VERSION() LIKE '%MariaDB%') = 1 THEN 'Unknown'
-        WHEN (SELECT VERSION()) IS NOT NULL THEN 'MySQL'
-        ELSE 'Unknown'
-    END AS database_type;`;
-            let r = await knex.raw(q);
-            if (!r[0]["database_type"])
-                r = r[0];
-            if (r["rows"])
-                r = r.rows;
-            const dbtype: "SQLite" | "MySQL" | "Unknown" = r[0].database_type;
-            if (dbtype === "Unknown")
-                throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-            return dbtype;
-        }
-        catch (eu: unknown) {
-            const e = sdk.WalletError.fromUnknown(eu);
-            if (e.code === "SQLITE_ERROR")
-                return "SQLite";
-            throw new sdk.WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`);
-        }
-    }
 }
 ```
 
-See also: [Chain](./client.md#type-chain), [DBType](./storage.md#type-dbtype), [WERR_NOT_IMPLEMENTED](./client.md#class-werr_not_implemented), [WalletError](./client.md#class-walleterror)
+See also: [Chain](./client.md#type-chain)
 
 ###### Constructor
 
 ```ts
-constructor(public chain: sdk.Chain, public storageName: string, public storageIdentityKey: string, public maxOutputScriptLength: number) 
+constructor(public chain: Chain, public storageName: string, public storageIdentityKey: string, public maxOutputScriptLength: number) 
 ```
 See also: [Chain](./client.md#type-chain)
 
@@ -2514,32 +2491,21 @@ Argument Details
 + **maxOutputScriptLength**
   + limit for scripts kept in outputs table, longer scripts will be pulled from rawTx
 
-###### Method dbtype
-
-```ts
-static async dbtype(knex: Knex<any, any[]>): Promise<DBType> 
-```
-See also: [DBType](./storage.md#type-dbtype)
-
-Returns
-
-connected database engine variant
-
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
 ##### Class: MergeEntity
 
 ```ts
-export class MergeEntity<API extends sdk.EntityTimeStamp, DE extends EntityBase<API>> {
+export class MergeEntity<API extends EntityTimeStamp, DE extends EntityBase<API>> {
     idMap: Record<number, number>;
-    constructor(public stateArray: API[] | undefined, public find: (storage: EntityStorage, userId: number, ei: API, syncMap: SyncMap, trx?: sdk.TrxToken) => Promise<{
+    constructor(public stateArray: API[] | undefined, public find: (storage: EntityStorage, userId: number, ei: API, syncMap: SyncMap, trx?: TrxToken) => Promise<{
         found: boolean;
         eo: DE;
         eiId: number;
     }>, public esm: EntitySyncMap) 
     updateSyncMap(map: Record<number, number>, inId: number, outId: number) 
-    async merge(since: Date | undefined, storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+    async merge(since: Date | undefined, storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<{
         inserts: number;
         updates: number;
     }> 
@@ -2551,7 +2517,7 @@ See also: [EntityBase](./storage.md#class-entitybase), [EntityStorage](./storage
 ###### Method merge
 
 ```ts
-async merge(since: Date | undefined, storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: sdk.TrxToken): Promise<{
+async merge(since: Date | undefined, storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<{
     inserts: number;
     updates: number;
 }> 
@@ -2582,7 +2548,7 @@ the party making requests of the remote service.
 For details of the API implemented, follow the "See also" link for the `WalletStorageProvider` interface.
 
 ```ts
-export class StorageClient implements sdk.WalletStorageProvider {
+export class StorageClient implements WalletStorageProvider {
     readonly endpointUrl: string;
     public settings?: TableSettings;
     constructor(wallet: WalletInterface, endpointUrl: string) 
@@ -2592,37 +2558,37 @@ export class StorageClient implements sdk.WalletStorageProvider {
     async makeAvailable(): Promise<TableSettings> 
     async destroy(): Promise<void> 
     async migrate(storageName: string, storageIdentityKey: string): Promise<string> 
-    getServices(): sdk.WalletServices 
-    setServices(v: sdk.WalletServices): void 
-    async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> 
-    async createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult> 
-    async processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> 
-    async abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
+    getServices(): WalletServices 
+    setServices(v: WalletServices): void 
+    async internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> 
+    async createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult> 
+    async processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> 
+    async abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
     async findOrInsertUser(identityKey): Promise<{
         user: TableUser;
         isNew: boolean;
     }> 
-    async findOrInsertSyncStateAuth(auth: sdk.AuthId, storageIdentityKey: string, storageName: string): Promise<{
+    async findOrInsertSyncStateAuth(auth: AuthId, storageIdentityKey: string, storageName: string): Promise<{
         syncState: TableSyncState;
         isNew: boolean;
     }> 
-    async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> 
-    async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
-    async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> 
-    async listCertificates(auth: sdk.AuthId, vargs: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult> 
-    async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
-    async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
-    async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> 
-    async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
-    async relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number> 
-    async relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number> 
-    async processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult> 
-    async getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> 
-    async updateProvenTxReqWithNewProvenTx(args: sdk.UpdateProvenTxReqWithNewProvenTxArgs): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> 
-    async setActive(auth: sdk.AuthId, newActiveStorageIdentityKey: string): Promise<number> 
+    async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> 
+    async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
+    async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> 
+    async listCertificates(auth: AuthId, vargs: ValidListCertificatesArgs): Promise<ListCertificatesResult> 
+    async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> 
+    async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+    async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> 
+    async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
+    async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> 
+    async relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number> 
+    async processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult> 
+    async getSyncChunk(args: RequestSyncChunkArgs): Promise<SyncChunk> 
+    async updateProvenTxReqWithNewProvenTx(args: UpdateProvenTxReqWithNewProvenTxArgs): Promise<UpdateProvenTxReqWithNewProvenTxResult> 
+    async setActive(auth: AuthId, newActiveStorageIdentityKey: string): Promise<number> 
     validateDate(date: Date | string | number): Date 
-    validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T 
-    validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
+    validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T 
+    validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
 }
 ```
 
@@ -2633,7 +2599,7 @@ See also: [AuthId](./client.md#interface-authid), [EntityTimeStamp](./client.md#
 Aborts an action by `reference` string.
 
 ```ts
-async abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
+async abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
 ```
 See also: [AuthId](./client.md#interface-authid)
 
@@ -2654,7 +2620,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Storage level processing for wallet `createAction`.
 
 ```ts
-async createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult> 
+async createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult> 
 ```
 See also: [AuthId](./client.md#interface-authid), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs)
 
@@ -2686,7 +2652,7 @@ This certificate retrieval method supports internal wallet operations.
 Field values are stored and retrieved encrypted.
 
 ```ts
-async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
+async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> 
 ```
 See also: [AuthId](./client.md#interface-authid), [FindCertificatesArgs](./client.md#interface-findcertificatesargs), [TableCertificateX](./storage.md#interface-tablecertificatex)
 
@@ -2707,7 +2673,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Used to both find and insert a `TableSyncState` record for the user to track wallet data replication across storage providers.
 
 ```ts
-async findOrInsertSyncStateAuth(auth: sdk.AuthId, storageIdentityKey: string, storageName: string): Promise<{
+async findOrInsertSyncStateAuth(auth: AuthId, storageIdentityKey: string, storageName: string): Promise<{
     syncState: TableSyncState;
     isNew: boolean;
 }> 
@@ -2757,7 +2723,7 @@ Find output baskets.
 This retrieval method supports internal wallet operations.
 
 ```ts
-async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
 ```
 See also: [AuthId](./client.md#interface-authid), [FindOutputBasketsArgs](./client.md#interface-findoutputbasketsargs), [TableOutputBasket](./storage.md#interface-tableoutputbasket)
 
@@ -2780,7 +2746,7 @@ Find outputs.
 This retrieval method supports internal wallet operations.
 
 ```ts
-async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> 
+async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> 
 ```
 See also: [AuthId](./client.md#interface-authid), [FindOutputsArgs](./client.md#interface-findoutputsargs), [TableOutput](./storage.md#interface-tableoutput)
 
@@ -2803,7 +2769,7 @@ Find requests for transaction proofs.
 This retrieval method supports internal wallet operations.
 
 ```ts
-async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
+async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
 ```
 See also: [FindProvenTxReqsArgs](./client.md#interface-findproventxreqsargs), [TableProvenTxReq](./storage.md#interface-tableproventxreq)
 
@@ -2824,7 +2790,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Remote storage does not offer `Services` to remote clients.
 
 ```ts
-getServices(): sdk.WalletServices 
+getServices(): WalletServices 
 ```
 See also: [WalletServices](./client.md#interface-walletservices)
 
@@ -2855,7 +2821,7 @@ The normal data flow is for the active storage to push backups as a sequence of 
 Also supports recovery where non-active storage can attempt to merge available data prior to becoming active.
 
 ```ts
-async getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> 
+async getSyncChunk(args: RequestSyncChunkArgs): Promise<SyncChunk> 
 ```
 See also: [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [SyncChunk](./client.md#interface-syncchunk)
 
@@ -2873,7 +2839,7 @@ Argument Details
 Inserts a new certificate with fields and keyring into remote storage.
 
 ```ts
-async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> 
+async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> 
 ```
 See also: [AuthId](./client.md#interface-authid), [TableCertificateX](./storage.md#interface-tablecertificatex)
 
@@ -2896,7 +2862,7 @@ Updates internalized outputs in remote storage.
 Triggers proof validation of containing transaction.
 
 ```ts
-async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> 
+async internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> 
 ```
 See also: [AuthId](./client.md#interface-authid), [StorageInternalizeActionResult](./client.md#interface-storageinternalizeactionresult)
 
@@ -2940,7 +2906,7 @@ false
 Storage level processing for wallet `listActions`.
 
 ```ts
-async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
+async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
 ```
 See also: [AuthId](./client.md#interface-authid), [ValidListActionsArgs](./client.md#interface-validlistactionsargs)
 
@@ -2961,7 +2927,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Storage level processing for wallet `listCertificates`.
 
 ```ts
-async listCertificates(auth: sdk.AuthId, vargs: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult> 
+async listCertificates(auth: AuthId, vargs: ValidListCertificatesArgs): Promise<ListCertificatesResult> 
 ```
 See also: [AuthId](./client.md#interface-authid), [ValidListCertificatesArgs](./client.md#interface-validlistcertificatesargs)
 
@@ -2982,7 +2948,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Storage level processing for wallet `listOutputs`.
 
 ```ts
-async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> 
+async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> 
 ```
 See also: [AuthId](./client.md#interface-authid), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs)
 
@@ -3039,7 +3005,7 @@ Storage level processing for wallet `createAction` and `signAction`.
 Handles remaining storage tasks once a fully signed transaction has been completed. This is common to both `createAction` and `signAction`.
 
 ```ts
-async processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> 
+async processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> 
 ```
 See also: [AuthId](./client.md#interface-authid), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults)
 
@@ -3062,7 +3028,7 @@ Process a "chunk" of replication data for the user.
 The normal data flow is for the active storage to push backups as a sequence of data chunks to backup storage providers.
 
 ```ts
-async processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult> 
+async processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult> 
 ```
 See also: [ProcessSyncChunkResult](./client.md#interface-processsyncchunkresult), [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [SyncChunk](./client.md#interface-syncchunk)
 
@@ -3085,7 +3051,7 @@ For storage supporting replication records must be kept of deletions. Therefore 
 when relinquished, and no longer returned by `listCertificates`, but are still retained by storage.
 
 ```ts
-async relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number> 
+async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> 
 ```
 See also: [AuthId](./client.md#interface-authid)
 
@@ -3104,7 +3070,7 @@ Relinquish an output.
 Relinquishing an output removes the output from whatever basket was tracking it.
 
 ```ts
-async relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number> 
+async relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number> 
 ```
 See also: [AuthId](./client.md#interface-authid)
 
@@ -3123,7 +3089,7 @@ then promotes one of the configured backups to active,
 demoting the current active to new backup.
 
 ```ts
-async setActive(auth: sdk.AuthId, newActiveStorageIdentityKey: string): Promise<number> 
+async setActive(auth: AuthId, newActiveStorageIdentityKey: string): Promise<number> 
 ```
 See also: [AuthId](./client.md#interface-authid)
 
@@ -3140,7 +3106,7 @@ This must match the `AuthFetch` identity securing the remote conneciton.
 Ignored. Remote storage cannot share `Services` with remote clients.
 
 ```ts
-setServices(v: sdk.WalletServices): void 
+setServices(v: WalletServices): void 
 ```
 See also: [WalletServices](./client.md#interface-walletservices)
 
@@ -3153,7 +3119,7 @@ Handles the data received when a new transaction proof is found in response to a
   - Updates the proof request record to 'completed' status which enables delayed deletion.
 
 ```ts
-async updateProvenTxReqWithNewProvenTx(args: sdk.UpdateProvenTxReqWithNewProvenTxArgs): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> 
+async updateProvenTxReqWithNewProvenTx(args: UpdateProvenTxReqWithNewProvenTxArgs): Promise<UpdateProvenTxReqWithNewProvenTxResult> 
 ```
 See also: [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult)
 
@@ -3172,7 +3138,7 @@ Helper to force uniform behavior across database engines.
 Use to process all arrays of records with time stamps retreived from database.
 
 ```ts
-validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
+validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3186,7 +3152,7 @@ Helper to force uniform behavior across database engines.
 Use to process all individual records with time stamps retreived from database.
 
 ```ts
-validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T 
+validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3199,79 +3165,79 @@ This class implements the `StorageProvider` interface using IndexedDB,
 via the promises wrapper package `idb`.
 
 ```ts
-export class StorageIdb extends StorageProvider implements sdk.WalletStorageProvider {
+export class StorageIdb extends StorageProvider implements WalletStorageProvider {
     dbName: string;
     db?: IDBPDatabase<StorageIdbSchema>;
     constructor(options: StorageIdbOptions) 
     async migrate(storageName: string, storageIdentityKey: string): Promise<string> 
     async verifyDB(storageName?: string, storageIdentityKey?: string): Promise<IDBPDatabase<StorageIdbSchema>> 
-    toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
-    async readSettings(trx?: sdk.TrxToken): Promise<TableSettings> 
+    toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
+    async readSettings(trx?: TrxToken): Promise<TableSettings> 
     async initDB(storageName?: string, storageIdentityKey?: string): Promise<IDBPDatabase<StorageIdbSchema>> 
     async reviewStatus(args: {
         agedLimit: Date;
-        trx?: sdk.TrxToken;
+        trx?: TrxToken;
     }): Promise<{
         log: string;
     }> 
-    async purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> 
+    async purgeData(params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> 
     async allocateChangeInput(userId: number, basketId: number, targetSatoshis: number, exactSatoshis: number | undefined, excludeSending: boolean, transactionId: number): Promise<TableOutput | undefined> 
-    async getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx> 
-    async getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: sdk.TrxToken): Promise<number[] | undefined> 
-    async getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]> 
-    async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> 
-    async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
-    async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> 
+    async getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx> 
+    async getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: TrxToken): Promise<number[] | undefined> 
+    async getLabelsForTransactionId(transactionId?: number, trx?: TrxToken): Promise<TableTxLabel[]> 
+    async getTagsForOutputId(outputId: number, trx?: TrxToken): Promise<TableOutputTag[]> 
+    async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
+    async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> 
     async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> 
-    async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
-    async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
-    async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> 
-    async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> 
+    async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> 
+    async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+    async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> 
+    async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> 
     async dropAllData(): Promise<void> 
-    async filterOutputTagMaps(args: sdk.FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void, userId?: number): Promise<void> 
-    async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> 
-    async filterProvenTxReqs(args: sdk.FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void, userId?: number): Promise<void> 
-    async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
-    async filterProvenTxs(args: sdk.FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> 
-    async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> 
-    async filterTxLabelMaps(args: sdk.FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void, userId?: number): Promise<void> 
-    async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> 
-    async countOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<number> 
-    async countProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<number> 
-    async countProvenTxs(args: sdk.FindProvenTxsArgs): Promise<number> 
-    async countTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<number> 
-    async insertCertificate(certificate: TableCertificateX, trx?: sdk.TrxToken): Promise<number> 
-    async insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void> 
-    async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> 
-    async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> 
-    async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> 
-    async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> 
-    async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> 
-    async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> 
-    async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> 
-    async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> 
-    async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> 
-    async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> 
-    async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> 
-    async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> 
-    async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> 
-    async updateIdb<T>(id: number | number[], update: Partial<T>, keyProp: string, storeName: string, trx?: sdk.TrxToken): Promise<number> 
-    async updateIdbKey<T>(key: (number | string)[], update: Partial<T>, keyProps: string[], storeName: string, trx?: sdk.TrxToken): Promise<number> 
-    async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> 
-    async updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: sdk.TrxToken): Promise<number> 
-    async updateCommission(id: number, update: Partial<TableCommission>, trx?: sdk.TrxToken): Promise<number> 
-    async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: sdk.TrxToken): Promise<number> 
-    async updateOutput(id: number, update: Partial<TableOutput>, trx?: sdk.TrxToken): Promise<number> 
-    async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: sdk.TrxToken): Promise<number> 
-    async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: sdk.TrxToken): Promise<number> 
-    async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: sdk.TrxToken): Promise<number> 
-    async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: sdk.TrxToken): Promise<number> 
-    async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: sdk.TrxToken): Promise<number> 
-    async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: sdk.TrxToken): Promise<number> 
-    async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: sdk.TrxToken): Promise<number> 
-    async updateUser(id: number, update: Partial<TableUser>, trx?: sdk.TrxToken): Promise<number> 
-    async updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: sdk.TrxToken): Promise<number> 
-    async updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: sdk.TrxToken): Promise<number> 
+    async filterOutputTagMaps(args: FindOutputTagMapsArgs, filtered: (v: TableOutputTagMap) => void, userId?: number): Promise<void> 
+    async findOutputTagMaps(args: FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> 
+    async filterProvenTxReqs(args: FindProvenTxReqsArgs, filtered: (v: TableProvenTxReq) => void, userId?: number): Promise<void> 
+    async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
+    async filterProvenTxs(args: FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> 
+    async findProvenTxs(args: FindProvenTxsArgs): Promise<TableProvenTx[]> 
+    async filterTxLabelMaps(args: FindTxLabelMapsArgs, filtered: (v: TableTxLabelMap) => void, userId?: number): Promise<void> 
+    async findTxLabelMaps(args: FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> 
+    async countOutputTagMaps(args: FindOutputTagMapsArgs): Promise<number> 
+    async countProvenTxReqs(args: FindProvenTxReqsArgs): Promise<number> 
+    async countProvenTxs(args: FindProvenTxsArgs): Promise<number> 
+    async countTxLabelMaps(args: FindTxLabelMapsArgs): Promise<number> 
+    async insertCertificate(certificate: TableCertificateX, trx?: TrxToken): Promise<number> 
+    async insertCertificateField(certificateField: TableCertificateField, trx?: TrxToken): Promise<void> 
+    async insertCommission(commission: TableCommission, trx?: TrxToken): Promise<number> 
+    async insertMonitorEvent(event: TableMonitorEvent, trx?: TrxToken): Promise<number> 
+    async insertOutput(output: TableOutput, trx?: TrxToken): Promise<number> 
+    async insertOutputBasket(basket: TableOutputBasket, trx?: TrxToken): Promise<number> 
+    async insertOutputTag(tag: TableOutputTag, trx?: TrxToken): Promise<number> 
+    async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: TrxToken): Promise<void> 
+    async insertProvenTx(tx: TableProvenTx, trx?: TrxToken): Promise<number> 
+    async insertProvenTxReq(tx: TableProvenTxReq, trx?: TrxToken): Promise<number> 
+    async insertSyncState(syncState: TableSyncState, trx?: TrxToken): Promise<number> 
+    async insertTransaction(tx: TableTransaction, trx?: TrxToken): Promise<number> 
+    async insertTxLabel(label: TableTxLabel, trx?: TrxToken): Promise<number> 
+    async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: TrxToken): Promise<void> 
+    async insertUser(user: TableUser, trx?: TrxToken): Promise<number> 
+    async updateIdb<T>(id: number | number[], update: Partial<T>, keyProp: string, storeName: string, trx?: TrxToken): Promise<number> 
+    async updateIdbKey<T>(key: (number | string)[], update: Partial<T>, keyProps: string[], storeName: string, trx?: TrxToken): Promise<number> 
+    async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: TrxToken): Promise<number> 
+    async updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: TrxToken): Promise<number> 
+    async updateCommission(id: number, update: Partial<TableCommission>, trx?: TrxToken): Promise<number> 
+    async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: TrxToken): Promise<number> 
+    async updateOutput(id: number, update: Partial<TableOutput>, trx?: TrxToken): Promise<number> 
+    async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: TrxToken): Promise<number> 
+    async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: TrxToken): Promise<number> 
+    async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number> 
+    async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number> 
+    async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number> 
+    async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number> 
+    async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number> 
+    async updateUser(id: number, update: Partial<TableUser>, trx?: TrxToken): Promise<number> 
+    async updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: TrxToken): Promise<number> 
+    async updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: TrxToken): Promise<number> 
     async destroy(): Promise<void> 
     allStores: string[] = [
         "certificates",
@@ -3290,50 +3256,50 @@ export class StorageIdb extends StorageProvider implements sdk.WalletStorageProv
         "tx_labels_map",
         "users"
     ];
-    async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> 
-    async filterCertificateFields(args: sdk.FindCertificateFieldsArgs, filtered: (v: TableCertificateField) => void): Promise<void> 
-    async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> 
-    async filterCertificates(args: sdk.FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> 
-    async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
-    async filterCommissions(args: sdk.FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> 
-    async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> 
-    async filterMonitorEvents(args: sdk.FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> 
-    async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> 
-    async filterOutputBaskets(args: sdk.FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> 
-    async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
-    async filterOutputs(args: sdk.FindOutputsArgs, filtered: (v: TableOutput) => void, tagIds?: number[], isQueryModeAll?: boolean): Promise<void> 
-    async findOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> 
-    async filterOutputTags(args: sdk.FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> 
-    async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> 
-    async filterSyncStates(args: sdk.FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> 
-    async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> 
-    async filterTransactions(args: sdk.FindTransactionsArgs, filtered: (v: TableTransaction) => void, labelIds?: number[], isQueryModeAll?: boolean): Promise<void> 
-    async findTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<TableTransaction[]> 
-    async filterTxLabels(args: sdk.FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> 
-    async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> 
-    async filterUsers(args: sdk.FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> 
-    async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> 
-    async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> 
-    async countCertificates(args: sdk.FindCertificatesArgs): Promise<number> 
-    async countCommissions(args: sdk.FindCommissionsArgs): Promise<number> 
-    async countMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<number> 
-    async countOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<number> 
-    async countOutputs(args: sdk.FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> 
-    async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> 
-    async countSyncStates(args: sdk.FindSyncStatesArgs): Promise<number> 
-    async countTransactions(args: sdk.FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> 
-    async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> 
-    async countUsers(args: sdk.FindUsersArgs): Promise<number> 
-    async getProvenTxsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTx[]> 
-    async getProvenTxReqsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> 
-    async getTxLabelMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> 
-    async getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> 
-    async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> 
-    validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
-    validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
-    validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
-    async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
-    async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> 
+    async transaction<T>(scope: (trx: TrxToken) => Promise<T>, trx?: TrxToken): Promise<T> 
+    async filterCertificateFields(args: FindCertificateFieldsArgs, filtered: (v: TableCertificateField) => void): Promise<void> 
+    async findCertificateFields(args: FindCertificateFieldsArgs): Promise<TableCertificateField[]> 
+    async filterCertificates(args: FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> 
+    async findCertificates(args: FindCertificatesArgs): Promise<TableCertificateX[]> 
+    async filterCommissions(args: FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> 
+    async findCommissions(args: FindCommissionsArgs): Promise<TableCommission[]> 
+    async filterMonitorEvents(args: FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> 
+    async findMonitorEvents(args: FindMonitorEventsArgs): Promise<TableMonitorEvent[]> 
+    async filterOutputBaskets(args: FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> 
+    async findOutputBaskets(args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+    async filterOutputs(args: FindOutputsArgs, filtered: (v: TableOutput) => void, tagIds?: number[], isQueryModeAll?: boolean): Promise<void> 
+    async findOutputs(args: FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<TableOutput[]> 
+    async filterOutputTags(args: FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> 
+    async findOutputTags(args: FindOutputTagsArgs): Promise<TableOutputTag[]> 
+    async filterSyncStates(args: FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> 
+    async findSyncStates(args: FindSyncStatesArgs): Promise<TableSyncState[]> 
+    async filterTransactions(args: FindTransactionsArgs, filtered: (v: TableTransaction) => void, labelIds?: number[], isQueryModeAll?: boolean): Promise<void> 
+    async findTransactions(args: FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<TableTransaction[]> 
+    async filterTxLabels(args: FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> 
+    async findTxLabels(args: FindTxLabelsArgs): Promise<TableTxLabel[]> 
+    async filterUsers(args: FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> 
+    async findUsers(args: FindUsersArgs): Promise<TableUser[]> 
+    async countCertificateFields(args: FindCertificateFieldsArgs): Promise<number> 
+    async countCertificates(args: FindCertificatesArgs): Promise<number> 
+    async countCommissions(args: FindCommissionsArgs): Promise<number> 
+    async countMonitorEvents(args: FindMonitorEventsArgs): Promise<number> 
+    async countOutputBaskets(args: FindOutputBasketsArgs): Promise<number> 
+    async countOutputs(args: FindOutputsArgs, tagIds?: number[], isQueryModeAll?: boolean): Promise<number> 
+    async countOutputTags(args: FindOutputTagsArgs): Promise<number> 
+    async countSyncStates(args: FindSyncStatesArgs): Promise<number> 
+    async countTransactions(args: FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> 
+    async countTxLabels(args: FindTxLabelsArgs): Promise<number> 
+    async countUsers(args: FindUsersArgs): Promise<number> 
+    async getProvenTxsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTx[]> 
+    async getProvenTxReqsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> 
+    async getTxLabelMapsForUser(args: FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> 
+    async getOutputTagMapsForUser(args: FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> 
+    async verifyReadyForDatabaseAccess(trx?: TrxToken): Promise<DBType> 
+    validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
+    validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
+    validatePartialForUpdate<T extends EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
+    async validateEntityForInsert<T extends EntityTimeStamp>(entity: T, trx?: TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
+    async validateRawTransaction(t: TableTransaction, trx?: TrxToken): Promise<void> 
     async adminStats(adminIdentityKey: string): Promise<StorageAdminStats> 
 }
 ```
@@ -3381,7 +3347,7 @@ it is where async initialization occurs.
 After initialization, cached settings are returned.
 
 ```ts
-async readSettings(trx?: sdk.TrxToken): Promise<TableSettings> 
+async readSettings(trx?: TrxToken): Promise<TableSettings> 
 ```
 See also: [TableSettings](./storage.md#interface-tablesettings), [TrxToken](./client.md#interface-trxtoken)
 
@@ -3391,7 +3357,7 @@ Convert the standard optional `TrxToken` parameter into either a direct knex dat
 or a Knex.Transaction as appropriate.
 
 ```ts
-toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: sdk.TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
+toDbTrx(stores: string[], mode: "readonly" | "readwrite", trx?: TrxToken): IDBPTransaction<StorageIdbSchema, string[], "readwrite" | "readonly"> 
 ```
 See also: [StorageIdbSchema](./storage.md#interface-storageidbschema), [TrxToken](./client.md#interface-trxtoken)
 
@@ -3401,7 +3367,7 @@ Helper to force uniform behavior across database engines.
 Use to process all arrays of records with time stamps retreived from database.
 
 ```ts
-validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
+validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3415,7 +3381,7 @@ Helper to force uniform behavior across database engines.
 Use to process all individual records with time stamps or number[] retreived from database.
 
 ```ts
-validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
+validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3425,7 +3391,7 @@ Helper to force uniform behavior across database engines.
 Use to process new entities being inserted into the database.
 
 ```ts
-async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
+async validateEntityForInsert<T extends EntityTimeStamp>(entity: T, trx?: TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp), [TrxToken](./client.md#interface-trxtoken)
 
@@ -3435,7 +3401,7 @@ Helper to force uniform behavior across database engines.
 Use to process the update template for entities being updated.
 
 ```ts
-validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
+validatePartialForUpdate<T extends EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3458,126 +3424,126 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: StorageKnex
 
 ```ts
-export class StorageKnex extends StorageProvider implements sdk.WalletStorageProvider {
+export class StorageKnex extends StorageProvider implements WalletStorageProvider {
     knex: Knex;
     constructor(options: StorageKnexOptions) 
     async readSettings(): Promise<TableSettings> 
-    override async getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx> 
+    override async getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx> 
     dbTypeSubstring(source: string, fromOffset: number, forLength?: number) 
-    override async getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: sdk.TrxToken): Promise<number[] | undefined> 
-    getProvenTxsForUserQuery(args: sdk.FindForUserSincePagedArgs): Knex.QueryBuilder 
-    override async getProvenTxsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTx[]> 
-    getProvenTxReqsForUserQuery(args: sdk.FindForUserSincePagedArgs): Knex.QueryBuilder 
-    override async getProvenTxReqsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> 
-    getTxLabelMapsForUserQuery(args: sdk.FindForUserSincePagedArgs): Knex.QueryBuilder 
-    override async getTxLabelMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> 
-    getOutputTagMapsForUserQuery(args: sdk.FindForUserSincePagedArgs): Knex.QueryBuilder 
-    override async getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> 
-    override async listActions(auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
-    override async listOutputs(auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs): Promise<ListOutputsResult> 
-    override async insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number> 
-    override async insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number> 
-    override async insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number> 
-    override async insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number> 
-    override async insertCertificate(certificate: TableCertificateX, trx?: sdk.TrxToken): Promise<number> 
-    override async insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void> 
-    override async insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number> 
-    override async insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number> 
-    override async insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number> 
-    override async insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number> 
-    override async insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number> 
-    override async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void> 
-    override async insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number> 
-    override async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void> 
-    override async insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number> 
-    override async insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number> 
-    override async updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateCommission(id: number, update: Partial<TableCommission>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateOutput(id: number, update: Partial<TableOutput>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateUser(id: number, update: Partial<TableUser>, trx?: sdk.TrxToken): Promise<number> 
-    override async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: sdk.TrxToken): Promise<number> 
-    setupQuery<T extends object>(table: string, args: sdk.FindPartialSincePagedArgs<T>): Knex.QueryBuilder 
-    findCertificateFieldsQuery(args: sdk.FindCertificateFieldsArgs): Knex.QueryBuilder 
-    findCertificatesQuery(args: sdk.FindCertificatesArgs): Knex.QueryBuilder 
-    findCommissionsQuery(args: sdk.FindCommissionsArgs): Knex.QueryBuilder 
-    findOutputBasketsQuery(args: sdk.FindOutputBasketsArgs): Knex.QueryBuilder 
-    findOutputsQuery(args: sdk.FindOutputsArgs, count?: boolean): Knex.QueryBuilder 
-    findOutputTagMapsQuery(args: sdk.FindOutputTagMapsArgs): Knex.QueryBuilder 
-    findOutputTagsQuery(args: sdk.FindOutputTagsArgs): Knex.QueryBuilder 
-    findProvenTxReqsQuery(args: sdk.FindProvenTxReqsArgs): Knex.QueryBuilder 
-    findProvenTxsQuery(args: sdk.FindProvenTxsArgs): Knex.QueryBuilder 
-    findSyncStatesQuery(args: sdk.FindSyncStatesArgs): Knex.QueryBuilder 
-    findTransactionsQuery(args: sdk.FindTransactionsArgs, count?: boolean): Knex.QueryBuilder 
-    findTxLabelMapsQuery(args: sdk.FindTxLabelMapsArgs): Knex.QueryBuilder 
-    findTxLabelsQuery(args: sdk.FindTxLabelsArgs): Knex.QueryBuilder 
-    findUsersQuery(args: sdk.FindUsersArgs): Knex.QueryBuilder 
-    findMonitorEventsQuery(args: sdk.FindMonitorEventsArgs): Knex.QueryBuilder 
-    override async findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
-    override async findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
-    override async findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]> 
-    override async findCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<TableCertificateField[]> 
-    override async findCertificates(args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]> 
-    override async findCommissions(args: sdk.FindCommissionsArgs): Promise<TableCommission[]> 
-    override async findOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
-    override async findOutputs(args: sdk.FindOutputsArgs): Promise<TableOutput[]> 
-    override async findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> 
-    override async findOutputTags(args: sdk.FindOutputTagsArgs): Promise<TableOutputTag[]> 
-    override async findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
-    override async findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]> 
-    override async findSyncStates(args: sdk.FindSyncStatesArgs): Promise<TableSyncState[]> 
-    override async findTransactions(args: sdk.FindTransactionsArgs): Promise<TableTransaction[]> 
-    override async findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> 
-    override async findTxLabels(args: sdk.FindTxLabelsArgs): Promise<TableTxLabel[]> 
-    override async findUsers(args: sdk.FindUsersArgs): Promise<TableUser[]> 
-    override async findMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<TableMonitorEvent[]> 
+    override async getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: TrxToken): Promise<number[] | undefined> 
+    getProvenTxsForUserQuery(args: FindForUserSincePagedArgs): Knex.QueryBuilder 
+    override async getProvenTxsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTx[]> 
+    getProvenTxReqsForUserQuery(args: FindForUserSincePagedArgs): Knex.QueryBuilder 
+    override async getProvenTxReqsForUser(args: FindForUserSincePagedArgs): Promise<TableProvenTxReq[]> 
+    getTxLabelMapsForUserQuery(args: FindForUserSincePagedArgs): Knex.QueryBuilder 
+    override async getTxLabelMapsForUser(args: FindForUserSincePagedArgs): Promise<TableTxLabelMap[]> 
+    getOutputTagMapsForUserQuery(args: FindForUserSincePagedArgs): Knex.QueryBuilder 
+    override async getOutputTagMapsForUser(args: FindForUserSincePagedArgs): Promise<TableOutputTagMap[]> 
+    override async listActions(auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
+    override async listOutputs(auth: AuthId, vargs: ValidListOutputsArgs): Promise<ListOutputsResult> 
+    override async insertProvenTx(tx: TableProvenTx, trx?: TrxToken): Promise<number> 
+    override async insertProvenTxReq(tx: TableProvenTxReq, trx?: TrxToken): Promise<number> 
+    override async insertUser(user: TableUser, trx?: TrxToken): Promise<number> 
+    override async insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number> 
+    override async insertCertificate(certificate: TableCertificateX, trx?: TrxToken): Promise<number> 
+    override async insertCertificateField(certificateField: TableCertificateField, trx?: TrxToken): Promise<void> 
+    override async insertOutputBasket(basket: TableOutputBasket, trx?: TrxToken): Promise<number> 
+    override async insertTransaction(tx: TableTransaction, trx?: TrxToken): Promise<number> 
+    override async insertCommission(commission: TableCommission, trx?: TrxToken): Promise<number> 
+    override async insertOutput(output: TableOutput, trx?: TrxToken): Promise<number> 
+    override async insertOutputTag(tag: TableOutputTag, trx?: TrxToken): Promise<number> 
+    override async insertOutputTagMap(tagMap: TableOutputTagMap, trx?: TrxToken): Promise<void> 
+    override async insertTxLabel(label: TableTxLabel, trx?: TrxToken): Promise<number> 
+    override async insertTxLabelMap(labelMap: TableTxLabelMap, trx?: TrxToken): Promise<void> 
+    override async insertMonitorEvent(event: TableMonitorEvent, trx?: TrxToken): Promise<number> 
+    override async insertSyncState(syncState: TableSyncState, trx?: TrxToken): Promise<number> 
+    override async updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: TrxToken): Promise<number> 
+    override async updateCertificate(id: number, update: Partial<TableCertificate>, trx?: TrxToken): Promise<number> 
+    override async updateCommission(id: number, update: Partial<TableCommission>, trx?: TrxToken): Promise<number> 
+    override async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: TrxToken): Promise<number> 
+    override async updateOutput(id: number, update: Partial<TableOutput>, trx?: TrxToken): Promise<number> 
+    override async updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: TrxToken): Promise<number> 
+    override async updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: TrxToken): Promise<number> 
+    override async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number> 
+    override async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number> 
+    override async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number> 
+    override async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number> 
+    override async updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: TrxToken): Promise<number> 
+    override async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number> 
+    override async updateUser(id: number, update: Partial<TableUser>, trx?: TrxToken): Promise<number> 
+    override async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: TrxToken): Promise<number> 
+    setupQuery<T extends object>(table: string, args: FindPartialSincePagedArgs<T>): Knex.QueryBuilder 
+    findCertificateFieldsQuery(args: FindCertificateFieldsArgs): Knex.QueryBuilder 
+    findCertificatesQuery(args: FindCertificatesArgs): Knex.QueryBuilder 
+    findCommissionsQuery(args: FindCommissionsArgs): Knex.QueryBuilder 
+    findOutputBasketsQuery(args: FindOutputBasketsArgs): Knex.QueryBuilder 
+    findOutputsQuery(args: FindOutputsArgs, count?: boolean): Knex.QueryBuilder 
+    findOutputTagMapsQuery(args: FindOutputTagMapsArgs): Knex.QueryBuilder 
+    findOutputTagsQuery(args: FindOutputTagsArgs): Knex.QueryBuilder 
+    findProvenTxReqsQuery(args: FindProvenTxReqsArgs): Knex.QueryBuilder 
+    findProvenTxsQuery(args: FindProvenTxsArgs): Knex.QueryBuilder 
+    findSyncStatesQuery(args: FindSyncStatesArgs): Knex.QueryBuilder 
+    findTransactionsQuery(args: FindTransactionsArgs, count?: boolean): Knex.QueryBuilder 
+    findTxLabelMapsQuery(args: FindTxLabelMapsArgs): Knex.QueryBuilder 
+    findTxLabelsQuery(args: FindTxLabelsArgs): Knex.QueryBuilder 
+    findUsersQuery(args: FindUsersArgs): Knex.QueryBuilder 
+    findMonitorEventsQuery(args: FindMonitorEventsArgs): Knex.QueryBuilder 
+    override async findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]> 
+    override async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+    override async findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]> 
+    override async findCertificateFields(args: FindCertificateFieldsArgs): Promise<TableCertificateField[]> 
+    override async findCertificates(args: FindCertificatesArgs): Promise<TableCertificateX[]> 
+    override async findCommissions(args: FindCommissionsArgs): Promise<TableCommission[]> 
+    override async findOutputBaskets(args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> 
+    override async findOutputs(args: FindOutputsArgs): Promise<TableOutput[]> 
+    override async findOutputTagMaps(args: FindOutputTagMapsArgs): Promise<TableOutputTagMap[]> 
+    override async findOutputTags(args: FindOutputTagsArgs): Promise<TableOutputTag[]> 
+    override async findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]> 
+    override async findProvenTxs(args: FindProvenTxsArgs): Promise<TableProvenTx[]> 
+    override async findSyncStates(args: FindSyncStatesArgs): Promise<TableSyncState[]> 
+    override async findTransactions(args: FindTransactionsArgs): Promise<TableTransaction[]> 
+    override async findTxLabelMaps(args: FindTxLabelMapsArgs): Promise<TableTxLabelMap[]> 
+    override async findTxLabels(args: FindTxLabelsArgs): Promise<TableTxLabel[]> 
+    override async findUsers(args: FindUsersArgs): Promise<TableUser[]> 
+    override async findMonitorEvents(args: FindMonitorEventsArgs): Promise<TableMonitorEvent[]> 
     async getCount<T extends object>(q: Knex.QueryBuilder<T, T[]>): Promise<number> 
-    override async countCertificateFields(args: sdk.FindCertificateFieldsArgs): Promise<number> 
-    override async countCertificates(args: sdk.FindCertificatesArgs): Promise<number> 
-    override async countCommissions(args: sdk.FindCommissionsArgs): Promise<number> 
-    override async countOutputBaskets(args: sdk.FindOutputBasketsArgs): Promise<number> 
-    override async countOutputs(args: sdk.FindOutputsArgs): Promise<number> 
-    override async countOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<number> 
-    override async countOutputTags(args: sdk.FindOutputTagsArgs): Promise<number> 
-    override async countProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<number> 
-    override async countProvenTxs(args: sdk.FindProvenTxsArgs): Promise<number> 
-    override async countSyncStates(args: sdk.FindSyncStatesArgs): Promise<number> 
-    override async countTransactions(args: sdk.FindTransactionsArgs): Promise<number> 
-    override async countTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<number> 
-    override async countTxLabels(args: sdk.FindTxLabelsArgs): Promise<number> 
-    override async countUsers(args: sdk.FindUsersArgs): Promise<number> 
-    override async countMonitorEvents(args: sdk.FindMonitorEventsArgs): Promise<number> 
+    override async countCertificateFields(args: FindCertificateFieldsArgs): Promise<number> 
+    override async countCertificates(args: FindCertificatesArgs): Promise<number> 
+    override async countCommissions(args: FindCommissionsArgs): Promise<number> 
+    override async countOutputBaskets(args: FindOutputBasketsArgs): Promise<number> 
+    override async countOutputs(args: FindOutputsArgs): Promise<number> 
+    override async countOutputTagMaps(args: FindOutputTagMapsArgs): Promise<number> 
+    override async countOutputTags(args: FindOutputTagsArgs): Promise<number> 
+    override async countProvenTxReqs(args: FindProvenTxReqsArgs): Promise<number> 
+    override async countProvenTxs(args: FindProvenTxsArgs): Promise<number> 
+    override async countSyncStates(args: FindSyncStatesArgs): Promise<number> 
+    override async countTransactions(args: FindTransactionsArgs): Promise<number> 
+    override async countTxLabelMaps(args: FindTxLabelMapsArgs): Promise<number> 
+    override async countTxLabels(args: FindTxLabelsArgs): Promise<number> 
+    override async countUsers(args: FindUsersArgs): Promise<number> 
+    override async countMonitorEvents(args: FindMonitorEventsArgs): Promise<number> 
     override async destroy(): Promise<void> 
     override async migrate(storageName: string, storageIdentityKey: string): Promise<string> 
     override async dropAllData(): Promise<void> 
-    override async transaction<T>(scope: (trx: sdk.TrxToken) => Promise<T>, trx?: sdk.TrxToken): Promise<T> 
-    toDb(trx?: sdk.TrxToken) 
-    async validateRawTransaction(t: TableTransaction, trx?: sdk.TrxToken): Promise<void> 
+    override async transaction<T>(scope: (trx: TrxToken) => Promise<T>, trx?: TrxToken): Promise<T> 
+    toDb(trx?: TrxToken) 
+    async validateRawTransaction(t: TableTransaction, trx?: TrxToken): Promise<void> 
     _verifiedReadyForDatabaseAccess: boolean = false;
-    async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> 
-    validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
-    async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
-    override async getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]> 
-    override async getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]> 
-    override async purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> 
+    async verifyReadyForDatabaseAccess(trx?: TrxToken): Promise<DBType> 
+    validatePartialForUpdate<T extends EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
+    async validateEntityForInsert<T extends EntityTimeStamp>(entity: T, trx?: TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
+    override async getLabelsForTransactionId(transactionId?: number, trx?: TrxToken): Promise<TableTxLabel[]> 
+    override async getTagsForOutputId(outputId: number, trx?: TrxToken): Promise<TableOutputTag[]> 
+    override async purgeData(params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> 
     override async reviewStatus(args: {
         agedLimit: Date;
-        trx?: sdk.TrxToken;
+        trx?: TrxToken;
     }): Promise<{
         log: string;
     }> 
     async countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number> 
     async allocateChangeInput(userId: number, basketId: number, targetSatoshis: number, exactSatoshis: number | undefined, excludeSending: boolean, transactionId: number): Promise<TableOutput | undefined> {
-        const status: sdk.TransactionStatus[] = ["completed", "unproven"];
+        const status: TransactionStatus[] = ["completed", "unproven"];
         if (!excludeSending)
             status.push("sending");
         const statusText = status.map(s => `'${s}'`).join(",");
@@ -3657,11 +3623,11 @@ export class StorageKnex extends StorageProvider implements sdk.WalletStoragePro
         });
         return r;
     }
-    validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
-    validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
+    validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
+    validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
     async adminStats(adminIdentityKey: string): Promise<AdminStatsResult> {
         if (this.dbtype !== "MySQL")
-            throw new sdk.WERR_NOT_IMPLEMENTED("adminStats, only MySQL is supported");
+            throw new WERR_NOT_IMPLEMENTED("adminStats, only MySQL is supported");
         const monitorEvent = verifyOneOrNone(await this.findMonitorEvents({
             partial: { event: "MonitorCallHistory" },
             orderDescending: true,
@@ -3852,7 +3818,7 @@ Convert the standard optional `TrxToken` parameter into either a direct knex dat
 or a Knex.Transaction as appropriate.
 
 ```ts
-toDb(trx?: sdk.TrxToken) 
+toDb(trx?: TrxToken) 
 ```
 See also: [TrxToken](./client.md#interface-trxtoken)
 
@@ -3862,7 +3828,7 @@ Helper to force uniform behavior across database engines.
 Use to process all arrays of records with time stamps retreived from database.
 
 ```ts
-validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
+validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[], booleanFields?: string[]): T[] 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3876,7 +3842,7 @@ Helper to force uniform behavior across database engines.
 Use to process all individual records with time stamps retreived from database.
 
 ```ts
-validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
+validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[], booleanFields?: string[]): T 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3886,7 +3852,7 @@ Helper to force uniform behavior across database engines.
 Use to process new entities being inserted into the database.
 
 ```ts
-async validateEntityForInsert<T extends sdk.EntityTimeStamp>(entity: T, trx?: sdk.TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
+async validateEntityForInsert<T extends EntityTimeStamp>(entity: T, trx?: TrxToken, dateFields?: string[], booleanFields?: string[]): Promise<any> 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp), [TrxToken](./client.md#interface-trxtoken)
 
@@ -3896,7 +3862,7 @@ Helper to force uniform behavior across database engines.
 Use to process the update template for entities being updated.
 
 ```ts
-validatePartialForUpdate<T extends sdk.EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
+validatePartialForUpdate<T extends EntityTimeStamp>(update: Partial<T>, dateFields?: string[], booleanFields?: string[]): Partial<T> 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -3908,7 +3874,7 @@ Make sure database is ready for access:
 - foreign key constraints are enabled
 
 ```ts
-async verifyReadyForDatabaseAccess(trx?: sdk.TrxToken): Promise<DBType> 
+async verifyReadyForDatabaseAccess(trx?: TrxToken): Promise<DBType> 
 ```
 See also: [DBType](./storage.md#type-dbtype), [TrxToken](./client.md#interface-trxtoken)
 
@@ -3918,65 +3884,65 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: StorageProvider
 
 ```ts
-export abstract class StorageProvider extends StorageReaderWriter implements sdk.WalletStorageProvider {
+export abstract class StorageProvider extends StorageReaderWriter implements WalletStorageProvider {
     isDirty = false;
-    _services?: sdk.WalletServices;
-    feeModel: sdk.StorageFeeModel;
+    _services?: WalletServices;
+    feeModel: StorageFeeModel;
     commissionSatoshis: number;
     commissionPubKeyHex?: PubKeyHex;
     maxRecursionDepth?: number;
     static defaultOptions() 
-    static createStorageBaseOptions(chain: sdk.Chain): StorageProviderOptions 
+    static createStorageBaseOptions(chain: Chain): StorageProviderOptions 
     constructor(options: StorageProviderOptions) 
     abstract reviewStatus(args: {
         agedLimit: Date;
-        trx?: sdk.TrxToken;
+        trx?: TrxToken;
     }): Promise<{
         log: string;
     }>;
-    abstract purgeData(params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults>;
+    abstract purgeData(params: PurgeParams, trx?: TrxToken): Promise<PurgeResults>;
     abstract allocateChangeInput(userId: number, basketId: number, targetSatoshis: number, exactSatoshis: number | undefined, excludeSending: boolean, transactionId: number): Promise<TableOutput | undefined>;
-    abstract getProvenOrRawTx(txid: string, trx?: sdk.TrxToken): Promise<sdk.ProvenOrRawTx>;
-    abstract getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: sdk.TrxToken): Promise<number[] | undefined>;
-    abstract getLabelsForTransactionId(transactionId?: number, trx?: sdk.TrxToken): Promise<TableTxLabel[]>;
-    abstract getTagsForOutputId(outputId: number, trx?: sdk.TrxToken): Promise<TableOutputTag[]>;
-    abstract listActions(auth: sdk.AuthId, args: sdk.ValidListActionsArgs): Promise<ListActionsResult>;
-    abstract listOutputs(auth: sdk.AuthId, args: sdk.ValidListOutputsArgs): Promise<ListOutputsResult>;
+    abstract getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx>;
+    abstract getRawTxOfKnownValidTransaction(txid?: string, offset?: number, length?: number, trx?: TrxToken): Promise<number[] | undefined>;
+    abstract getLabelsForTransactionId(transactionId?: number, trx?: TrxToken): Promise<TableTxLabel[]>;
+    abstract getTagsForOutputId(outputId: number, trx?: TrxToken): Promise<TableOutputTag[]>;
+    abstract listActions(auth: AuthId, args: ValidListActionsArgs): Promise<ListActionsResult>;
+    abstract listOutputs(auth: AuthId, args: ValidListOutputsArgs): Promise<ListOutputsResult>;
     abstract countChangeInputs(userId: number, basketId: number, excludeSending: boolean): Promise<number>;
-    abstract findCertificatesAuth(auth: sdk.AuthId, args: sdk.FindCertificatesArgs): Promise<TableCertificateX[]>;
-    abstract findOutputBasketsAuth(auth: sdk.AuthId, args: sdk.FindOutputBasketsArgs): Promise<TableOutputBasket[]>;
-    abstract findOutputsAuth(auth: sdk.AuthId, args: sdk.FindOutputsArgs): Promise<TableOutput[]>;
-    abstract insertCertificateAuth(auth: sdk.AuthId, certificate: TableCertificateX): Promise<number>;
+    abstract findCertificatesAuth(auth: AuthId, args: FindCertificatesArgs): Promise<TableCertificateX[]>;
+    abstract findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]>;
+    abstract findOutputsAuth(auth: AuthId, args: FindOutputsArgs): Promise<TableOutput[]>;
+    abstract insertCertificateAuth(auth: AuthId, certificate: TableCertificateX): Promise<number>;
     abstract adminStats(adminIdentityKey: string): Promise<AdminStatsResult>;
     override isStorageProvider(): boolean 
-    setServices(v: sdk.WalletServices) 
-    getServices(): sdk.WalletServices 
-    async abortAction(auth: sdk.AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
-    async internalizeAction(auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> 
-    async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: sdk.TrxToken): Promise<GetReqsAndBeefResult> 
-    async mergeReqToBeefToShareExternally(req: TableProvenTxReq, mergeToBeef: Beef, knownTxids: string[], trx?: sdk.TrxToken): Promise<void> 
-    async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: sdk.TrxToken): Promise<sdk.StorageProvenOrReq> 
-    async updateTransactionsStatus(transactionIds: number[], status: sdk.TransactionStatus, trx?: sdk.TrxToken): Promise<void> 
-    async updateTransactionStatus(status: sdk.TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: sdk.TrxToken): Promise<void> 
-    async createAction(auth: sdk.AuthId, args: sdk.ValidCreateActionArgs): Promise<sdk.StorageCreateActionResult> 
-    async processAction(auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> 
-    async attemptToPostReqsToNetwork(reqs: EntityProvenTxReq[], trx?: sdk.TrxToken): Promise<PostReqsToNetworkResult> 
-    async listCertificates(auth: sdk.AuthId, args: sdk.ValidListCertificatesArgs): Promise<ListCertificatesResult> 
-    async verifyKnownValidTransaction(txid: string, trx?: sdk.TrxToken): Promise<boolean> 
-    async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: sdk.TrxToken, requiredLevels?: number): Promise<Beef> 
-    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: sdk.TrxToken, requiredLevels?: number): Promise<Beef | undefined> 
-    async getBeefForTransaction(txid: string, options: sdk.StorageGetBeefOptions): Promise<Beef> 
-    async findMonitorEventById(id: number, trx?: sdk.TrxToken): Promise<TableMonitorEvent | undefined> 
-    async relinquishCertificate(auth: sdk.AuthId, args: RelinquishCertificateArgs): Promise<number> 
-    async relinquishOutput(auth: sdk.AuthId, args: RelinquishOutputArgs): Promise<number> 
-    async processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult> 
-    async updateProvenTxReqWithNewProvenTx(args: sdk.UpdateProvenTxReqWithNewProvenTxArgs): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> 
+    setServices(v: WalletServices) 
+    getServices(): WalletServices 
+    async abortAction(auth: AuthId, args: AbortActionArgs): Promise<AbortActionResult> 
+    async internalizeAction(auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> 
+    async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: TrxToken): Promise<GetReqsAndBeefResult> 
+    async mergeReqToBeefToShareExternally(req: TableProvenTxReq, mergeToBeef: Beef, knownTxids: string[], trx?: TrxToken): Promise<void> 
+    async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: TrxToken): Promise<StorageProvenOrReq> 
+    async updateTransactionsStatus(transactionIds: number[], status: TransactionStatus, trx?: TrxToken): Promise<void> 
+    async updateTransactionStatus(status: TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: TrxToken): Promise<void> 
+    async createAction(auth: AuthId, args: ValidCreateActionArgs): Promise<StorageCreateActionResult> 
+    async processAction(auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> 
+    async attemptToPostReqsToNetwork(reqs: EntityProvenTxReq[], trx?: TrxToken): Promise<PostReqsToNetworkResult> 
+    async listCertificates(auth: AuthId, args: ValidListCertificatesArgs): Promise<ListCertificatesResult> 
+    async verifyKnownValidTransaction(txid: string, trx?: TrxToken): Promise<boolean> 
+    async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef> 
+    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef | undefined> 
+    async getBeefForTransaction(txid: string, options: StorageGetBeefOptions): Promise<Beef> 
+    async findMonitorEventById(id: number, trx?: TrxToken): Promise<TableMonitorEvent | undefined> 
+    async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> 
+    async relinquishOutput(auth: AuthId, args: RelinquishOutputArgs): Promise<number> 
+    async processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult> 
+    async updateProvenTxReqWithNewProvenTx(args: UpdateProvenTxReqWithNewProvenTxArgs): Promise<UpdateProvenTxReqWithNewProvenTxResult> 
     async confirmSpendableOutputs(): Promise<{
         invalidSpendableOutputs: TableOutput[];
     }> 
-    async updateProvenTxReqDynamics(id: number, update: Partial<TableProvenTxReqDynamics>, trx?: sdk.TrxToken): Promise<number> 
-    async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: sdk.TrxToken): Promise<TableOutputX> 
-    async validateOutputScript(o: TableOutput, trx?: sdk.TrxToken): Promise<void> 
+    async updateProvenTxReqDynamics(id: number, update: Partial<TableProvenTxReqDynamics>, trx?: TrxToken): Promise<number> 
+    async extendOutput(o: TableOutput, includeBasket = false, includeTags = false, trx?: TrxToken): Promise<TableOutputX> 
+    async validateOutputScript(o: TableOutput, trx?: TrxToken): Promise<void> 
 }
 ```
 
@@ -4010,7 +3976,7 @@ This is safe "findOrInsert" operation using retry if unique index constraint
 is violated by a race condition insert.
 
 ```ts
-async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: sdk.TrxToken): Promise<sdk.StorageProvenOrReq> 
+async getProvenOrReq(txid: string, newReq?: TableProvenTxReq, trx?: TrxToken): Promise<StorageProvenOrReq> 
 ```
 See also: [StorageProvenOrReq](./client.md#interface-storageprovenorreq), [TableProvenTxReq](./storage.md#interface-tableproventxreq), [TrxToken](./client.md#interface-trxtoken)
 
@@ -4021,7 +3987,7 @@ lookup their ProvenTxReqApi req records.
 For the txids with reqs and status still ready to send construct a single merged beef.
 
 ```ts
-async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: sdk.TrxToken): Promise<GetReqsAndBeefResult> 
+async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: TrxToken): Promise<GetReqsAndBeefResult> 
 ```
 See also: [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [TrxToken](./client.md#interface-trxtoken)
 
@@ -4040,7 +4006,7 @@ Performs the following storage updates (typically):
 Alterations of "typically" to handle:
 
 ```ts
-async updateProvenTxReqWithNewProvenTx(args: sdk.UpdateProvenTxReqWithNewProvenTxArgs): Promise<sdk.UpdateProvenTxReqWithNewProvenTxResult> 
+async updateProvenTxReqWithNewProvenTx(args: UpdateProvenTxReqWithNewProvenTxArgs): Promise<UpdateProvenTxReqWithNewProvenTxResult> 
 ```
 See also: [UpdateProvenTxReqWithNewProvenTxArgs](./client.md#interface-updateproventxreqwithnewproventxargs), [UpdateProvenTxReqWithNewProvenTxResult](./client.md#interface-updateproventxreqwithnewproventxresult)
 
@@ -4051,7 +4017,7 @@ For all `status` values besides 'failed', just updates the transaction records s
 For 'status' of 'failed', attempts to make outputs previously allocated as inputs to this transaction usable again.
 
 ```ts
-async updateTransactionStatus(status: sdk.TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: sdk.TrxToken): Promise<void> 
+async updateTransactionStatus(status: TransactionStatus, transactionId?: number, userId?: number, reference?: string, trx?: TrxToken): Promise<void> 
 ```
 See also: [TransactionStatus](./client.md#type-transactionstatus), [TrxToken](./client.md#interface-trxtoken)
 
@@ -4152,83 +4118,83 @@ export abstract class StorageReaderWriter extends StorageReader {
     constructor(options: StorageReaderWriterOptions) 
     abstract dropAllData(): Promise<void>;
     abstract migrate(storageName: string, storageIdentityKey: string): Promise<string>;
-    abstract findOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<TableOutputTagMap[]>;
-    abstract findProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>;
-    abstract findProvenTxs(args: sdk.FindProvenTxsArgs): Promise<TableProvenTx[]>;
-    abstract findTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<TableTxLabelMap[]>;
-    abstract countOutputTagMaps(args: sdk.FindOutputTagMapsArgs): Promise<number>;
-    abstract countProvenTxReqs(args: sdk.FindProvenTxReqsArgs): Promise<number>;
-    abstract countProvenTxs(args: sdk.FindProvenTxsArgs): Promise<number>;
-    abstract countTxLabelMaps(args: sdk.FindTxLabelMapsArgs): Promise<number>;
-    abstract insertCertificate(certificate: TableCertificate, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertCertificateField(certificateField: TableCertificateField, trx?: sdk.TrxToken): Promise<void>;
-    abstract insertCommission(commission: TableCommission, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertMonitorEvent(event: TableMonitorEvent, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertOutput(output: TableOutput, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertOutputBasket(basket: TableOutputBasket, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertOutputTag(tag: TableOutputTag, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertOutputTagMap(tagMap: TableOutputTagMap, trx?: sdk.TrxToken): Promise<void>;
-    abstract insertProvenTx(tx: TableProvenTx, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertProvenTxReq(tx: TableProvenTxReq, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertSyncState(syncState: TableSyncState, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertTransaction(tx: TableTransaction, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertTxLabel(label: TableTxLabel, trx?: sdk.TrxToken): Promise<number>;
-    abstract insertTxLabelMap(labelMap: TableTxLabelMap, trx?: sdk.TrxToken): Promise<void>;
-    abstract insertUser(user: TableUser, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateCertificate(id: number, update: Partial<TableCertificate>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateCommission(id: number, update: Partial<TableCommission>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateOutput(id: number, update: Partial<TableOutput>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateSyncState(id: number, update: Partial<TableSyncState>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: sdk.TrxToken): Promise<number>;
-    abstract updateUser(id: number, update: Partial<TableUser>, trx?: sdk.TrxToken): Promise<number>;
-    async setActive(auth: sdk.AuthId, newActiveStorageIdentityKey: string): Promise<number> 
-    async findCertificateById(id: number, trx?: sdk.TrxToken): Promise<TableCertificate | undefined> 
-    async findCommissionById(id: number, trx?: sdk.TrxToken): Promise<TableCommission | undefined> 
-    async findOutputById(id: number, trx?: sdk.TrxToken, noScript?: boolean): Promise<TableOutput | undefined> 
-    async findOutputBasketById(id: number, trx?: sdk.TrxToken): Promise<TableOutputBasket | undefined> 
-    async findProvenTxById(id: number, trx?: sdk.TrxToken | undefined): Promise<TableProvenTx | undefined> 
-    async findProvenTxReqById(id: number, trx?: sdk.TrxToken | undefined): Promise<TableProvenTxReq | undefined> 
-    async findSyncStateById(id: number, trx?: sdk.TrxToken): Promise<TableSyncState | undefined> 
-    async findTransactionById(id: number, trx?: sdk.TrxToken, noRawTx?: boolean): Promise<TableTransaction | undefined> 
-    async findTxLabelById(id: number, trx?: sdk.TrxToken): Promise<TableTxLabel | undefined> 
-    async findOutputTagById(id: number, trx?: sdk.TrxToken): Promise<TableOutputTag | undefined> 
-    async findUserById(id: number, trx?: sdk.TrxToken): Promise<TableUser | undefined> 
-    async findOrInsertUser(identityKey: string, trx?: sdk.TrxToken): Promise<{
+    abstract findOutputTagMaps(args: FindOutputTagMapsArgs): Promise<TableOutputTagMap[]>;
+    abstract findProvenTxReqs(args: FindProvenTxReqsArgs): Promise<TableProvenTxReq[]>;
+    abstract findProvenTxs(args: FindProvenTxsArgs): Promise<TableProvenTx[]>;
+    abstract findTxLabelMaps(args: FindTxLabelMapsArgs): Promise<TableTxLabelMap[]>;
+    abstract countOutputTagMaps(args: FindOutputTagMapsArgs): Promise<number>;
+    abstract countProvenTxReqs(args: FindProvenTxReqsArgs): Promise<number>;
+    abstract countProvenTxs(args: FindProvenTxsArgs): Promise<number>;
+    abstract countTxLabelMaps(args: FindTxLabelMapsArgs): Promise<number>;
+    abstract insertCertificate(certificate: TableCertificate, trx?: TrxToken): Promise<number>;
+    abstract insertCertificateField(certificateField: TableCertificateField, trx?: TrxToken): Promise<void>;
+    abstract insertCommission(commission: TableCommission, trx?: TrxToken): Promise<number>;
+    abstract insertMonitorEvent(event: TableMonitorEvent, trx?: TrxToken): Promise<number>;
+    abstract insertOutput(output: TableOutput, trx?: TrxToken): Promise<number>;
+    abstract insertOutputBasket(basket: TableOutputBasket, trx?: TrxToken): Promise<number>;
+    abstract insertOutputTag(tag: TableOutputTag, trx?: TrxToken): Promise<number>;
+    abstract insertOutputTagMap(tagMap: TableOutputTagMap, trx?: TrxToken): Promise<void>;
+    abstract insertProvenTx(tx: TableProvenTx, trx?: TrxToken): Promise<number>;
+    abstract insertProvenTxReq(tx: TableProvenTxReq, trx?: TrxToken): Promise<number>;
+    abstract insertSyncState(syncState: TableSyncState, trx?: TrxToken): Promise<number>;
+    abstract insertTransaction(tx: TableTransaction, trx?: TrxToken): Promise<number>;
+    abstract insertTxLabel(label: TableTxLabel, trx?: TrxToken): Promise<number>;
+    abstract insertTxLabelMap(labelMap: TableTxLabelMap, trx?: TrxToken): Promise<void>;
+    abstract insertUser(user: TableUser, trx?: TrxToken): Promise<number>;
+    abstract updateCertificate(id: number, update: Partial<TableCertificate>, trx?: TrxToken): Promise<number>;
+    abstract updateCertificateField(certificateId: number, fieldName: string, update: Partial<TableCertificateField>, trx?: TrxToken): Promise<number>;
+    abstract updateCommission(id: number, update: Partial<TableCommission>, trx?: TrxToken): Promise<number>;
+    abstract updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: TrxToken): Promise<number>;
+    abstract updateOutput(id: number, update: Partial<TableOutput>, trx?: TrxToken): Promise<number>;
+    abstract updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: TrxToken): Promise<number>;
+    abstract updateOutputTag(id: number, update: Partial<TableOutputTag>, trx?: TrxToken): Promise<number>;
+    abstract updateOutputTagMap(outputId: number, tagId: number, update: Partial<TableOutputTagMap>, trx?: TrxToken): Promise<number>;
+    abstract updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number>;
+    abstract updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number>;
+    abstract updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number>;
+    abstract updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number>;
+    abstract updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number>;
+    abstract updateTxLabelMap(transactionId: number, txLabelId: number, update: Partial<TableTxLabelMap>, trx?: TrxToken): Promise<number>;
+    abstract updateUser(id: number, update: Partial<TableUser>, trx?: TrxToken): Promise<number>;
+    async setActive(auth: AuthId, newActiveStorageIdentityKey: string): Promise<number> 
+    async findCertificateById(id: number, trx?: TrxToken): Promise<TableCertificate | undefined> 
+    async findCommissionById(id: number, trx?: TrxToken): Promise<TableCommission | undefined> 
+    async findOutputById(id: number, trx?: TrxToken, noScript?: boolean): Promise<TableOutput | undefined> 
+    async findOutputBasketById(id: number, trx?: TrxToken): Promise<TableOutputBasket | undefined> 
+    async findProvenTxById(id: number, trx?: TrxToken | undefined): Promise<TableProvenTx | undefined> 
+    async findProvenTxReqById(id: number, trx?: TrxToken | undefined): Promise<TableProvenTxReq | undefined> 
+    async findSyncStateById(id: number, trx?: TrxToken): Promise<TableSyncState | undefined> 
+    async findTransactionById(id: number, trx?: TrxToken, noRawTx?: boolean): Promise<TableTransaction | undefined> 
+    async findTxLabelById(id: number, trx?: TrxToken): Promise<TableTxLabel | undefined> 
+    async findOutputTagById(id: number, trx?: TrxToken): Promise<TableOutputTag | undefined> 
+    async findUserById(id: number, trx?: TrxToken): Promise<TableUser | undefined> 
+    async findOrInsertUser(identityKey: string, trx?: TrxToken): Promise<{
         user: TableUser;
         isNew: boolean;
     }> 
-    async findOrInsertTransaction(newTx: TableTransaction, trx?: sdk.TrxToken): Promise<{
+    async findOrInsertTransaction(newTx: TableTransaction, trx?: TrxToken): Promise<{
         tx: TableTransaction;
         isNew: boolean;
     }> 
-    async findOrInsertOutputBasket(userId: number, name: string, trx?: sdk.TrxToken): Promise<TableOutputBasket> 
-    async findOrInsertTxLabel(userId: number, label: string, trx?: sdk.TrxToken): Promise<TableTxLabel> 
-    async findOrInsertTxLabelMap(transactionId: number, txLabelId: number, trx?: sdk.TrxToken): Promise<TableTxLabelMap> 
-    async findOrInsertOutputTag(userId: number, tag: string, trx?: sdk.TrxToken): Promise<TableOutputTag> 
-    async findOrInsertOutputTagMap(outputId: number, outputTagId: number, trx?: sdk.TrxToken): Promise<TableOutputTagMap> 
-    async findOrInsertSyncStateAuth(auth: sdk.AuthId, storageIdentityKey: string, storageName: string): Promise<{
+    async findOrInsertOutputBasket(userId: number, name: string, trx?: TrxToken): Promise<TableOutputBasket> 
+    async findOrInsertTxLabel(userId: number, label: string, trx?: TrxToken): Promise<TableTxLabel> 
+    async findOrInsertTxLabelMap(transactionId: number, txLabelId: number, trx?: TrxToken): Promise<TableTxLabelMap> 
+    async findOrInsertOutputTag(userId: number, tag: string, trx?: TrxToken): Promise<TableOutputTag> 
+    async findOrInsertOutputTagMap(outputId: number, outputTagId: number, trx?: TrxToken): Promise<TableOutputTagMap> 
+    async findOrInsertSyncStateAuth(auth: AuthId, storageIdentityKey: string, storageName: string): Promise<{
         syncState: TableSyncState;
         isNew: boolean;
     }> 
-    async findOrInsertProvenTxReq(newReq: TableProvenTxReq, trx?: sdk.TrxToken): Promise<{
+    async findOrInsertProvenTxReq(newReq: TableProvenTxReq, trx?: TrxToken): Promise<{
         req: TableProvenTxReq;
         isNew: boolean;
     }> 
-    async findOrInsertProvenTx(newProven: TableProvenTx, trx?: sdk.TrxToken): Promise<{
+    async findOrInsertProvenTx(newProven: TableProvenTx, trx?: TrxToken): Promise<{
         proven: TableProvenTx;
         isNew: boolean;
     }> 
-    abstract processSyncChunk(args: sdk.RequestSyncChunkArgs, chunk: sdk.SyncChunk): Promise<sdk.ProcessSyncChunkResult>;
-    async tagOutput(partial: Partial<TableOutput>, tag: string, trx?: sdk.TrxToken): Promise<void> 
+    abstract processSyncChunk(args: RequestSyncChunkArgs, chunk: SyncChunk): Promise<ProcessSyncChunkResult>;
+    async tagOutput(partial: Partial<TableOutput>, tag: string, trx?: TrxToken): Promise<void> 
 }
 ```
 
@@ -4244,8 +4210,8 @@ export class StorageServer {
     constructor(storage: StorageProvider, options: WalletStorageServerOptions) 
     public start(): void 
     validateDate(date: Date | string | number): Date 
-    validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T 
-    validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
+    validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T 
+    validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
 }
 ```
 
@@ -4257,7 +4223,7 @@ Helper to force uniform behavior across database engines.
 Use to process all arrays of records with time stamps retreived from database.
 
 ```ts
-validateEntities<T extends sdk.EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
+validateEntities<T extends EntityTimeStamp>(entities: T[], dateFields?: string[]): T[] 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -4271,7 +4237,7 @@ Helper to force uniform behavior across database engines.
 Use to process all individual records with time stamps retreived from database.
 
 ```ts
-validateEntity<T extends sdk.EntityTimeStamp>(entity: T, dateFields?: string[]): T 
+validateEntity<T extends EntityTimeStamp>(entity: T, dateFields?: string[]): T 
 ```
 See also: [EntityTimeStamp](./client.md#interface-entitytimestamp)
 
@@ -4540,16 +4506,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [listActionsIdb](#function-listactionsidb) | [reviewStatusIdb](#function-reviewstatusidb) |
-| [createAction](#function-createaction) | [listCertificates](#function-listcertificates) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) |
-| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [listOutputs](#function-listoutputs) | [shareReqsWithWorld](#function-sharereqswithworld) |
-| [createSyncMap](#function-createsyncmap) | [listOutputsIdb](#function-listoutputsidb) | [transactionInputSize](#function-transactioninputsize) |
-| [generateChangeSdk](#function-generatechangesdk) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [transactionOutputSize](#function-transactionoutputsize) |
-| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [offsetPubKey](#function-offsetpubkey) | [transactionSize](#function-transactionsize) |
-| [getBeefForTransaction](#function-getbeeffortransaction) | [processAction](#function-processaction) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
-| [getSyncChunk](#function-getsyncchunk) | [purgeData](#function-purgedata) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
-| [internalizeAction](#function-internalizeaction) | [purgeDataIdb](#function-purgedataidb) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
-| [listActions](#function-listactions) | [reviewStatus](#function-reviewstatus) | [varUintSize](#function-varuintsize) |
+| [attemptToPostReqsToNetwork](#function-attempttopostreqstonetwork) | [listActionsIdb](#function-listactionsidb) | [setDisableDoubleSpendCheckForTest](#function-setdisabledoublespendcheckfortest) |
+| [createAction](#function-createaction) | [listCertificates](#function-listcertificates) | [shareReqsWithWorld](#function-sharereqswithworld) |
+| [createStorageServiceChargeScript](#function-createstorageservicechargescript) | [listOutputs](#function-listoutputs) | [transactionInputSize](#function-transactioninputsize) |
+| [createSyncMap](#function-createsyncmap) | [listOutputsIdb](#function-listoutputsidb) | [transactionOutputSize](#function-transactionoutputsize) |
+| [determineDBType](#function-determinedbtype) | [lockScriptWithKeyOffsetFromPubKey](#function-lockscriptwithkeyoffsetfrompubkey) | [transactionSize](#function-transactionsize) |
+| [generateChangeSdk](#function-generatechangesdk) | [offsetPubKey](#function-offsetpubkey) | [validateGenerateChangeSdkParams](#function-validategeneratechangesdkparams) |
+| [generateChangeSdkMakeStorage](#function-generatechangesdkmakestorage) | [processAction](#function-processaction) | [validateGenerateChangeSdkResult](#function-validategeneratechangesdkresult) |
+| [getBeefForTransaction](#function-getbeeffortransaction) | [purgeData](#function-purgedata) | [validateStorageFeeModel](#function-validatestoragefeemodel) |
+| [getSyncChunk](#function-getsyncchunk) | [purgeDataIdb](#function-purgedataidb) | [varUintSize](#function-varuintsize) |
+| [internalizeAction](#function-internalizeaction) | [reviewStatus](#function-reviewstatus) |  |
+| [listActions](#function-listactions) | [reviewStatusIdb](#function-reviewstatusidb) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4572,7 +4539,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: createAction
 
 ```ts
-export async function createAction(storage: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidCreateActionArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<sdk.StorageCreateActionResult> 
+export async function createAction(storage: StorageProvider, auth: AuthId, vargs: ValidCreateActionArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<StorageCreateActionResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageCreateActionResult](./client.md#interface-storagecreateactionresult), [StorageProvider](./storage.md#class-storageprovider), [ValidCreateActionArgs](./client.md#interface-validcreateactionargs)
@@ -4599,6 +4566,21 @@ export function createSyncMap(): SyncMap
 ```
 
 See also: [SyncMap](./storage.md#interface-syncmap)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Function: determineDBType
+
+```ts
+export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> 
+```
+
+See also: [DBType](./storage.md#type-dbtype)
+
+Returns
+
+connected database engine variant
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4651,7 +4633,7 @@ be valid by verified proof are represented solely by 'txid'.
 If `knownTxids` is defined, any 'txid' required by the `Beef` that appears in the array is represented solely as a 'known' txid.
 
 ```ts
-export async function getBeefForTransaction(storage: StorageProvider, txid: string, options: sdk.StorageGetBeefOptions): Promise<Beef> 
+export async function getBeefForTransaction(storage: StorageProvider, txid: string, options: StorageGetBeefOptions): Promise<Beef> 
 ```
 
 See also: [StorageGetBeefOptions](./client.md#interface-storagegetbeefoptions), [StorageProvider](./storage.md#class-storageprovider)
@@ -4671,7 +4653,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 Gets the next sync chunk of updated data from un-remoted storage (could be using a remote DB connection).
 
 ```ts
-export async function getSyncChunk(storage: StorageReader, args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> 
+export async function getSyncChunk(storage: StorageReader, args: RequestSyncChunkArgs): Promise<SyncChunk> 
 ```
 
 See also: [RequestSyncChunkArgs](./client.md#interface-requestsyncchunkargs), [StorageReader](./storage.md#class-storagereader), [SyncChunk](./client.md#interface-syncchunk)
@@ -4707,7 +4689,7 @@ When the transaction already exists, the description is updated. The isOutgoing 
 2. Targetting a previously "custom" non-change output converts it into a change output. This alters the transaction's `satoshis`, and the wallet balance.
 
 ```ts
-export async function internalizeAction(storage: StorageProvider, auth: sdk.AuthId, args: InternalizeActionArgs): Promise<sdk.StorageInternalizeActionResult> 
+export async function internalizeAction(storage: StorageProvider, auth: AuthId, args: InternalizeActionArgs): Promise<StorageInternalizeActionResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageInternalizeActionResult](./client.md#interface-storageinternalizeactionresult), [StorageProvider](./storage.md#class-storageprovider)
@@ -4718,7 +4700,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: listActions
 
 ```ts
-export async function listActions(storage: StorageKnex, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
+export async function listActions(storage: StorageKnex, auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageKnex](./storage.md#class-storageknex), [ValidListActionsArgs](./client.md#interface-validlistactionsargs)
@@ -4729,7 +4711,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: listActionsIdb
 
 ```ts
-export async function listActionsIdb(storage: StorageIdb, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
+export async function listActionsIdb(storage: StorageIdb, auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageIdb](./storage.md#class-storageidb), [ValidListActionsArgs](./client.md#interface-validlistactionsargs)
@@ -4751,7 +4733,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: listOutputs
 
 ```ts
-export async function listOutputs(dsk: StorageKnex, auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<ListOutputsResult> 
+export async function listOutputs(dsk: StorageKnex, auth: AuthId, vargs: ValidListOutputsArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<ListOutputsResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageKnex](./storage.md#class-storageknex), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs)
@@ -4762,7 +4744,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: listOutputsIdb
 
 ```ts
-export async function listOutputsIdb(storage: StorageIdb, auth: sdk.AuthId, vargs: sdk.ValidListOutputsArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<ListOutputsResult> 
+export async function listOutputsIdb(storage: StorageIdb, auth: AuthId, vargs: ValidListOutputsArgs, originator?: OriginatorDomainNameStringUnder250Bytes): Promise<ListOutputsResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageIdb](./storage.md#class-storageidb), [ValidListOutputsArgs](./client.md#interface-validlistoutputsargs)
@@ -4797,7 +4779,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: processAction
 
 ```ts
-export async function processAction(storage: StorageProvider, auth: sdk.AuthId, args: sdk.StorageProcessActionArgs): Promise<sdk.StorageProcessActionResults> 
+export async function processAction(storage: StorageProvider, auth: AuthId, args: StorageProcessActionArgs): Promise<StorageProcessActionResults> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageProcessActionArgs](./client.md#interface-storageprocessactionargs), [StorageProcessActionResults](./client.md#interface-storageprocessactionresults), [StorageProvider](./storage.md#class-storageprovider)
@@ -4808,7 +4790,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: purgeData
 
 ```ts
-export async function purgeData(storage: StorageKnex, params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> 
+export async function purgeData(storage: StorageKnex, params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> 
 ```
 
 See also: [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [StorageKnex](./storage.md#class-storageknex), [TrxToken](./client.md#interface-trxtoken)
@@ -4819,7 +4801,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: purgeDataIdb
 
 ```ts
-export async function purgeDataIdb(storage: StorageIdb, params: sdk.PurgeParams, trx?: sdk.TrxToken): Promise<sdk.PurgeResults> 
+export async function purgeDataIdb(storage: StorageIdb, params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> 
 ```
 
 See also: [PurgeParams](./client.md#interface-purgeparams), [PurgeResults](./client.md#interface-purgeresults), [StorageIdb](./storage.md#class-storageidb), [TrxToken](./client.md#interface-trxtoken)
@@ -4838,7 +4820,7 @@ Looks for unpropagated state:
 ```ts
 export async function reviewStatus(storage: StorageKnex, args: {
     agedLimit: Date;
-    trx?: sdk.TrxToken;
+    trx?: TrxToken;
 }): Promise<{
     log: string;
 }> 
@@ -4986,7 +4968,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: validateStorageFeeModel
 
 ```ts
-export function validateStorageFeeModel(v?: sdk.StorageFeeModel): sdk.StorageFeeModel 
+export function validateStorageFeeModel(v?: StorageFeeModel): StorageFeeModel 
 ```
 
 See also: [StorageFeeModel](./client.md#interface-storagefeemodel)
@@ -5001,7 +4983,7 @@ Returns the byte size required to encode number as Bitcoin VarUint
 ```ts
 export function varUintSize(val: number): 1 | 3 | 5 | 9 {
     if (val < 0)
-        throw new sdk.WERR_INVALID_PARAMETER("varUint", "non-negative");
+        throw new WERR_INVALID_PARAMETER("varUint", "non-negative");
     return val <= 252 ? 1 : val <= 65535 ? 3 : val <= 4294967295 ? 5 : 9;
 }
 ```
@@ -5082,25 +5064,25 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => {
     return {
-        [sdk.specOpWalletBalance]: {
+        [specOpWalletBalance]: {
             name: "totalOutputsIsWalletBalance",
             useBasket: "default",
             ignoreLimit: true,
-            resultFromOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<ListOutputsResult> => {
+            resultFromOutputs: async (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<ListOutputsResult> => {
                 let totalOutputs = 0;
                 for (const o of outputs)
                     totalOutputs += o.satoshis;
                 return { totalOutputs, outputs: [] };
             }
         },
-        [sdk.specOpInvalidChange]: {
+        [specOpInvalidChange]: {
             name: "invalidChangeOutputs",
             useBasket: "default",
             ignoreLimit: true,
             includeOutputScripts: true,
             includeSpent: false,
             tagsToIntercept: ["release", "all"],
-            filterOutputs: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<TableOutput[]> => {
+            filterOutputs: async (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[], outputs: TableOutput[]): Promise<TableOutput[]> => {
                 const filteredOutputs: TableOutput[] = [];
                 const services = s.getServices();
                 for (const o of outputs) {
@@ -5125,12 +5107,12 @@ getBasketToSpecOp: () => Record<string, ListOutputsSpecOp> = () => {
                 return filteredOutputs;
             }
         },
-        [sdk.specOpSetWalletChangeParams]: {
+        [specOpSetWalletChangeParams]: {
             name: "setWalletChangeParams",
             tagsParamsCount: 2,
-            resultFromTags: async (s: StorageProvider, auth: sdk.AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]): Promise<ListOutputsResult> => {
+            resultFromTags: async (s: StorageProvider, auth: AuthId, vargs: ValidListOutputsArgs, specOpTags: string[]): Promise<ListOutputsResult> => {
                 if (specOpTags.length !== 2)
-                    throw new sdk.WERR_INVALID_PARAMETER("numberOfDesiredUTXOs and minimumDesiredUTXOValue", "valid");
+                    throw new WERR_INVALID_PARAMETER("numberOfDesiredUTXOs and minimumDesiredUTXOValue", "valid");
                 const numberOfDesiredUTXOs: number = verifyInteger(Number(specOpTags[0]));
                 const minimumDesiredUTXOValue: number = verifyInteger(Number(specOpTags[1]));
                 const basket = verifyOne(await s.findOutputBaskets({
@@ -5157,11 +5139,11 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
     return {
-        [sdk.specOpNoSendActions]: {
+        [specOpNoSendActions]: {
             name: "noSendActions",
             labelsToIntercept: ["abort"],
             setStatusFilter: () => ["nosend"],
-            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            postProcess: async (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
                 if (specOpLabels.indexOf("abort") >= 0) {
                     for (const tx of txs) {
                         if (tx.status === "nosend") {
@@ -5172,11 +5154,11 @@ getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
                 }
             }
         },
-        [sdk.specOpFailedActions]: {
+        [specOpFailedActions]: {
             name: "failedActions",
             labelsToIntercept: ["unfail"],
             setStatusFilter: () => ["failed"],
-            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            postProcess: async (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
                 if (specOpLabels.indexOf("unfail") >= 0) {
                     for (const tx of txs) {
                         if (tx.status === "failed") {

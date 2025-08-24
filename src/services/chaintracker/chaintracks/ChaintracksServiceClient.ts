@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { asString, sdk } from '../../../index.client'
-
-import { BaseBlockHeader, BlockHeader, isBaseBlockHeader } from './Api/BlockHeaderApi'
+import { Chain } from '../../../sdk/types'
+import { asString } from '../../../utility/utilityHelpers.noBuffer'
+import { BaseBlockHeader, BlockHeader } from './Api/BlockHeaderApi'
+import { ChaintracksClientApi, ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/ChaintracksClientApi'
 
 interface FetchStatus<T> {
   status: 'success' | 'error'
@@ -10,15 +10,13 @@ interface FetchStatus<T> {
   value?: T
 }
 
-export interface ChaintracksServiceClientOptions {
-  useAuthrite: boolean
-}
+export interface ChaintracksServiceClientOptions {}
 
 /**
  * Connects to a ChaintracksService to implement 'ChaintracksClientApi'
  *
  */
-export class ChaintracksServiceClient {
+export class ChaintracksServiceClient implements ChaintracksClientApi {
   static createChaintracksServiceClientOptions(): ChaintracksServiceClientOptions {
     const options: ChaintracksServiceClientOptions = {
       useAuthrite: false
@@ -29,11 +27,21 @@ export class ChaintracksServiceClient {
   options: ChaintracksServiceClientOptions
 
   constructor(
-    public chain: sdk.Chain,
+    public chain: Chain,
     public serviceUrl: string,
     options?: ChaintracksServiceClientOptions
   ) {
     this.options = options || ChaintracksServiceClient.createChaintracksServiceClientOptions()
+  }
+
+  subscribeHeaders(listener: HeaderListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  subscribeReorgs(listener: ReorgListener): Promise<string> {
+    throw new Error('Method not implemented.')
+  }
+  unsubscribe(subscriptionId: string): Promise<boolean> {
+    throw new Error('Method not implemented.')
   }
 
   async currentHeight(): Promise<number> {
@@ -98,45 +106,49 @@ export class ChaintracksServiceClient {
   }
 
   async startListening(): Promise<void> {
-    return await this.getJsonOrUndefined('/startListening')
+    await this.getPresentHeight()
   }
   async listening(): Promise<void> {
-    return await this.getJsonOrUndefined('/listening')
+    await this.getPresentHeight()
   }
-  async getChain(): Promise<sdk.Chain> {
+  async getChain(): Promise<Chain> {
     return this.chain
     //return await this.getJson('/getChain')
   }
 
   async isListening(): Promise<boolean> {
-    return await this.getJson('/isListening')
+    try {
+      await this.getPresentHeight()
+      return true
+    } catch {
+      return false
+    }
   }
   async isSynchronized(): Promise<boolean> {
-    return await this.getJson('/isSynchronized')
+    return await this.isListening()
   }
   async getPresentHeight(): Promise<number> {
     return await this.getJson('/getPresentHeight')
   }
+  async getInfo(): Promise<ChaintracksInfoApi> {
+    return await this.getJson('/getInfo')
+  }
   async findChainTipHeader(): Promise<BlockHeader> {
     return await this.getJson('/findChainTipHeaderHex')
   }
-  async findChainTipHashHex(): Promise<string> {
+  async findChainTipHash(): Promise<string> {
     return await this.getJson('/findChainTipHashHex')
   }
 
   async getHeaders(height: number, count: number): Promise<string> {
-    return await this.getJson(`/getHeaders?height=${height}&count=${count}`)
+    return await this.getJson<string>(`/getHeaders?height=${height}&count=${count}`)
   }
+
   async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> {
     return await this.getJsonOrUndefined(`/findHeaderHexForHeight?height=${height}`)
   }
-  async findChainWorkForBlockHash(hash: string): Promise<string | undefined> {
-    return await this.getJsonOrUndefined(`/findChainWorkHexForBlockHash?hash=${asString(hash)}`)
-  }
+
   async findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined> {
-    return await this.getJsonOrUndefined(`/findHeaderHexForBlockHash?hash=${asString(hash)}`)
-  }
-  async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<BlockHeader | undefined> {
-    return await this.getJsonOrUndefined(`/findHeaderHexForMerkleRoot?root=${asString(merkleRoot)}&height=${height}`)
+    return await this.getJsonOrUndefined(`/findHeaderHexForBlockHash?hash=${hash}`)
   }
 }

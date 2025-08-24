@@ -1,8 +1,8 @@
 import { ArcConfig, Beef, Transaction as BsvTransaction, ChainTracker, MerklePath } from '@bsv/sdk'
-import { ChaintracksServiceClient } from '../services/chaintracker'
 import { Chain, ReqHistoryNote } from './types'
 import { WalletError } from './WalletError'
 import { TableOutput } from '../storage/schema/tables/TableOutput'
+import { ChaintracksServiceClient } from '../services/chaintracker/chaintracks/ChaintracksServiceClient'
 /**
  * Defines standard interfaces to access functionality implemented by external transaction processing services.
  */

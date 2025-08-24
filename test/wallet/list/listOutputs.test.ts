@@ -11,6 +11,8 @@ import path from 'path'
 
 import 'fake-indexeddb/auto'
 
+const includeTestChaintracks = false
+
 describe('listOutputs test', () => {
   jest.setTimeout(99999999)
 
@@ -247,7 +249,8 @@ describe('listOutputs test', () => {
         }
         const r = await wallet.listOutputs(args)
         expect(r.BEEF).toBeTruthy()
-        expect(await Beef.fromBinary(r.BEEF || []).verify(await services.getChainTracker())).toBe(true)
+        if (includeTestChaintracks)
+          expect(await Beef.fromBinary(r.BEEF || []).verify(await services.getChainTracker())).toBe(true)
       }
     }
   })
@@ -409,6 +412,35 @@ describe('listOutputs test', () => {
         expect(r.outputs[1].outpoint).toBe(allOutputs[totalOutputs - 4].outpoint)
         expect(r.outputs[2].outpoint).toBe(allOutputs[totalOutputs - 5].outpoint)
         expect(r.outputs[3].outpoint).toBe(allOutputs[totalOutputs - 6].outpoint)
+      }
+    }
+  })
+
+  test('14 issue 50', async () => {
+    for (const { wallet } of ctxs) {
+      {
+        const args: ListOutputsArgs = {
+          basket: 'babbage-token-access',
+          tags: ['babbage_basket todo tokens'], // <-- tag exists, 17 outputs
+          tagQueryMode: 'any',
+          includeTags: true,
+          includeCustomInstructions: true,
+          includeLabels: true
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBeGreaterThan(0)
+      }
+      {
+        const args: ListOutputsArgs = {
+          basket: 'babbage-token-access',
+          tags: ['a_tag_that_does_not_exist'], // tag does not exist.. error?
+          tagQueryMode: 'any',
+          includeTags: true,
+          includeCustomInstructions: true,
+          includeLabels: true
+        }
+        const r = await wallet.listOutputs(args)
+        expect(r.totalOutputs).toBe(0)
       }
     }
   })

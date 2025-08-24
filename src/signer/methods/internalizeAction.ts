@@ -1,12 +1,8 @@
-import {
-  Beef,
-  InternalizeActionArgs,
-  InternalizeActionResult,
-  InternalizeOutput,
-  P2PKH,
-  WalletProtocol
-} from '@bsv/sdk'
-import { sdk, Wallet } from '../../index.client'
+import { Beef, InternalizeActionArgs, InternalizeOutput, P2PKH, WalletProtocol } from '@bsv/sdk'
+import { Wallet } from '../../Wallet'
+import { AuthId, StorageInternalizeActionResult } from '../../sdk/WalletStorage.interfaces'
+import { validateInternalizeActionArgs, ValidInternalizeActionArgs } from '../../sdk/validationHelpers'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 
 /**
  * Internalize Action allows a wallet to take ownership of outputs in a pre-existing transaction.
@@ -37,17 +33,17 @@ import { sdk, Wallet } from '../../index.client'
  */
 export async function internalizeAction(
   wallet: Wallet,
-  auth: sdk.AuthId,
+  auth: AuthId,
   args: InternalizeActionArgs
-): Promise<sdk.StorageInternalizeActionResult> {
-  const vargs = sdk.validateInternalizeActionArgs(args)
+): Promise<StorageInternalizeActionResult> {
+  const vargs = validateInternalizeActionArgs(args)
 
   const { ab, tx, txid } = await validateAtomicBeef()
   const brc29ProtocolID: WalletProtocol = [2, '3241645161d8']
 
   for (const o of vargs.outputs) {
     if (o.outputIndex < 0 || o.outputIndex >= tx.outputs.length)
-      throw new sdk.WERR_INVALID_PARAMETER('outputIndex', `a valid output index in range 0 to ${tx.outputs.length - 1}`)
+      throw new WERR_INVALID_PARAMETER('outputIndex', `a valid output index in range 0 to ${tx.outputs.length - 1}`)
     switch (o.protocol) {
       case 'basket insertion':
         setupBasketInsertionForOutput(o, vargs)
@@ -56,28 +52,28 @@ export async function internalizeAction(
         setupWalletPaymentForOutput(o, vargs)
         break
       default:
-        throw new sdk.WERR_INTERNAL(`unexpected protocol ${o.protocol}`)
+        throw new WERR_INTERNAL(`unexpected protocol ${o.protocol}`)
     }
   }
 
-  const r: sdk.StorageInternalizeActionResult = await wallet.storage.internalizeAction(args)
+  const r: StorageInternalizeActionResult = await wallet.storage.internalizeAction(args)
 
   return r
 
-  function setupWalletPaymentForOutput(o: InternalizeOutput, dargs: sdk.ValidInternalizeActionArgs) {
+  function setupWalletPaymentForOutput(o: InternalizeOutput, dargs: ValidInternalizeActionArgs) {
     const p = o.paymentRemittance
     const output = tx.outputs[o.outputIndex]
-    if (!p) throw new sdk.WERR_INVALID_PARAMETER('paymentRemitance', `valid for protocol ${o.protocol}`)
+    if (!p) throw new WERR_INVALID_PARAMETER('paymentRemitance', `valid for protocol ${o.protocol}`)
 
     const keyID = `${p.derivationPrefix} ${p.derivationSuffix}`
 
     const privKey = wallet.keyDeriver!.derivePrivateKey(brc29ProtocolID, keyID, p.senderIdentityKey)
     const expectedLockScript = new P2PKH().lock(privKey.toAddress())
     if (output.lockingScript.toHex() !== expectedLockScript.toHex())
-      throw new sdk.WERR_INVALID_PARAMETER('paymentRemitance', `locked by script conforming to BRC-29`)
+      throw new WERR_INVALID_PARAMETER('paymentRemitance', `locked by script conforming to BRC-29`)
   }
 
-  function setupBasketInsertionForOutput(o: InternalizeOutput, dargs: sdk.ValidInternalizeActionArgs) {
+  function setupBasketInsertionForOutput(o: InternalizeOutput, dargs: ValidInternalizeActionArgs) {
     /*
     No additional validations...
     */
@@ -91,11 +87,11 @@ export async function internalizeAction(
     const txValid = await ab.verify(await wallet.getServices().getChainTracker(), false)
     if (!txValid || !ab.atomicTxid) {
       console.log(`internalizeAction beef is invalid: ${ab.toLogString()}`)
-      throw new sdk.WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
+      throw new WERR_INVALID_PARAMETER('tx', 'valid AtomicBEEF')
     }
     const txid = ab.atomicTxid
     const btx = ab.findTxid(txid)
-    if (!btx) throw new sdk.WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF with newest txid of ${txid}`)
+    if (!btx) throw new WERR_INVALID_PARAMETER('tx', `valid AtomicBEEF with newest txid of ${txid}`)
     const tx = btx.tx!
 
     return { ab, tx, txid }

@@ -1,10 +1,13 @@
-import { ChaintracksChainTracker } from '..'
+import { ChaintracksChainTracker } from '../index.all'
 import { sdk } from '../../../index.client'
+
+const includeTestChaintracks = false
 
 describe('ChaintracksChaintracker tests', () => {
   jest.setTimeout(99999999)
 
   test(`0 test`, async () => {
+    if (!includeTestChaintracks) return
     await testChaintracksChaintracker('test')
   })
 

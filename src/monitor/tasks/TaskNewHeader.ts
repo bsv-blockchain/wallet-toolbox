@@ -1,4 +1,4 @@
-import { BlockHeader } from '../../services/chaintracker/chaintracks/Api/BlockHeaderApi'
+import { BlockHeader } from '../../sdk/WalletServices.interfaces'
 import { Monitor } from '../Monitor'
 import { WalletMonitorTask } from './WalletMonitorTask'
 
@@ -25,6 +25,7 @@ export class TaskNewHeader extends WalletMonitorTask {
    * when a cycle without a new header occurs and `processNewBlockHeader` is called.
    */
   queuedHeader?: BlockHeader
+  queuedHeaderWhen?: Date
 
   constructor(
     monitor: Monitor,
@@ -36,6 +37,21 @@ export class TaskNewHeader extends WalletMonitorTask {
   async getHeader(): Promise<BlockHeader> {
     return await this.monitor.chaintracks.findChainTipHeader()
   }
+
+  /**
+   * TODO: This is a temporary incomplete solution for which a full chaintracker
+   * with new header and reorg event notification is required.
+   *
+   * New header events drive retrieving merklePaths for newly mined transactions.
+   * This implementation performs this function.
+   *
+   * Reorg events are needed to know when previously retrieved mekrlePaths need to be
+   * updated in the proven_txs table (and ideally notifications delivered to users).
+   * Note that in-general, a reorg only shifts where in the block a transaction is mined,
+   * and sometimes which block. In the case of coinbase transactions, a transaction may
+   * also fail after a reorg.
+   */
+  override async asyncSetup(): Promise<void> {}
 
   trigger(nowMsecsSinceEpoch: number): { run: boolean } {
     const run = true
@@ -49,6 +65,10 @@ export class TaskNewHeader extends WalletMonitorTask {
     let isNew = true
     if (!oldHeader) {
       log = `first header: ${this.header.height} ${this.header.hash}`
+    } else if (oldHeader.height > this.header.height) {
+      log = `old header: ${this.header.height} vs ${oldHeader.height}`
+      this.header = oldHeader // Revert to old header with the higher height
+      isNew = false
     } else if (oldHeader.height < this.header.height) {
       const skip = this.header.height - oldHeader.height - 1
       const skipped = skip > 0 ? ` SKIPPED ${skip}` : ''
@@ -60,9 +80,11 @@ export class TaskNewHeader extends WalletMonitorTask {
     }
     if (isNew) {
       this.queuedHeader = this.header
+      this.queuedHeaderWhen = new Date()
     } else if (this.queuedHeader) {
       // Only process new block header if it has remained the chain tip for a full cycle
-      log = `process header: ${this.header.height} ${this.header.hash}`
+      const delay = (new Date().getTime() - this.queuedHeaderWhen!.getTime()) / 1000 // seconds
+      log = `process header: ${this.header.height} ${this.header.hash} delayed ${delay.toFixed(1)} secs`
       this.monitor.processNewBlockHeader(this.queuedHeader)
       this.queuedHeader = undefined
     }

@@ -1,12 +1,14 @@
-import {} from '../../index.client'
-import { maxDate, sdk, verifyId } from '../../../index.client'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { maxDate, verifyId } from '../../../utility/utilityHelpers'
 import { EntityBase, EntityStorage, EntitySyncMap, SyncMap } from './EntityBase'
+import { WERR_INTERNAL } from '../../../sdk/WERR_errors'
+import { EntityTimeStamp } from '../../../sdk/types'
 
 /**
  * @param API one of the storage table interfaces.
  * @param DE the corresponding entity class
  */
-export class MergeEntity<API extends sdk.EntityTimeStamp, DE extends EntityBase<API>> {
+export class MergeEntity<API extends EntityTimeStamp, DE extends EntityBase<API>> {
   idMap: Record<number, number>
 
   constructor(
@@ -16,7 +18,7 @@ export class MergeEntity<API extends sdk.EntityTimeStamp, DE extends EntityBase<
       userId: number,
       ei: API,
       syncMap: SyncMap,
-      trx?: sdk.TrxToken
+      trx?: TrxToken
     ) => Promise<{ found: boolean; eo: DE; eiId: number }>,
     /** id map for primary id of API and DE object. */
     public esm: EntitySyncMap
@@ -29,8 +31,7 @@ export class MergeEntity<API extends sdk.EntityTimeStamp, DE extends EntityBase<
     const o = verifyId(outId)
     if (map[i] === undefined) {
       map[i] = o
-    } else if (map[i] !== o)
-      throw new sdk.WERR_INTERNAL(`updateSyncMap map[${inId}] can't override ${map[i]} with ${o}`)
+    } else if (map[i] !== o) throw new WERR_INTERNAL(`updateSyncMap map[${inId}] can't override ${map[i]} with ${o}`)
   }
 
   /**
@@ -41,7 +42,7 @@ export class MergeEntity<API extends sdk.EntityTimeStamp, DE extends EntityBase<
     storage: EntityStorage,
     userId: number,
     syncMap: SyncMap,
-    trx?: sdk.TrxToken
+    trx?: TrxToken
   ): Promise<{ inserts: number; updates: number }> {
     let inserts = 0,
       updates = 0

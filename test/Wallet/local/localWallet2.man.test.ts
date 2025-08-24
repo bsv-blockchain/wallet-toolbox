@@ -29,8 +29,8 @@ describe('localWallet2 tests', () => {
 
   test('0 monitor runOnce', async () => {
     const setup = await createSetup(chain, options)
-    const log = await setup.monitor.runTask('UnFail')
-    if (log) console.log(log)
+    //const log = await setup.monitor.runTask('UnFail')
+    //if (log) console.log(log)
     await setup.monitor.runOnce()
     await setup.wallet.destroy()
   })

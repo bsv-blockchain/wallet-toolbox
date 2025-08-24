@@ -1,11 +1,11 @@
-import { sdk } from '../../index.client'
+import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 
 /**
  * Returns the byte size required to encode number as Bitcoin VarUint
  * @publicbody
  */
 export function varUintSize(val: number): 1 | 3 | 5 | 9 {
-  if (val < 0) throw new sdk.WERR_INVALID_PARAMETER('varUint', 'non-negative')
+  if (val < 0) throw new WERR_INVALID_PARAMETER('varUint', 'non-negative')
   return val <= 0xfc ? 1 : val <= 0xffff ? 3 : val <= 0xffffffff ? 5 : 9
 }
 
