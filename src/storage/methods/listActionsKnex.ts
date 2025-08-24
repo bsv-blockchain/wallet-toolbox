@@ -6,16 +6,21 @@ import {
   WalletActionOutput,
   WalletActionInput
 } from '@bsv/sdk'
-import { TableOutputX, TableTransaction, TableTxLabel } from '../index.client'
-import { asString, sdk, verifyOne } from '../../index.client'
 import { StorageKnex } from '../StorageKnex'
-import { isListActionsSpecOp } from '../../sdk'
 import { getLabelToSpecOp, ListActionsSpecOp } from './ListActionsSpecOp'
+import { AuthId } from '../../sdk/WalletStorage.interfaces'
+import { ValidListActionsArgs } from '../../sdk/validationHelpers'
+import { isListActionsSpecOp } from '../../sdk/types'
+import { TableTxLabel } from '../schema/tables/TableTxLabel'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { verifyOne } from '../../utility/utilityHelpers'
+import { TableOutputX } from '../schema/tables/TableOutput'
+import { asString } from '../../utility/utilityHelpers.noBuffer'
 
 export async function listActions(
   storage: StorageKnex,
-  auth: sdk.AuthId,
-  vargs: sdk.ValidListActionsArgs
+  auth: AuthId,
+  vargs: ValidListActionsArgs
 ): Promise<ListActionsResult> {
   const limit = vargs.limit
   const offset = vargs.offset

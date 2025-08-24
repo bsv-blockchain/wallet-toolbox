@@ -1,10 +1,11 @@
-import { asString, asArray } from '../../../../index.client'
-import { Chain, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk'
 import { HeightRange } from './HeightRange'
 import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { ChaintracksFetchApi } from '../Api/ChaintracksFetchApi'
 import { ChaintracksStorageBase } from '../Storage/ChaintracksStorageBase'
 import { Hash } from '@bsv/sdk'
+import { Chain } from '../../../../sdk/types'
+import { WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../../../sdk/WERR_errors'
+import { asArray, asString } from '../../../../utility/utilityHelpers.noBuffer'
 
 /**
  * Descriptive information about a single bulk header file.

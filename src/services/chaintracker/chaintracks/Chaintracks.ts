@@ -10,10 +10,10 @@ import { Chain } from '../../../sdk/types'
 import { ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/ChaintracksClientApi'
 import { BaseBlockHeader, BlockHeader, LiveBlockHeader } from './Api/BlockHeaderApi'
 import { asString } from '../../../utility/utilityHelpers.noBuffer'
-import { randomBytesBase64, wait } from '../../../index.client'
 import { HeightRange, HeightRanges } from './util/HeightRange'
 import { SingleWriterMultiReaderLock } from './util/SingleWriterMultiReaderLock'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
+import { randomBytesBase64, wait } from '../../../utility/utilityHelpers'
 
 export class Chaintracks implements ChaintracksManagementApi {
   static createOptions(chain: Chain): ChaintracksOptions {

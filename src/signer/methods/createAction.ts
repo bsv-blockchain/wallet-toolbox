@@ -120,27 +120,6 @@ function makeSignableTransactionBeef(tx: Transaction, inputBEEF: number[]): numb
   return beef.toBinaryAtomic(tx.id('hex'))
 }
 
-/**
- * Derive a change output locking script
- */
-export function makeChangeLock(
-  out: StorageCreateTransactionSdkOutput,
-  dctr: StorageCreateActionResult,
-  args: ValidCreateActionArgs,
-  changeKeys: KeyPair,
-  wallet: Wallet
-): Script {
-  const derivationPrefix = dctr.derivationPrefix
-  const derivationSuffix = verifyTruthy(out.derivationSuffix)
-  const sabppp = new ScriptTemplateBRC29({
-    derivationPrefix,
-    derivationSuffix,
-    keyDeriver: wallet.keyDeriver
-  })
-  const lockingScript = sabppp.lock(changeKeys.privateKey, changeKeys.publicKey)
-  return lockingScript
-}
-
 function removeUnlockScripts(args: ValidCreateActionArgs) {
   let storageArgs = args
   if (!storageArgs.inputs.every(i => i.unlockingScript === undefined)) {

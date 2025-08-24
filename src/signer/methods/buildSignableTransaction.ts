@@ -1,10 +1,11 @@
 import { Beef, Script, Transaction, TransactionInput, TransactionOutput } from '@bsv/sdk'
 import { Wallet, PendingStorageInput } from '../../Wallet'
-import { makeChangeLock } from './createAction'
-import { StorageCreateActionResult, StorageCreateTransactionSdkInput } from '../../sdk/WalletStorage.interfaces'
+import { StorageCreateActionResult, StorageCreateTransactionSdkInput, StorageCreateTransactionSdkOutput } from '../../sdk/WalletStorage.interfaces'
 import { ValidCreateActionArgs, ValidCreateActionInput } from '../../sdk/validationHelpers'
 import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 import { asBsvSdkScript, verifyTruthy } from '../../utility/utilityHelpers'
+import { KeyPair } from '../../sdk/types'
+import { ScriptTemplateBRC29 } from '../../utility/ScriptTemplateBRC29'
 
 export function buildSignableTransaction(
   dctr: StorageCreateActionResult,
@@ -155,4 +156,25 @@ export function buildSignableTransaction(
     pdi: pendingStorageInputs,
     log: ''
   }
+}
+
+/**
+ * Derive a change output locking script
+ */
+export function makeChangeLock(
+  out: StorageCreateTransactionSdkOutput,
+  dctr: StorageCreateActionResult,
+  args: ValidCreateActionArgs,
+  changeKeys: KeyPair,
+  wallet: Wallet
+): Script {
+  const derivationPrefix = dctr.derivationPrefix
+  const derivationSuffix = verifyTruthy(out.derivationSuffix)
+  const sabppp = new ScriptTemplateBRC29({
+    derivationPrefix,
+    derivationSuffix,
+    keyDeriver: wallet.keyDeriver
+  })
+  const lockingScript = sabppp.lock(changeKeys.privateKey, changeKeys.publicKey)
+  return lockingScript
 }
