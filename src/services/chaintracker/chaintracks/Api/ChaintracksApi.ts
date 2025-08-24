@@ -49,16 +49,16 @@ export interface ChaintracksManagementApi extends ChaintracksApi {
    * Useful for bulk ingestors such as those derived from BulkIngestorCDN.
    *
    * @param toFolder Where the json and headers files will be written
+   * @param toFs The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
    * @param sourceUrl Optional source URL to include in the exported files. Set if exported files will be transferred to a CDN.
    * @param toHeadersPerFile The maximum headers per file. Default is 100,000 (8MB)
    * @param maxHeight The maximum height to export. Default is the current bulk storage max height.
-   * @param toFs The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
    */
   exportBulkHeaders(
     toFolder: string,
+    toFs: ChaintracksFsApi,
     sourceUrl?: string,
     toHeadersPerFile?: number,
-    maxHeight?: number,
-    toFs?: ChaintracksFsApi
+    maxHeight?: number
   ): Promise<void>
 }

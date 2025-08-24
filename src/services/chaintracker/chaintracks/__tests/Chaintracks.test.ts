@@ -1,9 +1,8 @@
-import { createDefaultChaintracksOptions, createNoDbChaintracksOptions } from '../createDefaultChaintracksOptions'
+import { createDefaultKnexChaintracksOptions } from '../createDefaultKnexChaintracksOptions'
 import { Chaintracks } from '../Chaintracks'
 import { wait } from '../../../../utility/utilityHelpers'
-import { ChaintracksStorageNoDb } from '../Storage/ChaintracksStorageNoDb'
-import { ChaintracksFs } from '../util/ChaintracksFs'
 import { Chain } from '../../../../sdk'
+import { createNoDbChaintracksOptions } from '../createDefaultNoDbChaintracksOptions'
 
 const rootFolder = './src/services/chaintracker/chaintracks/__tests/data'
 
@@ -11,7 +10,7 @@ describe('Chaintracks tests', () => {
   jest.setTimeout(99999999)
 
   test.skip('0 basic operation mainnet', async () => {
-    const o = createDefaultChaintracksOptions('main', rootFolder)
+    const o = createDefaultKnexChaintracksOptions('main', rootFolder)
     const c = new Chaintracks(o)
     await c.makeAvailable()
 

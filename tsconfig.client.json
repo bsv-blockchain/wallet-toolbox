@@ -23,6 +23,7 @@
     "node_modules",
     "out",
     "client/out",
-    "mobile/out"
+    "mobile/out",
+    "__tests"
   ]
 }

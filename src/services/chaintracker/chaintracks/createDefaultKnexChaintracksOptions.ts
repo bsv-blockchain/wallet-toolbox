@@ -8,7 +8,6 @@ import { BulkIngestorCDNBabbage } from './Ingest/BulkIngestorCDNBabbage'
 import { ChaintracksFetch } from './util/ChaintracksFetch'
 import { LiveIngestorWhatsOnChainPoll } from './Ingest/LiveIngestorWhatsOnChainPoll'
 import { BulkIngestorWhatsOnChainCdn } from './Ingest/BulkIngestorWhatsOnChainCdn'
-import { ChaintracksStorageNoDb } from './Storage/ChaintracksStorageNoDb'
 
 /**
  *
@@ -16,7 +15,7 @@ import { ChaintracksStorageNoDb } from './Storage/ChaintracksStorageNoDb'
  * @param rootFolder defaults to "./data/"
  * @returns
  */
-export function createDefaultChaintracksOptions(
+export function createDefaultKnexChaintracksOptions(
   chain: Chain,
   rootFolder?: string,
   knexConfig?: Knex.Config
@@ -39,27 +38,6 @@ export function createDefaultChaintracksOptions(
   const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain)
   knexOptions.knex = knexInstance
   options.storage = new ChaintracksStorageKnex(knexOptions)
-
-  const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
-  options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))
-
-  const bulkWhatsOnChainOptions = BulkIngestorWhatsOnChainCdn.createBulkIngestorWhatsOnChainOptions(chain)
-  options.bulkIngestors.push(new BulkIngestorWhatsOnChainCdn(bulkWhatsOnChainOptions))
-
-  const liveWhatsOnChainOptions = LiveIngestorWhatsOnChainPoll.createLiveIngestorWhatsOnChainOptions(chain)
-  options.liveIngestors.push(new LiveIngestorWhatsOnChainPoll(liveWhatsOnChainOptions))
-
-  return options
-}
-
-export function createNoDbChaintracksOptions(chain: Chain): ChaintracksOptions {
-  const options = Chaintracks.createOptions(chain)
-
-  const so = ChaintracksStorageNoDb.createStorageBaseOptions(chain)
-  const s = new ChaintracksStorageNoDb(so)
-  options.storage = s
-
-  const fetch = new ChaintracksFetch()
 
   const bulkCDNOptions = BulkIngestorCDNBabbage.createBulkIngestorCDNBabbageOptions(chain, fetch)
   options.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCDNOptions))

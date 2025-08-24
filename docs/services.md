@@ -1210,7 +1210,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export interface ChaintracksManagementApi extends ChaintracksApi {
     destroy(): Promise<void>;
     validate(): Promise<boolean>;
-    exportBulkHeaders(toFolder: string, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number, toFs?: ChaintracksFsApi): Promise<void>;
+    exportBulkHeaders(toFolder: string, toFs: ChaintracksFsApi, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number): Promise<void>;
 }
 ```
 
@@ -1231,7 +1231,7 @@ Exports current bulk headers, including all ingests, excluding live headers to s
 Useful for bulk ingestors such as those derived from BulkIngestorCDN.
 
 ```ts
-exportBulkHeaders(toFolder: string, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number, toFs?: ChaintracksFsApi): Promise<void>
+exportBulkHeaders(toFolder: string, toFs: ChaintracksFsApi, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number): Promise<void>
 ```
 See also: [ChaintracksFsApi](./services.md#interface-chaintracksfsapi)
 
@@ -1239,14 +1239,14 @@ Argument Details
 
 + **toFolder**
   + Where the json and headers files will be written
++ **toFs**
+  + The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
 + **sourceUrl**
   + Optional source URL to include in the exported files. Set if exported files will be transferred to a CDN.
 + **toHeadersPerFile**
   + The maximum headers per file. Default is 100,000 (8MB)
 + **maxHeight**
   + The maximum height to export. Default is the current bulk storage max height.
-+ **toFs**
-  + The ChaintracksFsApi to use for writing files. If not provided, the default file system will be used.
 
 ###### Method validate
 
@@ -2571,7 +2571,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ARC](#class-arc) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |
+| [ARC](#class-arc) | [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksStorageKnex](#class-chaintracksstorageknex) |
+| [BHServiceClient](#class-bhserviceclient) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |
 | [Bitails](#class-bitails) | [BulkIngestorWhatsOnChainWs](#class-bulkingestorwhatsonchainws) | [ChaintracksWritableFile](#class-chaintrackswritablefile) |
 | [BulkFileDataManager](#class-bulkfiledatamanager) | [BulkStorageBase](#class-bulkstoragebase) | [HeightRange](#class-heightrange) |
 | [BulkFileDataReader](#class-bulkfiledatareader) | [Chaintracks](#class-chaintracks) | [LiveIngestorBase](#class-liveingestorbase) |
@@ -2584,7 +2585,6 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [BulkHeaderFiles](#class-bulkheaderfiles) | [ChaintracksService](#class-chaintracksservice) | [WhatsOnChain](#class-whatsonchain) |
 | [BulkIngestorBase](#class-bulkingestorbase) | [ChaintracksServiceClient](#class-chaintracksserviceclient) | [WhatsOnChainNoServices](#class-whatsonchainnoservices) |
 | [BulkIngestorCDN](#class-bulkingestorcdn) | [ChaintracksStorageBase](#class-chaintracksstoragebase) | [WhatsOnChainServices](#class-whatsonchainservices) |
-| [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksStorageKnex](#class-chaintracksstorageknex) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2680,6 +2680,49 @@ The ARC '/v1/tx' endpoint, as of 2025-02-17 DOES NOT support the following hex s
 async postRawTx(rawTx: HexString, txids?: string[]): Promise<PostTxResultForTxid> 
 ```
 See also: [PostTxResultForTxid](./client.md#interface-posttxresultfortxid)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: BHServiceClient
+
+```ts
+export class BHServiceClient implements ChaintracksServiceClient {
+    bhs: BlockHeadersService;
+    cache: Record<number, string>;
+    chain: Chain;
+    serviceUrl: string;
+    options: ChaintracksServiceClientOptions;
+    apiKey: string;
+    constructor(chain: Chain, url: string, apiKey: string) 
+    async currentHeight(): Promise<number> 
+    async isValidRootForHeight(root: string, height: number): Promise<boolean> 
+    async getPresentHeight(): Promise<number> 
+    async findHeaderForHeight(height: number): Promise<BlockHeader | undefined> 
+    async findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined> 
+    async getHeaders(height: number, count: number): Promise<string> 
+    async findChainWorkForBlockHash(hash: string): Promise<string | undefined> 
+    async findChainTipHeader(): Promise<BlockHeader> 
+    async getJsonOrUndefined<T>(path: string): Promise<T | undefined> 
+    async getJson<T>(path: string): Promise<T> 
+    async postJsonVoid<T>(path: string, params: T): Promise<void> 
+    async addHeader(header: any): Promise<void> 
+    async findHeaderForMerkleRoot(merkleRoot: string, height?: number): Promise<undefined> 
+    async startListening(): Promise<void> 
+    async listening(): Promise<void> 
+    async isSynchronized(): Promise<boolean> 
+    async getChain(): Promise<Chain> 
+    async isListening(): Promise<boolean> 
+    async getChainTipHeader(): Promise<BlockHeader> 
+    async findChainTipHash(): Promise<string> 
+    async subscribeHeaders(listener: HeaderListener): Promise<string> 
+    async subscribeReorgs(listener: ReorgListener): Promise<string> 
+    async unsubscribe(subscriptionId: string): Promise<boolean> 
+    async getInfo(): Promise<ChaintracksInfoApi> 
+}
+```
+
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient), [ChaintracksServiceClientOptions](./services.md#interface-chaintracksserviceclientoptions), [HeaderListener](./services.md#type-headerlistener), [ReorgListener](./services.md#type-reorglistener)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3349,7 +3392,7 @@ export class Chaintracks implements ChaintracksManagementApi {
     async findLiveHeaderForBlockHash(hash: string): Promise<LiveBlockHeader | undefined> 
     async findChainWorkForBlockHash(hash: string): Promise<string | undefined> 
     async validate(): Promise<boolean> 
-    async exportBulkHeaders(toFolder: string, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number, toFs?: ChaintracksFsApi): Promise<void> 
+    async exportBulkHeaders(toFolder: string, toFs: ChaintracksFsApi, sourceUrl?: string, toHeadersPerFile?: number, maxHeight?: number): Promise<void> 
     async startListening(): Promise<void> 
     private async syncBulkStorageNoLock(presentHeight: number, initialRanges: HeightRanges): Promise<void> {
         let newLiveHeaders: BlockHeader[] = [];
@@ -4604,7 +4647,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [convertBufferToUint32](#function-convertbuffertouint32) | [isLive](#function-islive) | [validateGenesisHeader](#function-validategenesisheader) |
 | [convertUint32ToBuffer](#function-convertuint32tobuffer) | [isLiveBlockHeader](#function-isliveblockheader) | [validateHeaderDifficulty](#function-validateheaderdifficulty) |
 | [convertWocToBlockHeaderHex](#function-convertwoctoblockheaderhex) | [isMoreWork](#function-ismorework) | [validateHeaderFormat](#function-validateheaderformat) |
-| [createDefaultChaintracksOptions](#function-createdefaultchaintracksoptions) | [readUInt32BE](#function-readuint32be) | [validateScriptHash](#function-validatescripthash) |
+| [createDefaultKnexChaintracksOptions](#function-createdefaultknexchaintracksoptions) | [readUInt32BE](#function-readuint32be) | [validateScriptHash](#function-validatescripthash) |
 | [createDefaultWalletServicesOptions](#function-createdefaultwalletservicesoptions) | [readUInt32LE](#function-readuint32le) | [workBNtoBuffer](#function-workbntobuffer) |
 | [createNoDbChaintracksOptions](#function-createnodbchaintracksoptions) | [selectBulkHeaderFiles](#function-selectbulkheaderfiles) | [writeUInt32BE](#function-writeuint32be) |
 | [deserializeBaseBlockHeader](#function-deserializebaseblockheader) | [serializeBaseBlockHeader](#function-serializebaseblockheader) | [writeUInt32LE](#function-writeuint32le) |
@@ -4874,10 +4917,10 @@ See also: [BlockHeader](./client.md#interface-blockheader), [WocHeader](./servic
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
-##### Function: createDefaultChaintracksOptions
+##### Function: createDefaultKnexChaintracksOptions
 
 ```ts
-export function createDefaultChaintracksOptions(chain: Chain, rootFolder?: string, knexConfig?: Knex.Config): ChaintracksOptions 
+export function createDefaultKnexChaintracksOptions(chain: Chain, rootFolder?: string, knexConfig?: Knex.Config): ChaintracksOptions 
 ```
 
 See also: [Chain](./client.md#type-chain), [ChaintracksOptions](./services.md#interface-chaintracksoptions)
@@ -4931,7 +4974,7 @@ export function deserializeBaseBlockHeader(buffer: number[] | Uint8Array, offset
 }
 ```
 
-See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [asString](./client.md#function-asstring), [readUInt32LE](./services.md#function-readuint32le)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [ReaderUint8Array](./client.md#class-readeruint8array), [asString](./client.md#function-asstring), [readUInt32LE](./services.md#function-readuint32le)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

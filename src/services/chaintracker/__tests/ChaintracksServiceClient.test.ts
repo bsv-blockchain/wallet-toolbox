@@ -1,5 +1,5 @@
 import { sdk } from '../../../index.client'
-import { ChaintracksServiceClient } from '../chaintracks'
+import { ChaintracksServiceClient } from '../chaintracks/index.client'
 
 const includeTestChaintracks = false
 

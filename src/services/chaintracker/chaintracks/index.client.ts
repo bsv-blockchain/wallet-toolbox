@@ -13,8 +13,6 @@ export * from './Chaintracks'
 export * from './ChaintracksService'
 export * from './ChaintracksServiceClient'
 
-export * from './createDefaultChaintracksOptions'
-
 export * from './Ingest/BulkIngestorBase'
 export * from './Ingest/LiveIngestorBase'
 
@@ -28,14 +26,13 @@ export * from './Ingest/WhatsOnChainServices'
 
 export * from './Storage/BulkStorageBase'
 export * from './Storage/ChaintracksStorageBase'
-export * from './Storage/ChaintracksStorageKnex'
-export * from './Storage/ChaintracksStorageMemory'
 export * from './Storage/ChaintracksStorageNoDb'
+
+export * from './createDefaultNoDbChaintracksOptions'
 
 export * from './util/BulkFilesReader'
 export * from './util/HeightRange'
 export * from './util/BulkFileDataManager'
 export * from './util/ChaintracksFetch'
-export * from './util/ChaintracksFs'
 
 export * as utils from './util/blockHeaderUtilities'

@@ -1,18 +1,15 @@
 import { Chaintracks } from './Chaintracks'
 
 import { IncomingMessage, Server, ServerResponse } from 'http'
-import https from 'https'
 import express from 'express'
 import bodyParser from 'body-parser'
 import { Chain } from '../../../sdk/types'
-import { createNoDbChaintracksOptions } from './createDefaultChaintracksOptions'
+import { createNoDbChaintracksOptions } from './createDefaultNoDbChaintracksOptions'
 import { Services } from '../../Services'
 import { FiatExchangeRates, WERR_INVALID_PARAMETER } from '../../../sdk'
 import { ChaintracksInfoApi } from './Api/ChaintracksClientApi'
 import { wait } from '../../../utility/utilityHelpers'
 import { BaseBlockHeader, BlockHeader } from './Api/BlockHeaderApi'
-import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
-import { ChaintracksFs } from './util/ChaintracksFs'
 
 export interface ChaintracksServiceOptions {
   chain: Chain

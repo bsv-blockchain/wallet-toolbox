@@ -13,9 +13,7 @@ import { asString } from '../../../utility/utilityHelpers.noBuffer'
 import { randomBytesBase64, wait } from '../../../index.client'
 import { HeightRange, HeightRanges } from './util/HeightRange'
 import { SingleWriterMultiReaderLock } from './util/SingleWriterMultiReaderLock'
-import { ChaintracksStorageBase } from './Storage/ChaintracksStorageBase'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
-import { ChaintracksFs } from './util/ChaintracksFs'
 
 export class Chaintracks implements ChaintracksManagementApi {
   static createOptions(chain: Chain): ChaintracksOptions {
@@ -296,13 +294,12 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   async exportBulkHeaders(
     toFolder: string,
+    toFs: ChaintracksFsApi,
     sourceUrl?: string,
     toHeadersPerFile?: number,
-    maxHeight?: number,
-    toFs?: ChaintracksFsApi
+    maxHeight?: number
   ): Promise<void> {
     toHeadersPerFile ||= 100000
-    toFs ||= ChaintracksFs
     const bulk = this.storage.bulkManager
     await bulk.exportHeadersToFs(toFs, toHeadersPerFile, toFolder, sourceUrl, maxHeight)
   }

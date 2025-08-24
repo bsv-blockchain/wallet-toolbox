@@ -1,4 +1,4 @@
-import { ChaintracksChainTracker } from '..'
+import { ChaintracksChainTracker } from '../index.all'
 import { sdk } from '../../../index.client'
 
 const includeTestChaintracks = false
