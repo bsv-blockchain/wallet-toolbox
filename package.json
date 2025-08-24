@@ -32,7 +32,7 @@
   "dependencies": {
     "@bsv/auth-express-middleware": "^1.2.3",
     "@bsv/payment-express-middleware": "^1.2.3",
-    "@bsv/sdk": "^1.6.23",
+    "@bsv/sdk": "^1.6.24",
     "express": "^4.21.2",
     "idb": "^8.0.2",
     "knex": "^3.1.0",
@@ -41,12 +41,12 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/node": "^22.5.0",
     "@types/cors": "^2.8.13",
     "@types/diff": "^6.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.4.0",
     "@types/jest-diff": "^20.0.1",
+    "@types/node": "^22.5.0",
     "chalk": "^4.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
