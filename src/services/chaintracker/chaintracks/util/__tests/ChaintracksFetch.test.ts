@@ -27,7 +27,7 @@ describe('ChaintracksFetch tests', () => {
     expect(validBulkHeaderFilesByFileHash()[fileHash]).toBeDefined()
   })
 
-  test('2 download faster crypto.subtle sha256', async () => {
+  test.skip('2 download faster crypto.subtle sha256', async () => {
     const fetch = new ChaintracksFetch()
     const cdnUrl = 'https://cdn.projectbabbage.com/blockheaders/'
     const url = `${cdnUrl}/testNet_0.headers`
