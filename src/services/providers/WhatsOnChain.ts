@@ -2,7 +2,19 @@ import { Beef, HexString, Utils, WhatsOnChainConfig } from '@bsv/sdk'
 import { convertProofToMerklePath } from '../../utility/tscProofToMerklePath'
 import SdkWhatsOnChain from './SdkWhatsOnChain'
 import { Chain, ReqHistoryNote } from '../../sdk/types'
-import { BlockHeader, BsvExchangeRate, GetMerklePathResult, GetRawTxResult, GetScriptHashHistoryResult, GetStatusForTxidsResult, GetUtxoStatusOutputFormat, GetUtxoStatusResult, PostBeefResult, PostTxResultForTxid, WalletServices } from '../../sdk/WalletServices.interfaces'
+import {
+  BlockHeader,
+  BsvExchangeRate,
+  GetMerklePathResult,
+  GetRawTxResult,
+  GetScriptHashHistoryResult,
+  GetStatusForTxidsResult,
+  GetUtxoStatusOutputFormat,
+  GetUtxoStatusResult,
+  PostBeefResult,
+  PostTxResultForTxid,
+  WalletServices
+} from '../../sdk/WalletServices.interfaces'
 import { WERR_BAD_REQUEST, WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 import { WalletError } from '../../sdk/WalletError'
 import { doubleSha256BE, wait } from '../../utility/utilityHelpers'
@@ -402,9 +414,7 @@ export class WhatsOnChainNoServices extends SdkWhatsOnChain {
       } catch (eu: unknown) {
         const e = WalletError.fromUnknown(eu)
         if (e.code !== 'ECONNRESET' || retry > 2) {
-          r.error = new WERR_INTERNAL(
-            `service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`
-          )
+          r.error = new WERR_INTERNAL(`service failure: ${url}, error: ${JSON.stringify(WalletError.fromUnknown(eu))}`)
           return r
         }
       }

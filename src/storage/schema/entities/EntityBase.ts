@@ -1,5 +1,5 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { StorageProvider } from "../../StorageProvider"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { StorageProvider } from '../../StorageProvider'
 
 export type EntityStorage = StorageProvider
 

@@ -1,8 +1,8 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
-import { TableUser } from "../tables/TableUser"
-import { WERR_INTERNAL } from "../../../sdk/WERR_errors"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
+import { TableUser } from '../tables/TableUser'
+import { WERR_INTERNAL } from '../../../sdk/WERR_errors'
 
 export class EntityUser extends EntityBase<TableUser> {
   constructor(api?: TableUser) {

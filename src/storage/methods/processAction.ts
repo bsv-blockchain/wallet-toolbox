@@ -2,9 +2,21 @@
 import { Beef, Transaction as BsvTransaction, SendWithResult, SendWithResultStatus } from '@bsv/sdk'
 import { aggregateActionResults } from '../../utility/aggregateResults'
 import { StorageProvider } from '../StorageProvider'
-import { AuthId, ReviewActionResult, StorageProcessActionArgs, StorageProcessActionResults } from '../../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  ReviewActionResult,
+  StorageProcessActionArgs,
+  StorageProcessActionResults
+} from '../../sdk/WalletStorage.interfaces'
 import { stampLog } from '../../utility/stampLog'
-import { randomBytesBase64, verifyId, verifyInteger, verifyOne, verifyOneOrNone, verifyTruthy } from '../../utility/utilityHelpers'
+import {
+  randomBytesBase64,
+  verifyId,
+  verifyInteger,
+  verifyOne,
+  verifyOneOrNone,
+  verifyTruthy
+} from '../../utility/utilityHelpers'
 import { EntityProvenTxReq } from '../schema/entities/EntityProvenTxReq'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION } from '../../sdk/WERR_errors'
 import { TableProvenTxReq } from '../schema/tables/TableProvenTxReq'

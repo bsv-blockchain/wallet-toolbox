@@ -1,6 +1,6 @@
-import { BaseBlockHeader, BlockHeader } from "../../../../sdk/WalletServices.interfaces"
+import { BaseBlockHeader, BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 
-export { BaseBlockHeader, BlockHeader } from "../../../../sdk/WalletServices.interfaces"
+export { BaseBlockHeader, BlockHeader } from '../../../../sdk/WalletServices.interfaces'
 
 /**
  * The "live" portion of the block chain is recent history that can conceivably be subject to reorganizations.

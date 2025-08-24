@@ -163,10 +163,7 @@ class InternalizeActionContext {
         case 'basket insertion':
           {
             if (!o.insertionRemittance || o.paymentRemittance)
-              throw new WERR_INVALID_PARAMETER(
-                'basket insertion',
-                'valid insertionRemittance and no paymentRemittance'
-              )
+              throw new WERR_INVALID_PARAMETER('basket insertion', 'valid insertionRemittance and no paymentRemittance')
             this.basketInsertions.push({
               ...o.insertionRemittance,
               txo,
@@ -177,10 +174,7 @@ class InternalizeActionContext {
         case 'wallet payment':
           {
             if (o.insertionRemittance || !o.paymentRemittance)
-              throw new WERR_INVALID_PARAMETER(
-                'wallet payment',
-                'valid paymentRemittance and no insertionRemittance'
-              )
+              throw new WERR_INVALID_PARAMETER('wallet payment', 'valid paymentRemittance and no insertionRemittance')
             this.walletPayments.push({
               ...o.paymentRemittance,
               txo,
@@ -307,10 +301,7 @@ class InternalizeActionContext {
     const tr = await this.storage.findOrInsertTransaction(newTx)
     if (!tr.isNew) {
       if (!this.isMerge)
-        throw new WERR_INVALID_PARAMETER(
-          'tx',
-          `target transaction of internalizeAction is undergoing active changes.`
-        )
+        throw new WERR_INVALID_PARAMETER('tx', `target transaction of internalizeAction is undergoing active changes.`)
       await this.storage.updateTransaction(tr.tx.transactionId!, {
         satoshis: tr.tx.satoshis + satoshis
       })

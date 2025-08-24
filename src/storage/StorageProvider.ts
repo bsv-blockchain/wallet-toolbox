@@ -22,7 +22,29 @@ import { internalizeAction } from './methods/internalizeAction'
 import { StorageReaderWriter, StorageReaderWriterOptions } from './StorageReaderWriter'
 import { EntityProvenTx, EntityProvenTxReq, EntitySyncState, EntityTransaction } from './schema/entities'
 import { ServicesCallHistory, WalletServices } from '../sdk/WalletServices.interfaces'
-import { AuthId, FindCertificatesArgs, FindOutputBasketsArgs, FindOutputsArgs, ProcessSyncChunkResult, ProvenOrRawTx, PurgeParams, PurgeResults, RequestSyncChunkArgs, StorageCreateActionResult, StorageFeeModel, StorageGetBeefOptions, StorageInternalizeActionResult, StorageProcessActionArgs, StorageProcessActionResults, StorageProvenOrReq, SyncChunk, TrxToken, UpdateProvenTxReqWithNewProvenTxArgs, UpdateProvenTxReqWithNewProvenTxResult, WalletStorageProvider } from '../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  FindCertificatesArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  ProcessSyncChunkResult,
+  ProvenOrRawTx,
+  PurgeParams,
+  PurgeResults,
+  RequestSyncChunkArgs,
+  StorageCreateActionResult,
+  StorageFeeModel,
+  StorageGetBeefOptions,
+  StorageInternalizeActionResult,
+  StorageProcessActionArgs,
+  StorageProcessActionResults,
+  StorageProvenOrReq,
+  SyncChunk,
+  TrxToken,
+  UpdateProvenTxReqWithNewProvenTxArgs,
+  UpdateProvenTxReqWithNewProvenTxResult,
+  WalletStorageProvider
+} from '../sdk/WalletStorage.interfaces'
 import { Chain, TransactionStatus } from '../sdk/types'
 import { TableProvenTxReq, TableProvenTxReqDynamics } from '../../src/storage/schema/tables/TableProvenTxReq'
 import { TableOutputBasket } from '../../src/storage/schema/tables/TableOutputBasket'
@@ -31,9 +53,23 @@ import { TableOutput, TableOutputX } from '../../src/storage/schema/tables/Table
 import { TableOutputTag } from '../../src/storage/schema/tables/TableOutputTag'
 import { TableTxLabel } from '../../src/storage/schema/tables/TableTxLabel'
 import { TableMonitorEvent } from '../../src/storage/schema/tables/TableMonitorEvent'
-import { parseWalletOutpoint, validateRelinquishCertificateArgs, validateRelinquishOutputArgs, ValidCreateActionArgs, ValidListActionsArgs, ValidListCertificatesArgs, ValidListOutputsArgs } from '../sdk/validationHelpers'
+import {
+  parseWalletOutpoint,
+  validateRelinquishCertificateArgs,
+  validateRelinquishOutputArgs,
+  ValidCreateActionArgs,
+  ValidListActionsArgs,
+  ValidListCertificatesArgs,
+  ValidListOutputsArgs
+} from '../sdk/validationHelpers'
 import { TableCertificateX } from './schema/tables/TableCertificate'
-import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_MISSING_PARAMETER, WERR_UNAUTHORIZED } from '../sdk/WERR_errors'
+import {
+  WERR_INTERNAL,
+  WERR_INVALID_OPERATION,
+  WERR_INVALID_PARAMETER,
+  WERR_MISSING_PARAMETER,
+  WERR_UNAUTHORIZED
+} from '../sdk/WERR_errors'
 import { verifyId, verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
 import { WalletError } from '../sdk/WalletError'
 import { asArray, asString } from '../utility/utilityHelpers.noBuffer'
@@ -302,11 +338,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     return r
   }
 
-  async updateTransactionsStatus(
-    transactionIds: number[],
-    status: TransactionStatus,
-    trx?: TrxToken
-  ): Promise<void> {
+  async updateTransactionsStatus(transactionIds: number[], status: TransactionStatus, trx?: TrxToken): Promise<void> {
     await this.transaction(async trx => {
       for (const id of transactionIds) {
         await this.updateTransactionStatus(status, id, undefined, undefined, trx)

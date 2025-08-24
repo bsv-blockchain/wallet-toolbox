@@ -1,9 +1,9 @@
 import { Knex } from 'knex'
 import { StorageKnex } from '../StorageKnex'
-import { TrxToken } from '../../sdk/WalletStorage.interfaces';
-import { WalletError } from '../../sdk/WalletError';
-import { TableTransaction } from '../schema/tables/TableTransaction';
-import { TableOutput } from '../schema/tables/TableOutput';
+import { TrxToken } from '../../sdk/WalletStorage.interfaces'
+import { WalletError } from '../../sdk/WalletError'
+import { TableTransaction } from '../schema/tables/TableTransaction'
+import { TableOutput } from '../schema/tables/TableOutput'
 
 /**
  * Looks for unpropagated state:

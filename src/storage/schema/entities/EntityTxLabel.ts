@@ -1,7 +1,7 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
-import { TableTxLabel } from "../tables/TableTxLabel"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
+import { TableTxLabel } from '../tables/TableTxLabel'
 
 export class EntityTxLabel extends EntityBase<TableTxLabel> {
   constructor(api?: TableTxLabel) {

@@ -1,5 +1,5 @@
-import { FiatExchangeRates, WalletServicesOptions } from "../../sdk/WalletServices.interfaces"
-import { WERR_BAD_REQUEST, WERR_MISSING_PARAMETER } from "../../sdk/WERR_errors"
+import { FiatExchangeRates, WalletServicesOptions } from '../../sdk/WalletServices.interfaces'
+import { WERR_BAD_REQUEST, WERR_MISSING_PARAMETER } from '../../sdk/WERR_errors'
 
 export async function updateChaintracksFiatExchangeRates(
   targetCurrencies: string[],

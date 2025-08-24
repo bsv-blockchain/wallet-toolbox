@@ -1,12 +1,12 @@
-import { GetMerklePathResult, WalletServices } from "../../../sdk/WalletServices.interfaces"
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { arraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableProvenTx } from "../tables/TableProvenTx"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { GetMerklePathResult, WalletServices } from '../../../sdk/WalletServices.interfaces'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { arraysEqual, verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableProvenTx } from '../tables/TableProvenTx'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 import { MerklePath } from '@bsv/sdk'
-import { EntityProvenTxReq } from "./EntityProvenTxReq"
-import { WERR_INTERNAL, WERR_MISSING_PARAMETER } from "../../../sdk/WERR_errors"
-import { WalletError } from "../../../sdk/WalletError"
+import { EntityProvenTxReq } from './EntityProvenTxReq'
+import { WERR_INTERNAL, WERR_MISSING_PARAMETER } from '../../../sdk/WERR_errors'
+import { WalletError } from '../../../sdk/WalletError'
 
 export class EntityProvenTx extends EntityBase<TableProvenTx> {
   /**

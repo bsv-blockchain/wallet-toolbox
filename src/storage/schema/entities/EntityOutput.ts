@@ -1,7 +1,7 @@
-import { StorageProvidedBy, TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { optionalArraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableOutput } from "../tables/TableOutput"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { StorageProvidedBy, TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { optionalArraysEqual, verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutput } from '../tables/TableOutput'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityOutput extends EntityBase<TableOutput> {
   constructor(api?: TableOutput) {

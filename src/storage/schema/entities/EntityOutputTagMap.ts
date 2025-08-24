@@ -1,8 +1,8 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { WERR_INVALID_OPERATION } from "../../../sdk/WERR_errors"
-import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableOutputTagMap } from "../tables/TableOutputTagMap"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { WERR_INVALID_OPERATION } from '../../../sdk/WERR_errors'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutputTagMap } from '../tables/TableOutputTagMap'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
   constructor(api?: TableOutputTagMap) {

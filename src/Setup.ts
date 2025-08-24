@@ -119,8 +119,7 @@ DEV_KEYS = '{
       `.env value for '${chain.toUpperCase()}_TAAL_API_KEY' is required.`
     )
 
-    if (!identityKey || !identityKey2)
-      throw new WERR_INVALID_OPERATION('.env is not a valid SetupEnv configuration.')
+    if (!identityKey || !identityKey2) throw new WERR_INVALID_OPERATION('.env is not a valid SetupEnv configuration.')
 
     return {
       chain,
@@ -578,4 +577,3 @@ export interface SetupWalletClientArgs extends SetupWalletArgs {
 function randomBytesHex(arg0: number): string {
   throw new Error('Function not implemented.')
 }
-

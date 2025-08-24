@@ -15,7 +15,17 @@ import { TableTxLabelMap } from './schema/tables/TableTxLabelMap'
 import { TableUser } from './schema/tables/TableUser'
 import { randomBytesBase64, verifyOneOrNone, verifyId, verifyOne } from '../utility/utilityHelpers'
 import { StorageReader, StorageReaderOptions } from './StorageReader'
-import { AuthId, FindOutputTagMapsArgs, FindProvenTxReqsArgs, FindProvenTxsArgs, FindTxLabelMapsArgs, ProcessSyncChunkResult, RequestSyncChunkArgs, SyncChunk, TrxToken } from '../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  FindOutputTagMapsArgs,
+  FindProvenTxReqsArgs,
+  FindProvenTxsArgs,
+  FindTxLabelMapsArgs,
+  ProcessSyncChunkResult,
+  RequestSyncChunkArgs,
+  SyncChunk,
+  TrxToken
+} from '../sdk/WalletStorage.interfaces'
 import { createSyncMap } from './schema/entities/EntityBase'
 
 export abstract class StorageReaderWriter extends StorageReader {
@@ -71,17 +81,9 @@ export abstract class StorageReaderWriter extends StorageReader {
     trx?: TrxToken
   ): Promise<number>
   abstract updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number>
-  abstract updateProvenTxReq(
-    id: number | number[],
-    update: Partial<TableProvenTxReq>,
-    trx?: TrxToken
-  ): Promise<number>
+  abstract updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number>
   abstract updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number>
-  abstract updateTransaction(
-    id: number | number[],
-    update: Partial<TableTransaction>,
-    trx?: TrxToken
-  ): Promise<number>
+  abstract updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number>
   abstract updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number>
   abstract updateTxLabelMap(
     transactionId: number,
@@ -314,11 +316,7 @@ export abstract class StorageReaderWriter extends StorageReader {
     }
   }
 
-  async findOrInsertOutputTagMap(
-    outputId: number,
-    outputTagId: number,
-    trx?: TrxToken
-  ): Promise<TableOutputTagMap> {
+  async findOrInsertOutputTagMap(outputId: number, outputTagId: number, trx?: TrxToken): Promise<TableOutputTagMap> {
     const partial = { outputId, outputTagId }
     for (let retry = 0; ; retry++) {
       try {

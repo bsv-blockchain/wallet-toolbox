@@ -1,23 +1,29 @@
-import { RequestSyncChunkArgs, SyncChunk, SyncStatus, TrxToken, WalletStorageSync } from "../../../sdk/WalletStorage.interfaces"
-import { WERR_INVALID_PARAMETER } from "../../../sdk/WERR_errors"
-import { maxDate, verifyId, verifyTruthy } from "../../../utility/utilityHelpers"
-import { TableSettings } from "../tables/TableSettings"
-import { TableSyncState } from "../tables/TableSyncState"
-import { createSyncMap, EntityBase, EntityStorage, EntitySyncMap, SyncError, SyncMap } from "./EntityBase"
-import { EntityCertificate } from "./EntityCertificate"
-import { EntityCertificateField } from "./EntityCertificateField"
-import { EntityCommission } from "./EntityCommission"
-import { EntityOutput } from "./EntityOutput"
-import { EntityOutputBasket } from "./EntityOutputBasket"
-import { EntityOutputTag } from "./EntityOutputTag"
-import { EntityOutputTagMap } from "./EntityOutputTagMap"
-import { EntityProvenTx } from "./EntityProvenTx"
-import { EntityProvenTxReq } from "./EntityProvenTxReq"
-import { EntityTransaction } from "./EntityTransaction"
-import { EntityTxLabel } from "./EntityTxLabel"
-import { EntityTxLabelMap } from "./EntityTxLabelMap"
-import { EntityUser } from "./EntityUser"
-import { MergeEntity } from "./MergeEntity"
+import {
+  RequestSyncChunkArgs,
+  SyncChunk,
+  SyncStatus,
+  TrxToken,
+  WalletStorageSync
+} from '../../../sdk/WalletStorage.interfaces'
+import { WERR_INVALID_PARAMETER } from '../../../sdk/WERR_errors'
+import { maxDate, verifyId, verifyTruthy } from '../../../utility/utilityHelpers'
+import { TableSettings } from '../tables/TableSettings'
+import { TableSyncState } from '../tables/TableSyncState'
+import { createSyncMap, EntityBase, EntityStorage, EntitySyncMap, SyncError, SyncMap } from './EntityBase'
+import { EntityCertificate } from './EntityCertificate'
+import { EntityCertificateField } from './EntityCertificateField'
+import { EntityCommission } from './EntityCommission'
+import { EntityOutput } from './EntityOutput'
+import { EntityOutputBasket } from './EntityOutputBasket'
+import { EntityOutputTag } from './EntityOutputTag'
+import { EntityOutputTagMap } from './EntityOutputTagMap'
+import { EntityProvenTx } from './EntityProvenTx'
+import { EntityProvenTxReq } from './EntityProvenTxReq'
+import { EntityTransaction } from './EntityTransaction'
+import { EntityTxLabel } from './EntityTxLabel'
+import { EntityTxLabelMap } from './EntityTxLabelMap'
+import { EntityUser } from './EntityUser'
+import { MergeEntity } from './MergeEntity'
 
 export class EntitySyncState extends EntityBase<TableSyncState> {
   constructor(api?: TableSyncState) {
@@ -232,12 +238,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
     return false
   }
 
-  override async mergeNew(
-    storage: EntityStorage,
-    userId: number,
-    syncMap: SyncMap,
-    trx?: TrxToken
-  ): Promise<void> {}
+  override async mergeNew(storage: EntityStorage, userId: number, syncMap: SyncMap, trx?: TrxToken): Promise<void> {}
 
   override async mergeExisting(
     storage: EntityStorage,

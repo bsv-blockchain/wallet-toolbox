@@ -18,10 +18,27 @@ import {
   maxPossibleSatoshis
 } from './generateChange'
 import { StorageProvider, validateStorageFeeModel } from '../StorageProvider'
-import { AuthId, StorageCreateActionResult, StorageCreateTransactionSdkInput, StorageCreateTransactionSdkOutput, StorageFeeModel, StorageGetBeefOptions, StorageProvidedBy } from '../../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  StorageCreateActionResult,
+  StorageCreateTransactionSdkInput,
+  StorageCreateTransactionSdkOutput,
+  StorageFeeModel,
+  StorageGetBeefOptions,
+  StorageProvidedBy
+} from '../../sdk/WalletStorage.interfaces'
 import { ValidCreateActionArgs, ValidCreateActionInput, ValidCreateActionOutput } from '../../sdk/validationHelpers'
 import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
-import { randomBytesBase64, sha256Hash, verifyId, verifyInteger, verifyNumber, verifyOne, verifyOneOrNone, verifyTruthy } from '../../utility/utilityHelpers'
+import {
+  randomBytesBase64,
+  sha256Hash,
+  verifyId,
+  verifyInteger,
+  verifyNumber,
+  verifyOne,
+  verifyOneOrNone,
+  verifyTruthy
+} from '../../utility/utilityHelpers'
 import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
 import { TableOutput } from '../schema/tables/TableOutput'
 import { asArray, asString } from '../../utility/utilityHelpers.noBuffer'
@@ -573,10 +590,7 @@ async function validateRequiredInputs(
         // inputTxids are checked next
         const isKnown = await storage.verifyKnownValidTransaction(btx.txid)
         if (!isKnown)
-          throw new WERR_INVALID_PARAMETER(
-            'inputBEEF',
-            `valid and contain complete proof data for unknown ${btx.txid}`
-          )
+          throw new WERR_INVALID_PARAMETER('inputBEEF', `valid and contain complete proof data for unknown ${btx.txid}`)
       }
     }
   }
@@ -587,8 +601,7 @@ async function validateRequiredInputs(
     if (!btx && trustSelf) {
       if (await storage.verifyKnownValidTransaction(txid)) btx = beef.mergeTxidOnly(txid)
     }
-    if (!btx)
-      throw new WERR_INVALID_PARAMETER('inputBEEF', `valid and contain proof data for possibly known ${txid}`)
+    if (!btx) throw new WERR_INVALID_PARAMETER('inputBEEF', `valid and contain proof data for possibly known ${txid}`)
   }
 
   if (!(await beef.verify(await storage.getServices().getChainTracker(), true))) {

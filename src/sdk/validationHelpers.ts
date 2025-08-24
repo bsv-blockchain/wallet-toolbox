@@ -684,8 +684,7 @@ export async function validateAcquireCertificateArgs(
   if (vargs.acquisitionProtocol === 'direct') {
     if (!vargs.serialNumber)
       throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
-    if (!vargs.signature)
-      throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
+    if (!vargs.signature) throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
     if (!vargs.revocationOutpoint)
       throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
   }
@@ -734,8 +733,7 @@ export function validateAcquireIssuanceCertificateArgs(
 ): ValidAcquireIssuanceCertificateArgs {
   if (args.acquisitionProtocol !== 'issuance')
     throw new WERR_INTERNAL('Only acquire certificate via issuance requests allowed here.')
-  if (args.serialNumber)
-    throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
+  if (args.serialNumber) throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
   if (args.signature) throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
   if (args.revocationOutpoint)
     throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')
@@ -762,8 +760,7 @@ export function validateAcquireIssuanceCertificateArgs(
 export function validateAcquireDirectCertificateArgs(args: AcquireCertificateArgs): ValidAcquireDirectCertificateArgs {
   if (args.acquisitionProtocol !== 'direct')
     throw new WERR_INTERNAL('Only acquire direct certificate requests allowed here.')
-  if (!args.serialNumber)
-    throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
+  if (!args.serialNumber) throw new WERR_INVALID_PARAMETER('serialNumber', 'valid when acquisitionProtocol is "direct"')
   if (!args.signature) throw new WERR_INVALID_PARAMETER('signature', 'valid when acquisitionProtocol is "direct"')
   if (!args.revocationOutpoint)
     throw new WERR_INVALID_PARAMETER('revocationOutpoint', 'valid when acquisitionProtocol is "direct"')

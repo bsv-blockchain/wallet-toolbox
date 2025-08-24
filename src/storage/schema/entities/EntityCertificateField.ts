@@ -1,8 +1,8 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { WERR_INVALID_OPERATION } from "../../../sdk/WERR_errors"
-import { verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableCertificateField } from "../tables/TableCertificateField"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { WERR_INVALID_OPERATION } from '../../../sdk/WERR_errors'
+import { verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableCertificateField } from '../tables/TableCertificateField'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityCertificateField extends EntityBase<TableCertificateField> {
   constructor(api?: TableCertificateField) {

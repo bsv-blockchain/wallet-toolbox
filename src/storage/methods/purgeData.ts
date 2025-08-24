@@ -9,11 +9,7 @@ import { TableOutputTagMap } from '../schema/tables/TableOutputTagMap'
 import { TableTxLabelMap } from '../schema/tables/TableTxLabelMap'
 import { TableCommission } from '../schema/tables/TableCommission'
 
-export async function purgeData(
-  storage: StorageKnex,
-  params: PurgeParams,
-  trx?: TrxToken
-): Promise<PurgeResults> {
+export async function purgeData(storage: StorageKnex, params: PurgeParams, trx?: TrxToken): Promise<PurgeResults> {
   const r: PurgeResults = { count: 0, log: '' }
   const defaultAge = 1000 * 60 * 60 * 24 * 14
 

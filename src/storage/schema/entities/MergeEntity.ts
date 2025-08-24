@@ -1,8 +1,8 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { maxDate, verifyId } from "../../../utility/utilityHelpers"
-import { EntityBase, EntityStorage, EntitySyncMap, SyncMap } from "./EntityBase"
-import { WERR_INTERNAL } from "../../../sdk/WERR_errors"
-import { EntityTimeStamp } from "../../../sdk/types"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { maxDate, verifyId } from '../../../utility/utilityHelpers'
+import { EntityBase, EntityStorage, EntitySyncMap, SyncMap } from './EntityBase'
+import { WERR_INTERNAL } from '../../../sdk/WERR_errors'
+import { EntityTimeStamp } from '../../../sdk/types'
 
 /**
  * @param API one of the storage table interfaces.
@@ -31,8 +31,7 @@ export class MergeEntity<API extends EntityTimeStamp, DE extends EntityBase<API>
     const o = verifyId(outId)
     if (map[i] === undefined) {
       map[i] = o
-    } else if (map[i] !== o)
-      throw new WERR_INTERNAL(`updateSyncMap map[${inId}] can't override ${map[i]} with ${o}`)
+    } else if (map[i] !== o) throw new WERR_INTERNAL(`updateSyncMap map[${inId}] can't override ${map[i]} with ${o}`)
   }
 
   /**

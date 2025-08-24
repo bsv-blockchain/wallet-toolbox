@@ -1,4 +1,3 @@
-
 import { Knex, knex as makeKnex } from 'knex'
 
 import dotenv from 'dotenv'

@@ -1,7 +1,7 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { arraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableCommission } from "../tables/TableCommission"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { arraysEqual, verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableCommission } from '../tables/TableCommission'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityCommission extends EntityBase<TableCommission> {
   constructor(api?: TableCommission) {
@@ -146,4 +146,3 @@ export class EntityCommission extends EntityBase<TableCommission> {
     return wasMerged
   }
 }
-

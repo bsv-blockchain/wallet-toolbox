@@ -23,24 +23,24 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ArcConfig](#interface-arcconfig) | [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [ChaintracksClientApi](#interface-chaintracksclientapi) | [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) |
-| [BaseBlockHeader](#interface-baseblockheader) | [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [ExchangeRatesIoApi](#interface-exchangeratesioapi) |
+| [ArcConfig](#interface-arcconfig) | [ChaintracksClientApi](#interface-chaintracksclientapi) | [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [ExchangeRatesIoApi](#interface-exchangeratesioapi) |
 | [BitailsConfig](#interface-bitailsconfig) | [ChaintracksFsApi](#interface-chaintracksfsapi) | [GetHeaderByteFileLinksResult](#interface-getheaderbytefilelinksresult) |
 | [BitailsMerkleProof](#interface-bitailsmerkleproof) | [ChaintracksInfoApi](#interface-chaintracksinfoapi) | [HeightRangeApi](#interface-heightrangeapi) |
-| [BlockHeader](#interface-blockheader) | [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [HeightRanges](#interface-heightranges) |
-| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [ChaintracksOptions](#interface-chaintracksoptions) | [LiveBlockHeader](#interface-liveblockheader) |
-| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [LiveIngestorApi](#interface-liveingestorapi) |
-| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) |
-| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) |
-| [BulkIngestorApi](#interface-bulkingestorapi) | [ChaintracksServiceOptions](#interface-chaintracksserviceoptions) | [ServiceCall](#interface-servicecall) |
-| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [ServiceToCall](#interface-servicetocall) |
-| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [WhatsOnChainServicesOptions](#interface-whatsonchainservicesoptions) |
-| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [WocChainInfo](#interface-wocchaininfo) |
-| [BulkStorageApi](#interface-bulkstorageapi) | [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [WocGetHeaderByteFileLinks](#interface-wocgetheaderbytefilelinks) |
-| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [ChaintracksStorageKnexOptions](#interface-chaintracksstorageknexoptions) | [WocGetHeadersHeader](#interface-wocgetheadersheader) |
-| [BulkSyncResult](#interface-bulksyncresult) | [ChaintracksStorageMemoryOptions](#interface-chaintracksstoragememoryoptions) | [WocHeader](#interface-wocheader) |
-| [ChaintracksApi](#interface-chaintracksapi) | [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) |  |
+| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [HeightRanges](#interface-heightranges) |
+| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [ChaintracksOptions](#interface-chaintracksoptions) | [LiveBlockHeader](#interface-liveblockheader) |
+| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [LiveIngestorApi](#interface-liveingestorapi) |
+| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) |
+| [BulkIngestorApi](#interface-bulkingestorapi) | [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) |
+| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [ChaintracksServiceOptions](#interface-chaintracksserviceoptions) | [ServiceCall](#interface-servicecall) |
+| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [ServiceToCall](#interface-servicetocall) |
+| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [WhatsOnChainServicesOptions](#interface-whatsonchainservicesoptions) |
+| [BulkStorageApi](#interface-bulkstorageapi) | [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [WocChainInfo](#interface-wocchaininfo) |
+| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [WocGetHeaderByteFileLinks](#interface-wocgetheaderbytefilelinks) |
+| [BulkSyncResult](#interface-bulksyncresult) | [ChaintracksStorageKnexOptions](#interface-chaintracksstorageknexoptions) | [WocGetHeadersHeader](#interface-wocgetheadersheader) |
+| [ChaintracksApi](#interface-chaintracksapi) | [ChaintracksStorageMemoryOptions](#interface-chaintracksstoragememoryoptions) | [WocHeader](#interface-wocheader) |
+| [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) |  |
+| [ChaintracksChainTrackerOptions](#interface-chaintrackschaintrackeroptions) | [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -134,75 +134,6 @@ See also: [blockHash](./services.md#function-blockhash)
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
-##### Interface: BaseBlockHeader
-
-These are fields of 80 byte serialized header in order whose double sha256 hash is a block's hash value
-and the next block's previousHash value.
-
-All block hash values and merkleRoot values are 32 byte hex string values with the byte order reversed from the serialized byte order.
-
-```ts
-export interface BaseBlockHeader {
-    version: number;
-    previousHash: string;
-    merkleRoot: string;
-    time: number;
-    bits: number;
-    nonce: number;
-}
-```
-
-###### Property bits
-
-Block header bits value. Serialized length is 4 bytes.
-
-```ts
-bits: number
-```
-
-###### Property merkleRoot
-
-Root hash of the merkle tree of all transactions in this block. Serialized length is 32 bytes.
-
-```ts
-merkleRoot: string
-```
-
-###### Property nonce
-
-Block header nonce value. Serialized length is 4 bytes.
-
-```ts
-nonce: number
-```
-
-###### Property previousHash
-
-Hash of previous block's block header. Serialized length is 32 bytes.
-
-```ts
-previousHash: string
-```
-
-###### Property time
-
-Block header time value. Serialized length is 4 bytes.
-
-```ts
-time: number
-```
-
-###### Property version
-
-Block header version value. Serialized length is 4 bytes.
-
-```ts
-version: number
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
 ##### Interface: BitailsConfig
 
 ```ts
@@ -240,38 +171,6 @@ export interface BitailsMerkleProof {
     target: string;
     nodes: string[];
 }
-```
-
-Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
-
----
-##### Interface: BlockHeader
-
-A `BaseBlockHeader` extended with its computed hash and height in its chain.
-
-```ts
-export interface BlockHeader extends BaseBlockHeader {
-    height: number;
-    hash: string;
-}
-```
-
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader)
-
-###### Property hash
-
-The double sha256 hash of the serialized `BaseBlockHeader` fields.
-
-```ts
-hash: string
-```
-
-###### Property height
-
-Height of the header, starting from zero.
-
-```ts
-height: number
 ```
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
@@ -498,7 +397,7 @@ export interface BulkIngestorApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 ###### Method fetchHeaders
 
@@ -511,7 +410,7 @@ The storage methods `insertBulkFile`, `updateBulkFile`, and `addBulkHeaders` sho
 ```ts
 fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 Returns
 
@@ -567,7 +466,7 @@ A BulkIngestor has two potential goals:
 ```ts
 synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BulkSyncResult>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [HeightRanges](./services.md#interface-heightranges)
 
 Returns
 
@@ -766,7 +665,7 @@ export interface BulkStorageApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [HeightRange](./services.md#class-heightrange)
+See also: [BlockHeader](./client.md#interface-blockheader), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [HeightRange](./services.md#class-heightrange)
 
 ###### Method appendHeaders
 
@@ -816,7 +715,7 @@ Throws if not found.
 ```ts
 findHeaderForHeight(height: number): Promise<BlockHeader>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Argument Details
 
@@ -830,7 +729,7 @@ Returns block header for a given block height on active chain.
 ```ts
 findHeaderForHeightOrUndefined(height: number): Promise<BlockHeader | undefined>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Argument Details
 
@@ -932,7 +831,7 @@ export interface BulkSyncResult {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -1004,6 +903,17 @@ Argument Details
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
 ---
+##### Interface: ChaintracksChainTrackerOptions
+
+```ts
+export interface ChaintracksChainTrackerOptions {
+    maxRetries?: number;
+}
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
 ##### Interface: ChaintracksClientApi
 
 Chaintracks client API excluding events and callbacks
@@ -1031,7 +941,7 @@ export interface ChaintracksClientApi extends ChainTracker {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [HeaderListener](./services.md#type-headerlistener), [ReorgListener](./services.md#type-reorglistener)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [HeaderListener](./services.md#type-headerlistener), [ReorgListener](./services.md#type-reorglistener)
 
 ###### Method addHeader
 
@@ -1045,7 +955,7 @@ is considered for insertion.
 ```ts
 addHeader(header: BaseBlockHeader): Promise<void>
 ```
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader)
 
 Returns
 
@@ -1066,7 +976,7 @@ Returns the active chain tip header
 ```ts
 findChainTipHeader(): Promise<BlockHeader>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method findHeaderForBlockHash
 
@@ -1075,7 +985,7 @@ Returns block header for a given recent block hash or undefined.
 ```ts
 findHeaderForBlockHash(hash: string): Promise<BlockHeader | undefined>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method findHeaderForHeight
 
@@ -1084,7 +994,7 @@ Returns block header for a given block height on active chain.
 ```ts
 findHeaderForHeight(height: number): Promise<BlockHeader | undefined>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method getChain
 
@@ -1628,7 +1538,7 @@ export interface ChaintracksStorageIngestApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 ###### Method deleteOlderLiveBlockHeaders
 
@@ -1687,7 +1597,7 @@ Implementation must call `pruneLiveBlockHeaders` after adding new header.
 ```ts
 insertHeader(header: BlockHeader, prev?: LiveBlockHeader): Promise<InsertHeaderResult>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Argument Details
 
@@ -1876,7 +1786,7 @@ export interface ChaintracksStorageQueryApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [HeightRange](./services.md#class-heightrange), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [HeightRange](./services.md#class-heightrange), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 ###### Property batchInsertLimit
 
@@ -1987,7 +1897,7 @@ Returns block header for a given block height on active chain.
 ```ts
 findHeaderForHeight(height: number): Promise<LiveBlockHeader | BlockHeader>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Argument Details
 
@@ -2001,7 +1911,7 @@ Returns block header for a given block height on active chain.
 ```ts
 findHeaderForHeightOrUndefined(height: number): Promise<LiveBlockHeader | BlockHeader | undefined>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Argument Details
 
@@ -2246,7 +2156,7 @@ export interface LiveBlockHeader extends BlockHeader {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Property chainWork
 
@@ -2310,7 +2220,7 @@ export interface LiveIngestorApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi)
+See also: [BlockHeader](./client.md#interface-blockheader), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi)
 
 ###### Method setStorage
 
@@ -2661,20 +2571,20 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [ARC](#class-arc) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [ChaintracksWritableFile](#class-chaintrackswritablefile) |
-| [Bitails](#class-bitails) | [BulkIngestorWhatsOnChainWs](#class-bulkingestorwhatsonchainws) | [HeightRange](#class-heightrange) |
-| [BulkFileDataManager](#class-bulkfiledatamanager) | [BulkStorageBase](#class-bulkstoragebase) | [LiveIngestorBase](#class-liveingestorbase) |
-| [BulkFileDataReader](#class-bulkfiledatareader) | [Chaintracks](#class-chaintracks) | [LiveIngestorWhatsOnChainPoll](#class-liveingestorwhatsonchainpoll) |
-| [BulkFilesReader](#class-bulkfilesreader) | [ChaintracksAppendableFile](#class-chaintracksappendablefile) | [LiveIngestorWhatsOnChainWs](#class-liveingestorwhatsonchainws) |
-| [BulkFilesReaderFs](#class-bulkfilesreaderfs) | [ChaintracksFetch](#class-chaintracksfetch) | [SdkWhatsOnChain](#class-sdkwhatsonchain) |
-| [BulkFilesReaderStorage](#class-bulkfilesreaderstorage) | [ChaintracksFsStatics](#class-chaintracksfsstatics) | [ServiceCollection](#class-servicecollection) |
-| [BulkHeaderFile](#class-bulkheaderfile) | [ChaintracksKnexMigrations](#class-chaintracksknexmigrations) | [Services](#class-services) |
-| [BulkHeaderFileFs](#class-bulkheaderfilefs) | [ChaintracksReadableFile](#class-chaintracksreadablefile) | [SingleWriterMultiReaderLock](#class-singlewritermultireaderlock) |
-| [BulkHeaderFileStorage](#class-bulkheaderfilestorage) | [ChaintracksService](#class-chaintracksservice) | [WhatsOnChain](#class-whatsonchain) |
-| [BulkHeaderFiles](#class-bulkheaderfiles) | [ChaintracksServiceClient](#class-chaintracksserviceclient) | [WhatsOnChainNoServices](#class-whatsonchainnoservices) |
-| [BulkIngestorBase](#class-bulkingestorbase) | [ChaintracksStorageBase](#class-chaintracksstoragebase) | [WhatsOnChainServices](#class-whatsonchainservices) |
-| [BulkIngestorCDN](#class-bulkingestorcdn) | [ChaintracksStorageKnex](#class-chaintracksstorageknex) |  |
-| [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |  |
+| [ARC](#class-arc) | [BulkIngestorWhatsOnChainCdn](#class-bulkingestorwhatsonchaincdn) | [ChaintracksStorageNoDb](#class-chaintracksstoragenodb) |
+| [Bitails](#class-bitails) | [BulkIngestorWhatsOnChainWs](#class-bulkingestorwhatsonchainws) | [ChaintracksWritableFile](#class-chaintrackswritablefile) |
+| [BulkFileDataManager](#class-bulkfiledatamanager) | [BulkStorageBase](#class-bulkstoragebase) | [HeightRange](#class-heightrange) |
+| [BulkFileDataReader](#class-bulkfiledatareader) | [Chaintracks](#class-chaintracks) | [LiveIngestorBase](#class-liveingestorbase) |
+| [BulkFilesReader](#class-bulkfilesreader) | [ChaintracksAppendableFile](#class-chaintracksappendablefile) | [LiveIngestorWhatsOnChainPoll](#class-liveingestorwhatsonchainpoll) |
+| [BulkFilesReaderFs](#class-bulkfilesreaderfs) | [ChaintracksChainTracker](#class-chaintrackschaintracker) | [LiveIngestorWhatsOnChainWs](#class-liveingestorwhatsonchainws) |
+| [BulkFilesReaderStorage](#class-bulkfilesreaderstorage) | [ChaintracksFetch](#class-chaintracksfetch) | [SdkWhatsOnChain](#class-sdkwhatsonchain) |
+| [BulkHeaderFile](#class-bulkheaderfile) | [ChaintracksFsStatics](#class-chaintracksfsstatics) | [ServiceCollection](#class-servicecollection) |
+| [BulkHeaderFileFs](#class-bulkheaderfilefs) | [ChaintracksKnexMigrations](#class-chaintracksknexmigrations) | [Services](#class-services) |
+| [BulkHeaderFileStorage](#class-bulkheaderfilestorage) | [ChaintracksReadableFile](#class-chaintracksreadablefile) | [SingleWriterMultiReaderLock](#class-singlewritermultireaderlock) |
+| [BulkHeaderFiles](#class-bulkheaderfiles) | [ChaintracksService](#class-chaintracksservice) | [WhatsOnChain](#class-whatsonchain) |
+| [BulkIngestorBase](#class-bulkingestorbase) | [ChaintracksServiceClient](#class-chaintracksserviceclient) | [WhatsOnChainNoServices](#class-whatsonchainnoservices) |
+| [BulkIngestorCDN](#class-bulkingestorcdn) | [ChaintracksStorageBase](#class-chaintracksstoragebase) | [WhatsOnChainServices](#class-whatsonchainservices) |
+| [BulkIngestorCDNBabbage](#class-bulkingestorcdnbabbage) | [ChaintracksStorageKnex](#class-chaintracksstorageknex) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2696,8 +2606,8 @@ export class ARC {
     constructor(URL: string, config?: ArcConfig, name?: string);
     constructor(URL: string, apiKey?: string, name?: string);
     constructor(URL: string, config?: string | ArcConfig, name?: string) 
-    async postRawTx(rawTx: HexString, txids?: string[]): Promise<sdk.PostTxResultForTxid> 
-    async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
+    async postRawTx(rawTx: HexString, txids?: string[]): Promise<PostTxResultForTxid> 
+    async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
     async getTxData(txid: string): Promise<ArcMinerGetTxData> 
 }
 ```
@@ -2752,7 +2662,7 @@ It does process multiple new transactions, however, which allows results for all
 to be collected by the `/v1/tx/${txid}` endpoint.
 
 ```ts
-async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
+async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
 ```
 See also: [PostBeefResult](./client.md#interface-postbeefresult)
 
@@ -2767,7 +2677,7 @@ The ARC '/v1/tx' endpoint, as of 2025-02-17 DOES NOT support the following hex s
   1. V2 serialized Beef
 
 ```ts
-async postRawTx(rawTx: HexString, txids?: string[]): Promise<sdk.PostTxResultForTxid> 
+async postRawTx(rawTx: HexString, txids?: string[]): Promise<PostTxResultForTxid> 
 ```
 See also: [PostTxResultForTxid](./client.md#interface-posttxresultfortxid)
 
@@ -2778,15 +2688,15 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export class Bitails {
-    readonly chain: sdk.Chain;
+    readonly chain: Chain;
     readonly apiKey: string;
     readonly URL: string;
     readonly httpClient: HttpClient;
-    constructor(chain: sdk.Chain = "main", config: BitailsConfig = {}) 
+    constructor(chain: Chain = "main", config: BitailsConfig = {}) 
     getHttpHeaders(): Record<string, string> 
-    async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
-    async postRaws(raws: HexString[], txids?: string[]): Promise<sdk.PostBeefResult> 
-    async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> 
+    async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
+    async postRaws(raws: HexString[], txids?: string[]): Promise<PostBeefResult> 
+    async getMerklePath(txid: string, services: WalletServices): Promise<GetMerklePathResult> 
 }
 ```
 
@@ -2799,14 +2709,14 @@ Bitails does not natively support a postBeef end-point aware of multiple txids o
 Send rawTx in `txids` order from beef.
 
 ```ts
-async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
+async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
 ```
 See also: [PostBeefResult](./client.md#interface-postbeefresult)
 
 ###### Method postRaws
 
 ```ts
-async postRaws(raws: HexString[], txids?: string[]): Promise<sdk.PostBeefResult> 
+async postRaws(raws: HexString[], txids?: string[]): Promise<PostBeefResult> 
 ```
 See also: [PostBeefResult](./client.md#interface-postbeefresult)
 
@@ -2857,7 +2767,7 @@ export class BulkFileDataManager {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkFileDataManagerMergeResult](./services.md#interface-bulkfiledatamanagermergeresult), [BulkFileDataManagerOptions](./services.md#interface-bulkfiledatamanageroptions), [BulkFileDataReader](./services.md#class-bulkfiledatareader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksStorageBulkFileApi](./services.md#interface-chaintracksstoragebulkfileapi), [HeightRange](./services.md#class-heightrange)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkFileDataManagerMergeResult](./services.md#interface-bulkfiledatamanagermergeresult), [BulkFileDataManagerOptions](./services.md#interface-bulkfiledatamanageroptions), [BulkFileDataReader](./services.md#class-bulkfiledatareader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksStorageBulkFileApi](./services.md#interface-chaintracksstoragebulkfileapi), [HeightRange](./services.md#class-heightrange)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -2916,7 +2826,7 @@ export class BulkFilesReader {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BulkHeaderFile](./services.md#class-bulkheaderfile), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [HeightRange](./services.md#class-heightrange)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BulkHeaderFile](./services.md#class-bulkheaderfile), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [HeightRange](./services.md#class-heightrange)
 
 ###### Property files
 
@@ -3128,7 +3038,7 @@ export abstract class BulkIngestorBase implements BulkIngestorApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkHeaderFilesInfo](./services.md#interface-bulkheaderfilesinfo), [BulkIngestorApi](./services.md#interface-bulkingestorapi), [BulkIngestorBaseOptions](./services.md#interface-bulkingestorbaseoptions), [BulkSyncResult](./services.md#interface-bulksyncresult), [Chain](./client.md#type-chain), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkHeaderFilesInfo](./services.md#interface-bulkheaderfilesinfo), [BulkIngestorApi](./services.md#interface-bulkingestorapi), [BulkIngestorBaseOptions](./services.md#interface-bulkingestorbaseoptions), [BulkSyncResult](./services.md#interface-bulksyncresult), [Chain](./client.md#type-chain), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 ###### Property filesInfo
 
@@ -3162,7 +3072,7 @@ The storage methods `insertBulkFile`, `updateBulkFile`, and `addBulkHeaders` sho
 ```ts
 abstract fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 Returns
 
@@ -3200,7 +3110,7 @@ A BulkIngestor has two potential goals:
 ```ts
 async synchronize(presentHeight: number, before: HeightRanges, priorLiveHeaders: BlockHeader[]): Promise<BulkSyncResult> 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkSyncResult](./services.md#interface-bulksyncresult), [HeightRanges](./services.md#interface-heightranges)
 
 Returns
 
@@ -3237,7 +3147,7 @@ export class BulkIngestorCDN extends BulkIngestorBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [BulkHeaderFilesInfo](./services.md#interface-bulkheaderfilesinfo), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorCDNOptions](./services.md#interface-bulkingestorcdnoptions), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [BulkHeaderFilesInfo](./services.md#interface-bulkheaderfilesinfo), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorCDNOptions](./services.md#interface-bulkingestorcdnoptions), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 ###### Method createBulkIngestorCDNOptions
 
@@ -3279,7 +3189,7 @@ Context Replace:
 ```ts
 async fetchHeaders(before: HeightRanges, fetchRange: HeightRange, bulkRange: HeightRange, priorLiveHeaders: BlockHeader[]): Promise<BlockHeader[]> 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges)
 
 Argument Details
 
@@ -3333,7 +3243,7 @@ export class BulkIngestorWhatsOnChainCdn extends BulkIngestorBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorWhatsOnChainOptions](./services.md#interface-bulkingestorwhatsonchainoptions), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorWhatsOnChainOptions](./services.md#interface-bulkingestorwhatsonchainoptions), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
 
 ###### Method createBulkIngestorWhatsOnChainOptions
 
@@ -3364,7 +3274,7 @@ export class BulkIngestorWhatsOnChainWs extends BulkIngestorBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorWhatsOnChainOptions](./services.md#interface-bulkingestorwhatsonchainoptions), [Chain](./client.md#type-chain), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkIngestorBase](./services.md#class-bulkingestorbase), [BulkIngestorWhatsOnChainOptions](./services.md#interface-bulkingestorwhatsonchainoptions), [Chain](./client.md#type-chain), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
 
 ###### Method createBulkIngestorWhatsOnChainOptions
 
@@ -3401,7 +3311,7 @@ export abstract class BulkStorageBase implements BulkStorageApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkStorageApi](./services.md#interface-bulkstorageapi), [BulkStorageBaseOptions](./services.md#interface-bulkstoragebaseoptions), [Chain](./client.md#type-chain), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [HeightRange](./services.md#class-heightrange)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkStorageApi](./services.md#interface-bulkstorageapi), [BulkStorageBaseOptions](./services.md#interface-bulkstoragebaseoptions), [Chain](./client.md#type-chain), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [HeightRange](./services.md#class-heightrange)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3606,7 +3516,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [ChaintracksManagementApi](./services.md#interface-chaintracksmanagementapi), [ChaintracksOptions](./services.md#interface-chaintracksoptions), [HeaderListener](./services.md#type-headerlistener), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [LiveBlockHeader](./services.md#interface-liveblockheader), [ReorgListener](./services.md#type-reorglistener), [Services](./services.md#class-services), [asString](./client.md#function-asstring), [blockHash](./services.md#function-blockhash), [wait](./client.md#function-wait)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksFsApi](./services.md#interface-chaintracksfsapi), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [ChaintracksManagementApi](./services.md#interface-chaintracksmanagementapi), [ChaintracksOptions](./services.md#interface-chaintracksoptions), [HeaderListener](./services.md#type-headerlistener), [HeightRange](./services.md#class-heightrange), [HeightRanges](./services.md#interface-heightranges), [LiveBlockHeader](./services.md#interface-liveblockheader), [ReorgListener](./services.md#type-reorglistener), [Services](./services.md#class-services), [asString](./client.md#function-asstring), [blockHash](./services.md#function-blockhash), [wait](./client.md#function-wait)
 
 ###### Method addHeader
 
@@ -3619,7 +3529,7 @@ Headers are considered in the order they were added.
 ```ts
 async addHeader(header: BaseBlockHeader): Promise<void> 
 ```
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader)
 
 ###### Method getPresentHeight
 
@@ -3674,6 +3584,24 @@ export class ChaintracksAppendableFile extends ChaintracksReadableFile implement
 ```
 
 See also: [ChaintracksAppendableFileApi](./services.md#interface-chaintracksappendablefileapi), [ChaintracksReadableFile](./services.md#class-chaintracksreadablefile)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Class: ChaintracksChainTracker
+
+```ts
+export class ChaintracksChainTracker implements ChainTracker {
+    chaintracks: ChaintracksServiceClient;
+    cache: Record<number, string>;
+    options: ChaintracksChainTrackerOptions;
+    constructor(chain?: Chain, chaintracks?: ChaintracksServiceClient, options?: ChaintracksChainTrackerOptions) 
+    async currentHeight(): Promise<number> 
+    async isValidRootForHeight(root: string, height: number): Promise<boolean> 
+}
+```
+
+See also: [Chain](./client.md#type-chain), [ChaintracksChainTrackerOptions](./services.md#interface-chaintrackschaintrackeroptions), [ChaintracksServiceClient](./services.md#class-chaintracksserviceclient)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3785,7 +3713,7 @@ Connects to a ChaintracksService to implement 'ChaintracksClientApi'
 export class ChaintracksServiceClient implements ChaintracksClientApi {
     static createChaintracksServiceClientOptions(): ChaintracksServiceClientOptions 
     options: ChaintracksServiceClientOptions;
-    constructor(public chain: sdk.Chain, public serviceUrl: string, options?: ChaintracksServiceClientOptions) 
+    constructor(public chain: Chain, public serviceUrl: string, options?: ChaintracksServiceClientOptions) 
     subscribeHeaders(listener: HeaderListener): Promise<string> 
     subscribeReorgs(listener: ReorgListener): Promise<string> 
     unsubscribe(subscriptionId: string): Promise<boolean> 
@@ -3797,7 +3725,7 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
     async addHeader(header: BaseBlockHeader): Promise<void> 
     async startListening(): Promise<void> 
     async listening(): Promise<void> 
-    async getChain(): Promise<sdk.Chain> 
+    async getChain(): Promise<Chain> 
     async isListening(): Promise<boolean> 
     async isSynchronized(): Promise<boolean> 
     async getPresentHeight(): Promise<number> 
@@ -3810,7 +3738,7 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksClientApi](./services.md#interface-chaintracksclientapi), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [ChaintracksServiceClientOptions](./services.md#interface-chaintracksserviceclientoptions), [HeaderListener](./services.md#type-headerlistener), [ReorgListener](./services.md#type-reorglistener)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksClientApi](./services.md#interface-chaintracksclientapi), [ChaintracksInfoApi](./services.md#interface-chaintracksinfoapi), [ChaintracksServiceClientOptions](./services.md#interface-chaintracksserviceclientoptions), [HeaderListener](./services.md#type-headerlistener), [ReorgListener](./services.md#type-reorglistener)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -3873,14 +3801,14 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkFileDataManager](./services.md#class-bulkfiledatamanager), [Chain](./client.md#type-chain), [ChaintracksStorageBaseOptions](./services.md#interface-chaintracksstoragebaseoptions), [ChaintracksStorageIngestApi](./services.md#interface-chaintracksstorageingestapi), [ChaintracksStorageQueryApi](./services.md#interface-chaintracksstoragequeryapi), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkFileDataManager](./services.md#class-bulkfiledatamanager), [Chain](./client.md#type-chain), [ChaintracksStorageBaseOptions](./services.md#interface-chaintracksstoragebaseoptions), [ChaintracksStorageIngestApi](./services.md#interface-chaintracksstorageingestapi), [ChaintracksStorageQueryApi](./services.md#interface-chaintracksstoragequeryapi), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 ###### Method insertHeader
 
 ```ts
 abstract insertHeader(header: BlockHeader): Promise<InsertHeaderResult>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
+See also: [BlockHeader](./client.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
 
 Returns
 
@@ -3945,14 +3873,14 @@ export class ChaintracksStorageKnex extends ChaintracksStorageBase implements Ch
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [Chain](./client.md#type-chain), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [ChaintracksStorageBulkFileApi](./services.md#interface-chaintracksstoragebulkfileapi), [ChaintracksStorageKnexOptions](./services.md#interface-chaintracksstorageknexoptions), [DBType](./storage.md#type-dbtype), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [BulkHeaderFileInfo](./services.md#interface-bulkheaderfileinfo), [Chain](./client.md#type-chain), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [ChaintracksStorageBulkFileApi](./services.md#interface-chaintracksstoragebulkfileapi), [ChaintracksStorageKnexOptions](./services.md#interface-chaintracksstorageknexoptions), [DBType](./storage.md#type-dbtype), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 ###### Method insertHeader
 
 ```ts
 async insertHeader(header: BlockHeader): Promise<InsertHeaderResult> 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
+See also: [BlockHeader](./client.md#interface-blockheader), [InsertHeaderResult](./services.md#type-insertheaderresult)
 
 Returns
 
@@ -4007,7 +3935,7 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [ChaintracksStorageNoDbOptions](./services.md#interface-chaintracksstoragenodboptions), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [ChaintracksStorageBase](./services.md#class-chaintracksstoragebase), [ChaintracksStorageNoDbOptions](./services.md#interface-chaintracksstoragenodboptions), [HeightRange](./services.md#class-heightrange), [InsertHeaderResult](./services.md#type-insertheaderresult), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4051,7 +3979,7 @@ export class HeightRange implements HeightRangeApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRangeApi](./services.md#interface-heightrangeapi)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRangeApi](./services.md#interface-heightrangeapi)
 
 ###### Method above
 
@@ -4097,7 +4025,7 @@ See also: [HeightRange](./services.md#class-heightrange)
 ```ts
 static from(headers: BlockHeader[]): HeightRange 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader), [HeightRange](./services.md#class-heightrange)
+See also: [BlockHeader](./client.md#interface-blockheader), [HeightRange](./services.md#class-heightrange)
 
 Returns
 
@@ -4167,7 +4095,7 @@ export abstract class LiveIngestorBase implements LiveIngestorApi {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [LiveIngestorApi](./services.md#interface-liveingestorapi), [LiveIngestorBaseOptions](./services.md#interface-liveingestorbaseoptions)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksStorageApi](./services.md#interface-chaintracksstorageapi), [LiveIngestorApi](./services.md#interface-liveingestorapi), [LiveIngestorBaseOptions](./services.md#interface-liveingestorbaseoptions)
 
 ###### Method getHeaderByHash
 
@@ -4177,7 +4105,7 @@ when the previousHash of a new header is unknown.
 ```ts
 abstract getHeaderByHash(hash: string): Promise<BlockHeader | undefined>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Argument Details
 
@@ -4223,7 +4151,7 @@ after `shutdown`.
 ```ts
 abstract startListening(liveHeaders: BlockHeader[]): Promise<void>
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method stopListening
 
@@ -4265,7 +4193,7 @@ export class LiveIngestorWhatsOnChainPoll extends LiveIngestorBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [LiveIngestorBase](./services.md#class-liveingestorbase), [LiveIngestorWhatsOnChainOptions](./services.md#interface-liveingestorwhatsonchainoptions), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [LiveIngestorBase](./services.md#class-liveingestorbase), [LiveIngestorWhatsOnChainOptions](./services.md#interface-liveingestorwhatsonchainoptions), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4285,7 +4213,7 @@ export class LiveIngestorWhatsOnChainWs extends LiveIngestorBase {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [LiveIngestorBase](./services.md#class-liveingestorbase), [LiveIngestorWhatsOnChainOptions](./services.md#interface-liveingestorwhatsonchainoptions), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [LiveIngestorBase](./services.md#class-liveingestorbase), [LiveIngestorWhatsOnChainOptions](./services.md#interface-liveingestorwhatsonchainoptions), [StopListenerToken](./services.md#type-stoplistenertoken), [WhatsOnChainServices](./services.md#class-whatsonchainservices)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4402,22 +4330,22 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: Services
 
 ```ts
-export class Services implements sdk.WalletServices {
-    static createDefaultOptions(chain: sdk.Chain): sdk.WalletServicesOptions 
-    options: sdk.WalletServicesOptions;
+export class Services implements WalletServices {
+    static createDefaultOptions(chain: Chain): WalletServicesOptions 
+    options: WalletServicesOptions;
     whatsonchain: WhatsOnChain;
     arcTaal: ARC;
     arcGorillaPool?: ARC;
     bitails: Bitails;
-    getMerklePathServices: ServiceCollection<sdk.GetMerklePathService>;
-    getRawTxServices: ServiceCollection<sdk.GetRawTxService>;
-    postBeefServices: ServiceCollection<sdk.PostBeefService>;
-    getUtxoStatusServices: ServiceCollection<sdk.GetUtxoStatusService>;
-    getStatusForTxidsServices: ServiceCollection<sdk.GetStatusForTxidsService>;
-    getScriptHashHistoryServices: ServiceCollection<sdk.GetScriptHashHistoryService>;
-    updateFiatExchangeRateServices: ServiceCollection<sdk.UpdateFiatExchangeRateService>;
-    chain: sdk.Chain;
-    constructor(optionsOrChain: sdk.Chain | sdk.WalletServicesOptions) 
+    getMerklePathServices: ServiceCollection<GetMerklePathService>;
+    getRawTxServices: ServiceCollection<GetRawTxService>;
+    postBeefServices: ServiceCollection<PostBeefService>;
+    getUtxoStatusServices: ServiceCollection<GetUtxoStatusService>;
+    getStatusForTxidsServices: ServiceCollection<GetStatusForTxidsService>;
+    getScriptHashHistoryServices: ServiceCollection<GetScriptHashHistoryService>;
+    updateFiatExchangeRateServices: ServiceCollection<UpdateFiatExchangeRateService>;
+    chain: Chain;
+    constructor(optionsOrChain: Chain | WalletServicesOptions) 
     getServicesCallHistory(reset?: boolean): ServicesCallHistory 
     async getChainTracker(): Promise<ChainTracker> 
     async getBsvExchangeRate(): Promise<number> 
@@ -4426,27 +4354,27 @@ export class Services implements sdk.WalletServices {
     get getRawTxsCount() 
     get postBeefServicesCount() 
     get getUtxoStatsCount() 
-    async getStatusForTxids(txids: string[], useNext?: boolean): Promise<sdk.GetStatusForTxidsResult> 
+    async getStatusForTxids(txids: string[], useNext?: boolean): Promise<GetStatusForTxidsResult> 
     hashOutputScript(script: string): string 
     async isUtxo(output: TableOutput): Promise<boolean> 
-    async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<sdk.GetUtxoStatusResult> 
-    async getScriptHashHistory(hash: string, useNext?: boolean): Promise<sdk.GetScriptHashHistoryResult> 
+    async getUtxoStatus(output: string, outputFormat?: GetUtxoStatusOutputFormat, outpoint?: string, useNext?: boolean): Promise<GetUtxoStatusResult> 
+    async getScriptHashHistory(hash: string, useNext?: boolean): Promise<GetScriptHashHistoryResult> 
     postBeefMode: "PromiseAll" | "UntilSuccess" = "UntilSuccess";
-    async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult[]> 
-    async getRawTx(txid: string, useNext?: boolean): Promise<sdk.GetRawTxResult> 
+    async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult[]> 
+    async getRawTx(txid: string, useNext?: boolean): Promise<GetRawTxResult> 
     async invokeChaintracksWithRetry<R>(method: () => Promise<R>): Promise<R> 
     async getHeaderForHeight(height: number): Promise<number[]> 
     async getHeight(): Promise<number> 
-    async hashToHeader(hash: string): Promise<sdk.BlockHeader> 
-    async getMerklePath(txid: string, useNext?: boolean): Promise<sdk.GetMerklePathResult> 
+    async hashToHeader(hash: string): Promise<BlockHeader> 
+    async getMerklePath(txid: string, useNext?: boolean): Promise<GetMerklePathResult> 
     targetCurrencies = ["USD", "GBP", "EUR"];
-    async updateFiatExchangeRates(rates?: sdk.FiatExchangeRates, updateMsecs?: number): Promise<sdk.FiatExchangeRates> 
+    async updateFiatExchangeRates(rates?: FiatExchangeRates, updateMsecs?: number): Promise<FiatExchangeRates> 
     async nLockTimeIsFinal(tx: string | number[] | BsvTransaction | number): Promise<boolean> 
     async getBeefForTxid(txid: string): Promise<Beef> 
 }
 ```
 
-See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [ServicesCallHistory](./client.md#type-servicescallhistory), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain), [getBeefForTxid](./services.md#function-getbeeffortxid)
+See also: [ARC](./services.md#class-arc), [Bitails](./services.md#class-bitails), [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [FiatExchangeRates](./client.md#interface-fiatexchangerates), [GetMerklePathResult](./client.md#interface-getmerklepathresult), [GetMerklePathService](./client.md#type-getmerklepathservice), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetRawTxService](./client.md#type-getrawtxservice), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetScriptHashHistoryService](./client.md#type-getscripthashhistoryservice), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetStatusForTxidsService](./client.md#type-getstatusfortxidsservice), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [GetUtxoStatusService](./client.md#type-getutxostatusservice), [PostBeefResult](./client.md#interface-postbeefresult), [PostBeefService](./client.md#type-postbeefservice), [ServiceCollection](./services.md#class-servicecollection), [ServicesCallHistory](./client.md#type-servicescallhistory), [TableOutput](./storage.md#interface-tableoutput), [UpdateFiatExchangeRateService](./client.md#type-updatefiatexchangerateservice), [WalletServices](./client.md#interface-walletservices), [WalletServicesOptions](./client.md#interface-walletservicesoptions), [WhatsOnChain](./services.md#class-whatsonchain), [getBeefForTxid](./services.md#function-getbeeffortxid)
 
 ###### Method hashOutputScript
 
@@ -4486,8 +4414,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export class WhatsOnChain extends WhatsOnChainNoServices {
     services: Services;
-    constructor(chain: sdk.Chain = "main", config: WhatsOnChainConfig = {}, services?: Services) 
-    async getMerklePath(txid: string, services: sdk.WalletServices): Promise<sdk.GetMerklePathResult> 
+    constructor(chain: Chain = "main", config: WhatsOnChainConfig = {}, services?: Services) 
+    async getMerklePath(txid: string, services: WalletServices): Promise<GetMerklePathResult> 
 }
 ```
 
@@ -4500,24 +4428,24 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 ```ts
 export class WhatsOnChainNoServices extends SdkWhatsOnChain {
-    constructor(chain: sdk.Chain = "main", config: WhatsOnChainConfig = {}) 
-    async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> 
+    constructor(chain: Chain = "main", config: WhatsOnChainConfig = {}) 
+    async getStatusForTxids(txids: string[]): Promise<GetStatusForTxidsResult> 
     async getTxPropagation(txid: string): Promise<number> 
     async getRawTx(txid: string): Promise<string | undefined> 
-    async getRawTxResult(txid: string): Promise<sdk.GetRawTxResult> 
-    async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
-    async postRawTx(rawTx: HexString): Promise<sdk.PostTxResultForTxid> 
-    async updateBsvExchangeRate(rate?: sdk.BsvExchangeRate, updateMsecs?: number): Promise<sdk.BsvExchangeRate> 
-    async getUtxoStatus(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat, outpoint?: string): Promise<sdk.GetUtxoStatusResult> 
-    async getScriptHashConfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
-    async getScriptHashUnconfirmedHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
-    async getScriptHashHistory(hash: string): Promise<sdk.GetScriptHashHistoryResult> 
+    async getRawTxResult(txid: string): Promise<GetRawTxResult> 
+    async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
+    async postRawTx(rawTx: HexString): Promise<PostTxResultForTxid> 
+    async updateBsvExchangeRate(rate?: BsvExchangeRate, updateMsecs?: number): Promise<BsvExchangeRate> 
+    async getUtxoStatus(output: string, outputFormat?: GetUtxoStatusOutputFormat, outpoint?: string): Promise<GetUtxoStatusResult> 
+    async getScriptHashConfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> 
+    async getScriptHashUnconfirmedHistory(hash: string): Promise<GetScriptHashHistoryResult> 
+    async getScriptHashHistory(hash: string): Promise<GetScriptHashHistoryResult> 
     async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> 
     async getChainInfo(): Promise<WocChainInfo> 
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [WocChainInfo](./services.md#interface-wocchaininfo)
+See also: [BlockHeader](./client.md#interface-blockheader), [BsvExchangeRate](./client.md#interface-bsvexchangerate), [Chain](./client.md#type-chain), [GetRawTxResult](./client.md#interface-getrawtxresult), [GetScriptHashHistoryResult](./client.md#interface-getscripthashhistoryresult), [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult), [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat), [GetUtxoStatusResult](./client.md#interface-getutxostatusresult), [PostBeefResult](./client.md#interface-postbeefresult), [PostTxResultForTxid](./client.md#interface-posttxresultfortxid), [SdkWhatsOnChain](./services.md#class-sdkwhatsonchain), [WocChainInfo](./services.md#interface-wocchaininfo)
 
 ###### Method getBlockHeaderByHash
 
@@ -4544,7 +4472,7 @@ See also: [BlockHeader](./services.md#interface-blockheader), [BsvExchangeRate](
 ```ts
 async getBlockHeaderByHash(hash: string): Promise<BlockHeader | undefined> 
 ```
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 ###### Method getRawTx
 
@@ -4581,7 +4509,7 @@ result for an unknown txid:
     [{"txid":"6815f8014db74eab8b7f75925c68929597f1d97efa970109d990824c25e5e62c","error":"unknown"}]
 
 ```ts
-async getStatusForTxids(txids: string[]): Promise<sdk.GetStatusForTxidsResult> 
+async getStatusForTxids(txids: string[]): Promise<GetStatusForTxidsResult> 
 ```
 See also: [GetStatusForTxidsResult](./client.md#interface-getstatusfortxidsresult)
 
@@ -4600,14 +4528,14 @@ WhatsOnChain does not natively support a postBeef end-point aware of multiple tx
 Send rawTx in `txids` order from beef.
 
 ```ts
-async postBeef(beef: Beef, txids: string[]): Promise<sdk.PostBeefResult> 
+async postBeef(beef: Beef, txids: string[]): Promise<PostBeefResult> 
 ```
 See also: [PostBeefResult](./client.md#interface-postbeefresult)
 
 ###### Method postRawTx
 
 ```ts
-async postRawTx(rawTx: HexString): Promise<sdk.PostTxResultForTxid> 
+async postRawTx(rawTx: HexString): Promise<PostTxResultForTxid> 
 ```
 See also: [PostTxResultForTxid](./client.md#interface-posttxresultfortxid)
 
@@ -4643,7 +4571,7 @@ export class WhatsOnChainServices {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [GetHeaderByteFileLinksResult](./services.md#interface-getheaderbytefilelinksresult), [HeightRange](./services.md#class-heightrange), [WhatsOnChain](./services.md#class-whatsonchain), [WhatsOnChainServicesOptions](./services.md#interface-whatsonchainservicesoptions), [WocChainInfo](./services.md#interface-wocchaininfo), [WocGetHeadersHeader](./services.md#interface-wocgetheadersheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [ChaintracksFetchApi](./services.md#interface-chaintracksfetchapi), [GetHeaderByteFileLinksResult](./services.md#interface-getheaderbytefilelinksresult), [HeightRange](./services.md#class-heightrange), [WhatsOnChain](./services.md#class-whatsonchain), [WhatsOnChainServicesOptions](./services.md#interface-whatsonchainservicesoptions), [WocChainInfo](./services.md#interface-wocchaininfo), [WocGetHeadersHeader](./services.md#interface-wocgetheadersheader)
 
 ###### Method getHeaders
 
@@ -4694,7 +4622,7 @@ High speed WebSocket based based old block header listener
 export async function WocHeadersBulkListener(fromHeight: number, toHeight: number, enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: Chain = "main", idleWait = 5000): Promise<boolean> 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [StopListenerToken](./services.md#type-stoplistenertoken)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [StopListenerToken](./services.md#type-stoplistenertoken)
 
 Returns
 
@@ -4749,7 +4677,7 @@ High speed WebSocket based based new block header listener
 export async function WocHeadersLiveListener(enqueue: (header: BlockHeader) => void, error: (code: number, message: string) => boolean, stop: StopListenerToken, chain: Chain = "main", idleWait = 100000): Promise<boolean> 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain), [StopListenerToken](./services.md#type-stoplistenertoken)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain), [StopListenerToken](./services.md#type-stoplistenertoken)
 
 Returns
 
@@ -4798,7 +4726,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: arcDefaultUrl
 
 ```ts
-export function arcDefaultUrl(chain: sdk.Chain): string 
+export function arcDefaultUrl(chain: Chain): string 
 ```
 
 See also: [Chain](./client.md#type-chain)
@@ -4809,7 +4737,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: arcGorillaPoolUrl
 
 ```ts
-export function arcGorillaPoolUrl(chain: sdk.Chain): string | undefined 
+export function arcGorillaPoolUrl(chain: Chain): string | undefined 
 ```
 
 See also: [Chain](./client.md#type-chain)
@@ -4834,7 +4762,7 @@ export function blockHash(header: BaseBlockHeader | number[] | Uint8Array): stri
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asString](./client.md#function-asstring), [doubleSha256BE](./client.md#function-doublesha256be), [serializeBaseBlockHeader](./services.md#function-serializebaseblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [asString](./client.md#function-asstring), [doubleSha256BE](./client.md#function-doublesha256be), [serializeBaseBlockHeader](./services.md#function-serializebaseblockheader)
 
 Returns
 
@@ -4941,7 +4869,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export function convertWocToBlockHeaderHex(woc: WocHeader): BlockHeader 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [WocHeader](./services.md#interface-wocheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [WocHeader](./services.md#interface-wocheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -4965,7 +4893,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: createDefaultWalletServicesOptions
 
 ```ts
-export function createDefaultWalletServicesOptions(chain: sdk.Chain, arcCallbackUrl?: string, arcCallbackToken?: string, arcApiKey?: string): sdk.WalletServicesOptions 
+export function createDefaultWalletServicesOptions(chain: Chain, arcCallbackUrl?: string, arcCallbackToken?: string, arcApiKey?: string): WalletServicesOptions 
 ```
 
 See also: [Chain](./client.md#type-chain), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
@@ -5003,7 +4931,7 @@ export function deserializeBaseBlockHeader(buffer: number[] | Uint8Array, offset
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asString](./client.md#function-asstring), [readUInt32LE](./services.md#function-readuint32le)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [asString](./client.md#function-asstring), [readUInt32LE](./services.md#function-readuint32le)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5014,7 +4942,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export function deserializeBaseBlockHeaders(buffer: number[] | Uint8Array, offset = 0, count?: number | undefined): BaseBlockHeader[] 
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5025,7 +4953,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export function deserializeBlockHeader(buffer: number[] | Uint8Array, offset = 0, height: number): BlockHeader 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5036,7 +4964,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export function deserializeBlockHeaders(firstHeight: number, buffer: number[] | Uint8Array, offset = 0, count?: number | undefined): BlockHeader[] 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5086,7 +5014,7 @@ export function genesisHeader(chain: Chain): BlockHeader {
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5119,7 +5047,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export async function getWhatsOnChainBlockHeaderByHash(hash: string, chain: Chain = "main", apiKey?: string): Promise<BlockHeader | undefined> 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [Chain](./client.md#type-chain)
+See also: [BlockHeader](./client.md#interface-blockheader), [Chain](./client.md#type-chain)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5134,7 +5062,7 @@ export function isBaseBlockHeader(header: BaseBlockHeader | BlockHeader | LiveBl
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5149,7 +5077,7 @@ export function isBlockHeader(header: BaseBlockHeader | BlockHeader | LiveBlockH
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5175,7 +5103,7 @@ export function isLive(header: BlockHeader | LiveBlockHeader): header is LiveBlo
 }
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5190,7 +5118,7 @@ export function isLiveBlockHeader(header: BaseBlockHeader | BlockHeader | LiveBl
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [BlockHeader](./services.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [BlockHeader](./client.md#interface-blockheader), [LiveBlockHeader](./services.md#interface-liveblockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5265,7 +5193,7 @@ export function serializeBaseBlockHeader(header: BaseBlockHeader, buffer?: numbe
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asArray](./client.md#function-asarray), [writeUInt32LE](./services.md#function-writeuint32le)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [asArray](./client.md#function-asarray), [writeUInt32LE](./services.md#function-writeuint32le)
 
 Returns
 
@@ -5280,7 +5208,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export function serializeBaseBlockHeaders(headers: BlockHeader[]): Uint8Array 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5352,7 +5280,7 @@ such that computing a double sha256 hash of the array computes
 the block hash for the header.
 
 ```ts
-export function toBinaryBaseBlockHeader(header: sdk.BaseBlockHeader): number[] {
+export function toBinaryBaseBlockHeader(header: BaseBlockHeader): number[] {
     const writer = new Utils.Writer();
     writer.writeUInt32BE(header.version);
     writer.writeReverse(asArray(header.previousHash));
@@ -5365,7 +5293,7 @@ export function toBinaryBaseBlockHeader(header: sdk.BaseBlockHeader): number[] {
 }
 ```
 
-See also: [BaseBlockHeader](./services.md#interface-baseblockheader), [asArray](./client.md#function-asarray), [writeUInt32BE](./services.md#function-writeuint32be)
+See also: [BaseBlockHeader](./client.md#interface-baseblockheader), [asArray](./client.md#function-asarray), [writeUInt32BE](./services.md#function-writeuint32be)
 
 Returns
 
@@ -5377,7 +5305,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: updateChaintracksFiatExchangeRates
 
 ```ts
-export async function updateChaintracksFiatExchangeRates(targetCurrencies: string[], options: sdk.WalletServicesOptions): Promise<sdk.FiatExchangeRates> 
+export async function updateChaintracksFiatExchangeRates(targetCurrencies: string[], options: WalletServicesOptions): Promise<FiatExchangeRates> 
 ```
 
 See also: [FiatExchangeRates](./client.md#interface-fiatexchangerates), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
@@ -5388,7 +5316,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: updateExchangeratesapi
 
 ```ts
-export async function updateExchangeratesapi(targetCurrencies: string[], options: sdk.WalletServicesOptions): Promise<sdk.FiatExchangeRates> 
+export async function updateExchangeratesapi(targetCurrencies: string[], options: WalletServicesOptions): Promise<FiatExchangeRates> 
 ```
 
 See also: [FiatExchangeRates](./client.md#interface-fiatexchangerates), [WalletServicesOptions](./client.md#interface-walletservicesoptions)
@@ -5523,7 +5451,7 @@ Throws on format errors.
 export function validateHeaderFormat(header: BlockHeader): void 
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Returns
 
@@ -5540,7 +5468,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: validateScriptHash
 
 ```ts
-export function validateScriptHash(output: string, outputFormat?: sdk.GetUtxoStatusOutputFormat): string 
+export function validateScriptHash(output: string, outputFormat?: GetUtxoStatusOutputFormat): string 
 ```
 
 See also: [GetUtxoStatusOutputFormat](./client.md#type-getutxostatusoutputformat)
@@ -5605,7 +5533,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export type EnqueueHandler = (header: BlockHeader) => void
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5627,7 +5555,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export type HeaderListener = (header: BlockHeader) => void
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -5659,7 +5587,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export type ReorgListener = (depth: number, oldTip: BlockHeader, newTip: BlockHeader) => void
 ```
 
-See also: [BlockHeader](./services.md#interface-blockheader)
+See also: [BlockHeader](./client.md#interface-blockheader)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

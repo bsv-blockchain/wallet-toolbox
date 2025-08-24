@@ -1,10 +1,10 @@
-import { TransactionStatus } from "../../../sdk/types"
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { optionalArraysEqual, verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableOutput } from "../tables/TableOutput"
-import { TableTransaction } from "../tables/TableTransaction"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
-import { EntityProvenTx } from "./EntityProvenTx"
+import { TransactionStatus } from '../../../sdk/types'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { optionalArraysEqual, verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutput } from '../tables/TableOutput'
+import { TableTransaction } from '../tables/TableTransaction'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
+import { EntityProvenTx } from './EntityProvenTx'
 import { Transaction as BsvTransaction, TransactionInput } from '@bsv/sdk'
 
 export class EntityTransaction extends EntityBase<TableTransaction> {

@@ -59,11 +59,7 @@ export interface MonitorOptions {
  * and potentially that reorgs update proofs that were already received.
  */
 export class Monitor {
-  static createDefaultWalletMonitorOptions(
-    chain: Chain,
-    storage: MonitorStorage,
-    services?: Services
-  ): MonitorOptions {
+  static createDefaultWalletMonitorOptions(chain: Chain, storage: MonitorStorage, services?: Services): MonitorOptions {
     services ||= new Services(chain)
     if (!services.options.chaintracks) throw new WERR_INVALID_PARAMETER('services.options.chaintracks', 'valid')
     const o: MonitorOptions = {

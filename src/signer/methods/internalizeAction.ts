@@ -1,10 +1,4 @@
-import {
-  Beef,
-  InternalizeActionArgs,
-  InternalizeOutput,
-  P2PKH,
-  WalletProtocol
-} from '@bsv/sdk'
+import { Beef, InternalizeActionArgs, InternalizeOutput, P2PKH, WalletProtocol } from '@bsv/sdk'
 import { Wallet } from '../../Wallet'
 import { AuthId, StorageInternalizeActionResult } from '../../sdk/WalletStorage.interfaces'
 import { validateInternalizeActionArgs, ValidInternalizeActionArgs } from '../../sdk/validationHelpers'

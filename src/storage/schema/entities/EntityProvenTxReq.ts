@@ -1,11 +1,11 @@
-import { ProvenTxReqStatus, ProvenTxReqTerminalStatus, ReqHistoryNote } from "../../../sdk/types"
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from "../../../sdk/WERR_errors"
-import { arraysEqual, verifyId, verifyOne, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { StorageProvider } from "../../StorageProvider"
-import { WalletStorageManager } from "../../WalletStorageManager"
-import { TableProvenTxReq, TableProvenTxReqDynamics } from "../tables/TableProvenTxReq"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { ProvenTxReqStatus, ProvenTxReqTerminalStatus, ReqHistoryNote } from '../../../sdk/types'
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../../sdk/WERR_errors'
+import { arraysEqual, verifyId, verifyOne, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { StorageProvider } from '../../StorageProvider'
+import { WalletStorageManager } from '../../WalletStorageManager'
+import { TableProvenTxReq, TableProvenTxReqDynamics } from '../tables/TableProvenTxReq'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
   static async fromStorageTxid(

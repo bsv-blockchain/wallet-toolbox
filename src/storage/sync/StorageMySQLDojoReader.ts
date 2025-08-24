@@ -9,10 +9,32 @@ import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
 import { outputColumnsWithoutLockingScript, TableOutput } from '../schema/tables/TableOutput'
 import { TableProvenTxReq } from '../schema/tables/TableProvenTxReq'
 import { Chain, EntityTimeStamp, ProvenTxReqStatus, TransactionStatus } from '../../sdk/types'
-import { FindCertificateFieldsArgs, FindCommissionsArgs, FindForUserSincePagedArgs, FindMonitorEventsArgs, FindOutputTagsArgs, FindPartialSincePagedArgs, FindSyncStatesArgs, FindTransactionsArgs, FindTxLabelsArgs, FindUsersArgs, SyncStatus, TrxToken, WalletStorageSyncReader } from '../../sdk/WalletStorage.interfaces'
+import {
+  FindCertificateFieldsArgs,
+  FindCommissionsArgs,
+  FindForUserSincePagedArgs,
+  FindMonitorEventsArgs,
+  FindOutputTagsArgs,
+  FindPartialSincePagedArgs,
+  FindSyncStatesArgs,
+  FindTransactionsArgs,
+  FindTxLabelsArgs,
+  FindUsersArgs,
+  SyncStatus,
+  TrxToken,
+  WalletStorageSyncReader
+} from '../../sdk/WalletStorage.interfaces'
 import { WERR_BAD_REQUEST, WERR_INTERNAL, WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
-import { randomBytesBase64, verifyHexString, verifyId, verifyInteger, verifyOne, verifyOptionalHexString, verifyTruthy } from '../../utility/utilityHelpers'
-import { FindCertificatesArgs, FindOutputBasketsArgs, FindOutputsArgs  } from '../../sdk/WalletStorage.interfaces'
+import {
+  randomBytesBase64,
+  verifyHexString,
+  verifyId,
+  verifyInteger,
+  verifyOne,
+  verifyOptionalHexString,
+  verifyTruthy
+} from '../../utility/utilityHelpers'
+import { FindCertificatesArgs, FindOutputBasketsArgs, FindOutputsArgs } from '../../sdk/WalletStorage.interfaces'
 import { TableTxLabel } from '../schema/tables/TableTxLabel'
 import { TableOutputTag } from '../schema/tables/TableOutputTag'
 import { TableTransaction, transactionColumnsWithoutRawTx } from '../schema/tables/TableTransaction'
@@ -155,10 +177,7 @@ export class StorageMySQLDojoReader extends StorageReader implements WalletStora
   }
   findTransactionsQuery(args: FindTransactionsArgs, count?: boolean): Knex.QueryBuilder {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. Transactions may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. Transactions may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',

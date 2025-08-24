@@ -29,7 +29,31 @@ import { listOutputs } from './methods/listOutputsKnex'
 import { DBType } from './StorageReader'
 import { reviewStatus } from './methods/reviewStatus'
 import { ServicesCallHistory } from '../sdk/WalletServices.interfaces'
-import { AuthId, FindCertificateFieldsArgs, FindCertificatesArgs, FindCommissionsArgs, FindForUserSincePagedArgs, FindMonitorEventsArgs, FindOutputBasketsArgs, FindOutputsArgs, FindOutputTagMapsArgs, FindOutputTagsArgs, FindPartialSincePagedArgs, FindProvenTxReqsArgs, FindProvenTxsArgs, FindSyncStatesArgs, FindTransactionsArgs, FindTxLabelMapsArgs, FindTxLabelsArgs, FindUsersArgs, ProvenOrRawTx, PurgeParams, PurgeResults, TrxToken, WalletStorageProvider } from '../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  FindCertificateFieldsArgs,
+  FindCertificatesArgs,
+  FindCommissionsArgs,
+  FindForUserSincePagedArgs,
+  FindMonitorEventsArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindOutputTagMapsArgs,
+  FindOutputTagsArgs,
+  FindPartialSincePagedArgs,
+  FindProvenTxReqsArgs,
+  FindProvenTxsArgs,
+  FindSyncStatesArgs,
+  FindTransactionsArgs,
+  FindTxLabelMapsArgs,
+  FindTxLabelsArgs,
+  FindUsersArgs,
+  ProvenOrRawTx,
+  PurgeParams,
+  PurgeResults,
+  TrxToken,
+  WalletStorageProvider
+} from '../sdk/WalletStorage.interfaces'
 import { WERR_INTERNAL, WERR_INVALID_PARAMETER, WERR_NOT_IMPLEMENTED, WERR_UNAUTHORIZED } from '../sdk/WERR_errors'
 import { verifyOne, verifyOneOrNone, verifyTruthy } from '../utility/utilityHelpers'
 import { ValidListActionsArgs, ValidListOutputsArgs } from '../sdk/validationHelpers'
@@ -372,11 +396,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
       .where({ commissionId: id })
       .update(this.validatePartialForUpdate(update))
   }
-  override async updateOutputBasket(
-    id: number,
-    update: Partial<TableOutputBasket>,
-    trx?: TrxToken
-  ): Promise<number> {
+  override async updateOutputBasket(id: number, update: Partial<TableOutputBasket>, trx?: TrxToken): Promise<number> {
     await this.verifyReadyForDatabaseAccess(trx)
     return await this.toDb(trx)<TableOutputBasket>('output_baskets')
       .where({ basketId: id })
@@ -478,11 +498,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
     await this.verifyReadyForDatabaseAccess(trx)
     return await this.toDb(trx)<TableUser>('users').where({ userId: id }).update(this.validatePartialForUpdate(update))
   }
-  override async updateMonitorEvent(
-    id: number,
-    update: Partial<TableMonitorEvent>,
-    trx?: TrxToken
-  ): Promise<number> {
+  override async updateMonitorEvent(id: number, update: Partial<TableMonitorEvent>, trx?: TrxToken): Promise<number> {
     await this.verifyReadyForDatabaseAccess(trx)
     return await this.toDb(trx)<TableMonitorEvent>('monitor_events')
       .where({ id })
@@ -594,10 +610,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
   }
   findProvenTxReqsQuery(args: FindProvenTxReqsArgs): Knex.QueryBuilder {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxReqs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxReqs may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
@@ -613,10 +626,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
   }
   findProvenTxsQuery(args: FindProvenTxsArgs): Knex.QueryBuilder {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxs may not be found by rawTx value.`)
     if (args.partial.merklePath)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.merklePath',
@@ -629,10 +639,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
   }
   findTransactionsQuery(args: FindTransactionsArgs, count?: boolean): Knex.QueryBuilder {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. Transactions may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. Transactions may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
@@ -666,10 +673,7 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
     args.partial.userId = auth.userId
     return await this.findCertificates(args)
   }
-  override async findOutputBasketsAuth(
-    auth: AuthId,
-    args: FindOutputBasketsArgs
-  ): Promise<TableOutputBasket[]> {
+  override async findOutputBasketsAuth(auth: AuthId, args: FindOutputBasketsArgs): Promise<TableOutputBasket[]> {
     if (!auth.userId || (args.partial.userId && args.partial.userId !== auth.userId)) throw new WERR_UNAUTHORIZED()
     args.partial.userId = auth.userId
     return await this.findOutputBaskets(args)

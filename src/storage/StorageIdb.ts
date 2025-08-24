@@ -27,7 +27,30 @@ import { listActionsIdb } from './methods/listActionsIdb'
 import { listOutputsIdb } from './methods/listOutputsIdb'
 import { reviewStatusIdb } from './methods/reviewStatusIdb'
 import { purgeDataIdb } from './methods/purgeDataIdb'
-import { AuthId, FindCertificateFieldsArgs, FindCertificatesArgs, FindCommissionsArgs, FindForUserSincePagedArgs, FindMonitorEventsArgs, FindOutputBasketsArgs, FindOutputsArgs, FindOutputTagMapsArgs, FindOutputTagsArgs, FindProvenTxReqsArgs, FindProvenTxsArgs, FindSyncStatesArgs, FindTransactionsArgs, FindTxLabelMapsArgs, FindTxLabelsArgs, FindUsersArgs, ProvenOrRawTx, PurgeParams, PurgeResults, TrxToken, WalletStorageProvider } from '../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  FindCertificateFieldsArgs,
+  FindCertificatesArgs,
+  FindCommissionsArgs,
+  FindForUserSincePagedArgs,
+  FindMonitorEventsArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindOutputTagMapsArgs,
+  FindOutputTagsArgs,
+  FindProvenTxReqsArgs,
+  FindProvenTxsArgs,
+  FindSyncStatesArgs,
+  FindTransactionsArgs,
+  FindTxLabelMapsArgs,
+  FindTxLabelsArgs,
+  FindUsersArgs,
+  ProvenOrRawTx,
+  PurgeParams,
+  PurgeResults,
+  TrxToken,
+  WalletStorageProvider
+} from '../sdk/WalletStorage.interfaces'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER, WERR_UNAUTHORIZED } from '../sdk/WERR_errors'
 import { EntityTimeStamp, TransactionStatus } from '../sdk/types'
 import { ValidListActionsArgs, ValidListOutputsArgs } from '../sdk/validationHelpers'
@@ -557,10 +580,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     userId?: number
   ): Promise<void> {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxReqs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxReqs may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
@@ -633,16 +653,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     return results
   }
 
-  async filterProvenTxs(
-    args: FindProvenTxsArgs,
-    filtered: (v: TableProvenTx) => void,
-    userId?: number
-  ): Promise<void> {
+  async filterProvenTxs(args: FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. ProvenTxs may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxs may not be found by rawTx value.`)
     if (args.partial.merklePath)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.merklePath',
@@ -1097,21 +1110,13 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   async updateProvenTx(id: number, update: Partial<TableProvenTx>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'provenTxId', 'proven_txs', trx)
   }
-  async updateProvenTxReq(
-    id: number | number[],
-    update: Partial<TableProvenTxReq>,
-    trx?: TrxToken
-  ): Promise<number> {
+  async updateProvenTxReq(id: number | number[], update: Partial<TableProvenTxReq>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'provenTxReqId', 'proven_tx_reqs', trx)
   }
   async updateSyncState(id: number, update: Partial<TableSyncState>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'syncStateId', 'sync_states', trx)
   }
-  async updateTransaction(
-    id: number | number[],
-    update: Partial<TableTransaction>,
-    trx?: TrxToken
-  ): Promise<number> {
+  async updateTransaction(id: number | number[], update: Partial<TableTransaction>, trx?: TrxToken): Promise<number> {
     return this.updateIdb(id, update, 'transactionId', 'transactions', trx)
   }
   async updateTxLabel(id: number, update: Partial<TableTxLabel>, trx?: TrxToken): Promise<number> {
@@ -1786,10 +1791,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     isQueryModeAll?: boolean
   ): Promise<void> {
     if (args.partial.rawTx)
-      throw new WERR_INVALID_PARAMETER(
-        'args.partial.rawTx',
-        `undefined. Transactions may not be found by rawTx value.`
-      )
+      throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. Transactions may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.inputBEEF',
@@ -2064,11 +2066,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     })
     return count
   }
-  async countTransactions(
-    args: FindTransactionsArgs,
-    labelIds?: number[],
-    isQueryModeAll?: boolean
-  ): Promise<number> {
+  async countTransactions(args: FindTransactionsArgs, labelIds?: number[], isQueryModeAll?: boolean): Promise<number> {
     let count = 0
     await this.filterTransactions(
       { ...args, noRawTx: true },

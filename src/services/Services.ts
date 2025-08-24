@@ -6,7 +6,28 @@ import { updateChaintracksFiatExchangeRates, updateExchangeratesapi } from './pr
 import { ARC } from './providers/ARC'
 import { Bitails } from './providers/Bitails'
 import { getBeefForTxid } from './providers/getBeefForTxid'
-import { BaseBlockHeader, BlockHeader, FiatExchangeRates, GetMerklePathResult, GetMerklePathService, GetRawTxResult, GetRawTxService, GetScriptHashHistoryResult, GetScriptHashHistoryService, GetStatusForTxidsResult, GetStatusForTxidsService, GetUtxoStatusOutputFormat, GetUtxoStatusResult, GetUtxoStatusService, PostBeefResult, PostBeefService, ServicesCallHistory, UpdateFiatExchangeRateService, WalletServices, WalletServicesOptions } from '../sdk/WalletServices.interfaces'
+import {
+  BaseBlockHeader,
+  BlockHeader,
+  FiatExchangeRates,
+  GetMerklePathResult,
+  GetMerklePathService,
+  GetRawTxResult,
+  GetRawTxService,
+  GetScriptHashHistoryResult,
+  GetScriptHashHistoryService,
+  GetStatusForTxidsResult,
+  GetStatusForTxidsService,
+  GetUtxoStatusOutputFormat,
+  GetUtxoStatusResult,
+  GetUtxoStatusService,
+  PostBeefResult,
+  PostBeefService,
+  ServicesCallHistory,
+  UpdateFiatExchangeRateService,
+  WalletServices,
+  WalletServicesOptions
+} from '../sdk/WalletServices.interfaces'
 import { Chain } from '../sdk/types'
 import { WERR_INTERNAL, WERR_INVALID_OPERATION, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
 import { ChaintracksChainTracker } from './chaintracker/ChaintracksChainTracker'
@@ -184,10 +205,7 @@ export class Services implements WalletServices {
 
   async isUtxo(output: TableOutput): Promise<boolean> {
     if (!output.lockingScript) {
-      throw new WERR_INVALID_PARAMETER(
-        'output.lockingScript',
-        'validated by storage provider validateOutputScript.'
-      )
+      throw new WERR_INVALID_PARAMETER('output.lockingScript', 'validated by storage provider validateOutputScript.')
     }
     const hash = this.hashOutputScript(Utils.toHex(output.lockingScript))
     const or = await this.getUtxoStatus(hash, undefined, `${output.txid}.${output.vout}`)
@@ -395,8 +413,7 @@ export class Services implements WalletServices {
   async hashToHeader(hash: string): Promise<BlockHeader> {
     const method = async () => {
       const header = await this.options.chaintracks!.findHeaderForBlockHash(hash)
-      if (!header)
-        throw new WERR_INVALID_PARAMETER('hash', `valid blockhash '${hash}' on mined chain ${this.chain}`)
+      if (!header) throw new WERR_INVALID_PARAMETER('hash', `valid blockhash '${hash}' on mined chain ${this.chain}`)
       return header
     }
     return this.invokeChaintracksWithRetry(method)

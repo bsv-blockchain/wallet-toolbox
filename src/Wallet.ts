@@ -81,11 +81,40 @@ import { Monitor } from './monitor/Monitor'
 import { WalletSigner } from './signer/WalletSigner'
 import { randomBytesBase64, toWalletNetwork } from './utility/utilityHelpers'
 import { ScriptTemplateBRC29 } from './utility/ScriptTemplateBRC29'
-import { Chain, KeyPair, specOpFailedActions, specOpInvalidChange, specOpNoSendActions, specOpSetWalletChangeParams, specOpThrowReviewActions, specOpWalletBalance, StorageIdentity, WalletBalance } from './sdk/types'
+import {
+  Chain,
+  KeyPair,
+  specOpFailedActions,
+  specOpInvalidChange,
+  specOpNoSendActions,
+  specOpSetWalletChangeParams,
+  specOpThrowReviewActions,
+  specOpWalletBalance,
+  StorageIdentity,
+  WalletBalance
+} from './sdk/types'
 import { WalletServices } from './sdk/WalletServices.interfaces'
 import { PrivilegedKeyManager } from './sdk/PrivilegedKeyManager'
 import { WERR_INTERNAL, WERR_INVALID_PARAMETER, WERR_REVIEW_ACTIONS } from './sdk/WERR_errors'
-import { validateAbortActionArgs, validateAcquireDirectCertificateArgs, validateAcquireIssuanceCertificateArgs, validateCreateActionArgs, validateDiscoverByAttributesArgs, validateDiscoverByIdentityKeyArgs, validateInternalizeActionArgs, validateListActionsArgs, validateListCertificatesArgs, validateListOutputsArgs, validateOriginator, validateProveCertificateArgs, validateRelinquishCertificateArgs, validateRelinquishOutputArgs, validateSignActionArgs, ValidCreateActionArgs, ValidWalletSignerArgs } from './sdk/validationHelpers'
+import {
+  validateAbortActionArgs,
+  validateAcquireDirectCertificateArgs,
+  validateAcquireIssuanceCertificateArgs,
+  validateCreateActionArgs,
+  validateDiscoverByAttributesArgs,
+  validateDiscoverByIdentityKeyArgs,
+  validateInternalizeActionArgs,
+  validateListActionsArgs,
+  validateListCertificatesArgs,
+  validateListOutputsArgs,
+  validateOriginator,
+  validateProveCertificateArgs,
+  validateRelinquishCertificateArgs,
+  validateRelinquishOutputArgs,
+  validateSignActionArgs,
+  ValidCreateActionArgs,
+  ValidWalletSignerArgs
+} from './sdk/validationHelpers'
 import { AuthId, StorageCreateActionResult, StorageInternalizeActionResult } from './sdk/WalletStorage.interfaces'
 import { WalletError } from './sdk/WalletError'
 

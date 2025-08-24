@@ -1,4 +1,4 @@
-import { WERR_INVALID_PARAMETER } from "../../sdk/WERR_errors"
+import { WERR_INVALID_PARAMETER } from '../../sdk/WERR_errors'
 
 /**
  * Returns the byte size required to encode number as Bitcoin VarUint

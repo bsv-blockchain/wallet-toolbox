@@ -1,7 +1,7 @@
-import { Chain } from "../sdk/types"
-import { WalletServicesOptions } from "../sdk/WalletServices.interfaces"
-import { randomBytesHex } from "../utility/utilityHelpers"
-import { ChaintracksServiceClient } from "./chaintracker/chaintracks/ChaintracksServiceClient"
+import { Chain } from '../sdk/types'
+import { WalletServicesOptions } from '../sdk/WalletServices.interfaces'
+import { randomBytesHex } from '../utility/utilityHelpers'
+import { ChaintracksServiceClient } from './chaintracker/chaintracks/ChaintracksServiceClient'
 
 export function createDefaultWalletServicesOptions(
   chain: Chain,

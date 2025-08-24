@@ -52,11 +52,11 @@ Extension `SetupWalletIdbArgs` used by `createWalletIdb` to construct a `SetupWa
 
 ```ts
 export interface SetupClientWalletArgs {
-    chain: sdk.Chain;
+    chain: Chain;
     rootKeyHex: string;
     privilegedKeyGetter?: () => Promise<PrivateKey>;
-    active?: sdk.WalletStorageProvider;
-    backups?: sdk.WalletStorageProvider[];
+    active?: WalletStorageProvider;
+    backups?: WalletStorageProvider[];
     taalApiKey?: string;
 }
 ```
@@ -68,7 +68,7 @@ See also: [Chain](./client.md#type-chain), [WalletStorageProvider](./client.md#i
 Optional. Active wallet storage. Can be added later.
 
 ```ts
-active?: sdk.WalletStorageProvider
+active?: WalletStorageProvider
 ```
 See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 
@@ -77,7 +77,7 @@ See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 Optional. One or more storage providers managed as backup destinations. Can be added later.
 
 ```ts
-backups?: sdk.WalletStorageProvider[]
+backups?: WalletStorageProvider[]
 ```
 See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 
@@ -137,7 +137,7 @@ provide an easy way to create and import these secrets and related properties.
 
 ```ts
 export interface SetupEnv {
-    chain: sdk.Chain;
+    chain: Chain;
     identityKey: string;
     identityKey2: string;
     filePath: string | undefined;
@@ -154,7 +154,7 @@ See also: [Chain](./client.md#type-chain)
 The chan being accessed: 'main' for mainnet, 'test' for 'testnet'.
 
 ```ts
-chain: sdk.Chain
+chain: Chain
 ```
 See also: [Chain](./client.md#type-chain)
 
@@ -223,7 +223,7 @@ export interface SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
     keyDeriver: KeyDeriverApi;
-    chain: sdk.Chain;
+    chain: Chain;
     storage: WalletStorageManager;
     services: Services;
     monitor: Monitor;
@@ -238,7 +238,7 @@ See also: [Chain](./client.md#type-chain), [Monitor](./monitor.md#class-monitor)
 The chain ('main' or 'test') which the wallet accesses.
 
 ```ts
-chain: sdk.Chain
+chain: Chain
 ```
 See also: [Chain](./client.md#type-chain)
 
@@ -330,8 +330,8 @@ export interface SetupWalletArgs {
     env: SetupEnv;
     rootKeyHex?: string;
     privilegedKeyGetter?: () => Promise<PrivateKey>;
-    active?: sdk.WalletStorageProvider;
-    backups?: sdk.WalletStorageProvider[];
+    active?: WalletStorageProvider;
+    backups?: WalletStorageProvider[];
 }
 ```
 
@@ -342,7 +342,7 @@ See also: [SetupEnv](./setup.md#interface-setupenv), [WalletStorageProvider](./c
 Optional. Active wallet storage. Can be added later.
 
 ```ts
-active?: sdk.WalletStorageProvider
+active?: WalletStorageProvider
 ```
 See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 
@@ -351,7 +351,7 @@ See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 Optional. One or more storage providers managed as backup destinations. Can be added later.
 
 ```ts
-backups?: sdk.WalletStorageProvider[]
+backups?: WalletStorageProvider[]
 ```
 See also: [WalletStorageProvider](./client.md#interface-walletstorageprovider)
 
@@ -445,7 +445,7 @@ export interface SetupWalletIdb extends SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
     keyDeriver: KeyDeriverApi;
-    chain: sdk.Chain;
+    chain: Chain;
     storage: WalletStorageManager;
     services: Services;
     monitor: Monitor;
@@ -480,7 +480,7 @@ export interface SetupWalletKnex extends SetupWallet {
     rootKey: PrivateKey;
     identityKey: string;
     keyDeriver: KeyDeriverApi;
-    chain: sdk.Chain;
+    chain: Chain;
     storage: WalletStorageManager;
     services: Services;
     monitor: Monitor;
@@ -554,7 +554,7 @@ It serves as a starting point for experimentation and customization.
 
 ```ts
 export abstract class Setup {
-    static noEnv(chain: sdk.Chain): boolean 
+    static noEnv(chain: Chain): boolean 
     static makeEnv(): string {
         const testPrivKey1 = PrivateKey.fromRandom();
         const testIdentityKey1 = testPrivKey1.toPublicKey().toString();
@@ -583,7 +583,7 @@ DEV_KEYS = '{
         console.log(log);
         return log;
     }
-    static getEnv(chain: sdk.Chain): SetupEnv {
+    static getEnv(chain: Chain): SetupEnv {
         const identityKey = chain === "main" ? process.env.MY_MAIN_IDENTITY : process.env.MY_TEST_IDENTITY;
         const identityKey2 = chain === "main" ? process.env.MY_MAIN_IDENTITY2 : process.env.MY_TEST_IDENTITY2;
         const filePath = chain === "main" ? process.env.MY_MAIN_FILEPATH : process.env.MY_TEST_FILEPATH;
@@ -591,7 +591,7 @@ DEV_KEYS = '{
         const mySQLConnection = process.env.MYSQL_CONNECTION || "{}";
         const taalApiKey = verifyTruthy(chain === "main" ? process.env.MAIN_TAAL_API_KEY : process.env.TEST_TAAL_API_KEY, `.env value for '${chain.toUpperCase()}_TAAL_API_KEY' is required.`);
         if (!identityKey || !identityKey2)
-            throw new sdk.WERR_INVALID_OPERATION(".env is not a valid SetupEnv configuration.");
+            throw new WERR_INVALID_OPERATION(".env is not a valid SetupEnv configuration.");
         return {
             chain,
             identityKey,
@@ -618,7 +618,7 @@ DEV_KEYS = '{
         const monitor = new Monitor(monopts);
         monitor.addDefaultTasks();
         const privilegedKeyManager = args.privilegedKeyGetter
-            ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+            ? new PrivilegedKeyManager(args.privilegedKeyGetter)
             : undefined;
         const wallet = new Wallet({
             chain,
@@ -641,7 +641,7 @@ DEV_KEYS = '{
         return r;
     }
     static async createWalletClientNoEnv(args: {
-        chain: sdk.Chain;
+        chain: Chain;
         rootKeyHex: string;
         storageUrl?: string;
         privilegedKeyGetter?: () => Promise<PrivateKey>;
@@ -671,7 +671,7 @@ DEV_KEYS = '{
         const lock = p2pkh.lock(address);
         return lock;
     }
-    static getUnlockP2PKH(priv: PrivateKey, satoshis: number): sdk.ScriptTemplateUnlock {
+    static getUnlockP2PKH(priv: PrivateKey, satoshis: number): ScriptTemplateUnlock {
         const p2pkh = new P2PKH();
         const lock = Setup.getLockP2PKH(Setup.getKeyPair(priv).address);
         const unlock = p2pkh.unlock(priv, "all", false, satoshis, lock);
@@ -815,7 +815,7 @@ static async createWallet(args: SetupWalletArgs): Promise<SetupWallet> {
     const monitor = new Monitor(monopts);
     monitor.addDefaultTasks();
     const privilegedKeyManager = args.privilegedKeyGetter
-        ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+        ? new PrivilegedKeyManager(args.privilegedKeyGetter)
         : undefined;
     const wallet = new Wallet({
         chain,
@@ -846,7 +846,7 @@ Setup a new `Wallet` without requiring a .env file.
 
 ```ts
 static async createWalletClientNoEnv(args: {
-    chain: sdk.Chain;
+    chain: Chain;
     rootKeyHex: string;
     storageUrl?: string;
     privilegedKeyGetter?: () => Promise<PrivateKey>;
@@ -906,7 +906,7 @@ Returns values for designated `chain`.
 Access private keys through the `devKeys` object: `devKeys[identityKey]`
 
 ```ts
-static getEnv(chain: sdk.Chain): SetupEnv {
+static getEnv(chain: Chain): SetupEnv {
     const identityKey = chain === "main" ? process.env.MY_MAIN_IDENTITY : process.env.MY_TEST_IDENTITY;
     const identityKey2 = chain === "main" ? process.env.MY_MAIN_IDENTITY2 : process.env.MY_TEST_IDENTITY2;
     const filePath = chain === "main" ? process.env.MY_MAIN_FILEPATH : process.env.MY_TEST_FILEPATH;
@@ -914,7 +914,7 @@ static getEnv(chain: sdk.Chain): SetupEnv {
     const mySQLConnection = process.env.MYSQL_CONNECTION || "{}";
     const taalApiKey = verifyTruthy(chain === "main" ? process.env.MAIN_TAAL_API_KEY : process.env.TEST_TAAL_API_KEY, `.env value for '${chain.toUpperCase()}_TAAL_API_KEY' is required.`);
     if (!identityKey || !identityKey2)
-        throw new sdk.WERR_INVALID_OPERATION(".env is not a valid SetupEnv configuration.");
+        throw new WERR_INVALID_OPERATION(".env is not a valid SetupEnv configuration.");
     return {
         chain,
         identityKey,
@@ -981,7 +981,7 @@ See also: [Setup](./setup.md#class-setup)
 ###### Method noEnv
 
 ```ts
-static noEnv(chain: sdk.Chain): boolean 
+static noEnv(chain: Chain): boolean 
 ```
 See also: [Chain](./client.md#type-chain)
 
@@ -1016,7 +1016,7 @@ export abstract class SetupClient {
         const monitor = new Monitor(monopts);
         monitor.addDefaultTasks();
         const privilegedKeyManager = args.privilegedKeyGetter
-            ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+            ? new PrivilegedKeyManager(args.privilegedKeyGetter)
             : undefined;
         const wallet = new Wallet({
             chain,
@@ -1039,7 +1039,7 @@ export abstract class SetupClient {
         return r;
     }
     static async createWalletClientNoEnv(args: {
-        chain: sdk.Chain;
+        chain: Chain;
         rootKeyHex: string;
         storageUrl?: string;
         privilegedKeyGetter?: () => Promise<PrivateKey>;
@@ -1069,7 +1069,7 @@ export abstract class SetupClient {
         const lock = p2pkh.lock(address);
         return lock;
     }
-    static getUnlockP2PKH(priv: PrivateKey, satoshis: number): sdk.ScriptTemplateUnlock {
+    static getUnlockP2PKH(priv: PrivateKey, satoshis: number): ScriptTemplateUnlock {
         const p2pkh = new P2PKH();
         const lock = SetupClient.getLockP2PKH(SetupClient.getKeyPair(priv).address);
         const unlock = p2pkh.unlock(priv, "all", false, satoshis, lock);
@@ -1177,7 +1177,7 @@ static async createWallet(args: SetupClientWalletArgs): Promise<SetupWallet> {
     const monitor = new Monitor(monopts);
     monitor.addDefaultTasks();
     const privilegedKeyManager = args.privilegedKeyGetter
-        ? new sdk.PrivilegedKeyManager(args.privilegedKeyGetter)
+        ? new PrivilegedKeyManager(args.privilegedKeyGetter)
         : undefined;
     const wallet = new Wallet({
         chain,
@@ -1208,7 +1208,7 @@ Setup a new `Wallet` without requiring a .env file.
 
 ```ts
 static async createWalletClientNoEnv(args: {
-    chain: sdk.Chain;
+    chain: Chain;
     rootKeyHex: string;
     storageUrl?: string;
     privilegedKeyGetter?: () => Promise<PrivateKey>;

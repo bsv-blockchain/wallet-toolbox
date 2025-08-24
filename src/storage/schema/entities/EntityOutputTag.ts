@@ -1,7 +1,7 @@
-import { TrxToken } from "../../../sdk/WalletStorage.interfaces"
-import { verifyId, verifyOneOrNone } from "../../../utility/utilityHelpers"
-import { TableOutputTag } from "../tables/TableOutputTag"
-import { EntityBase, EntityStorage, SyncMap } from "./EntityBase"
+import { TrxToken } from '../../../sdk/WalletStorage.interfaces'
+import { verifyId, verifyOneOrNone } from '../../../utility/utilityHelpers'
+import { TableOutputTag } from '../tables/TableOutputTag'
+import { EntityBase, EntityStorage, SyncMap } from './EntityBase'
 
 export class EntityOutputTag extends EntityBase<TableOutputTag> {
   constructor(api?: TableOutputTag) {

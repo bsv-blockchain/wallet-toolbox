@@ -11,10 +11,31 @@ import {
   WalletInterface,
   AuthFetch
 } from '@bsv/sdk'
-import { AuthId, FindCertificatesArgs, FindOutputBasketsArgs, FindOutputsArgs, FindProvenTxReqsArgs, ProcessSyncChunkResult, RequestSyncChunkArgs, StorageCreateActionResult, StorageInternalizeActionResult, StorageProcessActionArgs, StorageProcessActionResults, SyncChunk, UpdateProvenTxReqWithNewProvenTxArgs, UpdateProvenTxReqWithNewProvenTxResult, WalletStorageProvider } from '../../sdk/WalletStorage.interfaces'
+import {
+  AuthId,
+  FindCertificatesArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindProvenTxReqsArgs,
+  ProcessSyncChunkResult,
+  RequestSyncChunkArgs,
+  StorageCreateActionResult,
+  StorageInternalizeActionResult,
+  StorageProcessActionArgs,
+  StorageProcessActionResults,
+  SyncChunk,
+  UpdateProvenTxReqWithNewProvenTxArgs,
+  UpdateProvenTxReqWithNewProvenTxResult,
+  WalletStorageProvider
+} from '../../sdk/WalletStorage.interfaces'
 import { WERR_INVALID_OPERATION } from '../../sdk/WERR_errors'
 import { WalletServices } from '../../sdk/WalletServices.interfaces'
-import { ValidCreateActionArgs, ValidListActionsArgs, ValidListCertificatesArgs, ValidListOutputsArgs } from '../../sdk/validationHelpers'
+import {
+  ValidCreateActionArgs,
+  ValidListActionsArgs,
+  ValidListCertificatesArgs,
+  ValidListOutputsArgs
+} from '../../sdk/validationHelpers'
 import { TableSettings } from '../schema/tables/TableSettings'
 import { TableUser } from '../schema/tables/TableUser'
 import { TableSyncState } from '../schema/tables/TableSyncState'

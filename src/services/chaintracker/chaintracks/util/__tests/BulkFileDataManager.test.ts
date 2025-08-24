@@ -270,11 +270,11 @@ describe('BulkFileDataManager tests', () => {
     }
     if (deleteSqliteFile) {
       const fs = ChaintracksFs
-      try { await fs.delete(path) } catch {}
+      try {
+        await fs.delete(path)
+      } catch {}
     }
-    const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(
-      chain, makeKnex(localSqlite)
-    )
+    const knexOptions = ChaintracksStorageKnex.createStorageKnexOptions(chain, makeKnex(localSqlite))
     knexOptions.bulkFileDataManager = manager
     const storage = new ChaintracksStorageKnex(knexOptions)
     await storage.makeAvailable()
