@@ -3289,8 +3289,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 export interface ListActionsSpecOp {
     name: string;
     labelsToIntercept?: string[];
-    setStatusFilter?: () => sdk.TransactionStatus[];
-    postProcess?: (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]) => Promise<void>;
+    setStatusFilter?: () => TransactionStatus[];
+    postProcess?: (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]) => Promise<void>;
 }
 ```
 
@@ -18405,7 +18405,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Function: listActions
 
 ```ts
-export async function listActions(storage: StorageKnex, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs): Promise<ListActionsResult> 
+export async function listActions(storage: StorageKnex, auth: AuthId, vargs: ValidListActionsArgs): Promise<ListActionsResult> 
 ```
 
 See also: [AuthId](./client.md#interface-authid), [StorageKnex](./storage.md#class-storageknex), [ValidListActionsArgs](./client.md#interface-validlistactionsargs)
@@ -20646,11 +20646,11 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
     return {
-        [sdk.specOpNoSendActions]: {
+        [specOpNoSendActions]: {
             name: "noSendActions",
             labelsToIntercept: ["abort"],
             setStatusFilter: () => ["nosend"],
-            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            postProcess: async (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
                 if (specOpLabels.indexOf("abort") >= 0) {
                     for (const tx of txs) {
                         if (tx.status === "nosend") {
@@ -20661,11 +20661,11 @@ getLabelToSpecOp: () => Record<string, ListActionsSpecOp> = () => {
                 }
             }
         },
-        [sdk.specOpFailedActions]: {
+        [specOpFailedActions]: {
             name: "failedActions",
             labelsToIntercept: ["unfail"],
             setStatusFilter: () => ["failed"],
-            postProcess: async (s: StorageProvider, auth: sdk.AuthId, vargs: sdk.ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
+            postProcess: async (s: StorageProvider, auth: AuthId, vargs: ValidListActionsArgs, specOpLabels: string[], txs: Partial<TableTransaction>[]): Promise<void> => {
                 if (specOpLabels.indexOf("unfail") >= 0) {
                     for (const tx of txs) {
                         if (tx.status === "failed") {
