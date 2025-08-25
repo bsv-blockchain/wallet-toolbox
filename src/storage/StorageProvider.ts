@@ -103,6 +103,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     this.feeModel = options.feeModel
     this.commissionPubKeyHex = options.commissionPubKeyHex
     this.commissionSatoshis = options.commissionSatoshis
+    this.maxRecursionDepth = 12
   }
 
   abstract reviewStatus(args: { agedLimit: Date; trx?: TrxToken }): Promise<{ log: string }>

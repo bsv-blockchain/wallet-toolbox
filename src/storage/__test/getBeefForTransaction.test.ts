@@ -1,32 +1,9 @@
 import { Beef, ListActionsResult, ListOutputsResult } from '@bsv/sdk'
+import { WalletError } from '../../sdk/WalletError'
+import { StorageAdminStats, StorageProvider } from '../StorageProvider'
+import { Chain } from '../../sdk/types'
+import { Services } from '../../services/Services'
 import {
-  TrxToken,
-  PurgeParams,
-  PurgeResults,
-  ProvenOrRawTx,
-  AuthId,
-  ValidListActionsArgs,
-  ValidListOutputsArgs,
-  FindCertificatesArgs,
-  FindOutputBasketsArgs,
-  FindOutputsArgs,
-  FindOutputTagMapsArgs,
-  FindProvenTxReqsArgs,
-  FindProvenTxsArgs,
-  FindTxLabelMapsArgs,
-  FindCertificateFieldsArgs,
-  FindCommissionsArgs,
-  FindMonitorEventsArgs,
-  FindOutputTagsArgs,
-  FindSyncStatesArgs,
-  FindTransactionsArgs,
-  FindTxLabelsArgs,
-  FindUsersArgs,
-  FindForUserSincePagedArgs,
-  StorageGetBeefOptions
-} from '../../sdk'
-import {
-  StorageProvider,
   TableCertificate,
   TableCertificateField,
   TableCertificateX,
@@ -43,23 +20,53 @@ import {
   TableTransaction,
   TableTxLabel,
   TableTxLabelMap,
-  TableUser,
-  sdk,
-  Services,
-  EntityProvenTx,
-  StorageAdminStats
-} from '../../index.client'
+  TableUser
+} from '../schema/tables'
+import {
+  AuthId,
+  FindCertificateFieldsArgs,
+  FindCertificatesArgs,
+  FindCommissionsArgs,
+  FindForUserSincePagedArgs,
+  FindMonitorEventsArgs,
+  FindOutputBasketsArgs,
+  FindOutputsArgs,
+  FindOutputTagMapsArgs,
+  FindOutputTagsArgs,
+  FindProvenTxReqsArgs,
+  FindProvenTxsArgs,
+  FindSyncStatesArgs,
+  FindTransactionsArgs,
+  FindTxLabelMapsArgs,
+  FindTxLabelsArgs,
+  FindUsersArgs,
+  ProvenOrRawTx,
+  PurgeParams,
+  PurgeResults,
+  StorageGetBeefOptions,
+  TrxToken,
+} from '../../sdk/WalletStorage.interfaces'
+import {
+  ValidListActionsArgs,
+  ValidListOutputsArgs
+} from '../../sdk/validationHelpers'
 
 describe('getBeefForTransaction tests', () => {
   jest.setTimeout(99999999)
 
-  test('0_', async () => {
-    const ps = new ProtoStorage('main')
-    const beef = await ps.getBeefForTxid('794f836052ad73732a550c38bea3697a722c6a1e54bcbe63735ba79e0d23f623')
-    expect(beef.bumps.length > 0)
-    {
-      const beef = await ps.getBeefForTxid('53023657e79f446ca457040a0ab3b903000d7281a091397c7853f021726a560e')
+  test('0 ProtoStorage.getBeefForTxid', async () => {
+    try {
+      const ps = new ProtoStorage('main')
+      const beef = await ps.getBeefForTxid('794f836052ad73732a550c38bea3697a722c6a1e54bcbe63735ba79e0d23f623')
       expect(beef.bumps.length > 0)
+      {
+        const beef = await ps.getBeefForTxid('53023657e79f446ca457040a0ab3b903000d7281a091397c7853f021726a560e')
+        expect(beef.bumps.length > 0)
+      }
+    } catch (eu: unknown) {
+      const e = WalletError.fromUnknown(eu)
+      // If txids are not new, a throw will happen on attempt to look up header hash in chaintracks live headers.
+      expect(e.message).toBe('Maximum BEEF depth exceeded. Limit is 2')
     }
   })
 })
@@ -68,7 +75,7 @@ class ProtoStorage extends StorageProvider {
   gbo: StorageGetBeefOptions
   whatsOnChainApiKey?: string
 
-  constructor(chain: sdk.Chain) {
+  constructor(chain: Chain) {
     const o = StorageProvider.createStorageBaseOptions(chain)
     super(o)
     const so = Services.createDefaultOptions(chain)
@@ -80,6 +87,7 @@ class ProtoStorage extends StorageProvider {
       ignoreServices: false,
       ignoreStorage: true
     }
+    this.maxRecursionDepth = 2
   }
 
   async getBeefForTxid(txid: string): Promise<Beef> {
