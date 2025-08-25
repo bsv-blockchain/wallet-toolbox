@@ -53,8 +53,12 @@ describe(`ChaintracksClientApi tests`, () => {
     }
 
     if (includeGcrTestClient) {
-      const gcr = new ChaintracksServiceClient('test', `https://staging-chaintracks-921101068003.us-west1.run.app`, {})
+      const gcr = new ChaintracksServiceClient('test', `https://testnet-chaintracks.babbage.systems`, {})
       clients.push({ client: gcr, chain: 'test' })
+    }
+    if (includeGcrTestClient) {
+      const gcr = new ChaintracksServiceClient('main', `https://mainnet-chaintracks.babbage.systems`, {})
+      clients.push({ client: gcr, chain: 'main' })
     }
 
     if (includeNpmRegistryClient) {
