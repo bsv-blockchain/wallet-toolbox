@@ -15,6 +15,9 @@ export function createDefaultWalletServicesOptions(
       ? 'mainnet_9596de07e92300c6287e4393594ae39c' // no plan
       : 'testnet_0e6cf72133b43ea2d7861da2a38684e3' // personal "starter" key
 
+  //const chaintracksUrl = `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`
+  const chaintracksUrl = `https://${chain}net-chaintracks.babbage.systems`
+
   const o: WalletServicesOptions = {
     chain,
     taalApiKey,
@@ -36,11 +39,8 @@ export function createDefaultWalletServicesOptions(
     fiatUpdateMsecs: 1000 * 60 * 60 * 24, // 24 hours
     disableMapiCallback: true, // Rely on WalletMonitor by default.
     exchangeratesapiKey: 'bd539d2ff492bcb5619d5f27726a766f',
-    chaintracksFiatExchangeRatesUrl: `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}/getFiatExchangeRates`,
-    chaintracks: new ChaintracksServiceClient(
-      chain,
-      `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`
-    ),
+    chaintracksFiatExchangeRatesUrl: `${chaintracksUrl}/getFiatExchangeRates`,
+    chaintracks: new ChaintracksServiceClient(chain, chaintracksUrl),
     arcUrl: arcDefaultUrl(chain),
     arcConfig: {
       apiKey: arcApiKey ?? undefined,

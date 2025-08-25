@@ -19832,9 +19832,22 @@ Returns an await'able Promise that resolves in the given number of msecs.
 
 ```ts
 export function wait(msecs: number): Promise<void> {
+    const MIN_WAIT = 0;
+    const MAX_WAIT = 2 * 60 * 1000;
+    if (typeof msecs !== "number" || !Number.isFinite(msecs) || isNaN(msecs) || msecs < MIN_WAIT || msecs > MAX_WAIT) {
+        throw new WERR_INVALID_PARAMETER("msecs", `a number between ${MIN_WAIT} and ${MAX_WAIT} msecs, not ${msecs}.`);
+    }
     return new Promise(resolve => setTimeout(resolve, msecs));
 }
 ```
+
+See also: [WERR_INVALID_PARAMETER](./client.md#class-werr_invalid_parameter)
+
+Argument Details
+
++ **msecs**
+  + number of milliseconds to wait before resolving the promise.
+Must be greater than zero and less than 2 minutes (120,000 msecs)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
