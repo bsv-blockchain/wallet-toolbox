@@ -154,6 +154,19 @@ export function verifyOne<T>(results: T[], errorDescrition?: string): T {
  * @publicbody
  */
 export function wait(msecs: number): Promise<void> {
+  const MIN_WAIT = 0
+  const MAX_WAIT = 10000 // maximum allowed wait in ms (10 seconds)
+  if (
+    typeof msecs !== 'number' ||
+    !Number.isFinite(msecs) ||
+    isNaN(msecs) ||
+    msecs < MIN_WAIT ||
+    msecs > MAX_WAIT
+  ) {
+    throw new WERR_BAD_REQUEST(
+      `wait: Delay must be a number between ${MIN_WAIT} and ${MAX_WAIT} ms.`
+    )
+  }
   return new Promise(resolve => setTimeout(resolve, msecs))
 }
 
