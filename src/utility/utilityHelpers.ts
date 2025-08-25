@@ -162,11 +162,11 @@ export function wait(msecs: number): Promise<void> {
     typeof msecs !== 'number' ||
     !Number.isFinite(msecs) ||
     isNaN(msecs) ||
-    msecs <= MIN_WAIT ||
+    msecs < MIN_WAIT ||
     msecs > MAX_WAIT
   ) {
     throw new WERR_INVALID_PARAMETER('msecs',
-      `a number between ${MIN_WAIT} and ${MAX_WAIT} msecs.`
+      `a number between ${MIN_WAIT} and ${MAX_WAIT} msecs, not ${msecs}.`
     )
   }
   return new Promise(resolve => setTimeout(resolve, msecs))

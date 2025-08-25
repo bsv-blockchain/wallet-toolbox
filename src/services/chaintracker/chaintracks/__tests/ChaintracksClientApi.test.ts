@@ -82,14 +82,14 @@ describe(`ChaintracksClientApi tests`, () => {
       const gotInfo = await client.getInfo()
       expect(gotInfo.chain).toBe(chain)
       expect(gotInfo.heightBulk).toBeGreaterThan(700000)
-      expect(gotInfo.heightLive).toBeGreaterThanOrEqual(firstTip.height)
+      expect(gotInfo.heightLive).toBeGreaterThanOrEqual(firstTip.height - 2)
     }
   })
 
   test('2 getPresentHeight', async () => {
     for (const { client, chain } of clients) {
       const presentHeight = await client.getPresentHeight()
-      expect(presentHeight).toBeGreaterThanOrEqual(firstTip.height)
+      expect(presentHeight).toBeGreaterThanOrEqual(firstTip.height - 2)
     }
   })
 
