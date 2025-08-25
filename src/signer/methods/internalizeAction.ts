@@ -63,14 +63,14 @@ export async function internalizeAction(
   function setupWalletPaymentForOutput(o: InternalizeOutput, dargs: ValidInternalizeActionArgs) {
     const p = o.paymentRemittance
     const output = tx.outputs[o.outputIndex]
-    if (!p) throw new WERR_INVALID_PARAMETER('paymentRemitance', `valid for protocol ${o.protocol}`)
+    if (!p) throw new WERR_INVALID_PARAMETER('paymentRemittance', `valid for protocol ${o.protocol}`)
 
     const keyID = `${p.derivationPrefix} ${p.derivationSuffix}`
 
     const privKey = wallet.keyDeriver!.derivePrivateKey(brc29ProtocolID, keyID, p.senderIdentityKey)
     const expectedLockScript = new P2PKH().lock(privKey.toAddress())
     if (output.lockingScript.toHex() !== expectedLockScript.toHex())
-      throw new WERR_INVALID_PARAMETER('paymentRemitance', `locked by script conforming to BRC-29`)
+      throw new WERR_INVALID_PARAMETER('paymentRemittance', `locked by script conforming to BRC-29`)
   }
 
   function setupBasketInsertionForOutput(o: InternalizeOutput, dargs: ValidInternalizeActionArgs) {
