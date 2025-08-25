@@ -42,11 +42,19 @@ export class LocalCdnServer {
     this.app.get('/download/:filename', (req, res) => {
       const filePath = path.join(this.folder, req.params.filename)
 
-      if (!fs.existsSync(filePath)) {
+      // Ensure filePath stays within the allowed folder (prevent directory traversal)
+      const resolvedFolder = path.resolve(this.folder)
+      const resolvedFilePath = path.resolve(filePath)
+      if (!resolvedFilePath.startsWith(resolvedFolder + path.sep)) {
+        // Prevent access to files outside the allowed directory
+        return res.status(403).json({ error: 'Access denied' })
+      }
+
+      if (!fs.existsSync(resolvedFilePath)) {
         return res.status(404).json({ error: 'File not found' })
       }
 
-      res.download(filePath, err => {
+      res.download(resolvedFilePath, err => {
         if (err) {
           res.status(500).json({ error: 'Error downloading file' })
         }
