@@ -101,7 +101,7 @@ export abstract class Format {
 
   static toLogStringAdminStats(s: StorageAdminStats): string {
     let log = `StorageAdminStats: ${s.when} ${s.requestedBy}\n`
-    log += `  ${al('', 13)} ${ar('Day', 15)} ${ar('Month', 15)} ${ar('Total', 15)}\n`
+    log += `  ${al('', 13)} ${ar('Day', 18)} ${ar('Month', 18)} ${ar('Total', 18)}\n`
     log += dmt('users', s.usersDay, s.usersMonth, s.usersTotal)
     log += dmt('change sats', sa(s.satoshisDefaultDay), sa(s.satoshisDefaultMonth), sa(s.satoshisDefaultTotal))
     log += dmt('other sats', sa(s.satoshisOtherDay), sa(s.satoshisOtherMonth), sa(s.satoshisOtherTotal))
@@ -122,7 +122,7 @@ export abstract class Format {
     return log
 
     function dmt(l: string, d: number | string, m: number | string, t: number | string): string {
-      return `  ${al(l, 13)} ${ar(d, 15)} ${ar(m, 15)} ${ar(t, 15)}\n`
+      return `  ${al(l, 13)} ${ar(d, 18)} ${ar(m, 18)} ${ar(t, 18)}\n`
     }
   }
 }
