@@ -29,7 +29,7 @@ describe(`ChaintracksClientApi tests`, () => {
 
   const chain: Chain = 'main'
 
-  const clients: { client: ChaintracksClientApi, chain: Chain }[] = []
+  const clients: { client: ChaintracksClientApi; chain: Chain }[] = []
 
   let localService: ChaintracksService
   let localServiceStorage: ChaintracksStorageApi
@@ -75,7 +75,7 @@ describe(`ChaintracksClientApi tests`, () => {
   })
 
   test('0 getChain', async () => {
-    for (const {client, chain } of clients) {
+    for (const { client, chain } of clients) {
       const gotChain = await client.getChain()
       expect(gotChain).toBe(chain)
     }
