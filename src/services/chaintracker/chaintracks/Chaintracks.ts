@@ -4,7 +4,7 @@ import { LiveIngestorApi } from './Api/LiveIngestorApi'
 
 import { validateAgainstDirtyHashes } from './util/dirtyHashes'
 
-import { ChaintracksOptions, ChaintracksManagementApi } from './Api/ChaintracksApi'
+import { ChaintracksManagementApi, ChaintracksOptions } from './Api/ChaintracksApi'
 import { blockHash, validateHeaderFormat } from './util/blockHeaderUtilities'
 import { Chain } from '../../../sdk/types'
 import { ChaintracksInfoApi, HeaderListener, ReorgListener } from './Api/ChaintracksClientApi'
@@ -15,7 +15,6 @@ import { SingleWriterMultiReaderLock } from './util/SingleWriterMultiReaderLock'
 import { ChaintracksFsApi } from './Api/ChaintracksFsApi'
 import { randomBytesBase64, wait } from '../../../utility/utilityHelpers'
 import { WalletError } from '../../../sdk/WalletError'
-import { CWIStyleWalletManager } from '../../../CWIStyleWalletManager'
 
 export class Chaintracks implements ChaintracksManagementApi {
   static createOptions(chain: Chain): ChaintracksOptions {
@@ -96,20 +95,22 @@ export class Chaintracks implements ChaintracksManagementApi {
     const presentHeights: number[] = []
     for (const bulk of this.bulkIngestors) {
       try {
+        // It could be done in parallel using Promise.all method
         const presentHeight = await bulk.getPresentHeight()
         if (presentHeight) presentHeights.push(presentHeight)
       } catch (uerr: unknown) {
         console.error(uerr)
       }
     }
-    const presentHeight = presentHeights.length ? Math.max(...presentHeights) : undefined
-    if (!presentHeight) throw new Error('At least one bulk ingestor must implement getPresentHeight.')
+    if (!presentHeights.length) throw new Error('At least one bulk ingestor must implement getPresentHeight.')
+    const presentHeight = Math.max(...presentHeights)
     this.lastPresentHeight = presentHeight
     this.lastPresentHeightMsecs = now
     return presentHeight
   }
 
   async currentHeight(): Promise<number> {
+    // why are there two methods that do the same thing?
     return await this.getPresentHeight()
   }
 
@@ -127,7 +128,7 @@ export class Chaintracks implements ChaintracksManagementApi {
 
   async unsubscribe(subscriptionId: string): Promise<boolean> {
     let success = true
-    if (this.callbacks.header[subscriptionId]) delete this.callbacks.header[subscriptionId]
+    if (this.callbacks.header[subscriptionId]) {delete this.callbacks.header[subscriptionId]}
     else if (this.callbacks.reorg[subscriptionId]) delete this.callbacks.reorg[subscriptionId]
     else success = false
     return success
@@ -166,6 +167,11 @@ export class Chaintracks implements ChaintracksManagementApi {
       for (const liveIn of this.liveIngestors) await liveIn.setStorage(this.storage, this.log)
 
       // Start all live ingestors to push new headers onto liveHeaders... each long running.
+      /*
+      Live ingestors are started with startListening(this.liveHeaders).
+      They likely push into the same array consumed by the mainThreadShiftLiveHeaders without any explicit synchronization.
+      Is this acceptable?
+       */
       for (const liveIngestor of this.liveIngestors) this.promises.push(liveIngestor.startListening(this.liveHeaders))
 
       // Start mai loop to shift out liveHeaders...once sync'd, will set `available` true.
@@ -181,6 +187,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   async startPromises(): Promise<void> {
+    // this method seems unused. What is its intended purpose?
     if (this.promises.length > 0 || this.stopMainThread !== true) return
   }
 
@@ -285,7 +292,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   /**
-   * @returns true iff all headers from height zero through current chainTipHeader height can be retreived and form a valid chain.
+   * @returns true if all headers from height zero through current chainTipHeader height can be retreived and form a valid chain.
    */
   async validate(): Promise<boolean> {
     let h = await this.findChainTipHeader()
@@ -312,6 +319,7 @@ export class Chaintracks implements ChaintracksManagementApi {
   }
 
   async startListening(): Promise<void> {
+    // missing await for an async function call
     this.makeAvailable()
   }
 
@@ -328,7 +336,7 @@ export class Chaintracks implements ChaintracksManagementApi {
     let added = HeightRange.empty
 
     let done = false
-    for (; !done; ) {
+    while (!done) {
       let bulkSyncError: WalletError | undefined
       for (const bulk of this.bulkIngestors) {
         try {
@@ -343,6 +351,8 @@ export class Chaintracks implements ChaintracksManagementApi {
           )
 
           if (r.done) {
+            // Is it safe to relay on the ingestor's done flag?
+            // What if one ingestor is done but another could still add headers?
             done = true
             break
           }
@@ -358,10 +368,16 @@ export class Chaintracks implements ChaintracksManagementApi {
         this.startupError = bulkSyncError
         break
       }
+
+      // bulkDone is never set to true in the loop, so it seems it is not needed - and the loop will always break on 'done' being true.
       if (bulkDone) break
     }
 
     if (!this.startupError) {
+      // NOTE: that shifting and unshifting the arrays is not optimal for performance.
+      // If there is a lot of such operations and the length of the array is big, consider using a different data structure.
+      // like a linked list or a deque.
+      // However, if the number of headers is not too big, this should be fine.
       this.liveHeaders.unshift(...newLiveHeaders)
 
       added = after.bulk.above(initialRanges.bulk)
@@ -405,6 +421,7 @@ export class Chaintracks implements ChaintracksManagementApi {
           try {
             addListener(header)
           } catch {
+            // Shouldn't it be at least logged?
             /* ignore all errors thrown */
           }
         }
@@ -445,7 +462,6 @@ export class Chaintracks implements ChaintracksManagementApi {
   private async mainThreadShiftLiveHeaders(): Promise<void> {
     this.stopMainThread = false
     let lastSyncCheck = Date.now()
-    let lastBulkSync = Date.now()
     const cdnSyncRepeatMsecs = 24 * 60 * 60 * 1000 // 24 hours
     const syncCheckRepeatMsecs = 30 * 60 * 1000 // 30 minutes
 
@@ -475,7 +491,6 @@ export class Chaintracks implements ChaintracksManagementApi {
 
         if (!skipBulkSync) {
           // Bring bulk storage up-to-date and (re-)initialize liveHeaders
-          lastBulkSync = now
           if (this.available)
             // Once available, initial write lock is released, take a new one to update bulk storage.
             await this.syncBulkStorage(presentHeight, before)
@@ -489,14 +504,15 @@ export class Chaintracks implements ChaintracksManagementApi {
         let liveHeaderDupes = 0
         let needSyncCheck = false
 
-        for (; !needSyncCheck && !this.stopMainThread; ) {
+        while (!needSyncCheck && !this.stopMainThread) {
           let header = this.liveHeaders.shift()
           if (header) {
             // Process a "live" block header...
             let recursions = this.addLiveRecursionLimit
-            for (; !needSyncCheck && !this.stopMainThread; ) {
+            while (!needSyncCheck && !this.stopMainThread) {
               //console.log(`Processing liveHeader: height: ${header.height} hash: ${header.hash} ${new Date().toISOString()}`)
               const ihr = await this.addLiveHeader(header)
+              // Shouldn't the check `invalidInsertHeaderResult` be before calling addLiveHeader?
               if (this.invalidInsertHeaderResult(ihr)) {
                 this.log(`Ignoring liveHeader ${header.height} ${header.hash} due to invalid insert result.`)
                 needSyncCheck = true

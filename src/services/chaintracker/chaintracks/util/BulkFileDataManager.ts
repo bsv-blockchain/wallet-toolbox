@@ -353,6 +353,7 @@ export class BulkFileDataManager {
   }
 
   async getDataFromFile(file: BulkHeaderFileInfo, offset?: number, length?: number): Promise<Uint8Array | undefined> {
+    // await is not needed for this.getBfdForHeight
     const bfd = await this.getBfdForHeight(file.firstHeight)
     if (!bfd || bfd.count < file.count)
       throw new WERR_INVALID_PARAMETER(
@@ -742,6 +743,8 @@ export class BulkFileDataManager {
     truncate.count -= count
     truncate.firstHeight += count
 
+    // shouldn't it be checked that:
+    // if (!truncate.data || truncate.data.length < count*80) throw WERR_INTERNAL(...)
     truncate.data = truncate.data?.slice(count * 80)
     delete this.fileHashToIndex[truncate.fileHash]
     truncate.fileHash = asString(Hash.sha256(asArray(truncate.data!)), 'base64')
@@ -769,6 +772,8 @@ export class BulkFileDataManager {
       try {
         bfd.data = await this.fetch.download(url)
       } catch (err) {
+        // is it intended behavior to "retry" to load the same URL, even though it just failed?
+        // Some logging would be useful here.
         bfd.data = await this.fetch.download(url)
       }
       if (!bfd.data) throw new WERR_INVALID_PARAMETER('sourceUrl', `data not found for sourceUrl ${url}`)

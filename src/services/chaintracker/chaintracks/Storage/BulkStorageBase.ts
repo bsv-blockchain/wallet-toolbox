@@ -16,6 +16,7 @@ import { ChaintracksFsApi } from '../Api/ChaintracksFsApi'
 import { Utils } from '@bsv/sdk'
 import { asUint8Array } from '../../../../utility/utilityHelpers.noBuffer'
 
+// My IDE shows me that the BulkStorageBase is not used anywhere. What is the purpose of this class?
 export abstract class BulkStorageBase implements BulkStorageApi {
   static createBulkStorageBaseOptions(chain: Chain, fs: ChaintracksFsApi): BulkStorageBaseOptions {
     const options: BulkStorageBaseOptions = {
@@ -61,7 +62,8 @@ export abstract class BulkStorageBase implements BulkStorageApi {
       headersPerFile: maxPerFile
     }
     const maxHeight = await this.getMaxHeight()
-    const baseFilename = jsonFilename.slice(0, -5) // remove ".json"
+    const baseFilename = jsonFilename.slice(0, -5) // remove ".json" - How are you sure the filename ends with .json?
+    // These two strings - and can be global constants
     let prevHash = '00'.repeat(32)
     let prevChainWork = '00'.repeat(32)
     for (let height = 0; height <= maxHeight; height += maxPerFile) {
@@ -78,6 +80,8 @@ export abstract class BulkStorageBase implements BulkStorageApi {
       }
       const buffer = await this.headersToBuffer(height, count)
       await this.fs.writeFile(this.fs.pathJoin(rootFolder, file.fileName), buffer)
+
+      // This commented-out section seems crucial - because without it, prevHash and prevChainWork are never updated, and lastHash, fileHash, and lastChainWork are never set.
       /*
       file = await BulkFilesReader.validateHeaderFile(this.fs, rootFolder, file)
       if (!file.lastHash) throw new Error('Unexpected result.')

@@ -137,6 +137,7 @@ export abstract class ChaintracksStorageBase implements ChaintracksStorageQueryA
     return headers
   }
 
+  // This method seems unused
   async deleteBulkBlockHeaders(): Promise<void> {
     await this.bulkManager.deleteBulkFiles()
   }
