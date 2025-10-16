@@ -19,6 +19,7 @@ export interface ChaintracksServiceClientOptions {}
 export class ChaintracksServiceClient implements ChaintracksClientApi {
   static createChaintracksServiceClientOptions(): ChaintracksServiceClientOptions {
     const options: ChaintracksServiceClientOptions = {
+      // the Authrite support is not provided yet, is it?
       useAuthrite: false
     }
     return options
@@ -55,6 +56,13 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
     return isValid
   }
 
+  // I tried to request for some unexisting header
+  // http://localhost:3011/findHeaderHexForHeight?height=91891000,
+  // and the server returned:
+  // {"status":"success"}
+  // I'm not sure if "success" with no value is the intended behavior for "not found"
+  // In standard rest API, "not found" should return 404 status code
+  // and the client should handle that case
   async getJsonOrUndefined<T>(path: string): Promise<T | undefined> {
     let e: Error | undefined = undefined
     for (let retry = 0; retry < 3; retry++) {
@@ -134,6 +142,30 @@ export class ChaintracksServiceClient implements ChaintracksClientApi {
     return await this.getJson('/getInfo')
   }
   async findChainTipHeader(): Promise<BlockHeader> {
+    // When I tested it, the server responded with more fields than defined in the BlockHeader
+    // I suppose the `BlockHeader` definition should be updated to include those fields
+    /*
+    {
+      "status": "success",
+      "value": {
+        "height": 918934,
+        "hash": "00000000000000000165924d2b7e41fd586d88e02f846ea6428d37c51f97db31",
+        "version": 594616320,
+        "previousHash": "000000000000000007dce4ee864f0569066bcded7a6a3eca9b977eebf9cb3926",
+        "merkleRoot": "f4afaab11ec4921a59c9eb1e49435aeaaef6e4396ee9d4a77ef88fdd60057928",
+        "time": 1760620895,
+        "bits": 405131341,
+        "nonce": 2411550733,
+
+        // below are extra fields not defined in BlockHeader
+        "headerId": 2025,
+        "previousHeaderId": 2024,
+        "chainWork": "0000000000000000000000000000000000000000016934b62084adb28c318e3c",
+        "isChainTip": true,
+        "isActive": true
+      }
+    }
+     */
     return await this.getJson('/findChainTipHeaderHex')
   }
   async findChainTipHash(): Promise<string> {
