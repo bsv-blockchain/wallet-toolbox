@@ -67,7 +67,7 @@ export interface BulkHeaderFileInfo {
 export abstract class BulkHeaderFile implements BulkHeaderFileInfo {
   chain?: Chain | undefined
   count: number
-  data?: Uint8Array<ArrayBufferLike> | undefined
+  data?: Uint8Array | undefined
   fileHash: string | null
   fileId?: number | undefined
   fileName: string
