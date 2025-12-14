@@ -130,7 +130,7 @@ export async function listActions(
 
   const { q, qcount } = noLabels ? makeWithoutLabelsQueries() : makeWithLabelsQueries()
 
-  q.limit(limit).offset(offset).orderBy('transactionId', 'asc')
+  q.limit(limit).offset(offset).orderBy('transactionId', 'desc')
 
   const txs: Partial<TableTransaction>[] = await q
 
