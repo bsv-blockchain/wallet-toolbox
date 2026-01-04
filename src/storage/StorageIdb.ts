@@ -650,6 +650,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       firstTime = false
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
+      if (args.status && args.status.length > 0 && !args.status.includes(r.status)) continue
+      if (args.txids && args.txids.length > 0 && !args.txids.includes(r.txid)) continue
       if (args.partial) {
         if (args.partial.provenTxReqId && r.provenTxReqId !== args.partial.provenTxReqId) continue
         if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
@@ -800,6 +802,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       firstTime = false
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
+      if (args.labelIds && !args.labelIds.includes(r.txLabelId)) continue
       if (args.partial) {
         if (args.partial.txLabelId && r.txLabelId !== args.partial.txLabelId) continue
         if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
