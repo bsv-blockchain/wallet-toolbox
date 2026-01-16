@@ -529,6 +529,17 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     filtered: (v: TableOutputTagMap) => void,
     userId?: number
   ): Promise<void> {
+    // Pre-compute outputTagIds for this user BEFORE opening cursor.
+    // This avoids nested queries inside the cursor loop which cause IDB transaction timeouts.
+    let userOutputTagIds: Set<number> | undefined
+    if (userId !== undefined) {
+      userOutputTagIds = new Set<number>()
+      const userTags = await this.findOutputTags({ partial: { userId } })
+      for (const tag of userTags) {
+        userOutputTagIds.add(tag.outputTagId)
+      }
+    }
+
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -560,9 +571,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
-      if (userId !== undefined && r.txid) {
-        const count = await this.countOutputTags({ partial: { userId, outputTagId: r.outputTagId }, trx: args.trx })
-        if (count === 0) continue
+      if (userOutputTagIds !== undefined && !userOutputTagIds.has(r.outputTagId)) {
+        continue
       }
       if (skipped < offset) {
         skipped++
@@ -595,6 +605,20 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         'args.partial.inputBEEF',
         `undefined. ProvenTxReqs may not be found by inputBEEF value.`
       )
+
+    // Pre-compute txids for this user's transactions BEFORE opening cursor.
+    // This avoids nested queries inside the cursor loop which cause IDB transaction timeouts.
+    let userTxIds: Set<string> | undefined
+    if (userId !== undefined) {
+      userTxIds = new Set<string>()
+      const userTxs = await this.findTransactions({ partial: { userId }, noRawTx: true })
+      for (const tx of userTxs) {
+        if (tx.txid) {
+          userTxIds.add(tx.txid)
+        }
+      }
+    }
+
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -639,9 +663,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         if (args.partial.history && r.history !== args.partial.history) continue
         if (args.partial.notify && r.notify !== args.partial.notify) continue
       }
-      if (userId !== undefined && r.txid) {
-        const count = await this.countTransactions({ partial: { userId, txid: r.txid }, trx: args.trx })
-        if (count === 0) continue
+      if (userTxIds !== undefined && r.txid && !userTxIds.has(r.txid)) {
+        continue
       }
       if (skipped < offset) {
         skipped++
@@ -670,6 +693,20 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         'args.partial.merklePath',
         `undefined. ProvenTxs may not be found by merklePath value.`
       )
+
+    // Pre-compute provenTxIds for this user's transactions BEFORE opening cursor.
+    // This avoids nested queries inside the cursor loop which cause IDB transaction timeouts.
+    let userProvenTxIds: Set<number> | undefined
+    if (userId !== undefined) {
+      userProvenTxIds = new Set<number>()
+      const userTxs = await this.findTransactions({ partial: { userId }, noRawTx: true })
+      for (const tx of userTxs) {
+        if (tx.provenTxId !== undefined) {
+          userProvenTxIds.add(tx.provenTxId)
+        }
+      }
+    }
+
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -702,9 +739,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         if (args.partial.blockHash && r.blockHash !== args.partial.blockHash) continue
         if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
       }
-      if (userId !== undefined) {
-        const count = await this.countTransactions({ partial: { userId, provenTxId: r.provenTxId }, trx: args.trx })
-        if (count === 0) continue
+      if (userProvenTxIds !== undefined && !userProvenTxIds.has(r.provenTxId)) {
+        continue
       }
       if (skipped < offset) {
         skipped++
@@ -730,6 +766,17 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     filtered: (v: TableTxLabelMap) => void,
     userId?: number
   ): Promise<void> {
+    // Pre-compute txLabelIds for this user BEFORE opening cursor.
+    // This avoids nested queries inside the cursor loop which cause IDB transaction timeouts.
+    let userTxLabelIds: Set<number> | undefined
+    if (userId !== undefined) {
+      userTxLabelIds = new Set<number>()
+      const userLabels = await this.findTxLabels({ partial: { userId } })
+      for (const label of userLabels) {
+        userTxLabelIds.add(label.txLabelId)
+      }
+    }
+
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -760,9 +807,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
-      if (userId !== undefined) {
-        const count = await this.countTxLabels({ partial: { userId, txLabelId: r.txLabelId }, trx: args.trx })
-        if (count === 0) continue
+      if (userTxLabelIds !== undefined && !userTxLabelIds.has(r.txLabelId)) {
+        continue
       }
       if (skipped < offset) {
         skipped++
