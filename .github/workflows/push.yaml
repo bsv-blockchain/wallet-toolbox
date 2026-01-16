@@ -78,7 +78,7 @@ jobs:
 
       - name: Publish root to npm
         if: steps.check-root-version.outputs.should_publish_root == 'true'
-        run: npm publish
+        run: npm publish --access public
 
       - name: Skip publishing root
         if: steps.check-root-version.outputs.should_publish_root == 'false'
@@ -107,7 +107,7 @@ jobs:
         if: steps.check-client-version.outputs.should_publish_client == 'true'
         run: |
           cd client
-          npm publish
+          npm publish --access public
           cd ..
 
       - name: Skip publishing client
@@ -137,7 +137,7 @@ jobs:
         if: steps.check-mobile-version.outputs.should_publish_mobile == 'true'
         run: |
           cd mobile
-          npm publish
+          npm publish --access public
           cd ..
 
       - name: Skip publishing mobile

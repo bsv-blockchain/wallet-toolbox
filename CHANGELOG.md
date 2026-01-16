@@ -4,6 +4,15 @@ This document captures the history of significant changes to the wallet-toolbox 
 The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 1.7.19
+
+- Fix: Include build artifacts (d.ts, js) in published packages
+
+## wallet-toolbox 1.7.18
+
+- Fork published under @bopen-io scope as @bopen-io/wallet-toolbox
+- Also publishes @bopen-io/wallet-toolbox-client and @bopen-io/wallet-toolbox-mobile
+
 ## wallet-toolbox 1.7.17
 
 - Fix push.yaml to sync versions, correct root package contents (no mobile), and publish client and mobile
