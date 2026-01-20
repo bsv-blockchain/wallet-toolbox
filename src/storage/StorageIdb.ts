@@ -119,7 +119,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         const storeToCheck = stores[0] || this.allStores[0]
         t.objectStore(storeToCheck)
       } catch (e) {
-        console.error(`[StorageIdb.toDbTrx] Passed transaction already finished! stores=${stores.join(',')}, mode=${mode}`)
+        console.error(
+          `[StorageIdb.toDbTrx] Passed transaction already finished! stores=${stores.join(',')}, mode=${mode}`
+        )
         console.error('[StorageIdb.toDbTrx] Stack trace:', new Error().stack)
         throw e
       }
@@ -551,7 +553,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'output_tags_map', 'outputId', 'readwrite' | 'readonly'>
       | null
     if (args.partial?.outputTagId !== undefined) {
-      cursor = await dbTrx.objectStore('output_tags_map').index('outputTagId').openCursor(args.partial.outputTagId, direction)
+      cursor = await dbTrx
+        .objectStore('output_tags_map')
+        .index('outputTagId')
+        .openCursor(args.partial.outputTagId, direction)
     } else if (args.partial?.outputId !== undefined) {
       cursor = await dbTrx.objectStore('output_tags_map').index('outputId').openCursor(args.partial.outputId, direction)
     } else {
@@ -635,7 +640,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     if (args.partial?.provenTxReqId) {
       cursor = await dbTrx.objectStore('proven_tx_reqs').openCursor(args.partial.provenTxReqId, direction)
     } else if (args.partial?.provenTxId !== undefined) {
-      cursor = await dbTrx.objectStore('proven_tx_reqs').index('provenTxId').openCursor(args.partial.provenTxId, direction)
+      cursor = await dbTrx
+        .objectStore('proven_tx_reqs')
+        .index('provenTxId')
+        .openCursor(args.partial.provenTxId, direction)
     } else if (args.partial?.txid !== undefined) {
       cursor = await dbTrx.objectStore('proven_tx_reqs').index('txid').openCursor(args.partial.txid, direction)
     } else if (args.partial?.status !== undefined) {
@@ -793,7 +801,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'tx_labels_map', 'txLabelId', 'readwrite' | 'readonly'>
       | null
     if (args.partial?.transactionId !== undefined) {
-      cursor = await dbTrx.objectStore('tx_labels_map').index('transactionId').openCursor(args.partial.transactionId, direction)
+      cursor = await dbTrx
+        .objectStore('tx_labels_map')
+        .index('transactionId')
+        .openCursor(args.partial.transactionId, direction)
     } else if (args.partial?.txLabelId !== undefined) {
       cursor = await dbTrx.objectStore('tx_labels_map').index('txLabelId').openCursor(args.partial.txLabelId, direction)
     } else {
@@ -1081,7 +1092,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     try {
       store = dbTrx.objectStore(storeName)
     } catch (e) {
-      console.error(`[StorageIdb.updateIdb] objectStore('${storeName}') failed for id=${JSON.stringify(id)}, trx=${!!trx}:`, e)
+      console.error(
+        `[StorageIdb.updateIdb] objectStore('${storeName}') failed for id=${JSON.stringify(id)}, trx=${!!trx}:`,
+        e
+      )
       throw e
     }
     const ids = Array.isArray(id) ? id : [id]
@@ -1353,7 +1367,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         cursor = await dbTrx
           .objectStore('certificates')
           .index('userId_type_certifier_serialNumber')
-          .openCursor([args.partial.userId, args.partial.type, args.partial.certifier, args.partial.serialNumber], direction)
+          .openCursor(
+            [args.partial.userId, args.partial.type, args.partial.certifier, args.partial.serialNumber],
+            direction
+          )
       } else {
         cursor = await dbTrx.objectStore('certificates').index('userId').openCursor(args.partial.userId, direction)
       }
@@ -1429,7 +1446,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     } else if (args.partial?.userId !== undefined) {
       cursor = await dbTrx.objectStore('commissions').index('userId').openCursor(args.partial.userId, direction)
     } else if (args.partial?.transactionId !== undefined) {
-      cursor = await dbTrx.objectStore('commissions').index('transactionId').openCursor(args.partial.transactionId, direction)
+      cursor = await dbTrx
+        .objectStore('commissions')
+        .index('transactionId')
+        .openCursor(args.partial.transactionId, direction)
     } else {
       cursor = await dbTrx.objectStore('commissions').openCursor(null, direction)
     }
@@ -1640,7 +1660,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         cursor = await dbTrx.objectStore('outputs').index('userId').openCursor(args.partial.userId, direction)
       }
     } else if (args.partial?.transactionId !== undefined) {
-      cursor = await dbTrx.objectStore('outputs').index('transactionId').openCursor(args.partial.transactionId, direction)
+      cursor = await dbTrx
+        .objectStore('outputs')
+        .index('transactionId')
+        .openCursor(args.partial.transactionId, direction)
     } else if (args.partial?.basketId !== undefined) {
       cursor = await dbTrx.objectStore('outputs').index('basketId').openCursor(args.partial.basketId, direction)
     } else if (args.partial?.spentBy !== undefined) {
@@ -1912,7 +1935,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     } else if (args.partial?.status !== undefined) {
       cursor = await dbTrx.objectStore('transactions').index('status').openCursor(args.partial.status, direction)
     } else if (args.partial?.provenTxId !== undefined) {
-      cursor = await dbTrx.objectStore('transactions').index('provenTxId').openCursor(args.partial.provenTxId, direction)
+      cursor = await dbTrx
+        .objectStore('transactions')
+        .index('provenTxId')
+        .openCursor(args.partial.provenTxId, direction)
     } else if (args.partial?.reference !== undefined) {
       cursor = await dbTrx.objectStore('transactions').index('reference').openCursor(args.partial.reference, direction)
     } else {
