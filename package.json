@@ -1,6 +1,6 @@
 {
   "name": "@bopen-io/wallet-toolbox",
-  "version": "1.7.20-idb-fix.3",
+  "version": "1.7.20-idb-fix.4",
   "description": "BRC100 conforming wallet, wallet storage and wallet signer components",
   "main": "./out/src/index.js",
   "types": "./out/src/index.d.ts",

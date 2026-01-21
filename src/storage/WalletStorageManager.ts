@@ -744,23 +744,27 @@ export class WalletStorageManager implements sdk.WalletStorage {
     const identityKey = auth.identityKey
 
     const writerSettings = await writer.makeAvailable()
+    const isRemoteWriter = writer instanceof StorageClient
 
     let inserts = 0,
       updates = 0
 
-    log = await this.runAsSync(async sync => {
-      const reader = sync
-      const readerSettings = reader.getSettings()
-
+    // If writer is remote (StorageClient), we must NOT hold a local IDB transaction
+    // across network calls. Instead, do fresh reads for each chunk iteration.
+    if (isRemoteWriter && !activeSync) {
+      const readerSettings = this.getSettings()
       log += progLog(`syncToWriter from ${readerSettings.storageName} to ${writerSettings.storageName}\n`)
 
       let i = -1
       for (;;) {
         i++
+        // Network call to remote writer - OK, no local transaction held
         const ss = await EntitySyncState.fromStorage(writer, identityKey, readerSettings)
         const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
-        const chunk = await reader.getSyncChunk(args)
+        // Fresh local read - brief transaction that completes before network call
+        const chunk = await this.runAsSync(async sync => sync.getSyncChunk(args))
         log += EntitySyncState.syncChunkSummary(chunk)
+        // Network call to remote writer - OK, no local transaction held
         const r = await writer.processSyncChunk(args, chunk)
         inserts += r.inserts
         updates += r.updates
@@ -768,8 +772,31 @@ export class WalletStorageManager implements sdk.WalletStorage {
         if (r.done) break
       }
       log += progLog(`syncToWriter complete: ${inserts} inserts, ${updates} updates\n`)
-      return log
-    }, activeSync)
+    } else {
+      // Writer is local or we have an active sync context - use original approach
+      log = await this.runAsSync(async sync => {
+        const reader = sync
+        const readerSettings = reader.getSettings()
+
+        log += progLog(`syncToWriter from ${readerSettings.storageName} to ${writerSettings.storageName}\n`)
+
+        let i = -1
+        for (;;) {
+          i++
+          const ss = await EntitySyncState.fromStorage(writer, identityKey, readerSettings)
+          const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
+          const chunk = await reader.getSyncChunk(args)
+          log += EntitySyncState.syncChunkSummary(chunk)
+          const r = await writer.processSyncChunk(args, chunk)
+          inserts += r.inserts
+          updates += r.updates
+          log += progLog(`chunk ${i} inserted ${r.inserts} updated ${r.updates} ${r.maxUpdated_at}\n`)
+          if (r.done) break
+        }
+        log += progLog(`syncToWriter complete: ${inserts} inserts, ${updates} updates\n`)
+        return log
+      }, activeSync)
+    }
 
     return { inserts, updates, log }
   }
