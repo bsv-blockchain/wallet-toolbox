@@ -89,7 +89,8 @@ export class EntityTxLabelMap extends EntityBase<TableTxLabelMap> {
       await storage.findTxLabelMaps({
         partial: { transactionId, txLabelId },
         trx
-      })
+      }),
+      `EntityTxLabelMap.mergeFind(transactionId=${transactionId}, txLabelId=${txLabelId})`
     )
     return {
       found: !!ef,
