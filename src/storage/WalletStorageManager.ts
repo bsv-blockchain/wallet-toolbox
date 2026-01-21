@@ -25,6 +25,13 @@ import {
 import { StorageProvider } from './StorageProvider'
 import { StorageClient } from './remoting/StorageClient'
 
+function logSyncRequest(context: string, args: sdk.RequestSyncChunkArgs): void {
+  console.log(`[sync] ${context} request:`, JSON.stringify({
+    since: args.since,
+    offsets: args.offsets
+  }, null, 2))
+}
+
 class ManagedStorage {
   isAvailable: boolean
   isStorageProvider: boolean
@@ -715,6 +722,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
         i++
         const ss = await EntitySyncState.fromStorage(writer, identityKey, readerSettings)
         const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
+        logSyncRequest('syncFromReader', args)
         const chunk = await reader.getSyncChunk(args)
         if (chunk.user) {
           // Merging state from a reader cannot update activeStorage
@@ -761,6 +769,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
         // Network call to remote writer - OK, no local transaction held
         const ss = await EntitySyncState.fromStorage(writer, identityKey, readerSettings)
         const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
+        logSyncRequest('syncToWriter-remote', args)
         // Fresh local read - brief transaction that completes before network call
         const chunk = await this.runAsSync(async sync => sync.getSyncChunk(args))
         log += EntitySyncState.syncChunkSummary(chunk)
@@ -785,6 +794,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
           i++
           const ss = await EntitySyncState.fromStorage(writer, identityKey, readerSettings)
           const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
+          logSyncRequest('syncToWriter-local', args)
           const chunk = await reader.getSyncChunk(args)
           log += EntitySyncState.syncChunkSummary(chunk)
           const r = await writer.processSyncChunk(args, chunk)
@@ -869,7 +879,7 @@ export class WalletStorageManager implements sdk.WalletStorage {
           // Get sync state from newActive (the writer) - this tracks what newActive has already received
           const ss = await EntitySyncState.fromStorage(newActive.storage, identityKey, readerSettings)
           const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
-
+          logSyncRequest('mergeConflicts', args)
           // Network call to conflict (reader) - get chunk of data to sync
           const chunk = await conflict.storage.getSyncChunk(args)
           log += progLog(EntitySyncState.syncChunkSummary(chunk))
