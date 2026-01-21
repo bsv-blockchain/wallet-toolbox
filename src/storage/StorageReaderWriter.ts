@@ -144,7 +144,7 @@ export abstract class StorageReaderWriter extends StorageReader {
     let isNew = false
     for (let retry = 0; ; retry++) {
       try {
-        user = verifyOneOrNone(await this.findUsers({ partial: { identityKey }, trx }))
+        user = verifyOneOrNone(await this.findUsers({ partial: { identityKey }, trx }), `findOrInsertUser(identityKey=${identityKey.slice(0, 8)}...)`)
         if (user) break
         const now = new Date()
         user = {
@@ -351,7 +351,7 @@ export abstract class StorageReaderWriter extends StorageReader {
     for (let retry = 0; ; retry++) {
       try {
         const now = new Date()
-        let syncState = verifyOneOrNone(await this.findSyncStates({ partial }))
+        let syncState = verifyOneOrNone(await this.findSyncStates({ partial }), `findOrInsertSyncStateAuth(userId=${auth.userId}, storageIdentityKey=${storageIdentityKey.slice(0, 8)}...)`)
         if (!syncState) {
           syncState = {
             ...partial,
