@@ -844,38 +844,55 @@ export class WalletStorageManager implements sdk.WalletStorage {
 
     log += progLog('\n')
 
-    log += await this.runAsSync(async sync => {
-      let log = ''
+    // Handle conflicting actives OUTSIDE runAsSync to avoid IDB timeout.
+    // Network calls to remote storage can take longer than IDB transaction timeout.
+    if (this._conflictingActives!.length > 0) {
+      // Handle case where new active is current active to resolve conflicts.
+      // And where new active is one of the current conflict actives.
+      this._conflictingActives!.push(this._active!)
+      // Remove the new active from conflicting actives
+      this._conflictingActives = this._conflictingActives!.filter(ca => {
+        const isNewActive = ca.settings!.storageIdentityKey === storageIdentityKey
+        return !isNewActive
+      })
 
-      if (this._conflictingActives!.length > 0) {
-        // Merge state from conflicting actives into `newActive`.
+      // Merge state from each conflicting active into newActive.
+      // Network calls happen outside transactions to avoid IDB timeout.
+      for (const conflict of this._conflictingActives) {
+        log += progLog('MERGING STATE FROM CONFLICTING ACTIVES:\n')
+        const readerSettings = await conflict.storage.makeAvailable()
+        const writerSettings = await newActive.storage.makeAvailable()
 
-        // Handle case where new active is current active to resolve conflicts.
-        // And where new active is one of the current conflict actives.
-        this._conflictingActives!.push(this._active!)
-        // Remove the new active from conflicting actives and
-        // set new active as the conflicting active that matches the target `storageIdentityKey`
-        this._conflictingActives = this._conflictingActives!.filter(ca => {
-          const isNewActive = ca.settings!.storageIdentityKey === storageIdentityKey
-          return !isNewActive
-        })
+        let i = -1
+        for (;;) {
+          i++
+          // Get sync state from newActive (the writer) - this tracks what newActive has already received
+          const ss = await EntitySyncState.fromStorage(newActive.storage, identityKey, readerSettings)
+          const args = ss.makeRequestSyncChunkArgs(identityKey, writerSettings.storageIdentityKey)
 
-        // Merge state from conflicting actives into `newActive`.
-        for (const conflict of this._conflictingActives) {
-          log += progLog('MERGING STATE FROM CONFLICTING ACTIVES:\n')
-          const sfr = await this.syncToWriter(
-            { identityKey, userId: newActive.user!.userId, isActive: false },
-            newActive.storage,
-            conflict.storage,
-            undefined,
-            progLog
-          )
-          log += sfr.log
+          // Network call to conflict (reader) - get chunk of data to sync
+          const chunk = await conflict.storage.getSyncChunk(args)
+          log += progLog(EntitySyncState.syncChunkSummary(chunk))
+
+          // Preserve activeStorage - merging from reader cannot change active
+          if (chunk.user) {
+            chunk.user.activeStorage = storageIdentityKey
+          }
+
+          // Process chunk into newActive (the writer)
+          const r = await newActive.storage.processSyncChunk(args, chunk)
+          log += progLog(`chunk ${i} inserted ${r.inserts} updated ${r.updates} ${r.maxUpdated_at}\n`)
+          if (r.done) break
         }
-        log += progLog('PROPAGATE MERGED ACTIVE STATE TO NON-ACTIVES\n')
-      } else {
-        log += progLog('BACKUP CURRENT ACTIVE STATE THEN SET NEW ACTIVE\n')
       }
+      log += progLog('PROPAGATE MERGED ACTIVE STATE TO NON-ACTIVES\n')
+    } else {
+      log += progLog('BACKUP CURRENT ACTIVE STATE THEN SET NEW ACTIVE\n')
+    }
+
+    // Continue with local-only operations in runAsSync
+    log += await this.runAsSync(async sync => {
+      let innerLog = ''
 
       // If there were conflicting actives,
       // Push state merged from all merged actives into newActive to all stores other than the now single active.
@@ -896,18 +913,18 @@ export class WalletStorageManager implements sdk.WalletStorage {
           const stwr = await this.syncToWriter(
             { identityKey, userId: store.user!.userId, isActive: false },
             store.storage,
-            backupSource.storage,
+            sync,
             undefined,
             progLog
           )
-          log += stwr.log
+          innerLog += stwr.log
         }
       }
 
       this._isAvailable = false
       await this.makeAvailable()
 
-      return log
+      return innerLog
     })
 
     return log

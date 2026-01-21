@@ -144,8 +144,12 @@ export abstract class StorageReaderWriter extends StorageReader {
     let isNew = false
     for (let retry = 0; ; retry++) {
       try {
-        user = verifyOneOrNone(await this.findUsers({ partial: { identityKey }, trx }))
-        //console.log(`findOrInsertUser oneOrNone: ${JSON.stringify(user || 'none').slice(0,512)}`)
+        const users = await this.findUsers({ partial: { identityKey }, trx })
+        // Handle duplicate users gracefully - take the first (oldest) one
+        if (users.length > 1) {
+          console.warn(`[findOrInsertUser] Found ${users.length} duplicate users for identityKey ${identityKey.slice(0, 16)}... Using first.`)
+        }
+        user = users[0]
         if (user) break
         const now = new Date()
         user = {
@@ -352,7 +356,12 @@ export abstract class StorageReaderWriter extends StorageReader {
     for (let retry = 0; ; retry++) {
       try {
         const now = new Date()
-        let syncState = verifyOneOrNone(await this.findSyncStates({ partial }))
+        const syncStates = await this.findSyncStates({ partial })
+        // Handle duplicate sync states gracefully - take the first one
+        if (syncStates.length > 1) {
+          console.warn(`[findOrInsertSyncStateAuth] Found ${syncStates.length} duplicate sync states. Using first.`)
+        }
+        let syncState = syncStates[0]
         if (!syncState) {
           syncState = {
             ...partial,
