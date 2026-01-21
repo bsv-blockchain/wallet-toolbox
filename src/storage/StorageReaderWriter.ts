@@ -144,12 +144,7 @@ export abstract class StorageReaderWriter extends StorageReader {
     let isNew = false
     for (let retry = 0; ; retry++) {
       try {
-        const users = await this.findUsers({ partial: { identityKey }, trx })
-        // Handle duplicate users gracefully - take the first (oldest) one
-        if (users.length > 1) {
-          console.warn(`[findOrInsertUser] Found ${users.length} duplicate users for identityKey ${identityKey.slice(0, 16)}... Using first.`)
-        }
-        user = users[0]
+        user = verifyOneOrNone(await this.findUsers({ partial: { identityKey }, trx }))
         if (user) break
         const now = new Date()
         user = {
@@ -356,12 +351,7 @@ export abstract class StorageReaderWriter extends StorageReader {
     for (let retry = 0; ; retry++) {
       try {
         const now = new Date()
-        const syncStates = await this.findSyncStates({ partial })
-        // Handle duplicate sync states gracefully - take the first one
-        if (syncStates.length > 1) {
-          console.warn(`[findOrInsertSyncStateAuth] Found ${syncStates.length} duplicate sync states. Using first.`)
-        }
-        let syncState = syncStates[0]
+        let syncState = verifyOneOrNone(await this.findSyncStates({ partial }))
         if (!syncState) {
           syncState = {
             ...partial,
@@ -391,7 +381,11 @@ export abstract class StorageReaderWriter extends StorageReader {
     let isNew = false
     for (let retry = 0; ; retry++) {
       try {
-        req = verifyOneOrNone(await this.findProvenTxReqs({ partial: { txid: newReq.txid }, trx }))
+        const reqs = await this.findProvenTxReqs({ partial: { txid: newReq.txid }, trx })
+        if (reqs.length > 1) {
+          console.warn(`[findOrInsertProvenTxReq] Found ${reqs.length} duplicate reqs for txid ${newReq.txid.slice(0, 16)}... Using first.`)
+        }
+        req = reqs[0]
         if (req) break
         newReq.provenTxReqId = await this.insertProvenTxReq(newReq, trx)
         isNew = true

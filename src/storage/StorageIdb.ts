@@ -885,6 +885,16 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['certificates', 'certificate_fields'], 'readwrite', trx)
     const store = dbTrx.objectStore('certificates')
     try {
+      const existing = await store.index('userId_type_certifier_serialNumber').get([
+        certificate.userId,
+        certificate.type,
+        certificate.certifier,
+        certificate.serialNumber
+      ])
+      if (existing) {
+        certificate.certificateId = existing.certificateId
+        return certificate.certificateId
+      }
       const id = Number(await store.add!(e))
       certificate.certificateId = id
 
@@ -918,6 +928,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['commissions'], 'readwrite', trx)
     const store = dbTrx.objectStore('commissions')
     try {
+      const existing = await store.index('transactionId').get(commission.transactionId)
+      if (existing) {
+        commission.commissionId = existing.commissionId
+        return commission.commissionId
+      }
       const id = Number(await store.add!(e))
       commission.commissionId = id
     } finally {
@@ -944,6 +959,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['outputs'], 'readwrite', trx)
     const store = dbTrx.objectStore('outputs')
     try {
+      const existing = await store.index('transactionId_vout_userId').get([output.transactionId, output.vout, output.userId])
+      if (existing) {
+        output.outputId = existing.outputId
+        return output.outputId
+      }
       const id = Number(await store.add!(e))
       output.outputId = id
     } finally {
@@ -957,6 +977,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['output_baskets'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_baskets')
     try {
+      const existing = await store.index('name_userId').get([basket.name, basket.userId])
+      if (existing) {
+        basket.basketId = existing.basketId
+        return basket.basketId
+      }
       const id = Number(await store.add!(e))
       basket.basketId = id
     } finally {
@@ -970,6 +995,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['output_tags'], 'readwrite', trx)
     const store = dbTrx.objectStore('output_tags')
     try {
+      const existing = await store.index('tag_userId').get([tag.tag, tag.userId])
+      if (existing) {
+        tag.outputTagId = existing.outputTagId
+        return tag.outputTagId
+      }
       const id = Number(await store.add!(e))
       tag.outputTagId = id
     } finally {
@@ -993,6 +1023,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['proven_txs'], 'readwrite', trx)
     const store = dbTrx.objectStore('proven_txs')
     try {
+      const existing = await store.index('txid').get(tx.txid)
+      if (existing) {
+        tx.provenTxId = existing.provenTxId
+        return tx.provenTxId
+      }
       const id = Number(await store.add!(e))
       tx.provenTxId = id
     } finally {
@@ -1006,6 +1041,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['proven_tx_reqs'], 'readwrite', trx)
     const store = dbTrx.objectStore('proven_tx_reqs')
     try {
+      const existing = await store.index('txid').get(tx.txid)
+      if (existing) {
+        tx.provenTxReqId = existing.provenTxReqId
+        return tx.provenTxReqId
+      }
       const id = Number(await store.add!(e))
       tx.provenTxReqId = id
     } finally {
@@ -1032,6 +1072,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['transactions'], 'readwrite', trx)
     const store = dbTrx.objectStore('transactions')
     try {
+      const existing = await store.index('reference').get(tx.reference)
+      if (existing) {
+        tx.transactionId = existing.transactionId
+        return tx.transactionId
+      }
       const id = Number(await store.add!(e))
       tx.transactionId = id
     } finally {
@@ -1045,6 +1090,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['tx_labels'], 'readwrite', trx)
     const store = dbTrx.objectStore('tx_labels')
     try {
+      const existing = await store.index('label_userId').get([label.label, label.userId])
+      if (existing) {
+        label.txLabelId = existing.txLabelId
+        return label.txLabelId
+      }
       const id = Number(await store.add!(e))
       label.txLabelId = id
     } finally {
@@ -1068,6 +1118,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['users'], 'readwrite', trx)
     const store = dbTrx.objectStore('users')
     try {
+      const existing = await store.index('identityKey').get(user.identityKey)
+      if (existing) {
+        user.userId = existing.userId
+        return user.userId
+      }
       const id = Number(await store.add!(e))
       user.userId = id
     } finally {

@@ -97,12 +97,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
   abstract getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]>
 
   async findUserByIdentityKey(key: string): Promise<TableUser | undefined> {
-    const users = await this.findUsers({ partial: { identityKey: key } })
-    // Handle duplicate users gracefully - take the first (oldest) one
-    if (users.length > 1) {
-      console.warn(`[findUserByIdentityKey] Found ${users.length} duplicate users for identityKey ${key.slice(0, 16)}... Using first.`)
-    }
-    return users[0]
+    return verifyOneOrNone(await this.findUsers({ partial: { identityKey: key } }))
   }
 
   async getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> {

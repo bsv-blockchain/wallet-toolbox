@@ -80,12 +80,7 @@ export class EntityUser extends EntityBase<TableUser> {
     ei: TableUser,
     trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityUser; eiId: number }> {
-    const users = await storage.findUsers({ partial: { identityKey: ei.identityKey }, trx })
-    // Handle duplicate users gracefully - take the first (oldest) one
-    if (users.length > 1) {
-      console.warn(`[EntityUser.mergeFind] Found ${users.length} duplicate users for identityKey ${ei.identityKey.slice(0, 16)}... Using first.`)
-    }
-    const ef = users[0]
+    const ef = verifyOneOrNone(await storage.findUsers({ partial: { identityKey: ei.identityKey }, trx }))
     if (ef && ef.userId != userId) throw new WERR_INTERNAL('logic error, userIds don not match.')
     return {
       found: !!ef,
