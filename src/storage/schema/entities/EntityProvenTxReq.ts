@@ -13,13 +13,13 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     txid: string,
     trx?: TrxToken
   ): Promise<EntityProvenTxReq | undefined> {
-    const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid }, trx }), `EntityProvenTxReq.fromStorageTxid(txid=${txid.slice(0, 8)}...)`)
+    const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid }, trx }))
     if (!reqApi) return undefined
     return new EntityProvenTxReq(reqApi)
   }
 
   static async fromStorageId(storage: EntityStorage, id: number, trx?: TrxToken): Promise<EntityProvenTxReq> {
-    const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { provenTxReqId: id }, trx }), `EntityProvenTxReq.fromStorageId(id=${id})`)
+    const reqApi = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { provenTxReqId: id }, trx }))
     if (!reqApi) throw new WERR_INTERNAL(`proven_tx_reqs with id ${id} is missing.`)
     return new EntityProvenTxReq(reqApi)
   }
@@ -471,7 +471,7 @@ export class EntityProvenTxReq extends EntityBase<TableProvenTxReq> {
     syncMap: SyncMap,
     trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityProvenTxReq; eiId: number }> {
-    const ef = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid: ei.txid }, trx }), `EntityProvenTxReq.mergeFind(txid=${ei.txid.slice(0, 8)}...)`)
+    const ef = verifyOneOrNone(await storage.findProvenTxReqs({ partial: { txid: ei.txid }, trx }))
     return {
       found: !!ef,
       eo: new EntityProvenTxReq(ef || { ...ei }),

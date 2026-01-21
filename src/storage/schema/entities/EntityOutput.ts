@@ -241,8 +241,7 @@ export class EntityOutput extends EntityBase<TableOutput> {
       await storage.findOutputs({
         partial: { userId, transactionId, vout: ei.vout },
         trx
-      }),
-      `EntityOutput.mergeFind(userId=${userId}, transactionId=${transactionId}, vout=${ei.vout})`
+      })
     )
     return {
       found: !!ef,

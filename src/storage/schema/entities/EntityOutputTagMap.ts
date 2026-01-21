@@ -89,8 +89,7 @@ export class EntityOutputTagMap extends EntityBase<TableOutputTagMap> {
       await storage.findOutputTagMaps({
         partial: { outputId, outputTagId },
         trx
-      }),
-      `EntityOutputTagMap.mergeFind(outputId=${outputId}, outputTagId=${outputTagId})`
+      })
     )
     return {
       found: !!ef,

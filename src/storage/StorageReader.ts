@@ -97,7 +97,7 @@ export abstract class StorageReader implements sdk.WalletStorageSyncReader {
   abstract getOutputTagMapsForUser(args: sdk.FindForUserSincePagedArgs): Promise<TableOutputTagMap[]>
 
   async findUserByIdentityKey(key: string): Promise<TableUser | undefined> {
-    return verifyOneOrNone(await this.findUsers({ partial: { identityKey: key } }), `findUserByIdentityKey(${key.slice(0, 8)}...)`)
+    return verifyOneOrNone(await this.findUsers({ partial: { identityKey: key } }))
   }
 
   async getSyncChunk(args: sdk.RequestSyncChunkArgs): Promise<sdk.SyncChunk> {

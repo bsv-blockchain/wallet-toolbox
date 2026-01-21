@@ -244,8 +244,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
       await storage.findTransactions({
         partial: { reference: ei.reference, userId },
         trx
-      }),
-      `EntityTransaction.mergeFind(reference=${ei.reference}, userId=${userId})`
+      })
     )
     return {
       found: !!ef,

@@ -80,7 +80,7 @@ export class EntityUser extends EntityBase<TableUser> {
     ei: TableUser,
     trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityUser; eiId: number }> {
-    const ef = verifyOneOrNone(await storage.findUsers({ partial: { identityKey: ei.identityKey }, trx }), `EntityUser.mergeFind(identityKey=${ei.identityKey.slice(0, 8)}...)`)
+    const ef = verifyOneOrNone(await storage.findUsers({ partial: { identityKey: ei.identityKey }, trx }))
     if (ef && ef.userId != userId) throw new WERR_INTERNAL('logic error, userIds don not match.')
     return {
       found: !!ef,

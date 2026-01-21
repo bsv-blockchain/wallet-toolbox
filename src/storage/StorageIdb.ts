@@ -571,10 +571,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (args.since && args.since > r.updated_at) continue
       if (args.tagIds && !args.tagIds.includes(r.outputTagId)) continue
       if (args.partial) {
-        if ('outputTagId' in args.partial && r.outputTagId !== args.partial.outputTagId) continue
-        if ('outputId' in args.partial && r.outputId !== args.partial.outputId) continue
-        if ('created_at' in args.partial && r.created_at.getTime() !== args.partial.created_at?.getTime()) continue
-        if ('updated_at' in args.partial && r.updated_at.getTime() !== args.partial.updated_at?.getTime()) continue
+        if (args.partial.outputTagId && r.outputTagId !== args.partial.outputTagId) continue
+        if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userOutputTagIds !== undefined && !userOutputTagIds.has(r.outputTagId)) {
@@ -819,10 +819,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (args.since && args.since > r.updated_at) continue
       if (args.labelIds && !args.labelIds.includes(r.txLabelId)) continue
       if (args.partial) {
-        if ('txLabelId' in args.partial && r.txLabelId !== args.partial.txLabelId) continue
-        if ('transactionId' in args.partial && r.transactionId !== args.partial.transactionId) continue
-        if ('created_at' in args.partial && r.created_at.getTime() !== args.partial.created_at?.getTime()) continue
-        if ('updated_at' in args.partial && r.updated_at.getTime() !== args.partial.updated_at?.getTime()) continue
+        if (args.partial.txLabelId !== undefined && r.txLabelId !== args.partial.txLabelId) continue
+        if (args.partial.transactionId !== undefined && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userTxLabelIds !== undefined && !userTxLabelIds.has(r.txLabelId)) {

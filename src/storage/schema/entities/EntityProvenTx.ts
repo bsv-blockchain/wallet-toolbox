@@ -196,7 +196,7 @@ export class EntityProvenTx extends EntityBase<TableProvenTx> {
     syncMap: SyncMap,
     trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityProvenTx; eiId: number }> {
-    const ef = verifyOneOrNone(await storage.findProvenTxs({ partial: { txid: ei.txid }, trx }), `EntityProvenTx.mergeFind(txid=${ei.txid.slice(0, 8)}...)`)
+    const ef = verifyOneOrNone(await storage.findProvenTxs({ partial: { txid: ei.txid }, trx }))
     return {
       found: !!ef,
       eo: new EntityProvenTx(ef || { ...ei }),

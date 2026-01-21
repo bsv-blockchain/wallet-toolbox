@@ -132,14 +132,8 @@ export function verifyId(id: number | undefined | null): number {
  *
  * @returns results[0] or undefined if length is zero.
  */
-export function verifyOneOrNone<T>(results: T[], context?: string): T | undefined {
-  if (results.length > 1) {
-    const preview = JSON.stringify(results.slice(0, 3))
-    const msg = context
-      ? `Result must be unique. [${context}] Got ${results.length} results: ${preview}`
-      : `Result must be unique. Got ${results.length} results: ${preview}`
-    throw new WERR_BAD_REQUEST(msg)
-  }
+export function verifyOneOrNone<T>(results: T[]): T | undefined {
+  if (results.length > 1) throw new WERR_BAD_REQUEST('Result must be unique.')
   return results[0]
 }
 

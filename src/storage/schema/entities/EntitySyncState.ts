@@ -312,7 +312,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
       }
     }
     if (!!c.outputs) {
-      log += `  OUTPUTS [${c.outputs.length}]\n`
+      log += `  OUTPUTS\n`
       for (const r of c.outputs) {
         log += `    ${r.outputId} ${r.txid}.${r.vout} ${r.transactionId} ${r.spendable ? 'spendable' : ''} sats:${r.satoshis}\n`
       }
