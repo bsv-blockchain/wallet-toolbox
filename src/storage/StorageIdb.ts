@@ -368,19 +368,22 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     excludeSending: boolean,
     transactionId: number
   ): Promise<TableOutput | undefined> {
-    // Include proven_txs and proven_tx_reqs in store list since
-    // findOutputs -> validateOutputScript -> getProvenOrRawTx needs both
-    const dbTrx = this.toDbTrx(['outputs', 'transactions', 'proven_txs', 'proven_tx_reqs'], 'readwrite')
+    // Phase 1: Find and lock the output in a single IDB transaction.
+    // We use noScript=true because validateOutputScript needs to read from
+    // proven_tx_reqs store, which creates async gaps that cause IDB transactions
+    // to auto-commit before the locking operation completes.
+    let output: TableOutput | undefined
+    const dbTrx = this.toDbTrx(['outputs', 'transactions'], 'readwrite')
     try {
       const txStatus: TransactionStatus[] = ['completed', 'unproven']
       if (!excludeSending) txStatus.push('sending')
       const args: FindOutputsArgs = {
         partial: { userId, basketId, spendable: true },
         txStatus,
-        trx: dbTrx
+        trx: dbTrx,
+        noScript: true
       }
       const outputs = await this.findOutputs(args)
-      let output: TableOutput | undefined
       let scores: { output: TableOutput; score: number }[] = []
       for (const o of outputs) {
         if (exactSatoshis && o.satoshis === exactSatoshis) {
@@ -410,10 +413,17 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         // mark output as spent by transactionId
         await this.updateOutput(output.outputId, { spendable: false, spentBy: transactionId }, dbTrx)
       }
-      return output
     } finally {
       await dbTrx.done
     }
+
+    // Phase 2: After the IDB transaction commits, fetch the lockingScript.
+    // This is a separate operation that can safely read from proven_tx_reqs
+    // without risking transaction auto-commit issues.
+    if (output) {
+      await this.validateOutputScript(output)
+    }
+    return output
   }
 
   async getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx> {
@@ -1809,9 +1819,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     )
     for (const o of results) {
       if (!args.noScript) {
-        // Pass the transaction to avoid creating separate IDB operations
-        // that would cause a passed transaction to auto-commit
-        await this.validateOutputScript(o, args.trx)
+        // Do NOT pass args.trx here - by this point the original transaction
+        // has auto-committed (IDB commits when event loop is idle with no pending ops).
+        // Let validateOutputScript create its own transaction.
+        await this.validateOutputScript(o)
       } else {
         o.lockingScript = undefined
       }
