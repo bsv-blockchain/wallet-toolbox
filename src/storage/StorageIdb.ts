@@ -368,8 +368,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     excludeSending: boolean,
     transactionId: number
   ): Promise<TableOutput | undefined> {
-    // Include proven_txs in store list since findOutputs -> validateOutputScript needs it
-    const dbTrx = this.toDbTrx(['outputs', 'transactions', 'proven_txs'], 'readwrite')
+    // Include proven_txs and proven_tx_reqs in store list since
+    // findOutputs -> validateOutputScript -> getProvenOrRawTx needs both
+    const dbTrx = this.toDbTrx(['outputs', 'transactions', 'proven_txs', 'proven_tx_reqs'], 'readwrite')
     try {
       const txStatus: TransactionStatus[] = ['completed', 'unproven']
       if (!excludeSending) txStatus.push('sending')
