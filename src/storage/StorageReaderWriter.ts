@@ -383,7 +383,9 @@ export abstract class StorageReaderWriter extends StorageReader {
       try {
         const reqs = await this.findProvenTxReqs({ partial: { txid: newReq.txid }, trx })
         if (reqs.length > 1) {
-          console.warn(`[findOrInsertProvenTxReq] Found ${reqs.length} duplicate reqs for txid ${newReq.txid.slice(0, 16)}... Using first.`)
+          console.warn(
+            `[findOrInsertProvenTxReq] Found ${reqs.length} duplicate reqs for txid ${newReq.txid.slice(0, 16)}... Using first.`
+          )
         }
         req = reqs[0]
         if (req) break

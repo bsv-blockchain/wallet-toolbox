@@ -896,12 +896,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['certificates', 'certificate_fields'], 'readwrite', trx)
     const store = dbTrx.objectStore('certificates')
     try {
-      const existing = await store.index('userId_type_certifier_serialNumber').get([
-        certificate.userId,
-        certificate.type,
-        certificate.certifier,
-        certificate.serialNumber
-      ])
+      const existing = await store
+        .index('userId_type_certifier_serialNumber')
+        .get([certificate.userId, certificate.type, certificate.certifier, certificate.serialNumber])
       if (existing) {
         certificate.certificateId = existing.certificateId
         return certificate.certificateId
@@ -970,7 +967,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx(['outputs'], 'readwrite', trx)
     const store = dbTrx.objectStore('outputs')
     try {
-      const existing = await store.index('transactionId_vout_userId').get([output.transactionId, output.vout, output.userId])
+      const existing = await store
+        .index('transactionId_vout_userId')
+        .get([output.transactionId, output.vout, output.userId])
       if (existing) {
         output.outputId = existing.outputId
         return output.outputId
