@@ -1822,9 +1822,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         // has auto-committed (IDB commits when event loop is idle with no pending ops).
         // Let validateOutputScript create its own transaction.
         await this.validateOutputScript(o)
-      } else {
-        o.lockingScript = undefined
       }
+      // When noScript=true, skip validateOutputScript but preserve existing lockingScript
     }
     return results
   }
