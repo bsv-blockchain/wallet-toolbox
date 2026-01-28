@@ -35,6 +35,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
   async getInputs(storage: EntityStorage, trx?: TrxToken): Promise<TableOutput[]> {
     const inputs = await storage.findOutputs({
       partial: { userId: this.userId, spentBy: this.id },
+      noScript: true,
       trx
     })
     // Merge "inputs" by spentBy and userId
@@ -47,6 +48,7 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
             txid: input.sourceTXID,
             vout: input.sourceOutputIndex
           },
+          noScript: true,
           trx
         })
       )

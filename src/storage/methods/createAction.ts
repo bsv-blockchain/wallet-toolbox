@@ -247,7 +247,7 @@ async function createNewInputs(
 
       // Transaction contains only IDB operations: re-read to verify state, then write
       await storage.transaction(async trx => {
-        const o3 = verifyOne(await storage.findOutputs({ partial: { outputId: o.outputId }, trx }))
+        const o3 = verifyOne(await storage.findOutputs({ partial: { outputId: o.outputId }, noScript: true, trx }))
         if (o3.spentBy !== undefined) {
           const spendingTx = await storage.findTransactionById(verifyId(o3.spentBy), trx)
           if (spendingTx && spendingTx.txid) {
