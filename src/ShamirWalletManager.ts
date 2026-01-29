@@ -443,4 +443,36 @@ export class ShamirWalletManager {
     getUserIdHash(): string | undefined {
         return this.userIdHash
     }
+
+    /**
+     * Delete the user's account and stored share from the WAB server
+     * Requires OTP verification
+     *
+     * WARNING: This permanently deletes Share B from the server.
+     * If the user loses Share A or Share C after this, they will lose access to their wallet.
+     *
+     * @param authPayload Contains OTP code and auth method data
+     */
+    async deleteAccount(
+        authPayload: { phoneNumber?: string; email?: string; otp: string }
+    ): Promise<void> {
+        if (!this.userIdHash) {
+            throw new Error('User ID hash not set. Cannot delete account.')
+        }
+
+        const result = await this.wabClient.deleteShamirUser(
+            this.config.authMethodType,
+            authPayload,
+            this.userIdHash
+        )
+
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to delete account')
+        }
+
+        // Clear local state
+        this.privateKey = undefined
+        this.userIdHash = undefined
+        this.underlying = undefined
+    }
 }

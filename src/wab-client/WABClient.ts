@@ -201,4 +201,29 @@ export class WABClient {
     })
     return res.json()
   }
+
+  /**
+   * Delete a Shamir user's account and stored share
+   * Requires OTP verification
+   *
+   * @param methodType The auth method type used for verification
+   * @param payload Contains the OTP code and auth method specific data
+   * @param userIdHash SHA256 hash of the user's identity key
+   */
+  public async deleteShamirUser(
+    methodType: string,
+    payload: any,
+    userIdHash: string
+  ): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${this.serverUrl}/share/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType,
+        payload,
+        userIdHash
+      })
+    })
+    return res.json()
+  }
 }
