@@ -1,19 +1,20 @@
 /**
  * ShamirWalletManager
  *
- * A wallet manager that uses Shamir Secret Sharing (2-of-3) for key recovery
+ * A wallet manager that uses Shamir Secret Sharing for key recovery
  * instead of password-derived keys and on-chain UMP tokens.
  *
  * Security improvements over CWIStyleWalletManager:
  * - No password enumeration attacks possible (no password-derived keys)
  * - No encrypted key material stored on-chain
- * - Server only holds 1 of 3 shares (cannot reconstruct alone)
+ * - Server only holds 1 share (cannot reconstruct alone)
  * - Defense-in-depth with mouse entropy + CSPRNG for key generation
  *
- * Share distribution:
- * - Share A: User saves as printed backup AND file
- * - Share B: Stored on WAB server, released only after OTP verification
- * - Share C: User saves to password manager
+ * Default configuration (2-of-3):
+ * - Share 1 (server): Stored on WAB server, released only after OTP verification
+ * - Shares 2..n (user): Application decides how to store (print, password manager, etc.)
+ *
+ * The threshold and total shares are configurable. WAB always stores exactly one share.
  */
 
 import { PrivateKey, WalletInterface, Hash, Utils } from '@bsv/sdk'
@@ -25,14 +26,20 @@ import { EntropyCollector, EntropyProgressCallback } from './entropy/EntropyColl
  * Result from creating a new Shamir-based wallet
  */
 export interface CreateShamirWalletResult {
-    /** Share A - for user to print and save as file */
-    shareA: string
-    /** Share C - for user to save in password manager */
-    shareC: string
+    /**
+     * User shares to be stored by the application (excludes server share)
+     * For 2-of-3: returns 2 shares, server holds 1
+     * For 3-of-5: returns 4 shares, server holds 1
+     */
+    userShares: string[]
     /** Hash of the user's identity key (used for server lookup) */
     userIdHash: string
     /** The generated private key (for immediate wallet use) */
     privateKey: PrivateKey
+    /** The threshold used (k shares needed to reconstruct) */
+    threshold: number
+    /** Total number of shares generated */
+    totalShares: number
 }
 
 /**
@@ -48,17 +55,22 @@ export interface ShamirWalletManagerConfig {
         privateKey: PrivateKey,
         privilegedKeyManager: PrivilegedKeyManager
     ) => Promise<WalletInterface>
+    /**
+     * Number of shares required to reconstruct the key (default: 2)
+     * Must be >= 2 and <= totalShares
+     */
+    threshold?: number
+    /**
+     * Total number of shares to generate (default: 3)
+     * WAB server stores 1, application receives (totalShares - 1)
+     */
+    totalShares?: number
 }
 
 /**
- * Callbacks for share storage during wallet creation
+ * Callback for handling user shares during wallet creation
  */
-export interface ShareStorageCallbacks {
-    /** Called when Share A is ready - user should print/save this */
-    onShareAReady: (share: string) => Promise<boolean>
-    /** Called when Share C is ready - user should save to password manager */
-    onShareCReady: (share: string) => Promise<boolean>
-}
+export type ShareStorageCallback = (shares: string[], threshold: number, totalShares: number) => Promise<boolean>
 
 export class ShamirWalletManager {
     private config: ShamirWalletManagerConfig
@@ -67,11 +79,49 @@ export class ShamirWalletManager {
     private privateKey?: PrivateKey
     private underlying?: WalletInterface
     private userIdHash?: string
+    private readonly threshold: number
+    private readonly totalShares: number
 
     constructor(config: ShamirWalletManagerConfig) {
         this.config = config
         this.wabClient = new WABClient(config.wabServerUrl)
         this.entropyCollector = new EntropyCollector()
+
+        // Set defaults and validate
+        this.threshold = config.threshold ?? 2
+        this.totalShares = config.totalShares ?? 3
+
+        if (this.threshold < 2) {
+            throw new Error('Threshold must be at least 2')
+        }
+        if (this.totalShares < 3) {
+            throw new Error('Total shares must be at least 3')
+        }
+        // User must have at least threshold shares to recover independently
+        // (server holds 1 share, user holds totalShares - 1)
+        // This prevents WAB from becoming a custodian
+        const userShareCount = this.totalShares - 1
+        if (userShareCount < this.threshold) {
+            throw new Error(
+                `User must have at least ${this.threshold} shares to recover independently. ` +
+                `With ${this.totalShares} total shares and server holding 1, user only gets ${userShareCount}. ` +
+                `Increase totalShares to at least ${this.threshold + 1}.`
+            )
+        }
+    }
+
+    /**
+     * Get the configured threshold
+     */
+    getThreshold(): number {
+        return this.threshold
+    }
+
+    /**
+     * Get the configured total shares
+     */
+    getTotalShares(): number {
+        return this.totalShares
     }
 
     /**
@@ -125,45 +175,41 @@ export class ShamirWalletManager {
     }
 
     /**
-     * Create a new wallet with Shamir 2-of-3 key split
+     * Create a new wallet with Shamir key split
      *
      * Flow:
      * 1. Generate private key from entropy
-     * 2. Split into 3 Shamir shares (2-of-3 threshold)
-     * 3. Start OTP verification with WAB server
-     * 4. After OTP verified, store Share B on server
-     * 5. Return Share A and C for user to save
+     * 2. Split into Shamir shares (threshold-of-totalShares)
+     * 3. Store first share on WAB server (requires OTP verification)
+     * 4. Return remaining shares for application to handle
      *
      * @param authPayload Auth method specific payload (e.g., { phoneNumber: "+1...", otp: "123456" })
-     * @param callbacks Callbacks for share storage
-     * @returns Result containing shares A and C for user to save
+     * @param onUserSharesReady Callback when user shares are ready - return true to confirm saved
+     * @returns Result containing user shares (server share already stored)
      */
     async createNewWallet(
         authPayload: { phoneNumber?: string; email?: string; otp: string },
-        callbacks: ShareStorageCallbacks
+        onUserSharesReady: ShareStorageCallback
     ): Promise<CreateShamirWalletResult> {
         // 1. Generate private key from entropy (mixed with CSPRNG)
         const entropy = this.entropyCollector.generateEntropy()
         const privateKey = new PrivateKey(Array.from(entropy))
 
-        // 2. Split into Shamir shares (2-of-3)
-        const shares = privateKey.toBackupShares(2, 3)
-        const [shareA, shareB, shareC] = shares
+        // 2. Split into Shamir shares
+        const shares = privateKey.toBackupShares(this.threshold, this.totalShares)
+
+        // First share goes to server, rest go to user
+        const serverShare = shares[0]
+        const userShares = shares.slice(1)
 
         // 3. Generate user ID hash for server identification
         const userIdHash = this.generateUserIdHash(privateKey)
 
-        // 4. Present Share A to user for saving
-        const shareASaved = await callbacks.onShareAReady(shareA)
-        if (!shareASaved) {
-            throw new Error('User did not confirm Share A was saved')
-        }
-
-        // 5. Store Share B on WAB server (requires OTP verification)
+        // 4. Store server share on WAB server (requires OTP verification)
         const storeResult = await this.wabClient.storeShare(
             this.config.authMethodType,
             authPayload,
-            shareB,
+            serverShare,
             userIdHash
         )
 
@@ -171,11 +217,10 @@ export class ShamirWalletManager {
             throw new Error(storeResult.message || 'Failed to store share on server')
         }
 
-        // 6. Present Share C to user for saving
-        const shareCSaved = await callbacks.onShareCReady(shareC)
-        if (!shareCSaved) {
-            // Note: Share B is already stored, so we just warn but don't fail
-            console.warn('User did not confirm Share C was saved. Recovery may be limited.')
+        // 5. Present user shares for application to handle
+        const sharesSaved = await onUserSharesReady(userShares, this.threshold, this.totalShares)
+        if (!sharesSaved) {
+            console.warn('User shares may not have been saved. Recovery may be limited.')
         }
 
         // Store state
@@ -183,10 +228,11 @@ export class ShamirWalletManager {
         this.userIdHash = userIdHash
 
         return {
-            shareA,
-            shareC,
+            userShares,
             userIdHash,
-            privateKey
+            privateKey,
+            threshold: this.threshold,
+            totalShares: this.totalShares
         }
     }
 
@@ -219,26 +265,34 @@ export class ShamirWalletManager {
     }
 
     /**
-     * Recover wallet using Shares A and B (printed backup + server)
-     * Requires OTP verification to retrieve Share B
+     * Recover wallet using user shares plus the server share
+     * Requires OTP verification to retrieve the server share
      *
-     * @param shareA The user's printed/file backup share
+     * @param userShares Array of user-held shares (need threshold-1 shares)
      * @param authPayload Contains OTP code and auth method data
      */
-    async recoverWithSharesAB(
-        shareA: string,
+    async recoverWithServerShare(
+        userShares: string[],
         authPayload: { phoneNumber?: string; email?: string; otp: string }
     ): Promise<PrivateKey> {
-        // Validate share format
-        this.validateShareFormat(shareA)
-
-        // Compute user ID hash from share A integrity (requires knowing the structure)
-        // For now, assume userIdHash is already set or passed
-        if (!this.userIdHash) {
-            throw new Error('User ID hash not set. Cannot retrieve Share B.')
+        // Validate share formats
+        for (const share of userShares) {
+            this.validateShareFormat(share)
         }
 
-        // Retrieve Share B from server
+        if (!this.userIdHash) {
+            throw new Error('User ID hash not set. Call setUserIdHash first.')
+        }
+
+        // Need threshold-1 user shares (server provides 1)
+        const threshold = this.getThresholdFromShare(userShares[0])
+        if (userShares.length < threshold - 1) {
+            throw new Error(
+                `Need at least ${threshold - 1} user shares to recover with server share. Got ${userShares.length}.`
+            )
+        }
+
+        // Retrieve server share
         const retrieveResult = await this.wabClient.retrieveShare(
             this.config.authMethodType,
             authPayload,
@@ -249,8 +303,11 @@ export class ShamirWalletManager {
             throw new Error(retrieveResult.message || 'Failed to retrieve share from server')
         }
 
+        // Combine server share with user shares
+        const allShares = [retrieveResult.shareB, ...userShares.slice(0, threshold - 1)]
+
         // Reconstruct private key
-        const privateKey = PrivateKey.fromBackupShares([shareA, retrieveResult.shareB])
+        const privateKey = PrivateKey.fromBackupShares(allShares)
 
         // Verify reconstruction by checking user ID hash
         const reconstructedHash = this.generateUserIdHash(privateKey)
@@ -263,19 +320,31 @@ export class ShamirWalletManager {
     }
 
     /**
-     * Recover wallet using Shares A and C (printed backup + password manager)
-     * Does NOT require server interaction
+     * Recover wallet using only user-held shares (no server interaction)
+     * Requires at least threshold shares
      *
-     * @param shareA The user's printed/file backup share
-     * @param shareC The user's password manager share
+     * @param userShares Array of user-held shares (need at least threshold shares)
      */
-    async recoverWithSharesAC(shareA: string, shareC: string): Promise<PrivateKey> {
-        // Validate share formats
-        this.validateShareFormat(shareA)
-        this.validateShareFormat(shareC)
+    async recoverWithUserShares(userShares: string[]): Promise<PrivateKey> {
+        if (userShares.length < 2) {
+            throw new Error('Need at least 2 shares to recover')
+        }
 
-        // Reconstruct private key
-        const privateKey = PrivateKey.fromBackupShares([shareA, shareC])
+        // Validate share formats
+        for (const share of userShares) {
+            this.validateShareFormat(share)
+        }
+
+        // Get threshold from share
+        const threshold = this.getThresholdFromShare(userShares[0])
+        if (userShares.length < threshold) {
+            throw new Error(
+                `Need at least ${threshold} shares to recover. Got ${userShares.length}.`
+            )
+        }
+
+        // Reconstruct private key using threshold shares
+        const privateKey = PrivateKey.fromBackupShares(userShares.slice(0, threshold))
 
         // Compute and store user ID hash
         this.userIdHash = this.generateUserIdHash(privateKey)
@@ -285,45 +354,18 @@ export class ShamirWalletManager {
     }
 
     /**
-     * Recover wallet using Shares B and C (server + password manager)
-     * Requires OTP verification to retrieve Share B
-     *
-     * @param shareC The user's password manager share
-     * @param authPayload Contains OTP code and auth method data
+     * Extract threshold from a share (format: x.y.threshold.integrity)
      */
-    async recoverWithSharesBC(
-        shareC: string,
-        authPayload: { phoneNumber?: string; email?: string; otp: string }
-    ): Promise<PrivateKey> {
-        // Validate share format
-        this.validateShareFormat(shareC)
-
-        if (!this.userIdHash) {
-            throw new Error('User ID hash not set. Call setUserIdHash first.')
+    private getThresholdFromShare(share: string): number {
+        const parts = share.split('.')
+        if (parts.length !== 4) {
+            throw new Error('Invalid share format')
         }
-
-        // Retrieve Share B from server
-        const retrieveResult = await this.wabClient.retrieveShare(
-            this.config.authMethodType,
-            authPayload,
-            this.userIdHash
-        )
-
-        if (!retrieveResult.success || !retrieveResult.shareB) {
-            throw new Error(retrieveResult.message || 'Failed to retrieve share from server')
+        const threshold = parseInt(parts[2], 10)
+        if (isNaN(threshold) || threshold < 2) {
+            throw new Error('Invalid threshold in share')
         }
-
-        // Reconstruct private key
-        const privateKey = PrivateKey.fromBackupShares([retrieveResult.shareB, shareC])
-
-        // Verify reconstruction
-        const reconstructedHash = this.generateUserIdHash(privateKey)
-        if (reconstructedHash !== this.userIdHash) {
-            throw new Error('Share reconstruction failed: integrity check failed')
-        }
-
-        this.privateKey = privateKey
-        return privateKey
+        return threshold
     }
 
     /**
@@ -353,15 +395,19 @@ export class ShamirWalletManager {
     }
 
     /**
-     * Rotate keys - generate new key and update Share B on server
-     * User must save new Share A and C
+     * Rotate keys - generate new key and update server share
+     * User must save new user shares
+     *
+     * @param authPayload Contains OTP code and auth method data
+     * @param onUserSharesReady Callback when new user shares are ready
      */
     async rotateKeys(
         authPayload: { phoneNumber?: string; email?: string; otp: string },
-        callbacks: ShareStorageCallbacks
+        onUserSharesReady: ShareStorageCallback
     ): Promise<CreateShamirWalletResult> {
-        // Reset and collect new entropy
-        this.entropyCollector.reset()
+        if (!this.userIdHash) {
+            throw new Error('User ID hash not set. Cannot rotate keys.')
+        }
 
         // Require fresh entropy for key rotation
         if (!this.hasEnoughEntropy()) {
@@ -373,42 +419,41 @@ export class ShamirWalletManager {
         const newPrivateKey = new PrivateKey(Array.from(entropy))
 
         // Split into new Shamir shares
-        const shares = newPrivateKey.toBackupShares(2, 3)
-        const [shareA, shareB, shareC] = shares
+        const shares = newPrivateKey.toBackupShares(this.threshold, this.totalShares)
+        const serverShare = shares[0]
+        const userShares = shares.slice(1)
 
         // Generate new user ID hash
         const newUserIdHash = this.generateUserIdHash(newPrivateKey)
 
-        // Present Share A to user
-        const shareASaved = await callbacks.onShareAReady(shareA)
-        if (!shareASaved) {
-            throw new Error('User did not confirm Share A was saved')
-        }
-
-        // Update Share B on server
+        // Update server share
         const updateResult = await this.wabClient.updateShare(
             this.config.authMethodType,
             authPayload,
-            this.userIdHash!,
-            shareB
+            this.userIdHash,
+            serverShare
         )
 
         if (!updateResult.success) {
             throw new Error(updateResult.message || 'Failed to update share on server')
         }
 
-        // Present Share C to user
-        await callbacks.onShareCReady(shareC)
+        // Present user shares
+        const sharesSaved = await onUserSharesReady(userShares, this.threshold, this.totalShares)
+        if (!sharesSaved) {
+            console.warn('User shares may not have been saved. Recovery may be limited.')
+        }
 
         // Update state
         this.privateKey = newPrivateKey
         this.userIdHash = newUserIdHash
 
         return {
-            shareA,
-            shareC,
+            userShares,
             userIdHash: newUserIdHash,
-            privateKey: newPrivateKey
+            privateKey: newPrivateKey,
+            threshold: this.threshold,
+            totalShares: this.totalShares
         }
     }
 
@@ -448,8 +493,8 @@ export class ShamirWalletManager {
      * Delete the user's account and stored share from the WAB server
      * Requires OTP verification
      *
-     * WARNING: This permanently deletes Share B from the server.
-     * If the user loses Share A or Share C after this, they will lose access to their wallet.
+     * WARNING: This permanently deletes the server share.
+     * User must have enough remaining shares to meet the threshold for recovery.
      *
      * @param authPayload Contains OTP code and auth method data
      */

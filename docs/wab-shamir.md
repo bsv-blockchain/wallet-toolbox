@@ -1,19 +1,31 @@
-# WAB Shamir 2-of-3 Key Recovery
+# WAB Shamir Key Recovery
 
-This guide covers the Shamir Secret Sharing key recovery system, which provides secure wallet backup and recovery using a 2-of-3 threshold scheme.
+This guide covers the Shamir Secret Sharing key recovery system, which provides secure wallet backup and recovery using a configurable threshold scheme.
 
 ## Overview
 
-The Shamir system splits your wallet's root private key into 3 shares. Any 2 shares can reconstruct the key:
+The Shamir system splits your wallet's root private key into multiple shares. A configurable threshold of shares can reconstruct the key:
 
-- **Share A**: User saves as printed backup and/or file
-- **Share B**: Stored on WAB server, released only after OTP verification
-- **Share C**: User saves to password manager
+- **Server share**: Stored on WAB server, released only after OTP verification
+- **User shares**: Application decides how to store (print, password manager, hardware device, etc.)
 
-This design ensures:
-- The WAB server alone cannot access your funds (only holds 1 share)
-- Loss of any single share doesn't lock you out
-- Multiple recovery paths exist (A+B, A+C, or B+C)
+**Default configuration (2-of-3):**
+- 3 total shares, 2 required to reconstruct
+- Server holds 1 share, user receives 2 shares
+- Any 2 shares can recover the key
+
+**Example configurations:**
+
+| Threshold | Total | Server | User Shares | Use Case |
+|-----------|-------|--------|-------------|----------|
+| 2 | 3 | 1 | 2 | Standard (default) |
+| 2 | 4 | 1 | 3 | Extra redundancy |
+| 3 | 5 | 1 | 4 | High security |
+| 3 | 4 | 1 | 3 | Balanced security |
+
+**Important constraint:** User must always have at least `threshold` shares so they can recover independently without the server. This prevents the WAB from becoming a custodian of user funds. For example, 2-of-2 is not allowed because the user would only have 1 share and could not recover without server cooperation.
+
+The WAB server always stores exactly one share and cannot reconstruct the key alone.
 
 ## Generating a Secure Key with Entropy Collection
 
@@ -65,8 +77,12 @@ import { ShamirWalletManager, Setup, PrivateKey, PrivilegedKeyManager } from '@b
 const manager = new ShamirWalletManager({
     wabServerUrl: 'https://your-wab-server.com',
     authMethodType: 'TwilioPhone', // or 'DevConsole' for development
+
+    // Optional: customize threshold scheme (defaults to 2-of-3)
+    threshold: 2,    // shares needed to reconstruct (min: 2)
+    totalShares: 3,  // total shares generated (min: 3, must be >= threshold + 1)
+
     walletBuilder: async (privateKey, privilegedKeyManager) => {
-        // Build your wallet using the recovered key
         const { wallet } = await Setup.createWalletSQLite({
             filePath: './wallet.sqlite',
             databaseName: 'myWallet',
@@ -77,6 +93,9 @@ const manager = new ShamirWalletManager({
         return wallet
     }
 })
+
+// Check configuration
+console.log(`Using ${manager.getThreshold()}-of-${manager.getTotalShares()} scheme`)
 ```
 
 ### Creating a New Wallet
@@ -88,7 +107,6 @@ await manager.collectEntropyFromBrowser(document, (progress) => {
 })
 
 // 2. Start OTP verification (user receives SMS)
-// Note: OTP start happens via /auth/start before calling createNewWallet
 const wabClient = new WABClient('https://your-wab-server.com')
 await wabClient.startShareAuth('TwilioPhone', userIdHash, {
     phoneNumber: '+1234567890'
@@ -97,76 +115,60 @@ await wabClient.startShareAuth('TwilioPhone', userIdHash, {
 // 3. User enters OTP code, then create wallet
 const result = await manager.createNewWallet(
     { phoneNumber: '+1234567890', otp: '123456' },
-    {
-        onShareAReady: async (shareA) => {
-            // Display Share A for user to save
-            showPrintableBackup(shareA)
-            return await confirmUserSaved('Share A')
-        },
-        onShareCReady: async (shareC) => {
-            // Display Share C for password manager
-            showCopyableText(shareC)
-            return await confirmUserSaved('Share C')
-        }
+    async (userShares, threshold, totalShares) => {
+        // Application decides how to handle user shares
+        // For 2-of-3: userShares has 2 shares
+        console.log(`Save these ${userShares.length} shares (${threshold}-of-${totalShares} scheme)`)
+
+        // Example: first share for printing, second for password manager
+        await showPrintableBackup(userShares[0])
+        await showCopyableText(userShares[1])
+
+        return await confirmUserSavedShares()
     }
 )
 
-console.log('User ID Hash:', result.userIdHash) // Save for future recovery
-console.log('Share A:', result.shareA) // User's printed backup
-console.log('Share C:', result.shareC) // User's password manager backup
+console.log('User ID Hash:', result.userIdHash)
+console.log('User Shares:', result.userShares)
+console.log(`Scheme: ${result.threshold}-of-${result.totalShares}`)
 
 // 4. Build and use the wallet
 const wallet = await manager.buildWallet()
 ```
 
-### Recovery with Shares A + B (Printed Backup + Server)
+### Recovery with Server Share
+
+When the user has enough shares but needs the server share to meet threshold:
 
 ```ts
 const manager = new ShamirWalletManager({ /* config */ })
 
-// User provides their userIdHash (or derive from Share A)
+// User provides their userIdHash
 manager.setUserIdHash(savedUserIdHash)
 
-// Start OTP to retrieve Share B
+// Start OTP to retrieve server share
 await manager.startOTPVerification({ phoneNumber: '+1234567890' })
 
-// User enters OTP, recover with Share A
-const privateKey = await manager.recoverWithSharesAB(
-    shareA,
+// Recover with user shares (need threshold-1 shares)
+// For 2-of-3: need 1 user share + server share
+const privateKey = await manager.recoverWithServerShare(
+    [userShare1], // Array of user-held shares
     { phoneNumber: '+1234567890', otp: '123456' }
 )
 
 const wallet = await manager.buildWallet()
 ```
 
-### Recovery with Shares A + C (Offline Recovery)
+### Recovery with User Shares Only (Offline)
 
-This method requires no server interaction:
-
-```ts
-const manager = new ShamirWalletManager({ /* config */ })
-
-// Recover using both user-held shares
-const privateKey = await manager.recoverWithSharesAC(shareA, shareC)
-
-const wallet = await manager.buildWallet()
-```
-
-### Recovery with Shares B + C (Lost Printed Backup)
+When the user has enough shares to meet threshold without the server:
 
 ```ts
 const manager = new ShamirWalletManager({ /* config */ })
 
-manager.setUserIdHash(savedUserIdHash)
-
-// Start OTP to retrieve Share B
-await manager.startOTPVerification({ phoneNumber: '+1234567890' })
-
-// Recover with Share C from password manager
-const privateKey = await manager.recoverWithSharesBC(
-    shareC,
-    { phoneNumber: '+1234567890', otp: '123456' }
-)
+// Recover using user-held shares (need at least threshold shares)
+// For 2-of-3: need 2 user shares
+const privateKey = await manager.recoverWithUserShares([userShare1, userShare2])
 
 const wallet = await manager.buildWallet()
 ```
@@ -185,28 +187,28 @@ await client.startShareAuth('TwilioPhone', userIdHash, {
     phoneNumber: '+1234567890'
 })
 
-// Store a share (after OTP verification)
+// Store the server share (after OTP verification)
 const storeResult = await client.storeShare(
     'TwilioPhone',
     { phoneNumber: '+1234567890', otp: '123456' },
-    shareB, // The share to store (format: x.y.threshold.integrity)
+    serverShare, // The share to store (format: x.y.threshold.integrity)
     userIdHash
 )
 
-// Retrieve a share (requires OTP)
+// Retrieve the server share (requires OTP)
 const retrieveResult = await client.retrieveShare(
     'TwilioPhone',
     { phoneNumber: '+1234567890', otp: '654321' },
     userIdHash
 )
-console.log('Retrieved Share B:', retrieveResult.shareB)
+console.log('Retrieved server share:', retrieveResult.shareB)
 
 // Update share (for key rotation)
 await client.updateShare(
     'TwilioPhone',
     { phoneNumber: '+1234567890', otp: '111222' },
     userIdHash,
-    newShareB
+    newServerShare
 )
 
 // Delete account and stored share
@@ -229,20 +231,15 @@ await manager.collectEntropyFromBrowser(document, onProgress)
 // Rotate keys (requires OTP verification)
 const newResult = await manager.rotateKeys(
     { phoneNumber: '+1234567890', otp: '123456' },
-    {
-        onShareAReady: async (shareA) => {
-            showPrintableBackup(shareA)
-            return await confirmUserSaved('New Share A')
-        },
-        onShareCReady: async (shareC) => {
-            showCopyableText(shareC)
-            return await confirmUserSaved('New Share C')
-        }
+    async (userShares, threshold, totalShares) => {
+        console.log(`Save these ${userShares.length} NEW shares`)
+        // User must save all new shares
+        return await confirmUserSavedShares()
     }
 )
 
-// User must save new Share A and Share C
-// Share B is automatically updated on server
+// Server share is automatically updated
+// User must save new user shares
 ```
 
 ## Account Deletion
@@ -255,17 +252,17 @@ await manager.deleteAccount({
     phoneNumber: '+1234567890',
     otp: '123456'
 })
-// WARNING: Share B is permanently deleted
-// User needs Share A + Share C to recover after this
+// WARNING: Server share is permanently deleted
+// User needs enough remaining shares to meet threshold
 ```
 
 ## Share Format
 
 Shamir shares use the format: `x.y.threshold.integrity`
 
-- **x**: Share index (1, 2, or 3)
+- **x**: Share index (1, 2, 3, ...)
 - **y**: Share data (Base58 encoded)
-- **threshold**: Number of shares required (always 2)
+- **threshold**: Number of shares required (e.g., 2)
 - **integrity**: Checksum for validation
 
 Example share:
@@ -275,17 +272,29 @@ Example share:
 
 ## Security Considerations
 
-1. **Share A**: Store in a secure physical location (safe, safety deposit box)
-2. **Share C**: Use a reputable password manager with strong master password
-3. **User ID Hash**: Store separately - it identifies your account but cannot recover keys
-4. **OTP Security**: Consider SIM-swap risks with SMS; email may be safer for some users
-5. **Entropy Quality**: Always collect full entropy before key generation
+1. **Share Storage**: Store user shares in separate, secure locations
+2. **Threshold Selection**: Higher threshold = more security but less convenience
+3. **OTP Security**: Consider SIM-swap risks with SMS; email may be safer for some users
+4. **Entropy Quality**: Always collect full entropy before key generation
+5. **User ID Hash**: Store separately - it identifies your account but cannot recover keys
+
+### Recommended Share Storage by Scheme
+
+**2-of-3 (default):**
+- Share 1: Print and store in safe/safety deposit box
+- Share 2: Save in password manager
+
+**3-of-5 (high security):**
+- Share 1: Print and store in safe
+- Share 2: Save in password manager
+- Share 3: Store on hardware device (USB)
+- Share 4: Give to trusted family member
 
 ## Error Handling
 
 ```ts
 try {
-    await manager.recoverWithSharesAB(shareA, authPayload)
+    await manager.recoverWithServerShare(userShares, authPayload)
 } catch (error) {
     if (error.message.includes('Rate limited')) {
         // Too many attempts - wait and retry
@@ -293,6 +302,8 @@ try {
         // Wrong code - let user retry
     } else if (error.message.includes('integrity check failed')) {
         // Shares don't match - wrong share or corrupted
+    } else if (error.message.includes('Need at least')) {
+        // Not enough shares provided
     }
 }
 ```
