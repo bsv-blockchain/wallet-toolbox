@@ -91,4 +91,114 @@ export class WABClient {
     })
     return res.json()
   }
+
+  // ============================================================
+  // Shamir Share Management (2-of-3 Key Recovery System)
+  // ============================================================
+
+  /**
+   * Start OTP verification for share operations
+   * This initiates the auth flow (e.g., sends SMS code via Twilio)
+   *
+   * @param methodType The auth method type (e.g., "TwilioPhone", "DevConsole")
+   * @param userIdHash SHA256 hash of the user's identity key
+   * @param payload Auth method specific data (e.g., { phoneNumber: "+1..." })
+   */
+  public async startShareAuth(
+    methodType: string,
+    userIdHash: string,
+    payload: any
+  ): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${this.serverUrl}/auth/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType,
+        presentationKey: userIdHash, // Reuse existing auth flow with userIdHash
+        payload
+      })
+    })
+    return res.json()
+  }
+
+  /**
+   * Store a Shamir share (Share B) on the server
+   * Requires prior OTP verification via startShareAuth
+   *
+   * @param methodType The auth method type used for verification
+   * @param payload Contains the OTP code and auth method specific data
+   * @param shareB The Shamir share to store (format: x.y.threshold.integrity)
+   * @param userIdHash SHA256 hash of the user's identity key
+   */
+  public async storeShare(
+    methodType: string,
+    payload: any,
+    shareB: string,
+    userIdHash: string
+  ): Promise<{ success: boolean; message: string; userId?: number }> {
+    const res = await fetch(`${this.serverUrl}/share/store`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType,
+        payload,
+        shareB,
+        userIdHash
+      })
+    })
+    return res.json()
+  }
+
+  /**
+   * Retrieve a Shamir share (Share B) from the server
+   * Requires OTP verification
+   *
+   * @param methodType The auth method type used for verification
+   * @param payload Contains the OTP code and auth method specific data
+   * @param userIdHash SHA256 hash of the user's identity key
+   */
+  public async retrieveShare(
+    methodType: string,
+    payload: any,
+    userIdHash: string
+  ): Promise<{ success: boolean; shareB?: string; message: string }> {
+    const res = await fetch(`${this.serverUrl}/share/retrieve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType,
+        payload,
+        userIdHash
+      })
+    })
+    return res.json()
+  }
+
+  /**
+   * Update a Shamir share (for key rotation)
+   * Requires OTP verification
+   *
+   * @param methodType The auth method type used for verification
+   * @param payload Contains the OTP code and auth method specific data
+   * @param userIdHash SHA256 hash of the user's identity key
+   * @param newShareB The new Shamir share to store
+   */
+  public async updateShare(
+    methodType: string,
+    payload: any,
+    userIdHash: string,
+    newShareB: string
+  ): Promise<{ success: boolean; message: string; shareVersion?: number }> {
+    const res = await fetch(`${this.serverUrl}/share/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType,
+        payload,
+        userIdHash,
+        newShareB
+      })
+    })
+    return res.json()
+  }
 }

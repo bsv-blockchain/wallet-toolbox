@@ -9,7 +9,6 @@ import {
 import { Chain, ReqHistoryNote } from './types'
 import { WalletError } from './WalletError'
 import { TableOutput } from '../storage/schema/tables/TableOutput'
-import { ChaintracksServiceClient } from '../services/chaintracker/chaintracks/ChaintracksServiceClient'
 import { ChaintracksClientApi } from '../services/chaintracker/chaintracks/Api/ChaintracksClientApi'
 /**
  * Defines standard interfaces to access functionality implemented by external transaction processing services.
