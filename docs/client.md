@@ -14069,6 +14069,29 @@ export class WABClient {
     public async unlinkMethod(presentationKey: string, authMethodId: number) 
     public async requestFaucet(presentationKey: string) 
     public async deleteUser(presentationKey: string) 
+    public async startShareAuth(methodType: string, userIdHash: string, payload: any): Promise<{
+        success: boolean;
+        message: string;
+    }> 
+    public async storeShare(methodType: string, payload: any, shareB: string, userIdHash: string): Promise<{
+        success: boolean;
+        message: string;
+        userId?: number;
+    }> 
+    public async retrieveShare(methodType: string, payload: any, userIdHash: string): Promise<{
+        success: boolean;
+        shareB?: string;
+        message: string;
+    }> 
+    public async updateShare(methodType: string, payload: any, userIdHash: string, newShareB: string): Promise<{
+        success: boolean;
+        message: string;
+        shareVersion?: number;
+    }> 
+    public async deleteShamirUser(methodType: string, payload: any, userIdHash: string): Promise<{
+        success: boolean;
+        message: string;
+    }> 
 }
 ```
 
@@ -14082,6 +14105,27 @@ Complete an Auth Method flow
 public async completeAuthMethod(authMethod: AuthMethodInteractor, presentationKey: string, payload: any) 
 ```
 See also: [AuthMethodInteractor](./client.md#class-authmethodinteractor)
+
+###### Method deleteShamirUser
+
+Delete a Shamir user's account and stored share
+Requires OTP verification
+
+```ts
+public async deleteShamirUser(methodType: string, payload: any, userIdHash: string): Promise<{
+    success: boolean;
+    message: string;
+}> 
+```
+
+Argument Details
+
++ **methodType**
+  + The auth method type used for verification
++ **payload**
+  + Contains the OTP code and auth method specific data
++ **userIdHash**
+  + SHA256 hash of the user's identity key
 
 ###### Method deleteUser
 
@@ -14123,6 +14167,28 @@ Request faucet
 public async requestFaucet(presentationKey: string) 
 ```
 
+###### Method retrieveShare
+
+Retrieve a Shamir share (Share B) from the server
+Requires OTP verification
+
+```ts
+public async retrieveShare(methodType: string, payload: any, userIdHash: string): Promise<{
+    success: boolean;
+    shareB?: string;
+    message: string;
+}> 
+```
+
+Argument Details
+
++ **methodType**
+  + The auth method type used for verification
++ **payload**
+  + Contains the OTP code and auth method specific data
++ **userIdHash**
+  + SHA256 hash of the user's identity key
+
 ###### Method startAuthMethod
 
 Start an Auth Method flow
@@ -14132,6 +14198,51 @@ public async startAuthMethod(authMethod: AuthMethodInteractor, presentationKey: 
 ```
 See also: [AuthMethodInteractor](./client.md#class-authmethodinteractor)
 
+###### Method startShareAuth
+
+Start OTP verification for share operations
+This initiates the auth flow (e.g., sends SMS code via Twilio)
+
+```ts
+public async startShareAuth(methodType: string, userIdHash: string, payload: any): Promise<{
+    success: boolean;
+    message: string;
+}> 
+```
+
+Argument Details
+
++ **methodType**
+  + The auth method type (e.g., "TwilioPhone", "DevConsole")
++ **userIdHash**
+  + SHA256 hash of the user's identity key
++ **payload**
+  + Auth method specific data (e.g., { phoneNumber: "+1..." })
+
+###### Method storeShare
+
+Store a Shamir share (Share B) on the server
+Requires prior OTP verification via startShareAuth
+
+```ts
+public async storeShare(methodType: string, payload: any, shareB: string, userIdHash: string): Promise<{
+    success: boolean;
+    message: string;
+    userId?: number;
+}> 
+```
+
+Argument Details
+
++ **methodType**
+  + The auth method type used for verification
++ **payload**
+  + Contains the OTP code and auth method specific data
++ **shareB**
+  + The Shamir share to store (format: x.y.threshold.integrity)
++ **userIdHash**
+  + SHA256 hash of the user's identity key
+
 ###### Method unlinkMethod
 
 Unlink a given Auth Method by ID
@@ -14139,6 +14250,30 @@ Unlink a given Auth Method by ID
 ```ts
 public async unlinkMethod(presentationKey: string, authMethodId: number) 
 ```
+
+###### Method updateShare
+
+Update a Shamir share (for key rotation)
+Requires OTP verification
+
+```ts
+public async updateShare(methodType: string, payload: any, userIdHash: string, newShareB: string): Promise<{
+    success: boolean;
+    message: string;
+    shareVersion?: number;
+}> 
+```
+
+Argument Details
+
++ **methodType**
+  + The auth method type used for verification
++ **payload**
+  + Contains the OTP code and auth method specific data
++ **userIdHash**
+  + SHA256 hash of the user's identity key
++ **newShareB**
+  + The new Shamir share to store
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 

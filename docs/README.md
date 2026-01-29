@@ -9,6 +9,7 @@ The documentation is split into various pages, each covering a set of related fu
 - [Storage](./storage.md) — Wallet data persistent storage classes and related APIs.
 - [Services](./services.md) — Support for abstracted external network services.
 - [Monitor](./monitor.md) — Background task manager for wallet action validation and processing.
+- [WAB Shamir](./wab-shamir.md) — Shamir 2-of-3 key recovery system with entropy collection and WAB server integration.
 
 ## Open API
 
