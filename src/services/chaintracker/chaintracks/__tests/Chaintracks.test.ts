@@ -35,7 +35,8 @@ describe('Chaintracks tests', () => {
     await NoDbBody('test')
   })
 
-  test.skip('3 NoDb export mainnet', async () => {
+  test('3 NoDb export mainnet', async () => {
+    if (_tu.noEnv('main')) return
     await NoDbBody('main', true)
   })
 

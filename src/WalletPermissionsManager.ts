@@ -125,6 +125,24 @@ export interface GroupedPermissionRequest {
  */
 export type GroupedPermissionEventHandler = (request: GroupedPermissionRequest) => void | Promise<void>
 
+export interface CounterpartyPermissions {
+  description?: string
+  protocols: Array<{
+    protocolID: WalletProtocol
+    description: string
+  }>
+}
+
+export interface CounterpartyPermissionRequest {
+  originator: string
+  requestID: string
+  counterparty: PubKeyHex
+  counterpartyLabel?: string
+  permissions: CounterpartyPermissions
+}
+
+export type CounterpartyPermissionEventHandler = (request: CounterpartyPermissionRequest) => void | Promise<void>
+
 /**
  * Describes a single requested permission that the user must either grant or deny.
  *
@@ -267,6 +285,7 @@ export interface WalletPermissionsManagerCallbacks {
   onCertificateAccessRequested?: PermissionEventHandler[]
   onSpendingAuthorizationRequested?: PermissionEventHandler[]
   onGroupedPermissionRequested?: GroupedPermissionEventHandler[]
+  onCounterpartyPermissionRequested?: CounterpartyPermissionEventHandler[]
 }
 
 /**
@@ -441,7 +460,8 @@ export class WalletPermissionsManager implements WalletInterface {
     onBasketAccessRequested: [],
     onCertificateAccessRequested: [],
     onSpendingAuthorizationRequested: [],
-    onGroupedPermissionRequested: []
+    onGroupedPermissionRequested: [],
+    onCounterpartyPermissionRequested: []
   }
 
   /**
@@ -457,7 +477,16 @@ export class WalletPermissionsManager implements WalletInterface {
   private activeRequests: Map<
     string,
     {
-      request: PermissionRequest | { originator: string; permissions: GroupedPermissions }
+      request:
+        | PermissionRequest
+        | { originator: string; permissions: GroupedPermissions; displayOriginator?: string }
+        | {
+            originator: string
+            counterparty: PubKeyHex
+            permissions: CounterpartyPermissions
+            displayOriginator?: string
+            counterpartyLabel?: string
+          }
       pending: Array<{
         resolve: (val: any) => void
         reject: (err: any) => void
@@ -468,6 +497,22 @@ export class WalletPermissionsManager implements WalletInterface {
   /** Cache recently confirmed permissions to avoid repeated lookups. */
   private permissionCache: Map<string, { expiry: number; cachedAt: number }> = new Map()
   private recentGrants: Map<string, number> = new Map()
+
+  private manifestCache: Map<
+    string,
+    {
+      groupPermissions: GroupedPermissions | null
+      counterpartyPermissions: CounterpartyPermissions | null
+      fetchedAt: number
+    }
+  > = new Map()
+  private manifestFetchInProgress: Map<
+    string,
+    Promise<{ groupPermissions: GroupedPermissions | null; counterpartyPermissions: CounterpartyPermissions | null }>
+  > = new Map()
+  private static readonly MANIFEST_CACHE_TTL_MS = 5 * 60 * 1000
+
+  private pactEstablishedCache: Map<string, number> = new Map()
 
   /** How long a cached permission remains valid (5 minutes). */
   private static readonly CACHE_TTL_MS = 5 * 60 * 1000
@@ -602,7 +647,7 @@ export class WalletPermissionsManager implements WalletInterface {
    */
   public bindCallback(
     eventName: keyof WalletPermissionsManagerCallbacks,
-    handler: PermissionEventHandler | GroupedPermissionEventHandler
+    handler: PermissionEventHandler | GroupedPermissionEventHandler | CounterpartyPermissionEventHandler
   ): number {
     const arr = this.callbacks[eventName]! as any[]
     arr.push(handler)
@@ -764,11 +809,8 @@ export class WalletPermissionsManager implements WalletInterface {
     const originLookupValues = this.buildOriginatorLookupValues(displayOriginator, originator)
 
     // --- Validation: Ensure granted permissions are a subset of what was requested ---
-    if (
-      params.granted.spendingAuthorization &&
-      !deepEqual(params.granted.spendingAuthorization, requestedPermissions.spendingAuthorization)
-    ) {
-      throw new Error('Granted spending authorization does not match the original request.')
+    if (params.granted.spendingAuthorization && !requestedPermissions.spendingAuthorization) {
+      throw new Error('Granted spending authorization was not part of the original request.')
     }
     if (
       params.granted.protocolPermissions?.some(
@@ -789,70 +831,80 @@ export class WalletPermissionsManager implements WalletInterface {
 
     const expiry = params.expiry || 0 // default: never expires
 
+    const toCreate: Array<{ request: PermissionRequest; expiry: number; amount?: number }> = []
+    const toRenew: Array<{ oldToken: PermissionToken; request: PermissionRequest; expiry: number; amount?: number }> =
+      []
+
     if (params.granted.spendingAuthorization) {
-      await this.createPermissionOnChain(
-        {
+      toCreate.push({
+        request: {
           type: 'spending',
           originator,
           spending: { satoshis: params.granted.spendingAuthorization.amount },
           reason: params.granted.spendingAuthorization.description
         },
-        0, // No expiry for spending tokens
-        params.granted.spendingAuthorization.amount
-      )
+        expiry: 0,
+        amount: params.granted.spendingAuthorization.amount
+      })
     }
-    for (const p of params.granted.protocolPermissions || []) {
+
+    const grantedProtocols = params.granted.protocolPermissions || []
+    const protocolTokens = await this.mapWithConcurrency(grantedProtocols, 8, async p => {
       const token = await this.findProtocolToken(
         originator,
-        false, // No privileged protocols allowed in groups for added security.
+        false,
         p.protocolID,
         p.counterparty || 'self',
         true,
         originLookupValues
       )
-      if (token) {
-        const request: PermissionRequest = {
-          type: 'protocol',
-          originator,
-          privileged: false, // No privileged protocols allowed in groups for added security.
-          protocolID: p.protocolID,
-          counterparty: p.counterparty || 'self',
-          reason: p.description
-        }
-        await this.renewPermissionOnChain(token, request, expiry)
-        this.markRecentGrant(request)
-      } else {
-        const request: PermissionRequest = {
-          type: 'protocol',
-          originator,
-          privileged: false, // No privileged protocols allowed in groups for added security.
-          protocolID: p.protocolID,
-          counterparty: p.counterparty || 'self',
-          reason: p.description
-        }
-        await this.createPermissionOnChain(request, expiry)
-        this.markRecentGrant(request)
-      }
-    }
-    for (const b of params.granted.basketAccess || []) {
-      const request: PermissionRequest = { type: 'basket', originator, basket: b.basket, reason: b.description }
-      await this.createPermissionOnChain(request, expiry)
-      this.markRecentGrant(request)
-    }
-    for (const c of params.granted.certificateAccess || []) {
+      return { p, token }
+    })
+
+    for (const { p, token } of protocolTokens) {
       const request: PermissionRequest = {
-        type: 'certificate',
+        type: 'protocol',
         originator,
-        privileged: false, // No certificates on the privileged identity are allowed as part of groups.
-        certificate: {
-          verifier: c.verifierPublicKey,
-          certType: c.type,
-          fields: c.fields
-        },
-        reason: c.description
+        privileged: false,
+        protocolID: p.protocolID,
+        counterparty: p.counterparty || 'self',
+        reason: p.description
       }
-      await this.createPermissionOnChain(request, expiry)
-      this.markRecentGrant(request)
+      if (token) {
+        toRenew.push({ oldToken: token, request, expiry })
+      } else {
+        toCreate.push({ request, expiry })
+      }
+    }
+
+    for (const b of params.granted.basketAccess || []) {
+      toCreate.push({
+        request: { type: 'basket', originator, basket: b.basket, reason: b.description },
+        expiry
+      })
+    }
+
+    for (const c of params.granted.certificateAccess || []) {
+      toCreate.push({
+        request: {
+          type: 'certificate',
+          originator,
+          privileged: false,
+          certificate: {
+            verifier: c.verifierPublicKey,
+            certType: c.type,
+            fields: c.fields
+          },
+          reason: c.description
+        },
+        expiry
+      })
+    }
+
+    const created = await this.createPermissionTokensBestEffort(toCreate)
+    const renewed = await this.renewPermissionTokensBestEffort(toRenew)
+    for (const req of [...created, ...renewed]) {
+      this.markRecentGrant(req)
     }
 
     // Resolve all pending promises for this request
@@ -867,6 +919,101 @@ export class WalletPermissionsManager implements WalletInterface {
    * @param requestID The ID of the request being denied.
    */
   public async denyGroupedPermission(requestID: string): Promise<void> {
+    const matching = this.activeRequests.get(requestID)
+    if (!matching) {
+      throw new Error('Request ID not found.')
+    }
+    const err = new Error('The user has denied the request for permission.')
+    ;(err as any).code = 'ERR_PERMISSION_DENIED'
+    for (const p of matching.pending) {
+      p.reject(err)
+    }
+    this.activeRequests.delete(requestID)
+  }
+
+  public async dismissGroupedPermission(requestID: string): Promise<void> {
+    const matching = this.activeRequests.get(requestID)
+    if (!matching) {
+      throw new Error('Request ID not found.')
+    }
+    for (const p of matching.pending) {
+      p.resolve(true)
+    }
+    this.activeRequests.delete(requestID)
+  }
+
+  public async grantCounterpartyPermission(params: {
+    requestID: string
+    granted: Partial<CounterpartyPermissions>
+    expiry?: number
+  }): Promise<void> {
+    const matching = this.activeRequests.get(params.requestID)
+    if (!matching) {
+      throw new Error('Request ID not found.')
+    }
+
+    const originalRequest = matching.request as {
+      originator: string
+      counterparty: PubKeyHex
+      permissions: CounterpartyPermissions
+      displayOriginator?: string
+      counterpartyLabel?: string
+    }
+    const { originator, counterparty, permissions: requestedPermissions, displayOriginator } = originalRequest
+    const originLookupValues = this.buildOriginatorLookupValues(displayOriginator, originator)
+
+    if (params.granted.protocols?.some(g => !requestedPermissions.protocols.find(r => deepEqual(r, g)))) {
+      throw new Error('Granted protocol permissions are not a subset of the original request.')
+    }
+
+    const expiry = params.expiry || 0
+
+    const toCreate: Array<{ request: PermissionRequest; expiry: number; amount?: number }> = []
+    const toRenew: Array<{ oldToken: PermissionToken; request: PermissionRequest; expiry: number; amount?: number }> =
+      []
+
+    const grantedProtocols = params.granted.protocols || []
+    const protocolTokens = await this.mapWithConcurrency(grantedProtocols, 8, async p => {
+      const token = await this.findProtocolToken(
+        originator,
+        false,
+        p.protocolID,
+        counterparty,
+        true,
+        originLookupValues
+      )
+      return { p, token }
+    })
+
+    for (const { p, token } of protocolTokens) {
+      const request: PermissionRequest = {
+        type: 'protocol',
+        originator,
+        privileged: false,
+        protocolID: p.protocolID,
+        counterparty,
+        reason: p.description
+      }
+      if (token) {
+        toRenew.push({ oldToken: token, request, expiry })
+      } else {
+        toCreate.push({ request, expiry })
+      }
+    }
+
+    const created = await this.createPermissionTokensBestEffort(toCreate)
+    const renewed = await this.renewPermissionTokensBestEffort(toRenew)
+    for (const req of [...created, ...renewed]) {
+      this.markRecentGrant(req)
+    }
+
+    for (const p of matching.pending) {
+      p.resolve(true)
+    }
+    this.activeRequests.delete(params.requestID)
+  }
+
+  public async denyCounterpartyPermission(requestID: string): Promise<void> {
     const matching = this.activeRequests.get(requestID)
     if (!matching) {
       throw new Error('Request ID not found.')
@@ -1286,6 +1433,536 @@ export class WalletPermissionsManager implements WalletInterface {
     })
   }
 
+  private validateCounterpartyPermissions(raw: any): CounterpartyPermissions | null {
+    if (!raw || !Array.isArray(raw.protocols) || raw.protocols.length === 0) return null
+
+    const validProtocols = raw.protocols.filter((p: any) => {
+      return (
+        Array.isArray(p?.protocolID) &&
+        p.protocolID[0] === 2 &&
+        typeof p.protocolID[1] === 'string' &&
+        typeof p?.description === 'string'
+      )
+    })
+
+    if (validProtocols.length === 0) return null
+
+    return {
+      description: typeof raw.description === 'string' ? raw.description : undefined,
+      protocols: validProtocols
+    }
+  }
+
+  private async fetchManifestPermissions(originator: string): Promise<{
+    groupPermissions: GroupedPermissions | null
+    counterpartyPermissions: CounterpartyPermissions | null
+  }> {
+    const cached = this.manifestCache.get(originator)
+    if (cached && Date.now() - cached.fetchedAt < WalletPermissionsManager.MANIFEST_CACHE_TTL_MS) {
+      return {
+        groupPermissions: cached.groupPermissions,
+        counterpartyPermissions: cached.counterpartyPermissions
+      }
+    }
+
+    const inProgress = this.manifestFetchInProgress.get(originator)
+    if (inProgress) {
+      return inProgress
+    }
+
+    const fetchPromise = (async (): Promise<{
+      groupPermissions: GroupedPermissions | null
+      counterpartyPermissions: CounterpartyPermissions | null
+    }> => {
+      try {
+        const proto = originator.startsWith('localhost:') ? 'http' : 'https'
+        const response = await fetch(`${proto}://${originator}/manifest.json`)
+        if (response.ok) {
+          const manifest = await response.json()
+          const groupPermissions: GroupedPermissions | null = manifest?.babbage?.groupPermissions || null
+          const counterpartyPermissions: CounterpartyPermissions | null = this.validateCounterpartyPermissions(
+            manifest?.babbage?.counterpartyPermissions
+          )
+          this.manifestCache.set(originator, { groupPermissions, counterpartyPermissions, fetchedAt: Date.now() })
+          return { groupPermissions, counterpartyPermissions }
+        }
+      } catch (e) {}
+
+      const result = { groupPermissions: null, counterpartyPermissions: null }
+      this.manifestCache.set(originator, { ...result, fetchedAt: Date.now() })
+      return result
+    })()
+
+    this.manifestFetchInProgress.set(originator, fetchPromise)
+    try {
+      return await fetchPromise
+    } finally {
+      this.manifestFetchInProgress.delete(originator)
+    }
+  }
+
+  private async fetchManifestGroupPermissions(originator: string): Promise<GroupedPermissions | null> {
+    const { groupPermissions } = await this.fetchManifestPermissions(originator)
+    return groupPermissions
+  }
+
+  private async filterAlreadyGrantedPermissions(
+    originator: string,
+    groupPermissions: GroupedPermissions
+  ): Promise<GroupedPermissions> {
+    const permissionsToRequest: GroupedPermissions = {
+      description: groupPermissions.description,
+      protocolPermissions: [],
+      basketAccess: [],
+      certificateAccess: []
+    }
+
+    if (groupPermissions.spendingAuthorization) {
+      const hasAuth = await this.hasSpendingAuthorization({
+        originator,
+        satoshis: groupPermissions.spendingAuthorization.amount
+      })
+      if (!hasAuth) {
+        permissionsToRequest.spendingAuthorization = groupPermissions.spendingAuthorization
+      }
+    }
+
+    for (const p of groupPermissions.protocolPermissions || []) {
+      const hasPerm = await this.hasProtocolPermission({
+        originator,
+        privileged: false,
+        protocolID: p.protocolID,
+        counterparty: p.counterparty || 'self'
+      })
+      if (!hasPerm) {
+        permissionsToRequest.protocolPermissions!.push(p)
+      }
+    }
+
+    for (const b of groupPermissions.basketAccess || []) {
+      const hasAccess = await this.hasBasketAccess({
+        originator,
+        basket: b.basket
+      })
+      if (!hasAccess) {
+        permissionsToRequest.basketAccess!.push(b)
+      }
+    }
+
+    for (const c of groupPermissions.certificateAccess || []) {
+      const hasAccess = await this.hasCertificateAccess({
+        originator,
+        privileged: false,
+        verifier: c.verifierPublicKey,
+        certType: c.type,
+        fields: c.fields
+      })
+      if (!hasAccess) {
+        permissionsToRequest.certificateAccess!.push(c)
+      }
+    }
+
+    return permissionsToRequest
+  }
+
+  private hasAnyPermissionsToRequest(permissions: GroupedPermissions): boolean {
+    return !!(
+      permissions.spendingAuthorization ||
+      (permissions.protocolPermissions?.length ?? 0) > 0 ||
+      (permissions.basketAccess?.length ?? 0) > 0 ||
+      (permissions.certificateAccess?.length ?? 0) > 0
+    )
+  }
+
+  private hasGroupedPermissionRequestedHandlers(): boolean {
+    const handlers = this.callbacks.onGroupedPermissionRequested || []
+    return handlers.some(h => typeof h === 'function')
+  }
+
+  private hasCounterpartyPermissionRequestedHandlers(): boolean {
+    const handlers = this.callbacks.onCounterpartyPermissionRequested || []
+    return handlers.some(h => typeof h === 'function')
+  }
+
+  private async hasPactEstablished(originator: string, counterparty: string): Promise<boolean> {
+    if (counterparty === 'self' || counterparty === 'anyone') {
+      return true
+    }
+
+    const cacheKey = `${originator}:${counterparty}`
+    if (this.pactEstablishedCache.has(cacheKey)) {
+      return true
+    }
+
+    const { counterpartyPermissions } = await this.fetchManifestPermissions(originator)
+    if (!counterpartyPermissions?.protocols?.length) {
+      return true
+    }
+
+    const firstProtocol = counterpartyPermissions.protocols[0]
+    const hasToken = await this.hasProtocolPermission({
+      originator,
+      privileged: false,
+      protocolID: firstProtocol.protocolID,
+      counterparty
+    })
+
+    if (hasToken) {
+      this.pactEstablishedCache.set(cacheKey, Date.now())
+      return true
+    }
+
+    return false
+  }
+
+  private markPactEstablished(originator: string, counterparty: string): void {
+    const cacheKey = `${originator}:${counterparty}`
+    this.pactEstablishedCache.set(cacheKey, Date.now())
+  }
+
+  private async maybeRequestPact(currentRequest: PermissionRequest): Promise<boolean | null> {
+    if (!this.config.seekGroupedPermission) {
+      return null
+    }
+    if (!this.hasCounterpartyPermissionRequestedHandlers()) {
+      return null
+    }
+    if (currentRequest.type !== 'protocol') {
+      return null
+    }
+    if (currentRequest.privileged) {
+      return null
+    }
+    const [level] = currentRequest.protocolID!
+    if (level !== 2) {
+      return null
+    }
+
+    const originator = currentRequest.originator
+    const counterparty = currentRequest.counterparty
+    if (!counterparty || counterparty === 'self' || counterparty === 'anyone') {
+      return null
+    }
+    if (!/^[0-9a-fA-F]{66}$/.test(counterparty)) {
+      return null
+    }
+
+    if (await this.hasPactEstablished(originator, counterparty)) {
+      return null
+    }
+
+    const { counterpartyPermissions } = await this.fetchManifestPermissions(originator)
+    if (!counterpartyPermissions?.protocols?.length) {
+      return null
+    }
+
+    const protocolsToRequest: CounterpartyPermissions['protocols'] = []
+    for (const p of counterpartyPermissions.protocols) {
+      const hasPerm = await this.hasProtocolPermission({
+        originator,
+        privileged: false,
+        protocolID: p.protocolID,
+        counterparty
+      })
+      if (!hasPerm) {
+        protocolsToRequest.push(p)
+      }
+    }
+
+    if (protocolsToRequest.length === 0) {
+      this.markPactEstablished(originator, counterparty)
+      return null
+    }
+
+    const permissionsToRequest: CounterpartyPermissions = {
+      description: counterpartyPermissions.description,
+      protocols: protocolsToRequest
+    }
+
+    const key = `pact:${originator}:${counterparty}`
+    const existing = this.activeRequests.get(key)
+    if (existing) {
+      const existingRequest = existing.request as {
+        originator: string
+        counterparty: PubKeyHex
+        permissions: CounterpartyPermissions
+        displayOriginator?: string
+        counterpartyLabel?: string
+      }
+      for (const p of permissionsToRequest.protocols) {
+        if (!existingRequest.permissions.protocols.find(x => deepEqual(x, p))) {
+          existingRequest.permissions.protocols.push(p)
+        }
+      }
+      await new Promise<boolean>((resolve, reject) => {
+        existing.pending.push({ resolve, reject })
+      })
+    } else {
+      await new Promise<boolean>(async (resolve, reject) => {
+        this.activeRequests.set(key, {
+          request: {
+            originator,
+            counterparty,
+            permissions: permissionsToRequest,
+            displayOriginator: currentRequest.displayOriginator
+          },
+          pending: [{ resolve, reject }]
+        })
+
+        await this.callEvent('onCounterpartyPermissionRequested', {
+          requestID: key,
+          originator,
+          counterparty,
+          permissions: permissionsToRequest
+        })
+      })
+    }
+
+    this.markPactEstablished(originator, counterparty)
+    const satisfied = await this.hasProtocolPermission({
+      originator,
+      privileged: false,
+      protocolID: currentRequest.protocolID!,
+      counterparty
+    })
+    return satisfied ? true : null
+  }
+
+  private async maybeRequestPeerGroupedLevel2ProtocolPermissions(
+    currentRequest: PermissionRequest
+  ): Promise<boolean | null> {
+    if (!this.config.seekGroupedPermission) {
+      return null
+    }
+    if (!this.hasGroupedPermissionRequestedHandlers()) {
+      return null
+    }
+    if (currentRequest.type !== 'protocol') {
+      return null
+    }
+    const [level] = currentRequest.protocolID!
+    if (level !== 2) {
+      return null
+    }
+
+    const originator = currentRequest.originator
+    const privileged = currentRequest.privileged ?? false
+    const counterparty = currentRequest.counterparty ?? 'self'
+
+    const groupPermissions = await this.fetchManifestGroupPermissions(originator)
+    if (!groupPermissions) {
+      return null
+    }
+
+    const normalizeManifestCounterparty = (cp: string | undefined): string => {
+      if (cp === '') return counterparty
+      return cp ?? 'self'
+    }
+
+    const manifestLevel2ForThisPeer = (groupPermissions.protocolPermissions || [])
+      .filter(p => (p.protocolID?.[0] ?? 0) === 2)
+      .map(p => ({
+        protocolID: p.protocolID,
+        counterparty: normalizeManifestCounterparty(p.counterparty),
+        description: p.description
+      }))
+      .filter(p => p.counterparty === counterparty)
+
+    const isCurrentRequestInManifest = manifestLevel2ForThisPeer.some(p =>
+      deepEqual(p.protocolID, currentRequest.protocolID!)
+    )
+    if (!isCurrentRequestInManifest) {
+      return null
+    }
+
+    const permissionsToRequest: GroupedPermissions = {
+      protocolPermissions: []
+    }
+
+    for (const p of manifestLevel2ForThisPeer) {
+      const hasPerm = await this.hasProtocolPermission({
+        originator,
+        privileged,
+        protocolID: p.protocolID,
+        counterparty: p.counterparty
+      })
+      if (!hasPerm) {
+        permissionsToRequest.protocolPermissions!.push({
+          protocolID: p.protocolID,
+          counterparty: p.counterparty,
+          description: p.description
+        })
+      }
+    }
+
+    if (!this.hasAnyPermissionsToRequest(permissionsToRequest)) {
+      return null
+    }
+
+    const key = `group-peer:${originator}:${privileged}:${counterparty}`
+    const existing = this.activeRequests.get(key)
+    if (existing) {
+      const existingRequest = existing.request as {
+        originator: string
+        permissions: GroupedPermissions
+        displayOriginator?: string
+      }
+      if (!existingRequest.permissions.protocolPermissions) {
+        existingRequest.permissions.protocolPermissions = []
+      }
+      for (const p of permissionsToRequest.protocolPermissions || []) {
+        if (!existingRequest.permissions.protocolPermissions.find(x => deepEqual(x, p))) {
+          existingRequest.permissions.protocolPermissions.push(p)
+        }
+      }
+      await new Promise<boolean>((resolve, reject) => {
+        existing.pending.push({ resolve, reject })
+      })
+    } else {
+      await new Promise<boolean>(async (resolve, reject) => {
+        const permissions: GroupedPermissions = permissionsToRequest
+
+        this.activeRequests.set(key, {
+          request: {
+            originator,
+            permissions,
+            displayOriginator: currentRequest.displayOriginator
+          },
+          pending: [{ resolve, reject }]
+        })
+
+        await this.callEvent('onGroupedPermissionRequested', {
+          requestID: key,
+          originator,
+          permissions
+        })
+      })
+    }
+
+    const satisfied = await this.checkSpecificPermissionAfterGroupFlow(currentRequest)
+    return satisfied ? true : null
+  }
+
+  private async checkSpecificPermissionAfterGroupFlow(request: PermissionRequest): Promise<boolean> {
+    switch (request.type) {
+      case 'protocol':
+        return await this.hasProtocolPermission({
+          originator: request.originator,
+          privileged: request.privileged ?? false,
+          protocolID: request.protocolID!,
+          counterparty: request.counterparty ?? 'self'
+        })
+      case 'basket':
+        return await this.hasBasketAccess({
+          originator: request.originator,
+          basket: request.basket!
+        })
+      case 'certificate':
+        return await this.hasCertificateAccess({
+          originator: request.originator,
+          privileged: request.privileged ?? false,
+          verifier: request.certificate!.verifier,
+          certType: request.certificate!.certType,
+          fields: request.certificate!.fields
+        })
+      case 'spending':
+        return await this.hasSpendingAuthorization({
+          originator: request.originator,
+          satoshis: request.spending!.satoshis
+        })
+      default:
+        return false
+    }
+  }
+
+  private isRequestIncludedInGroupPermissions(
+    request: PermissionRequest,
+    groupPermissions: GroupedPermissions
+  ): boolean {
+    switch (request.type) {
+      case 'protocol': {
+        if (request.privileged) return false
+        const pid = request.protocolID
+        if (!pid) return false
+        const cp = request.counterparty ?? 'self'
+        return !!groupPermissions.protocolPermissions?.some(p => {
+          const manifestCp = p.counterparty === '' ? cp : (p.counterparty ?? 'self')
+          return deepEqual(p.protocolID, pid) && manifestCp === cp
+        })
+      }
+      case 'basket': {
+        const basket = request.basket
+        if (!basket) return false
+        return !!groupPermissions.basketAccess?.some(b => b.basket === basket)
+      }
+      case 'certificate': {
+        if (request.privileged) return false
+        const cert = request.certificate
+        if (!cert) return false
+        return !!groupPermissions.certificateAccess?.some(c => {
+          const fieldsA = new Set(c.fields || [])
+          const fieldsB = new Set(cert.fields || [])
+          if (fieldsA.size !== fieldsB.size) return false
+          for (const f of fieldsA) if (!fieldsB.has(f)) return false
+          return c.type === cert.certType && c.verifierPublicKey === cert.verifier
+        })
+      }
+      case 'spending':
+        return !!groupPermissions.spendingAuthorization
+      default:
+        return false
+    }
+  }
+
+  private async maybeRequestGroupedPermissions(currentRequest: PermissionRequest): Promise<boolean | null> {
+    if (!this.config.seekGroupedPermission) {
+      return null
+    }
+
+    const originator = currentRequest.originator
+
+    const groupPermissions = await this.fetchManifestGroupPermissions(originator)
+    if (!groupPermissions) {
+      return null
+    }
+
+    if (!this.isRequestIncludedInGroupPermissions(currentRequest, groupPermissions)) {
+      return null
+    }
+
+    const permissionsToRequest = await this.filterAlreadyGrantedPermissions(originator, groupPermissions)
+    if (!this.hasAnyPermissionsToRequest(permissionsToRequest)) {
+      return null
+    }
+
+    const key = `group:${originator}`
+    if (this.activeRequests.has(key)) {
+      await new Promise<boolean>((resolve, reject) => {
+        this.activeRequests.get(key)!.pending.push({ resolve, reject })
+      })
+    } else {
+      await new Promise<boolean>(async (resolve, reject) => {
+        this.activeRequests.set(key, {
+          request: {
+            originator,
+            permissions: permissionsToRequest,
+            displayOriginator: currentRequest.displayOriginator
+          },
+          pending: [{ resolve, reject }]
+        })
+
+        await this.callEvent('onGroupedPermissionRequested', {
+          requestID: key,
+          originator,
+          permissions: permissionsToRequest
+        })
+      })
+    }
+
+    const satisfied = await this.checkSpecificPermissionAfterGroupFlow(currentRequest)
+    return satisfied ? true : null
+  }
+
   /**
    * A central method that triggers the permission request flow.
    * - It checks if there's already an active request for the same key
@@ -1298,8 +1975,24 @@ export class WalletPermissionsManager implements WalletInterface {
     const preparedRequest: PermissionRequest = {
       ...r,
       originator: normalizedOriginator,
-      displayOriginator: r.displayOriginator ?? r.originator
+      displayOriginator: r.displayOriginator ?? r.previousToken?.rawOriginator ?? r.originator
     }
+
+    const pactResult = await this.maybeRequestPact(preparedRequest)
+    if (pactResult !== null) {
+      return pactResult
+    }
+
+    const peerGroupResult = await this.maybeRequestPeerGroupedLevel2ProtocolPermissions(preparedRequest)
+    if (peerGroupResult !== null) {
+      return peerGroupResult
+    }
+
+    const groupResult = await this.maybeRequestGroupedPermissions(preparedRequest)
+    if (groupResult !== null) {
+      return groupResult
+    }
+
     const key = this.buildRequestKey(preparedRequest)
 
     // If there's already a queue for the same resource, we piggyback on it
@@ -1894,11 +2587,176 @@ export class WalletPermissionsManager implements WalletInterface {
           }
         ],
         options: {
-          acceptDelayedBroadcast: false
+          acceptDelayedBroadcast: true
         }
       },
       this.adminOriginator
     )
+  }
+
+  private async mapWithConcurrency<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+    if (!items.length) return []
+    const results: R[] = new Array(items.length)
+    let i = 0
+    const worker = async () => {
+      while (true) {
+        const idx = i++
+        if (idx >= items.length) return
+        results[idx] = await fn(items[idx])
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()))
+    return results
+  }
+
+  private async runBestEffortBatches<T, R>(
+    items: T[],
+    chunkSize: number,
+    runChunk: (chunk: T[]) => Promise<R[]>
+  ): Promise<R[]> {
+    if (!items.length) return []
+    const out: R[] = []
+    for (let i = 0; i < items.length; i += chunkSize) {
+      const chunk = items.slice(i, i + chunkSize)
+      out.push(...(await this.runBestEffortChunk(chunk, runChunk)))
+    }
+    return out
+  }
+
+  private async runBestEffortChunk<T, R>(chunk: T[], runChunk: (chunk: T[]) => Promise<R[]>): Promise<R[]> {
+    try {
+      return await runChunk(chunk)
+    } catch (e) {
+      if (chunk.length <= 1) {
+        console.error('Permission batch failed:', e)
+        return []
+      }
+      const mid = Math.ceil(chunk.length / 2)
+      const left = await this.runBestEffortChunk(chunk.slice(0, mid), runChunk)
+      const right = await this.runBestEffortChunk(chunk.slice(mid), runChunk)
+      return [...left, ...right]
+    }
+  }
+
+  private async buildPermissionOutput(
+    r: PermissionRequest,
+    expiry: number,
+    amount?: number
+  ): Promise<{
+    output: { lockingScript: string; satoshis: number; outputDescription: string; basket: string; tags: string[] }
+    request: PermissionRequest
+  }> {
+    const normalizedOriginator = this.normalizeOriginator(r.originator) || r.originator
+    r.originator = normalizedOriginator
+    const basketName = BASKET_MAP[r.type]
+    if (!basketName) {
+      throw new Error(`Unsupported permission type: ${r.type}`)
+    }
+    const fields: number[][] = await this.buildPushdropFields(r, expiry, amount)
+    const script = await new PushDrop(this.underlying).lock(
+      fields,
+      WalletPermissionsManager.PERM_TOKEN_ENCRYPTION_PROTOCOL,
+      '1',
+      'self',
+      true,
+      true
+    )
+    const tags = this.buildTagsForRequest(r)
+    return {
+      request: r,
+      output: {
+        lockingScript: script.toHex(),
+        satoshis: 1,
+        outputDescription: `${r.type} permission token`,
+        basket: basketName,
+        tags
+      }
+    }
+  }
+
+  private async createPermissionTokensBestEffort(
+    items: Array<{ request: PermissionRequest; expiry: number; amount?: number }>
+  ): Promise<PermissionRequest[]> {
+    const CHUNK = 25
+    return this.runBestEffortBatches(items, CHUNK, async chunk => {
+      const built = await this.mapWithConcurrency(chunk, 8, c =>
+        this.buildPermissionOutput(c.request, c.expiry, c.amount)
+      )
+      await this.createAction(
+        {
+          description: `Grant ${built.length} permissions`,
+          outputs: built.map(b => b.output),
+          options: { acceptDelayedBroadcast: true }
+        },
+        this.adminOriginator
+      )
+      return built.map(b => b.request)
+    })
+  }
+
+  private async renewPermissionTokensBestEffort(
+    items: Array<{ oldToken: PermissionToken; request: PermissionRequest; expiry: number; amount?: number }>
+  ): Promise<PermissionRequest[]> {
+    const CHUNK = 15
+    return this.runBestEffortBatches(items, CHUNK, async chunk => {
+      const built = await this.mapWithConcurrency(chunk, 8, c =>
+        this.buildPermissionOutput(c.request, c.expiry, c.amount)
+      )
+
+      const inputBeef = new Beef()
+      for (const c of chunk) {
+        inputBeef.mergeBeef(Beef.fromBinary(c.oldToken.tx))
+      }
+
+      const { signableTransaction } = await this.createAction(
+        {
+          description: `Renew ${chunk.length} permissions`,
+          inputBEEF: inputBeef.toBinary(),
+          inputs: chunk.map((c, i) => ({
+            outpoint: `${c.oldToken.txid}.${c.oldToken.outputIndex}`,
+            unlockingScriptLength: 73,
+            inputDescription: `Consume old permission token #${i + 1}`
+          })),
+          outputs: built.map(b => b.output),
+          options: {
+            acceptDelayedBroadcast: true,
+            randomizeOutputs: false,
+            signAndProcess: false
+          }
+        },
+        this.adminOriginator
+      )
+
+      if (!signableTransaction?.reference || !signableTransaction.tx) {
+        throw new Error('Failed to create signable transaction')
+      }
+
+      const partialTx = Transaction.fromAtomicBEEF(signableTransaction.tx)
+      const pushdrop = new PushDrop(this.underlying)
+      const spends: Record<number, { unlockingScript: string }> = {}
+
+      for (let i = 0; i < chunk.length; i++) {
+        const token = chunk[i].oldToken
+        const unlocker = pushdrop.unlock(
+          WalletPermissionsManager.PERM_TOKEN_ENCRYPTION_PROTOCOL,
+          '1',
+          'self',
+          'all',
+          false,
+          1,
+          LockingScript.fromHex(token.outputScript)
+        )
+        const unlockingScript = await unlocker.sign(partialTx, i)
+        spends[i] = { unlockingScript: unlockingScript.toHex() }
+      }
+
+      const { txid } = await this.underlying.signAction({
+        reference: signableTransaction.reference,
+        spends
+      })
+      if (!txid) throw new Error('Failed to finalize renewal transaction')
+      return built.map(b => b.request)
+    })
   }
 
   private async coalescePermissionTokens(
@@ -1938,7 +2796,7 @@ export class WalletPermissionsManager implements WalletInterface {
           }
         ],
         options: {
-          acceptDelayedBroadcast: false,
+          acceptDelayedBroadcast: true,
           randomizeOutputs: false,
           signAndProcess: false
         }
@@ -2050,7 +2908,7 @@ export class WalletPermissionsManager implements WalletInterface {
             }
           ],
           options: {
-            acceptDelayedBroadcast: false
+            acceptDelayedBroadcast: true
           }
         },
         this.adminOriginator
@@ -2218,7 +3076,7 @@ export class WalletPermissionsManager implements WalletInterface {
           tags,
           tagQueryMode: 'all',
           include: 'entire transactions',
-          limit: 100
+          limit: 10000
         },
         this.adminOriginator
       )
@@ -2565,12 +3423,65 @@ export class WalletPermissionsManager implements WalletInterface {
           }
         ],
         options: {
-          acceptDelayedBroadcast: false
+          acceptDelayedBroadcast: true
         }
       },
       this.adminOriginator
     )
     const tx = Transaction.fromBEEF(signableTransaction!.tx)
+
+    const normalizeTxid = (txid?: string) => (txid ?? '').toLowerCase()
+    const reverseHexTxid = (txid: string) => {
+      const hex = normalizeTxid(txid)
+      if (!/^[0-9a-f]{64}$/.test(hex)) return hex
+      const bytes = hex.match(/../g)
+      return bytes ? bytes.reverse().join('') : hex
+    }
+    const matchesOutpointString = (outpoint: string) => {
+      const dot = outpoint.lastIndexOf('.')
+      const colon = outpoint.lastIndexOf(':')
+      const sep = dot > colon ? dot : colon
+      if (sep === -1) return false
+      const txidPart = outpoint.slice(0, sep)
+      const indexPart = outpoint.slice(sep + 1)
+      const vout = Number(indexPart)
+      if (!Number.isFinite(vout)) return false
+      return normalizeTxid(txidPart) === normalizeTxid(oldToken.txid) && vout === oldToken.outputIndex
+    }
+
+    let permInputIndex = tx.inputs.findIndex((input: any) => {
+      const txidCandidate: unknown =
+        input?.sourceTXID ??
+        input?.sourceTxid ??
+        input?.sourceTxId ??
+        input?.prevTxId ??
+        input?.prevTxid ??
+        input?.prevTXID ??
+        input?.txid ??
+        input?.txID
+
+      const voutCandidate: unknown =
+        input?.sourceOutputIndex ?? input?.sourceOutput ?? input?.outputIndex ?? input?.vout ?? input?.prevOutIndex
+
+      if (typeof txidCandidate === 'string' && typeof voutCandidate === 'number') {
+        const cand = normalizeTxid(txidCandidate)
+        const target = normalizeTxid(oldToken.txid)
+        if (cand === target && voutCandidate === oldToken.outputIndex) return true
+        if (cand === reverseHexTxid(oldToken.txid) && voutCandidate === oldToken.outputIndex) return true
+      }
+
+      const outpointCandidate: unknown = input?.outpoint ?? input?.sourceOutpoint ?? input?.prevOutpoint
+      if (typeof outpointCandidate === 'string' && matchesOutpointString(outpointCandidate)) return true
+
+      return false
+    })
+
+    if (permInputIndex === -1 && tx.inputs.length === 1) {
+      permInputIndex = 0
+    }
+    if (permInputIndex === -1) {
+      throw new Error('Unable to locate permission token input for revocation.')
+    }
     const unlocker = new PushDrop(this.underlying).unlock(
       WalletPermissionsManager.PERM_TOKEN_ENCRYPTION_PROTOCOL,
       '1',
@@ -2580,11 +3491,11 @@ export class WalletPermissionsManager implements WalletInterface {
       1,
       LockingScript.fromHex(oldToken.outputScript)
     )
-    const unlockingScript = await unlocker.sign(tx, 0)
+    const unlockingScript = await unlocker.sign(tx, permInputIndex)
     await this.underlying.signAction({
       reference: signableTransaction!.reference,
       spends: {
-        0: {
+        [permInputIndex]: {
           unlockingScript: unlockingScript.toHex()
         }
       }
@@ -3354,82 +4265,15 @@ export class WalletPermissionsManager implements WalletInterface {
     if (this.config.seekGroupedPermission && originator) {
       const { normalized: normalizedOriginator } = this.prepareOriginator(originator)
       originator = normalizedOriginator
-      // 1. Fetch manifest.json from the originator
-      let groupPermissions: GroupedPermissions | undefined
-      try {
-        const proto = originator.startsWith('localhost:') ? 'http' : 'https'
-        const response = await fetch(`${proto}://${originator}/manifest.json`)
-        if (response.ok) {
-          const manifest = await response.json()
-          if (manifest?.babbage?.groupPermissions) {
-            groupPermissions = manifest.babbage.groupPermissions
-          }
-        }
-      } catch (e) {
-        // Ignore fetch/parse errors, just proceed without group permissions.
-      }
 
+      // 1. Fetch manifest.json from the originator
+      const groupPermissions = await this.fetchManifestGroupPermissions(originator)
       if (groupPermissions) {
         // 2. Filter out already-granted permissions
-        const permissionsToRequest: GroupedPermissions = {
-          protocolPermissions: [],
-          basketAccess: [],
-          certificateAccess: []
-        }
-
-        if (groupPermissions.spendingAuthorization) {
-          const hasAuth = await this.hasSpendingAuthorization({
-            originator,
-            satoshis: groupPermissions.spendingAuthorization.amount
-          })
-          if (!hasAuth) {
-            permissionsToRequest.spendingAuthorization = groupPermissions.spendingAuthorization
-          }
-        }
-
-        for (const p of groupPermissions.protocolPermissions || []) {
-          const hasPerm = await this.hasProtocolPermission({
-            originator,
-            privileged: false, // Privilege is never allowed here
-            protocolID: p.protocolID,
-            counterparty: p.counterparty || 'self'
-          })
-          if (!hasPerm) {
-            permissionsToRequest.protocolPermissions!.push(p)
-          }
-        }
-
-        for (const b of groupPermissions.basketAccess || []) {
-          const hasAccess = await this.hasBasketAccess({
-            originator,
-            basket: b.basket
-          })
-          if (!hasAccess) {
-            permissionsToRequest.basketAccess!.push(b)
-          }
-        }
-
-        for (const c of groupPermissions.certificateAccess || []) {
-          const hasAccess = await this.hasCertificateAccess({
-            originator,
-            privileged: false, // Privilege is never allowed here for security
-            verifier: c.verifierPublicKey,
-            certType: c.type,
-            fields: c.fields
-          })
-          if (!hasAccess) {
-            permissionsToRequest.certificateAccess!.push(c)
-          }
-        }
+        const permissionsToRequest = await this.filterAlreadyGrantedPermissions(originator, groupPermissions)
 
         // 3. If any permissions are left to request, start the flow
-        const hasRequests =
-          permissionsToRequest.spendingAuthorization ||
-          (permissionsToRequest.protocolPermissions?.length ?? 0) > 0 ||
-          (permissionsToRequest.basketAccess?.length ?? 0) > 0 ||
-          (permissionsToRequest.certificateAccess?.length ?? 0) > 0
-
-        if (hasRequests) {
+        if (this.hasAnyPermissionsToRequest(permissionsToRequest)) {
           const key = `group:${originator}`
           if (this.activeRequests.has(key)) {
             // Another call is already waiting, piggyback on it

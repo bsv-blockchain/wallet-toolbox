@@ -1,5 +1,14 @@
 const { Validation } = jest.requireActual('@bsv/sdk')
 
+const existingFetch = (globalThis as any).fetch
+if (!existingFetch || !(existingFetch as any)._isMockFunction) {
+  ;(globalThis as any).fetch = jest.fn(async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({})
+  }))
+}
+
 /**
  * A permissions manager testing mock/stub file for:
  *  1) The `@bsv/sdk` library: Transaction, LockingScript, PushDrop, Utils, Random, etc.

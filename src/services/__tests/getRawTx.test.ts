@@ -1,9 +1,11 @@
+import { _tu } from '../../../test/utils/TestUtilsWalletStorage'
 import { Services } from '../../index.client'
 
 describe('getRawTx service tests', () => {
   jest.setTimeout(99999999)
 
   test('0', async () => {
+    if (_tu.noEnv('test')) return
     const options = Services.createDefaultOptions('test')
     const services = new Services(options)
 

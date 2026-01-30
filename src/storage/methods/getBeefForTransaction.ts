@@ -82,7 +82,9 @@ async function mergeBeefForTransactionRecurse(
       options.trustSelf,
       options.knownTxids,
       undefined,
-      requiredLevels
+      requiredLevels,
+      options.chainTracker,
+      options.skipInvalidProofs
     )
     if (knownBeef) return knownBeef
   }

@@ -428,5 +428,17 @@ export const validBulkHeaderFiles: BulkHeaderFileInfo[] = [
     prevHash: '00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087',
     sourceUrl: 'https://cdn.projectbabbage.com/blockheaders',
     validated: true
+  },
+  {
+    chain: 'main',
+    count: 31772,
+    fileHash: 'NuVsRUrI5QnjILbYy4LS3A/Udl6PH/m8Y9uVguEsekM=',
+    fileName: 'mainNet_9.headers',
+    firstHeight: 900000,
+    lastChainWork: '0000000000000000000000000000000000000000016ab16bb9b31430588788d3',
+    lastHash: '0000000000000000024a2f1caef4b0ffdc1a036b09f9ed7f48b538f619f32ef2',
+    prevChainWork: '000000000000000000000000000000000000000001664db1f2d50327928007e0',
+    prevHash: '00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087',
+    sourceUrl: 'https://cdn.projectbabbage.com/blockheaders'
   }
 ]

@@ -12,7 +12,8 @@ import {
   RelinquishOutputArgs,
   AbortActionArgs,
   Validation,
-  WalletLoggerInterface
+  WalletLoggerInterface,
+  ChainTracker
 } from '@bsv/sdk'
 import { getBeefForTransaction } from './methods/getBeefForTransaction'
 import { GetReqsAndBeefDetail, GetReqsAndBeefResult, processAction } from './methods/processAction'
@@ -57,6 +58,7 @@ import { TableMonitorEvent } from '../../src/storage/schema/tables/TableMonitorE
 import { TableCertificateX } from './schema/tables/TableCertificate'
 import {
   WERR_INTERNAL,
+  WERR_INVALID_MERKLE_ROOT,
   WERR_INVALID_OPERATION,
   WERR_INVALID_PARAMETER,
   WERR_MISSING_PARAMETER,
@@ -438,6 +440,20 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     return proven != undefined || rawTx != undefined
   }
 
+  /**
+   * Pulls data from storage to build a valid beef for a txid.
+   *
+   * Optionally merges the data into an existing beef.
+   * Optionally requires a minimum number of proof levels.
+   *
+   * @param txid
+   * @param mergeToBeef
+   * @param trustSelf
+   * @param knownTxids
+   * @param trx
+   * @param requiredLevels
+   * @returns
+   */
   async getValidBeefForKnownTxid(
     txid: string,
     mergeToBeef?: Beef,
@@ -457,7 +473,9 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     trustSelf?: TrustSelf,
     knownTxids?: string[],
     trx?: TrxToken,
-    requiredLevels?: number
+    requiredLevels?: number,
+    chainTracker?: ChainTracker,
+    skipInvalidProofs?: boolean
   ): Promise<Beef | undefined> {
     const beef = mergeToBeef || new Beef()
 
@@ -468,10 +486,25 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
       } else {
         if (trustSelf === 'known') beef.mergeTxidOnly(txid)
         else {
-          beef.mergeRawTx(r.proven.rawTx)
           const mp = new EntityProvenTx(r.proven).getMerklePath()
-          beef.mergeBump(mp)
-          return beef
+          if (chainTracker) {
+            const root = mp.computeRoot()
+            const isValid = await chainTracker.isValidRootForHeight(root, r.proven.height)
+            if (!isValid) {
+              if (!skipInvalidProofs) {
+                throw new WERR_INVALID_MERKLE_ROOT(r.proven.blockHash, r.proven.height, root, txid)
+              }
+              // ignore this currently invalid proof and try to recurse deeper
+              r.rawTx = r.proven.rawTx
+              r.proven = undefined
+            }
+          }
+          if (r.proven) {
+            // If we still like this proof, merge it and return
+            beef.mergeRawTx(r.proven.rawTx)
+            beef.mergeBump(mp)
+            return beef
+          }
         }
       }
     }

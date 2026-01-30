@@ -35,6 +35,163 @@ describe('WalletPermissionsManager - Permission Request Flow & Active Requests',
    * UNIT TESTS
    */
   describe('Unit Tests: requestPermissionFlow & activeRequests map', () => {
+    it('should coalesce level-2 protocol requests for the same counterparty into a single grouped permission prompt based on manifest.json', async () => {
+      mockNoTokensFound(manager)
+
+      jest.spyOn(manager as any, 'fetchManifestGroupPermissions').mockResolvedValue({
+        protocolPermissions: [
+          {
+            protocolID: [2, 'l2-proto-A'],
+            counterparty: '',
+            description: 'A'
+          },
+          {
+            protocolID: [2, 'l2-proto-B'],
+            counterparty: 'peer-123',
+            description: 'B'
+          },
+          {
+            protocolID: [2, 'l2-proto-C'],
+            counterparty: 'peer-999',
+            description: 'C'
+          },
+          {
+            protocolID: [1, 'l1-proto-D'],
+            counterparty: 'peer-123',
+            description: 'D'
+          }
+        ]
+      })
+
+      const groupRequestCallback = jest.fn(() => {})
+      manager.bindCallback('onGroupedPermissionRequested', groupRequestCallback)
+
+      const callA = manager.ensureProtocolPermission({
+        originator: 'example.com',
+        privileged: false,
+        protocolID: [2, 'l2-proto-A'],
+        counterparty: 'peer-123',
+        reason: 'UnitTest - L2 A',
+        seekPermission: true,
+        usageType: 'signing'
+      })
+
+      const callB = manager.ensureProtocolPermission({
+        originator: 'example.com',
+        privileged: false,
+        protocolID: [2, 'l2-proto-B'],
+        counterparty: 'peer-123',
+        reason: 'UnitTest - L2 B',
+        seekPermission: true,
+        usageType: 'signing'
+      })
+
+      await new Promise(res => setTimeout(res, 5))
+
+      expect(groupRequestCallback).toHaveBeenCalledTimes(1)
+      const callbackArg = (groupRequestCallback.mock as any).calls[0][0]
+      const requestID = callbackArg.requestID
+      expect(typeof requestID).toBe('string')
+      expect(requestID).toMatch(/^group-peer:/)
+
+      const activeRequests = (manager as any).activeRequests as Map<string, any>
+      const queued = activeRequests.get(requestID)
+      expect(queued.request.permissions.protocolPermissions.length).toBe(2)
+      expect(queued.request.permissions.protocolPermissions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ protocolID: [2, 'l2-proto-A'], counterparty: 'peer-123' }),
+          expect.objectContaining({ protocolID: [2, 'l2-proto-B'], counterparty: 'peer-123' })
+        ])
+      )
+
+      await manager.denyGroupedPermission(requestID)
+
+      await expect(callA).rejects.toThrow(/denied/i)
+      await expect(callB).rejects.toThrow(/denied/i)
+
+      expect(activeRequests.size).toBe(0)
+    })
+
+    it('should create separate grouped permission requests for different peers (no cross-peer grouping)', async () => {
+      mockNoTokensFound(manager)
+
+      jest.spyOn(manager as any, 'fetchManifestGroupPermissions').mockResolvedValue({
+        protocolPermissions: [
+          {
+            protocolID: [2, 'l2-proto-B'],
+            counterparty: 'peer-123',
+            description: 'B'
+          },
+          {
+            protocolID: [2, 'l2-proto-C'],
+            counterparty: 'peer-999',
+            description: 'C'
+          }
+        ]
+      })
+
+      const groupRequestCallback = jest.fn(() => {})
+      manager.bindCallback('onGroupedPermissionRequested', groupRequestCallback)
+
+      const callB = manager.ensureProtocolPermission({
+        originator: 'example.com',
+        privileged: false,
+        protocolID: [2, 'l2-proto-B'],
+        counterparty: 'peer-123',
+        reason: 'UnitTest - L2 B peer-123',
+        seekPermission: true,
+        usageType: 'signing'
+      })
+
+      const callC = manager.ensureProtocolPermission({
+        originator: 'example.com',
+        privileged: false,
+        protocolID: [2, 'l2-proto-C'],
+        counterparty: 'peer-999',
+        reason: 'UnitTest - L2 C peer-999',
+        seekPermission: true,
+        usageType: 'signing'
+      })
+
+      await new Promise(res => setTimeout(res, 5))
+
+      expect(groupRequestCallback).toHaveBeenCalledTimes(2)
+      const requestID1 = (groupRequestCallback.mock as any).calls[0][0].requestID
+      const requestID2 = (groupRequestCallback.mock as any).calls[1][0].requestID
+
+      expect(requestID1).not.toBe(requestID2)
+      expect(requestID1).toMatch(/^group-peer:/)
+      expect(requestID2).toMatch(/^group-peer:/)
+
+      const activeRequests = (manager as any).activeRequests as Map<string, any>
+      expect(activeRequests.size).toBe(2)
+
+      const queued1 = activeRequests.get(requestID1)
+      const queued2 = activeRequests.get(requestID2)
+
+      expect(queued1.request.permissions.protocolPermissions).toEqual(
+        expect.arrayContaining([expect.objectContaining({ protocolID: [2, 'l2-proto-B'], counterparty: 'peer-123' })])
+      )
+      expect(queued1.request.permissions.protocolPermissions).not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ protocolID: [2, 'l2-proto-C'], counterparty: 'peer-999' })])
+      )
+
+      expect(queued2.request.permissions.protocolPermissions).toEqual(
+        expect.arrayContaining([expect.objectContaining({ protocolID: [2, 'l2-proto-C'], counterparty: 'peer-999' })])
+      )
+      expect(queued2.request.permissions.protocolPermissions).not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ protocolID: [2, 'l2-proto-B'], counterparty: 'peer-123' })])
+      )
+
+      await manager.denyGroupedPermission(requestID1)
+      await manager.denyGroupedPermission(requestID2)
+
+      await expect(callB).rejects.toThrow(/denied/i)
+      await expect(callC).rejects.toThrow(/denied/i)
+
+      expect(activeRequests.size).toBe(0)
+    })
+
     it('should coalesce parallel requests for the same resource into a single user prompt', async () => {
       // We want to test the underlying private method "requestPermissionFlow" indirectly
       // or we can test it via a public method that calls it. We'll do so via ensureProtocolPermission.

@@ -5,7 +5,8 @@ import {
   InternalizeActionArgs,
   TransactionOutput,
   Beef,
-  Validation
+  Validation,
+  Utils
 } from '@bsv/sdk'
 import { GetReqsAndBeefResult, shareReqsWithWorld } from './processAction'
 import { StorageProvider } from '../StorageProvider'
@@ -152,7 +153,7 @@ class InternalizeActionContext {
   }
 
   async asyncSetup() {
-    ;({ ab: this.ab, tx: this.tx, txid: this.txid } = await this.validateAtomicBeef(this.args.tx))
+    ;({ ab: this.ab, tx: this.tx, txid: this.txid } = await this.validateAtomicBeef(Utils.toArray(this.args.tx)))
 
     for (const o of this.args.outputs) {
       if (o.outputIndex < 0 || o.outputIndex >= this.tx.outputs.length)
@@ -405,7 +406,7 @@ class InternalizeActionContext {
       //
       // Attempt to create a provenTxReq record for the txid to obtain a proof,
       // while allowing for possible race conditions...
-      const newReq = EntityProvenTxReq.fromTxid(this.txid, this.tx.toBinary(), this.args.tx)
+      const newReq = EntityProvenTxReq.fromTxid(this.txid, this.tx.toBinary(), Utils.toArray(this.args.tx))
       newReq.status = 'unsent'
       // this history and notify will be merged into an existing req if it exists.
       newReq.addHistoryNote({ what: 'internalizeAction', userId: this.userId })

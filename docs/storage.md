@@ -3949,7 +3949,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     async listCertificates(auth: AuthId, args: Validation.ValidListCertificatesArgs): Promise<ListCertificatesResult> 
     async verifyKnownValidTransaction(txid: string, trx?: TrxToken): Promise<boolean> 
     async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef> 
-    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef | undefined> 
+    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number, chainTracker?: ChainTracker, skipInvalidProofs?: boolean): Promise<Beef | undefined> 
     async getBeefForTransaction(txid: string, options: StorageGetBeefOptions): Promise<Beef> 
     async findMonitorEventById(id: number, trx?: TrxToken): Promise<TableMonitorEvent | undefined> 
     async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> 
@@ -4009,6 +4009,18 @@ For the txids with reqs and status still ready to send construct a single merged
 async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: TrxToken): Promise<GetReqsAndBeefResult> 
 ```
 See also: [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [TrxToken](./client.md#interface-trxtoken)
+
+###### Method getValidBeefForKnownTxid
+
+Pulls data from storage to build a valid beef for a txid.
+
+Optionally merges the data into an existing beef.
+Optionally requires a minimum number of proof levels.
+
+```ts
+async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef> 
+```
+See also: [TrxToken](./client.md#interface-trxtoken)
 
 ###### Method updateProvenTxReqWithNewProvenTx
 

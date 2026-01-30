@@ -13,52 +13,54 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [AdminStatsResult](#interface-adminstatsresult) | [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageCreateActionResult](#interface-storagecreateactionresult) |
-| [ArcConfig](#interface-arcconfig) | [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) |
-| [ArcMinerGetTxData](#interface-arcminergettxdata) | [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) |
-| [AuthId](#interface-authid) | [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageFeeModel](#interface-storagefeemodel) |
-| [AuthPayload](#interface-authpayload) | [GetHeaderByteFileLinksResult](#interface-getheaderbytefilelinksresult) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) |
-| [BaseBlockHeader](#interface-baseblockheader) | [GetMerklePathResult](#interface-getmerklepathresult) | [StorageIdbOptions](#interface-storageidboptions) |
-| [BitailsConfig](#interface-bitailsconfig) | [GetRawTxResult](#interface-getrawtxresult) | [StorageIdbSchema](#interface-storageidbschema) |
-| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageIdentity](#interface-storageidentity) |
-| [BlockHeader](#interface-blockheader) | [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) |
-| [BsvExchangeRate](#interface-bsvexchangerate) | [GetScriptHashHistory](#interface-getscripthashhistory) | [StorageProcessActionArgs](#interface-storageprocessactionargs) |
-| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [StorageProcessActionResults](#interface-storageprocessactionresults) |
-| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [StorageProvenOrReq](#interface-storageprovenorreq) |
-| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [StorageProviderOptions](#interface-storageprovideroptions) |
-| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [GetUtxoStatusResult](#interface-getutxostatusresult) | [StorageReaderOptions](#interface-storagereaderoptions) |
-| [BulkIngestorApi](#interface-bulkingestorapi) | [GroupedPermissionRequest](#interface-groupedpermissionrequest) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) |
-| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [GroupedPermissions](#interface-groupedpermissions) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) |
-| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [HeightRangeApi](#interface-heightrangeapi) | [SyncChunk](#interface-syncchunk) |
-| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [HeightRanges](#interface-heightranges) | [SyncError](#interface-syncerror) |
-| [BulkStorageApi](#interface-bulkstorageapi) | [KeyPair](#interface-keypair) | [SyncMap](#interface-syncmap) |
-| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [KeyPairAddress](#interface-keypairaddress) | [TableCertificate](#interface-tablecertificate) |
-| [BulkSyncResult](#interface-bulksyncresult) | [ListActionsSpecOp](#interface-listactionsspecop) | [TableCertificateField](#interface-tablecertificatefield) |
-| [CertOpsWallet](#interface-certopswallet) | [ListOutputsSpecOp](#interface-listoutputsspecop) | [TableCertificateX](#interface-tablecertificatex) |
-| [Certifier](#interface-certifier) | [LiveBlockHeader](#interface-liveblockheader) | [TableCommission](#interface-tablecommission) |
-| [ChaintracksApi](#interface-chaintracksapi) | [LiveIngestorApi](#interface-liveingestorapi) | [TableMonitorEvent](#interface-tablemonitorevent) |
-| [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) | [TableOutput](#interface-tableoutput) |
-| [ChaintracksChainTrackerOptions](#interface-chaintrackschaintrackeroptions) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) | [TableOutputBasket](#interface-tableoutputbasket) |
-| [ChaintracksClientApi](#interface-chaintracksclientapi) | [MonitorOptions](#interface-monitoroptions) | [TableOutputTag](#interface-tableoutputtag) |
-| [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [OutPoint](#interface-outpoint) | [TableOutputTagMap](#interface-tableoutputtagmap) |
-| [ChaintracksFsApi](#interface-chaintracksfsapi) | [Paged](#interface-paged) | [TableOutputX](#interface-tableoutputx) |
-| [ChaintracksInfoApi](#interface-chaintracksinfoapi) | [PendingSignAction](#interface-pendingsignaction) | [TableProvenTx](#interface-tableproventx) |
-| [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [PendingStorageInput](#interface-pendingstorageinput) | [TableProvenTxReq](#interface-tableproventxreq) |
-| [ChaintracksOptions](#interface-chaintracksoptions) | [PermissionRequest](#interface-permissionrequest) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
-| [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [PermissionToken](#interface-permissiontoken) | [TableSettings](#interface-tablesettings) |
-| [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableSyncState](#interface-tablesyncstate) |
-| [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [PermissionsModule](#interface-permissionsmodule) | [TableTransaction](#interface-tabletransaction) |
-| [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [PostBeefResult](#interface-postbeefresult) | [TableTxLabel](#interface-tabletxlabel) |
-| [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableTxLabelMap](#interface-tabletxlabelmap) |
-| [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableUser](#interface-tableuser) |
-| [ChaintracksStorageIdbOptions](#interface-chaintracksstorageidboptions) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TaskPurgeParams](#interface-taskpurgeparams) |
-| [ChaintracksStorageIdbSchema](#interface-chaintracksstorageidbschema) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TrustSettings](#interface-trustsettings) |
-| [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [TrxToken](#interface-trxtoken) |
-| [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) | [PostTxsResult](#interface-posttxsresult) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
-| [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [TxScriptOffsets](#interface-txscriptoffsets) |
-| [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) | [Profile](#interface-profile) | [UMPToken](#interface-umptoken) |
-| [CommitNewTxResults](#interface-commitnewtxresults) | [ProvenOrRawTx](#interface-provenorrawtx) | [UMPTokenInteractor](#interface-umptokeninteractor) |
-| [CompleteAuthResponse](#interface-completeauthresponse) | [ProvenTransactionStatus](#interface-proventransactionstatus) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
+| [AdminStatsResult](#interface-adminstatsresult) | [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StatusForTxidResult](#interface-statusfortxidresult) |
+| [ArcConfig](#interface-arcconfig) | [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageAdminStats](#interface-storageadminstats) |
+| [ArcMinerGetTxData](#interface-arcminergettxdata) | [GenerateChangeSdkOutput](#interface-generatechangesdkoutput) | [StorageCreateActionResult](#interface-storagecreateactionresult) |
+| [AuthId](#interface-authid) | [GenerateChangeSdkParams](#interface-generatechangesdkparams) | [StorageCreateTransactionSdkInput](#interface-storagecreatetransactionsdkinput) |
+| [AuthPayload](#interface-authpayload) | [GenerateChangeSdkResult](#interface-generatechangesdkresult) | [StorageCreateTransactionSdkOutput](#interface-storagecreatetransactionsdkoutput) |
+| [BaseBlockHeader](#interface-baseblockheader) | [GenerateChangeSdkStorageChange](#interface-generatechangesdkstoragechange) | [StorageFeeModel](#interface-storagefeemodel) |
+| [BitailsConfig](#interface-bitailsconfig) | [GetHeaderByteFileLinksResult](#interface-getheaderbytefilelinksresult) | [StorageGetBeefOptions](#interface-storagegetbeefoptions) |
+| [BitailsMerkleProof](#interface-bitailsmerkleproof) | [GetMerklePathResult](#interface-getmerklepathresult) | [StorageIdbOptions](#interface-storageidboptions) |
+| [BlockHeader](#interface-blockheader) | [GetRawTxResult](#interface-getrawtxresult) | [StorageIdbSchema](#interface-storageidbschema) |
+| [BsvExchangeRate](#interface-bsvexchangerate) | [GetReqsAndBeefDetail](#interface-getreqsandbeefdetail) | [StorageIdentity](#interface-storageidentity) |
+| [BulkFileDataManagerMergeResult](#interface-bulkfiledatamanagermergeresult) | [GetReqsAndBeefResult](#interface-getreqsandbeefresult) | [StorageInternalizeActionResult](#interface-storageinternalizeactionresult) |
+| [BulkFileDataManagerOptions](#interface-bulkfiledatamanageroptions) | [GetScriptHashHistory](#interface-getscripthashhistory) | [StorageProcessActionArgs](#interface-storageprocessactionargs) |
+| [BulkHeaderFileInfo](#interface-bulkheaderfileinfo) | [GetScriptHashHistoryResult](#interface-getscripthashhistoryresult) | [StorageProcessActionResults](#interface-storageprocessactionresults) |
+| [BulkHeaderFilesInfo](#interface-bulkheaderfilesinfo) | [GetStatusForTxidsResult](#interface-getstatusfortxidsresult) | [StorageProvenOrReq](#interface-storageprovenorreq) |
+| [BulkIngestorApi](#interface-bulkingestorapi) | [GetUtxoStatusDetails](#interface-getutxostatusdetails) | [StorageProviderOptions](#interface-storageprovideroptions) |
+| [BulkIngestorBaseOptions](#interface-bulkingestorbaseoptions) | [GetUtxoStatusResult](#interface-getutxostatusresult) | [StorageReaderOptions](#interface-storagereaderoptions) |
+| [BulkIngestorCDNOptions](#interface-bulkingestorcdnoptions) | [GroupedPermissionRequest](#interface-groupedpermissionrequest) | [StorageReaderWriterOptions](#interface-storagereaderwriteroptions) |
+| [BulkIngestorWhatsOnChainOptions](#interface-bulkingestorwhatsonchainoptions) | [GroupedPermissions](#interface-groupedpermissions) | [StorageSyncReaderOptions](#interface-storagesyncreaderoptions) |
+| [BulkStorageApi](#interface-bulkstorageapi) | [HeightRangeApi](#interface-heightrangeapi) | [SyncChunk](#interface-syncchunk) |
+| [BulkStorageBaseOptions](#interface-bulkstoragebaseoptions) | [HeightRanges](#interface-heightranges) | [SyncError](#interface-syncerror) |
+| [BulkSyncResult](#interface-bulksyncresult) | [KeyPair](#interface-keypair) | [SyncMap](#interface-syncmap) |
+| [CertOpsWallet](#interface-certopswallet) | [KeyPairAddress](#interface-keypairaddress) | [TableCertificate](#interface-tablecertificate) |
+| [Certifier](#interface-certifier) | [ListActionsSpecOp](#interface-listactionsspecop) | [TableCertificateField](#interface-tablecertificatefield) |
+| [ChaintracksApi](#interface-chaintracksapi) | [ListOutputsSpecOp](#interface-listoutputsspecop) | [TableCertificateX](#interface-tablecertificatex) |
+| [ChaintracksAppendableFileApi](#interface-chaintracksappendablefileapi) | [LiveBlockHeader](#interface-liveblockheader) | [TableCommission](#interface-tablecommission) |
+| [ChaintracksChainTrackerOptions](#interface-chaintrackschaintrackeroptions) | [LiveIngestorApi](#interface-liveingestorapi) | [TableMonitorEvent](#interface-tablemonitorevent) |
+| [ChaintracksClientApi](#interface-chaintracksclientapi) | [LiveIngestorBaseOptions](#interface-liveingestorbaseoptions) | [TableOutput](#interface-tableoutput) |
+| [ChaintracksFetchApi](#interface-chaintracksfetchapi) | [LiveIngestorWhatsOnChainOptions](#interface-liveingestorwhatsonchainoptions) | [TableOutputBasket](#interface-tableoutputbasket) |
+| [ChaintracksFsApi](#interface-chaintracksfsapi) | [MonitorOptions](#interface-monitoroptions) | [TableOutputTag](#interface-tableoutputtag) |
+| [ChaintracksInfoApi](#interface-chaintracksinfoapi) | [OutPoint](#interface-outpoint) | [TableOutputTagMap](#interface-tableoutputtagmap) |
+| [ChaintracksManagementApi](#interface-chaintracksmanagementapi) | [Paged](#interface-paged) | [TableOutputX](#interface-tableoutputx) |
+| [ChaintracksOptions](#interface-chaintracksoptions) | [PendingSignAction](#interface-pendingsignaction) | [TableProvenTx](#interface-tableproventx) |
+| [ChaintracksPackageInfoApi](#interface-chaintrackspackageinfoapi) | [PendingStorageInput](#interface-pendingstorageinput) | [TableProvenTxReq](#interface-tableproventxreq) |
+| [ChaintracksReadableFileApi](#interface-chaintracksreadablefileapi) | [PermissionRequest](#interface-permissionrequest) | [TableProvenTxReqDynamics](#interface-tableproventxreqdynamics) |
+| [ChaintracksServiceClientOptions](#interface-chaintracksserviceclientoptions) | [PermissionToken](#interface-permissiontoken) | [TableSettings](#interface-tablesettings) |
+| [ChaintracksStorageApi](#interface-chaintracksstorageapi) | [PermissionsManagerConfig](#interface-permissionsmanagerconfig) | [TableSyncState](#interface-tablesyncstate) |
+| [ChaintracksStorageBaseOptions](#interface-chaintracksstoragebaseoptions) | [PermissionsModule](#interface-permissionsmodule) | [TableTransaction](#interface-tabletransaction) |
+| [ChaintracksStorageBulkFileApi](#interface-chaintracksstoragebulkfileapi) | [PostBeefResult](#interface-postbeefresult) | [TableTxLabel](#interface-tabletxlabel) |
+| [ChaintracksStorageIdbOptions](#interface-chaintracksstorageidboptions) | [PostBeefResultForTxidApi](#interface-postbeefresultfortxidapi) | [TableTxLabelMap](#interface-tabletxlabelmap) |
+| [ChaintracksStorageIdbSchema](#interface-chaintracksstorageidbschema) | [PostReqsToNetworkDetails](#interface-postreqstonetworkdetails) | [TableUser](#interface-tableuser) |
+| [ChaintracksStorageIngestApi](#interface-chaintracksstorageingestapi) | [PostReqsToNetworkResult](#interface-postreqstonetworkresult) | [TaskPurgeParams](#interface-taskpurgeparams) |
+| [ChaintracksStorageNoDbOptions](#interface-chaintracksstoragenodboptions) | [PostTxResultForTxid](#interface-posttxresultfortxid) | [TrustSettings](#interface-trustsettings) |
+| [ChaintracksStorageQueryApi](#interface-chaintracksstoragequeryapi) | [PostTxResultForTxidError](#interface-posttxresultfortxiderror) | [TrxToken](#interface-trxtoken) |
+| [ChaintracksWritableFileApi](#interface-chaintrackswritablefileapi) | [PostTxsResult](#interface-posttxsresult) | [TscMerkleProofApi](#interface-tscmerkleproofapi) |
+| [CommitNewTxResults](#interface-commitnewtxresults) | [ProcessSyncChunkResult](#interface-processsyncchunkresult) | [TxScriptOffsets](#interface-txscriptoffsets) |
+| [CompleteAuthResponse](#interface-completeauthresponse) | [Profile](#interface-profile) | [UMPToken](#interface-umptoken) |
+| [CounterpartyPermissionRequest](#interface-counterpartypermissionrequest) | [ProvenOrRawTx](#interface-provenorrawtx) | [UMPTokenInteractor](#interface-umptokeninteractor) |
+| [CounterpartyPermissions](#interface-counterpartypermissions) | [ProvenTransactionStatus](#interface-proventransactionstatus) | [UpdateProvenTxReqWithNewProvenTxArgs](#interface-updateproventxreqwithnewproventxargs) |
 | [CreateActionResultX](#interface-createactionresultx) | [ProvenTxFromTxidResult](#interface-proventxfromtxidresult) | [UpdateProvenTxReqWithNewProvenTxResult](#interface-updateproventxreqwithnewproventxresult) |
 | [DeactivedHeader](#interface-deactivedheader) | [ProvenTxReqHistory](#interface-proventxreqhistory) | [ValidateGenerateChangeSdkParamsResult](#interface-validategeneratechangesdkparamsresult) |
 | [EntitySyncMap](#interface-entitysyncmap) | [ProvenTxReqHistorySummaryApi](#interface-proventxreqhistorysummaryapi) | [VerifyAndRepairBeefResult](#interface-verifyandrepairbeefresult) |
@@ -85,8 +87,6 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [FindTxLabelsArgs](#interface-findtxlabelsargs) | [SetupWalletIdbArgs](#interface-setupwalletidbargs) | [WocGetHeadersHeader](#interface-wocgetheadersheader) |
 | [FindUsersArgs](#interface-findusersargs) | [SignActionResultX](#interface-signactionresultx) | [WocHeader](#interface-wocheader) |
 | [GenerateChangeSdkChangeInput](#interface-generatechangesdkchangeinput) | [StartAuthResponse](#interface-startauthresponse) | [XValidCreateActionOutput](#interface-xvalidcreateactionoutput) |
-| [GenerateChangeSdkChangeOutput](#interface-generatechangesdkchangeoutput) | [StatusForTxidResult](#interface-statusfortxidresult) |  |
-| [GenerateChangeSdkInput](#interface-generatechangesdkinput) | [StorageAdminStats](#interface-storageadminstats) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -813,7 +813,7 @@ enableCache: boolean
 
 ###### Property idleWait
 
-Maximum msces of "normal" pause with no new data arriving.
+Maximum msecs of "normal" pause with no new data arriving.
 
 ```ts
 idleWait: number | undefined
@@ -2309,6 +2309,38 @@ export interface CompleteAuthResponse {
     success: boolean;
     message?: string;
     presentationKey?: string;
+}
+```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: CounterpartyPermissionRequest
+
+```ts
+export interface CounterpartyPermissionRequest {
+    originator: string;
+    requestID: string;
+    counterparty: PubKeyHex;
+    counterpartyLabel?: string;
+    permissions: CounterpartyPermissions;
+}
+```
+
+See also: [CounterpartyPermissions](./client.md#interface-counterpartypermissions)
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Interface: CounterpartyPermissions
+
+```ts
+export interface CounterpartyPermissions {
+    description?: string;
+    protocols: Array<{
+        protocolID: WalletProtocol;
+        description: string;
+    }>;
 }
 ```
 
@@ -7230,10 +7262,11 @@ export interface WalletPermissionsManagerCallbacks {
     onCertificateAccessRequested?: PermissionEventHandler[];
     onSpendingAuthorizationRequested?: PermissionEventHandler[];
     onGroupedPermissionRequested?: GroupedPermissionEventHandler[];
+    onCounterpartyPermissionRequested?: CounterpartyPermissionEventHandler[];
 }
 ```
 
-See also: [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [PermissionEventHandler](./client.md#type-permissioneventhandler)
+See also: [CounterpartyPermissionEventHandler](./client.md#type-counterpartypermissioneventhandler), [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [PermissionEventHandler](./client.md#type-permissioneventhandler)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -13184,7 +13217,7 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     async listCertificates(auth: AuthId, args: Validation.ValidListCertificatesArgs): Promise<ListCertificatesResult> 
     async verifyKnownValidTransaction(txid: string, trx?: TrxToken): Promise<boolean> 
     async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef> 
-    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef | undefined> 
+    async getValidBeefForTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number, chainTracker?: ChainTracker, skipInvalidProofs?: boolean): Promise<Beef | undefined> 
     async getBeefForTransaction(txid: string, options: StorageGetBeefOptions): Promise<Beef> 
     async findMonitorEventById(id: number, trx?: TrxToken): Promise<TableMonitorEvent | undefined> 
     async relinquishCertificate(auth: AuthId, args: RelinquishCertificateArgs): Promise<number> 
@@ -13244,6 +13277,18 @@ For the txids with reqs and status still ready to send construct a single merged
 async getReqsAndBeefToShareWithWorld(txids: string[], knownTxids: string[], trx?: TrxToken): Promise<GetReqsAndBeefResult> 
 ```
 See also: [GetReqsAndBeefResult](./storage.md#interface-getreqsandbeefresult), [TrxToken](./client.md#interface-trxtoken)
+
+###### Method getValidBeefForKnownTxid
+
+Pulls data from storage to build a valid beef for a txid.
+
+Optionally merges the data into an existing beef.
+Optionally requires a minimum number of proof levels.
+
+```ts
+async getValidBeefForKnownTxid(txid: string, mergeToBeef?: Beef, trustSelf?: TrustSelf, knownTxids?: string[], trx?: TrxToken, requiredLevels?: number): Promise<Beef> 
+```
+See also: [TrxToken](./client.md#interface-trxtoken)
 
 ###### Method updateProvenTxReqWithNewProvenTx
 
@@ -14861,7 +14906,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export class WalletPermissionsManager implements WalletInterface {
     constructor(underlyingWallet: WalletInterface, adminOriginator: string, config: PermissionsManagerConfig = {}) 
-    public bindCallback(eventName: keyof WalletPermissionsManagerCallbacks, handler: PermissionEventHandler | GroupedPermissionEventHandler): number 
+    public bindCallback(eventName: keyof WalletPermissionsManagerCallbacks, handler: PermissionEventHandler | GroupedPermissionEventHandler | CounterpartyPermissionEventHandler): number 
     public unbindCallback(eventName: keyof WalletPermissionsManagerCallbacks, reference: number | Function): boolean 
     public async grantPermission(params: {
         requestID: string;
@@ -14876,6 +14921,13 @@ export class WalletPermissionsManager implements WalletInterface {
         expiry?: number;
     }): Promise<void> 
     public async denyGroupedPermission(requestID: string): Promise<void> 
+    public async dismissGroupedPermission(requestID: string): Promise<void> 
+    public async grantCounterpartyPermission(params: {
+        requestID: string;
+        granted: Partial<CounterpartyPermissions>;
+        expiry?: number;
+    }): Promise<void> 
+    public async denyCounterpartyPermission(requestID: string): Promise<void> 
     public async ensureProtocolPermission({ originator, privileged, protocolID, counterparty, reason, seekPermission = true, usageType }: {
         originator: string;
         privileged: boolean;
@@ -14994,7 +15046,7 @@ export class WalletPermissionsManager implements WalletInterface {
 }
 ```
 
-See also: [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [GroupedPermissions](./client.md#interface-groupedpermissions), [PermissionEventHandler](./client.md#type-permissioneventhandler), [PermissionToken](./client.md#interface-permissiontoken), [PermissionsManagerConfig](./client.md#interface-permissionsmanagerconfig), [WalletPermissionsManagerCallbacks](./client.md#interface-walletpermissionsmanagercallbacks), [createAction](./storage.md#function-createaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [proveCertificate](./client.md#function-provecertificate), [signAction](./client.md#function-signaction)
+See also: [CounterpartyPermissionEventHandler](./client.md#type-counterpartypermissioneventhandler), [CounterpartyPermissions](./client.md#interface-counterpartypermissions), [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [GroupedPermissions](./client.md#interface-groupedpermissions), [PermissionEventHandler](./client.md#type-permissioneventhandler), [PermissionToken](./client.md#interface-permissiontoken), [PermissionsManagerConfig](./client.md#interface-permissionsmanagerconfig), [WalletPermissionsManagerCallbacks](./client.md#interface-walletpermissionsmanagercallbacks), [createAction](./storage.md#function-createaction), [internalizeAction](./storage.md#function-internalizeaction), [listActions](./storage.md#function-listactions), [listCertificates](./storage.md#function-listcertificates), [listOutputs](./storage.md#function-listoutputs), [proveCertificate](./client.md#function-provecertificate), [signAction](./client.md#function-signaction)
 
 ###### Constructor
 
@@ -15019,9 +15071,9 @@ Argument Details
 Binds a callback function to a named event, such as `onProtocolPermissionRequested`.
 
 ```ts
-public bindCallback(eventName: keyof WalletPermissionsManagerCallbacks, handler: PermissionEventHandler | GroupedPermissionEventHandler): number 
+public bindCallback(eventName: keyof WalletPermissionsManagerCallbacks, handler: PermissionEventHandler | GroupedPermissionEventHandler | CounterpartyPermissionEventHandler): number 
 ```
-See also: [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [PermissionEventHandler](./client.md#type-permissioneventhandler), [WalletPermissionsManagerCallbacks](./client.md#interface-walletpermissionsmanagercallbacks)
+See also: [CounterpartyPermissionEventHandler](./client.md#type-counterpartypermissioneventhandler), [GroupedPermissionEventHandler](./client.md#type-groupedpermissioneventhandler), [PermissionEventHandler](./client.md#type-permissioneventhandler), [WalletPermissionsManagerCallbacks](./client.md#interface-walletpermissionsmanagercallbacks)
 
 Returns
 
@@ -18256,7 +18308,8 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 
 | | | |
 | --- | --- | --- |
-| [Chain](#type-chain) | [GroupedPermissionEventHandler](#type-groupedpermissioneventhandler) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |
+| [Chain](#type-chain) | [GetUtxoStatusService](#type-getutxostatusservice) | [ReqHistoryNote](#type-reqhistorynote) |
+| [CounterpartyPermissionEventHandler](#type-counterpartypermissioneventhandler) | [GroupedPermissionEventHandler](#type-groupedpermissioneventhandler) | [ReviewActionResultStatus](#type-reviewactionresultstatus) |
 | [DBType](#type-dbtype) | [HeaderListener](#type-headerlistener) | [ScriptHashFormat](#type-scripthashformat) |
 | [EnqueueHandler](#type-enqueuehandler) | [InsertHeaderResult](#type-insertheaderresult) | [ServicesCallHistory](#type-servicescallhistory) |
 | [EntityStorage](#type-entitystorage) | [MonitorStorage](#type-monitorstorage) | [StopListenerToken](#type-stoplistenertoken) |
@@ -18266,7 +18319,6 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 | [GetScriptHashHistoryService](#type-getscripthashhistoryservice) | [PostTxsService](#type-posttxsservice) | [TransactionStatus](#type-transactionstatus) |
 | [GetStatusForTxidsService](#type-getstatusfortxidsservice) | [ProvenTxReqStatus](#type-proventxreqstatus) | [UpdateFiatExchangeRateService](#type-updatefiatexchangerateservice) |
 | [GetUtxoStatusOutputFormat](#type-getutxostatusoutputformat) | [ReorgListener](#type-reorglistener) | [WalletLoggerLevel](#type-walletloggerlevel) |
-| [GetUtxoStatusService](#type-getutxostatusservice) | [ReqHistoryNote](#type-reqhistorynote) |  |
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -18277,6 +18329,17 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ```ts
 export type Chain = "main" | "test"
 ```
+
+Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
+
+---
+##### Type: CounterpartyPermissionEventHandler
+
+```ts
+export type CounterpartyPermissionEventHandler = (request: CounterpartyPermissionRequest) => void | Promise<void>
+```
+
+See also: [CounterpartyPermissionRequest](./client.md#interface-counterpartypermissionrequest)
 
 Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](#functions), [Types](#types), [Variables](#variables)
 
@@ -19613,6 +19676,18 @@ validBulkHeaderFiles: BulkHeaderFileInfo[] = [
         prevHash: "00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087",
         sourceUrl: "https://cdn.projectbabbage.com/blockheaders",
         validated: true
+    },
+    {
+        chain: "main",
+        count: 31772,
+        fileHash: "NuVsRUrI5QnjILbYy4LS3A/Udl6PH/m8Y9uVguEsekM=",
+        fileName: "mainNet_9.headers",
+        firstHeight: 900000,
+        lastChainWork: "0000000000000000000000000000000000000000016ab16bb9b31430588788d3",
+        lastHash: "0000000000000000024a2f1caef4b0ffdc1a036b09f9ed7f48b538f619f32ef2",
+        prevChainWork: "000000000000000000000000000000000000000001664db1f2d50327928007e0",
+        prevHash: "00000000000000000e7dcc27c06ee353bd37260b2e7e664314c204f0324a5087",
+        sourceUrl: "https://cdn.projectbabbage.com/blockheaders"
     }
 ]
 ```

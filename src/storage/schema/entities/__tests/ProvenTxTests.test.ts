@@ -168,6 +168,7 @@ describe('ProvenTx class method tests', () => {
   })
 
   test('1_fromTxid: txid with no rawTx available', async () => {
+    if (_tu.noEnv('test')) return
     const ctx = ctxs[0]
     const txid = 'missing-txid'
 
@@ -182,6 +183,7 @@ describe('ProvenTx class method tests', () => {
   })
 
   test('2_fromTxid: txid with no Merkle proof available', async () => {
+    if (_tu.noEnv('test')) return
     const ctx = ctxs[0]
     const txid = 'no-merkle-proof-txid'
     const services: sdk.WalletServices = ctx.services

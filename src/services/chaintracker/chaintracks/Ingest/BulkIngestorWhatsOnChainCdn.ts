@@ -11,7 +11,7 @@ import { WhatsOnChainServices, WhatsOnChainServicesOptions } from './WhatsOnChai
 
 export interface BulkIngestorWhatsOnChainOptions extends BulkIngestorBaseOptions, WhatsOnChainServicesOptions {
   /**
-   * Maximum msces of "normal" pause with no new data arriving.
+   * Maximum msecs of "normal" pause with no new data arriving.
    */
   idleWait: number | undefined
   /**
