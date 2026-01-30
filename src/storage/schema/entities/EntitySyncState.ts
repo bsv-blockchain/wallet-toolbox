@@ -35,6 +35,7 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
         updated_at: now,
         userId: 0,
         storageIdentityKey: '',
+        deviceId: '',
         storageName: '',
         init: false,
         refNum: '',
@@ -62,14 +63,16 @@ export class EntitySyncState extends EntityBase<TableSyncState> {
   static async fromStorage(
     storage: WalletStorageSync,
     userIdentityKey: string,
-    remoteSettings: TableSettings
+    remoteSettings: TableSettings,
+    deviceId?: string
   ): Promise<EntitySyncState> {
     const { user } = verifyTruthy(await storage.findOrInsertUser(userIdentityKey))
     let { syncState: api } = verifyTruthy(
       await storage.findOrInsertSyncStateAuth(
         { userId: user.userId, identityKey: userIdentityKey },
         remoteSettings.storageIdentityKey,
-        remoteSettings.storageName
+        remoteSettings.storageName,
+        deviceId
       )
     )
     if (!api.syncMap || api.syncMap === '{}') api.syncMap = JSON.stringify(createSyncMap())

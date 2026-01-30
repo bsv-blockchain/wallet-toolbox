@@ -119,7 +119,8 @@ export interface WalletStorageSync extends WalletStorageWriter {
   findOrInsertSyncStateAuth(
     auth: AuthId,
     storageIdentityKey: string,
-    storageName: string
+    storageName: string,
+    deviceId?: string
   ): Promise<{ syncState: TableSyncState; isNew: boolean }>
 
   /**
@@ -489,6 +490,14 @@ export interface RequestSyncChunkArgs {
    * The identity of whose data is being requested
    */
   identityKey: string
+
+  /**
+   * Unique identifier for the client device. Used to isolate SyncState per device,
+   * preventing ID mapping corruption when multiple devices share the same wallet identity.
+   * Empty string for backwards compatibility with existing clients.
+   */
+  deviceId?: string
+
   /**
    * The max updated_at time received from the storage service receiving the request.
    * Will be undefiend if this is the first request or if no data was previously sync'ed.

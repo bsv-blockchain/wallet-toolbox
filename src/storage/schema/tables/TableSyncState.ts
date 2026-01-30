@@ -6,6 +6,7 @@ export interface TableSyncState extends sdk.EntityTimeStamp {
   syncStateId: number
   userId: number
   storageIdentityKey: string
+  deviceId?: string
   storageName: string
   status: sdk.SyncStatus
   init: boolean
