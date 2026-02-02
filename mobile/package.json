@@ -1,6 +1,6 @@
 {
   "name": "@bopen-io/wallet-toolbox-mobile",
-  "version": "1.7.22-idb-fix.2",
+  "version": "1.7.22-idb-fix.3",
   "description": "Client only Wallet Storage",
   "main": "./out/src/index.mobile.js",
   "types": "./out/src/index.mobile.d.ts",
