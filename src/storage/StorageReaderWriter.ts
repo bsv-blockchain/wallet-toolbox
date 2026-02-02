@@ -345,10 +345,9 @@ export abstract class StorageReaderWriter extends StorageReader {
   async findOrInsertSyncStateAuth(
     auth: AuthId,
     storageIdentityKey: string,
-    storageName: string,
-    deviceId?: string
+    storageName: string
   ): Promise<{ syncState: TableSyncState; isNew: boolean }> {
-    const partial = { userId: auth.userId!, storageIdentityKey, storageName, deviceId: deviceId ?? '' }
+    const partial = { userId: auth.userId!, storageIdentityKey, storageName }
     for (let retry = 0; ; retry++) {
       try {
         const now = new Date()

@@ -55,17 +55,15 @@ import { EntityTimeStamp } from '../../sdk/types'
  */
 export class StorageClient implements WalletStorageProvider {
   readonly endpointUrl: string
-  readonly deviceId: string
   private readonly authClient: AuthFetch
   private nextId = 1
 
   // Track ephemeral (in-memory) "settings" if you wish to align with isAvailable() checks
   public settings?: TableSettings
 
-  constructor(wallet: WalletInterface, endpointUrl: string, deviceId?: string) {
+  constructor(wallet: WalletInterface, endpointUrl: string) {
     this.authClient = new AuthFetch(wallet)
     this.endpointUrl = endpointUrl
-    this.deviceId = deviceId ?? ''
   }
 
   /**
@@ -275,14 +273,12 @@ export class StorageClient implements WalletStorageProvider {
   async findOrInsertSyncStateAuth(
     auth: AuthId,
     storageIdentityKey: string,
-    storageName: string,
-    deviceId?: string
+    storageName: string
   ): Promise<{ syncState: TableSyncState; isNew: boolean }> {
     const r = await this.rpcCall<{ syncState: TableSyncState; isNew: boolean }>('findOrInsertSyncStateAuth', [
       auth,
       storageIdentityKey,
-      storageName,
-      deviceId ?? this.deviceId
+      storageName
     ])
     r.syncState = this.validateEntity(r.syncState, ['when'])
     return r

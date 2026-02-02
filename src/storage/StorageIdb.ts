@@ -1928,7 +1928,6 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
         if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.storageIdentityKey && r.storageIdentityKey !== args.partial.storageIdentityKey) continue
-        if (args.partial.deviceId !== undefined && (r.deviceId ?? '') !== args.partial.deviceId) continue
         if (args.partial.storageName && r.storageName !== args.partial.storageName) continue
         if (args.partial.status && r.status !== args.partial.status) continue
         if (args.partial.init !== undefined && r.init !== args.partial.init) continue

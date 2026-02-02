@@ -73,25 +73,6 @@ export class KnexMigrations implements MigrationSource<string> {
       }
     }
 
-    migrations['2025-10-30-001 add deviceId to sync_states'] = {
-      async up(knex) {
-        const hasColumn = await knex.schema.hasColumn('sync_states', 'deviceId')
-        if (!hasColumn) {
-          await knex.schema.alterTable('sync_states', table => {
-            table.string('deviceId', 64).notNullable().defaultTo('')
-          })
-        }
-      },
-      async down(knex) {
-        const hasColumn = await knex.schema.hasColumn('sync_states', 'deviceId')
-        if (hasColumn) {
-          await knex.schema.alterTable('sync_states', table => {
-            table.dropColumn('deviceId')
-          })
-        }
-      }
-    }
-
     migrations['2025-10-13-001 add outputs spendable index'] = {
       async up(knex) {
         await knex.schema.alterTable('outputs', table => {
@@ -414,7 +395,6 @@ export class KnexMigrations implements MigrationSource<string> {
           table.increments('syncStateId')
           table.integer('userId').unsigned().notNullable().references('userId').inTable('users')
           table.string('storageIdentityKey', 130).notNullable().defaultTo('')
-          table.string('deviceId', 64).notNullable().defaultTo('')
           table.string('storageName').notNullable()
           table.string('status').notNullable().defaultTo('unknown')
           table.boolean('init').notNullable().defaultTo(false)
