@@ -11,7 +11,7 @@ export class ChaintracksStorageMemory extends ChaintracksStorageKnex {
   static createStorageMemoryOptions(chain: Chain) {
     const options: ChaintracksStorageMemoryOptions = {
       ...ChaintracksStorageKnex.createStorageKnexOptions(chain),
-      sqliteClient: 'sqlite3'
+      sqliteClient: 'better-sqlite3'
     }
     return options
   }
@@ -21,7 +21,7 @@ export class ChaintracksStorageMemory extends ChaintracksStorageKnex {
       throw new Error(
         'knex will be automatically configured from the sqliteClient property setting. Must be undefined.'
       )
-    options.knex = knex({ client: options.sqliteClient || 'sqlite3', connection: ':memory:', useNullAsDefault: true })
+    options.knex = knex({ client: options.sqliteClient || 'better-sqlite3', connection: ':memory:', useNullAsDefault: true })
 
     super(options)
   }

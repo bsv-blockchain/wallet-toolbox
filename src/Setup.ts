@@ -400,7 +400,7 @@ DEV_KEYS = '{
    */
   static createSQLiteKnex(filename: string): Knex {
     const config: Knex.Config = {
-      client: 'sqlite3',
+      client: 'better-sqlite3',
       connection: { filename },
       useNullAsDefault: true
     }

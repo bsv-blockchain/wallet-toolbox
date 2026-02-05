@@ -483,7 +483,8 @@ export async function determineDBType(knex: Knex<any, any[]>): Promise<DBType> {
     return dbtype
   } catch (eu: unknown) {
     const e = WalletError.fromUnknown(eu)
-    if (e.code === 'SQLITE_ERROR') return 'SQLite'
+    // Check for SQLite errors from both node-sqlite3 (SQLITE_ERROR) and better-sqlite3 (SqliteError)
+    if (e.code === 'SQLITE_ERROR' || e.code === 'SqliteError') return 'SQLite'
     throw new WERR_NOT_IMPLEMENTED(`Attempting to create database on unsuported engine.`)
   }
 }

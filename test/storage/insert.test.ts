@@ -32,6 +32,7 @@ describe('insert tests', () => {
     // Setting reuseExisting=false (4th param) ensures each test run gets a fresh database.
     const localSQLiteFile = await _tu.newTmpFile('inserttest.sqlite', false, false, false)
     const knexSQLite = _tu.createLocalSQLite(localSQLiteFile)
+
     storages.push(
       new StorageKnex({
         ...StorageKnex.defaultOptions(),
@@ -54,6 +55,30 @@ describe('insert tests', () => {
     for (const storage of storages) {
       await storage.dropAllData()
       await storage.migrate('insert tests', '1'.repeat(64))
+    }
+
+    // Explicitly enable foreign keys AFTER all setup operations, since dropAllData/migrate
+    // might reset the connection state. This is a belt and suspenders approach.
+    await knexSQLite.raw('PRAGMA foreign_keys = ON')
+  })
+
+  // Re-enable foreign keys before each test to ensure constraint checking works
+  // This is needed because the connection pool might reset the pragma
+  beforeEach(async () => {
+    for (const storage of storages) {
+      // Cast to StorageKnex to access knex property
+      const sk = storage as StorageKnex
+      if (sk.knex) {
+        try {
+          await sk.knex.raw('PRAGMA foreign_keys = ON')
+          const fkStatus = await sk.knex.raw('PRAGMA foreign_keys')
+          if (fkStatus[0]?.foreign_keys !== 1) {
+            console.error('WARNING: Foreign keys not enabled after PRAGMA:', fkStatus)
+          }
+        } catch (e) {
+          // Ignore errors for non-SQLite databases
+        }
+      }
     }
   })
 

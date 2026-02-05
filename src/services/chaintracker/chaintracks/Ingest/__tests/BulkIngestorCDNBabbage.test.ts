@@ -37,7 +37,7 @@ async function testUpdateLocalCache(chain: Chain, test: string) {
   const cdn = new BulkIngestorCDNBabbage(bulkCDNOptions)
 
   const localSqlite: Knex.Config = {
-    client: 'sqlite3',
+    client: 'better-sqlite3',
     connection: { filename: fs.pathJoin(rootFolder, `BulkIngestorCDNBabbage.test_${test}.sqlite`) },
     useNullAsDefault: true
   }

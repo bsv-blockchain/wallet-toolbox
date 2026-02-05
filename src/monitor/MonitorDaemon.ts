@@ -54,7 +54,7 @@ export class MonitorDaemon {
 
       if (a.sqliteFilename) {
         a.knexConfig = {
-          client: 'sqlite3',
+          client: 'better-sqlite3',
           connection: { filename: a.sqliteFilename },
           useNullAsDefault: true
         }

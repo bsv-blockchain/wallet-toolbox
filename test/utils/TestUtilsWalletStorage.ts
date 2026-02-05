@@ -592,9 +592,67 @@ export abstract class TestUtilsWalletStorage {
 
   static createLocalSQLite(filename: string): Knex {
     const config: Knex.Config = {
-      client: 'sqlite3',
+      client: 'better-sqlite3',
       connection: { filename },
-      useNullAsDefault: true
+      useNullAsDefault: true,
+      pool: {
+        min: 1,
+        max: 1,
+        // Keep the connection alive to ensure foreign key PRAGMA persists
+        acquireTimeoutMillis: 30000,
+        createTimeoutMillis: 30000,
+        destroyTimeoutMillis: 5000,
+        idleTimeoutMillis: 60000,
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 100,
+        // Enable foreign keys on every new connection
+        // PRAGMA foreign_keys is a per-connection setting in SQLite
+        afterCreate: (conn: any, done: Function) => {
+          conn.pragma('foreign_keys = ON')
+          done()
+        }
+      }
+    }
+    const knex = makeKnex(config)
+    return knex
+  }
+
+  /**
+   * Create an in-memory SQLite database for testing.
+   * Uses a unique file:memdb_xxx?mode=memory&cache=shared URI to create
+   * a completely isolated database per call while keeping it in memory.
+   * Must use min: 1 to keep the same connection (and thus the same db) alive.
+   *
+   * IMPORTANT: For in-memory SQLite, the connection must never be destroyed
+   * or the database will be lost. We set very high idle timeouts to prevent
+   * the pool from destroying the connection.
+   */
+  static createMemorySQLite(): Knex {
+    // Use a unique identifier to completely isolate this in-memory database
+    const uniqueId = `memdb_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    const config: Knex.Config = {
+      client: 'better-sqlite3',
+      connection: { filename: `file:${uniqueId}?mode=memory&cache=shared` },
+      useNullAsDefault: true,
+      pool: {
+        min: 1,
+        max: 1,
+        // Prevent the pool from destroying the connection - this is critical for
+        // in-memory SQLite because destroying the connection loses the database.
+        // Use very high timeouts to effectively disable idle connection destruction.
+        idleTimeoutMillis: 60 * 60 * 1000, // 1 hour
+        acquireTimeoutMillis: 30000,
+        createTimeoutMillis: 30000,
+        destroyTimeoutMillis: 5000,
+        reapIntervalMillis: 1000,
+        // Propagate errors from afterCreate
+        propagateCreateError: true,
+        // Enable foreign keys on every new connection
+        afterCreate: (conn: any, done: Function) => {
+          conn.pragma('foreign_keys = ON')
+          done()
+        }
+      }
     }
     const knex = makeKnex(config)
     return knex
@@ -2102,14 +2160,16 @@ export const logUniqueConstraintError = (
   columnNames: string[],
   logEnabled: boolean = false
 ): void => {
-  if (logEnabled) {
-    // Construct the expected error message string with the table name prefixed to each column
-    const expectedErrorString = `SQLITE_CONSTRAINT: UNIQUE constraint failed: ${columnNames.map(col => `${tableName}.${col}`).join(', ')}`
+  // The unique constraint error message differs between sqlite3 and better-sqlite3:
+  // - sqlite3: "SQLITE_CONSTRAINT: UNIQUE constraint failed: table.column"
+  // - better-sqlite3: "UNIQUE constraint failed: table.column"
+  const constraintPart = `UNIQUE constraint failed: ${columnNames.map(col => `${tableName}.${col}`).join(', ')}`
 
-    logger('expectedErrorString=', expectedErrorString)
+  if (logEnabled) {
+    logger('constraintPart=', constraintPart)
 
     // Check if the error message contains the expected string
-    if (error.message.includes(expectedErrorString)) {
+    if (error.message.includes(constraintPart)) {
       console.log(`Unique constraint error for columns ${columnNames.join(', ')} caught as expected:`, error.message)
     } else {
       console.log('Unexpected error message:', error.message)
@@ -2117,11 +2177,7 @@ export const logUniqueConstraintError = (
   }
 
   // If the error doesn't match the expected unique constraint error message, throw it
-  if (
-    !error.message.includes(
-      `SQLITE_CONSTRAINT: UNIQUE constraint failed: ${columnNames.map(col => `${tableName}.${col}`).join(', ')}`
-    )
-  ) {
+  if (!error.message.includes(constraintPart)) {
     console.log('Unexpected error:', error.message)
     throw new Error(`Unexpected error: ${error.message}`)
   }
@@ -2146,7 +2202,10 @@ const logForeignConstraintError = (
   logEnabled: boolean = false
 ): void => {
   if (logEnabled) {
-    if (error.message.includes(`SQLITE_CONSTRAINT: FOREIGN KEY constraint failed`)) {
+    // The foreign key constraint error message differs between sqlite3 and better-sqlite3:
+    // - sqlite3: "SQLITE_CONSTRAINT: FOREIGN KEY constraint failed"
+    // - better-sqlite3: "FOREIGN KEY constraint failed"
+    if (error.message.includes(`FOREIGN KEY constraint failed`)) {
       logger(`${columnName} constraint error caught as expected:`, error.message)
     } else {
       logger('Unexpected error:', error.message)

@@ -31,7 +31,7 @@ import {
 
 setLogging(false)
 
-import knex, { Knex } from 'knex'
+import { Knex } from 'knex'
 
 describe('update2 tests', () => {
   const storages: StorageKnex[] = []
@@ -41,18 +41,8 @@ describe('update2 tests', () => {
   const createDB = async (databaseName: string): Promise<void> => {
     const localSQLiteFile = await _tu.newTmpFile(`${databaseName}.sqlite`, false, false, true)
 
-    // Need to pool connections
-    const knexSQLite: Knex = knex({
-      client: 'sqlite3',
-      connection: {
-        filename: localSQLiteFile
-      },
-      useNullAsDefault: true,
-      pool: {
-        min: 1,
-        max: 5
-      }
-    })
+    // Use the standard utility to create SQLite connections with proper foreign key support
+    const knexSQLite: Knex = _tu.createLocalSQLite(localSQLiteFile)
 
     const storage = new StorageKnex({
       ...StorageKnex.defaultOptions(),
@@ -65,6 +55,11 @@ describe('update2 tests', () => {
     await storage.dropAllData()
     await storage.migrate('test setup', '1'.repeat(64))
     await storage.makeAvailable()
+
+    // Explicitly enable foreign keys AFTER all setup operations, since dropAllData/migrate
+    // might reset the connection state. This is a belt and suspenders approach.
+    await knexSQLite.raw('PRAGMA foreign_keys = ON')
+
     const setup = await _tu.createTestSetup1(storage)
 
     setups.push({ setup, storage })
@@ -272,6 +267,8 @@ describe('update2 tests', () => {
         console.error('Error inserting initial record:', (error as Error).message)
         return
       }
+      // Ensure foreign keys are enabled right before the constraint check
+      await storage.knex.raw('PRAGMA foreign_keys = ON')
       await expect(storage.updateProvenTx(1, { provenTxId: 0 })).rejects.toThrow(/FOREIGN KEY constraint failed/)
       const r1 = await storage.updateProvenTx(3, { provenTxId: 0 })
       await expect(Promise.resolve(r1)).resolves.toBe(1)
@@ -456,6 +453,8 @@ describe('update2 tests', () => {
       }
       const r5 = await storage.updateProvenTxReq(3, { txid: 'newValidTxid' })
       await expect(Promise.resolve(r5)).resolves.toBe(1)
+      // Ensure foreign keys are enabled for constraint check
+      await storage.knex.raw('PRAGMA foreign_keys = ON')
       await expect(storage.updateProvenTxReq(4, { txid: 'newValidTxid' })).rejects.toThrow(/UNIQUE constraint failed/)
       const finalRecords = await storage.findProvenTxReqs({ partial: {} })
       expect(finalRecords.find(r => r.provenTxReqId === 4)?.txid).toBe('mockTxid2')
@@ -613,6 +612,18 @@ describe('update2 tests', () => {
         console.error('Error inserting initial record:', error.message)
         return
       }
+      // Ensure foreign keys are enabled for constraint check
+      await storage.knex.raw('PRAGMA foreign_keys = ON')
+      const fkStatus = await storage.knex.raw('PRAGMA foreign_keys')
+      console.log('Foreign keys status:', JSON.stringify(fkStatus))
+      // Check what data exists
+      const users = await storage.findUsers({ partial: {} })
+      console.log(
+        'Users:',
+        users.map(u => u.userId)
+      )
+      const txs = await storage.findTransactions({ partial: { userId: 1 } })
+      console.log('Transactions for userId=1:', txs.length)
       await expect(storage.updateUser(1, { userId: 0 })).rejects.toThrow(/FOREIGN KEY constraint failed/)
       await expect(storage.updateUser(2, { userId: 0 })).rejects.toThrow(/FOREIGN KEY constraint failed/)
       const r1 = await storage.updateUser(3, { userId: 0 })
