@@ -153,7 +153,7 @@ class InternalizeActionContext {
   }
 
   async asyncSetup() {
-    ;({ ab: this.ab, tx: this.tx, txid: this.txid } = await this.validateAtomicBeef(Utils.toArray(this.args.tx)))
+    ; ({ ab: this.ab, tx: this.tx, txid: this.txid } = await this.validateAtomicBeef(Utils.toArray(this.args.tx)))
 
     for (const o of this.args.outputs) {
       if (o.outputIndex < 0 || o.outputIndex >= this.tx.outputs.length)
@@ -452,6 +452,13 @@ class InternalizeActionContext {
       const txLabel = await this.storage.findOrInsertTxLabel(this.userId, label)
       await this.storage.findOrInsertTxLabelMap(verifyId(transactionId), verifyId(txLabel.txLabelId))
     }
+
+    // Automatically add date labels for time-based filtering
+    const now = new Date()
+    const dateLabel = await this.storage.findOrInsertTxLabel(this.userId, `date-${now.toISOString().slice(0, 10)}`)
+    await this.storage.findOrInsertTxLabelMap(verifyId(transactionId), verifyId(dateLabel.txLabelId))
+    const tsLabel = await this.storage.findOrInsertTxLabel(this.userId, `ts-${now.toISOString()}`)
+    await this.storage.findOrInsertTxLabelMap(verifyId(transactionId), verifyId(tsLabel.txLabelId))
   }
 
   async addBasketTags(basket: BasketInsertionX, outputId: number) {

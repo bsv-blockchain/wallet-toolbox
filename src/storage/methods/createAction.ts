@@ -489,6 +489,12 @@ async function createNewTxRecord(
     await storage.findOrInsertTxLabelMap(verifyId(newTx.transactionId), verifyId(txLabel.txLabelId))
   }
 
+  // Automatically add date labels for time-based filtering
+  const dateLabel = await storage.findOrInsertTxLabel(userId, `date-${now.toISOString().slice(0, 10)}`)
+  await storage.findOrInsertTxLabelMap(verifyId(newTx.transactionId), verifyId(dateLabel.txLabelId))
+  const tsLabel = await storage.findOrInsertTxLabel(userId, `ts-${now.toISOString()}`)
+  await storage.findOrInsertTxLabelMap(verifyId(newTx.transactionId), verifyId(tsLabel.txLabelId))
+
   return newTx
 }
 
