@@ -11,9 +11,12 @@ export async function getIdentityKey(wallet: CertOpsWallet): Promise<PubKeyHex> 
 
 export function toWalletNetwork(chain: Chain): WalletNetwork {
   switch (chain) {
-    case 'main': return 'mainnet'
-    case 'test': return 'testnet'
-    case 'teratest': return 'testnet'
+    case 'main':
+      return 'mainnet'
+    case 'test':
+      return 'testnet'
+    case 'teratest':
+      return 'testnet'
     case 'mock':
       throw new Error(`toWalletNetwork does not support 'mock' chain.`)
   }

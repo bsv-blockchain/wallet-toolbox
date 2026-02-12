@@ -297,8 +297,7 @@ describe('MockServices end-to-end', () => {
     expect(tip).toBeDefined()
 
     // Find the coinbase UTXO
-    const utxos = await services.storage.knex('mockchain_utxos')
-      .where({ isCoinbase: true, blockHeight: 0 })
+    const utxos = await services.storage.knex('mockchain_utxos').where({ isCoinbase: true, blockHeight: 0 })
     expect(utxos.length).toBe(1)
     const coinbaseUtxo = utxos[0]
 
@@ -318,9 +317,10 @@ describe('MockServices end-to-end', () => {
     const beef = new Beef()
     // Add the source coinbase tx
     const coinbaseTxRow = await services.storage.getTransaction(coinbaseUtxo.txid)
-    const coinbaseRawTx = coinbaseTxRow!.rawTx instanceof Buffer
-      ? Array.from(coinbaseTxRow!.rawTx)
-      : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
+    const coinbaseRawTx =
+      coinbaseTxRow!.rawTx instanceof Buffer
+        ? Array.from(coinbaseTxRow!.rawTx)
+        : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
 
     // For BEEF we need the source as proven tx
     const pathResult = await services.getMerklePath(coinbaseUtxo.txid)
@@ -347,7 +347,8 @@ describe('MockServices end-to-end', () => {
     expect(height).toBe(100)
 
     // Find the genesis coinbase UTXO (at height 0)
-    const utxos = await services.storage.knex('mockchain_utxos')
+    const utxos = await services.storage
+      .knex('mockchain_utxos')
       .where({ isCoinbase: true, blockHeight: 0, spentByTxid: null })
     expect(utxos.length).toBe(1)
     const coinbaseUtxo = utxos[0]
@@ -355,9 +356,10 @@ describe('MockServices end-to-end', () => {
     // Get the source transaction
     const coinbaseTxRow = await services.storage.getTransaction(coinbaseUtxo.txid)
     expect(coinbaseTxRow).toBeDefined()
-    const coinbaseRawTx = coinbaseTxRow!.rawTx instanceof Buffer
-      ? Array.from(coinbaseTxRow!.rawTx)
-      : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
+    const coinbaseRawTx =
+      coinbaseTxRow!.rawTx instanceof Buffer
+        ? Array.from(coinbaseTxRow!.rawTx)
+        : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
 
     // Create a spending transaction. The coinbase output is OP_TRUE (anyone-can-spend)
     // We use OP_TRUE as the unlocking script (evaluates to true)
@@ -531,7 +533,8 @@ describe('MockServices reorg', () => {
     }
     // Now at height 100, block 0 coinbase is mature
 
-    const coinbaseUtxos = await services.storage.knex('mockchain_utxos')
+    const coinbaseUtxos = await services.storage
+      .knex('mockchain_utxos')
       .where({ isCoinbase: true, blockHeight: 0, spentByTxid: null })
     const coinbaseUtxo = coinbaseUtxos[0]
 
@@ -549,9 +552,10 @@ describe('MockServices reorg', () => {
 
     const beef = new Beef()
     const coinbaseTxRow = await services.storage.getTransaction(coinbaseUtxo.txid)
-    const coinbaseRawTx = coinbaseTxRow!.rawTx instanceof Buffer
-      ? Array.from(coinbaseTxRow!.rawTx)
-      : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
+    const coinbaseRawTx =
+      coinbaseTxRow!.rawTx instanceof Buffer
+        ? Array.from(coinbaseTxRow!.rawTx)
+        : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
     const pathResult = await services.getMerklePath(coinbaseUtxo.txid)
     addProvenTxToBeef(beef, coinbaseRawTx, pathResult.merklePath!)
     beef.mergeRawTx(Array.from(spendTx.toBinary()))
@@ -583,7 +587,8 @@ describe('MockServices reorg', () => {
       await services.mineBlock()
     }
 
-    const coinbaseUtxos = await services.storage.knex('mockchain_utxos')
+    const coinbaseUtxos = await services.storage
+      .knex('mockchain_utxos')
       .where({ isCoinbase: true, blockHeight: 0, spentByTxid: null })
     const coinbaseUtxo = coinbaseUtxos[0]
 
@@ -601,9 +606,10 @@ describe('MockServices reorg', () => {
 
     const beef = new Beef()
     const coinbaseTxRow = await services.storage.getTransaction(coinbaseUtxo.txid)
-    const coinbaseRawTx = coinbaseTxRow!.rawTx instanceof Buffer
-      ? Array.from(coinbaseTxRow!.rawTx)
-      : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
+    const coinbaseRawTx =
+      coinbaseTxRow!.rawTx instanceof Buffer
+        ? Array.from(coinbaseTxRow!.rawTx)
+        : Array.from(coinbaseTxRow!.rawTx as Uint8Array)
     const pathResult = await services.getMerklePath(coinbaseUtxo.txid)
     addProvenTxToBeef(beef, coinbaseRawTx, pathResult.merklePath!)
     beef.mergeRawTx(Array.from(spendTx.toBinary()))

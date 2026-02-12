@@ -77,10 +77,14 @@ export function createDefaultWalletServicesOptions(
 
 export function arcDefaultUrl(chain: Chain): string {
   switch (chain) {
-    case 'main': return 'https://arc.taal.com'
-    case 'test': return 'https://arc-test.taal.com'
-    case 'teratest': return 'https://arc-teratest.taal.com'
-    case 'mock': return ''
+    case 'main':
+      return 'https://arc.taal.com'
+    case 'test':
+      return 'https://arc-test.taal.com'
+    case 'teratest':
+      return 'https://arc-teratest.taal.com'
+    case 'mock':
+      return ''
   }
 }
 

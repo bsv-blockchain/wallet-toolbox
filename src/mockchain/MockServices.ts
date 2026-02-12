@@ -1,11 +1,4 @@
-import {
-  Beef,
-  ChainTracker,
-  MerklePath,
-  Transaction as BsvTransaction,
-  Utils,
-  WalletLoggerInterface
-} from '@bsv/sdk'
+import { Beef, ChainTracker, MerklePath, Transaction as BsvTransaction, Utils, WalletLoggerInterface } from '@bsv/sdk'
 import { Knex } from 'knex'
 import { Chain } from '../sdk/types'
 import {
@@ -97,7 +90,8 @@ export class MockServices implements WalletServices {
         const currentHeight = await this.tracker.currentHeight()
         for (let i = 0; i < tx.inputs.length; i++) {
           const input = tx.inputs[i]
-          const sourceTxid = input.sourceTXID || (input.sourceTransaction ? input.sourceTransaction.id('hex') : undefined)
+          const sourceTxid =
+            input.sourceTXID || (input.sourceTransaction ? input.sourceTransaction.id('hex') : undefined)
           if (!sourceTxid) {
             throw new WERR_INVALID_PARAMETER('input.sourceTXID', `defined for input ${i}`)
           }
@@ -105,10 +99,16 @@ export class MockServices implements WalletServices {
 
           const utxo = await this.storage.getUtxo(sourceTxid, sourceVout)
           if (!utxo) {
-            throw new WERR_INVALID_PARAMETER('input', `reference a known UTXO. Input ${i}: ${sourceTxid}.${sourceVout} not found`)
+            throw new WERR_INVALID_PARAMETER(
+              'input',
+              `reference a known UTXO. Input ${i}: ${sourceTxid}.${sourceVout} not found`
+            )
           }
           if (utxo.spentByTxid) {
-            throw new WERR_INVALID_PARAMETER('input', `not be already spent. Input ${i}: ${sourceTxid}.${sourceVout} spent by ${utxo.spentByTxid}`)
+            throw new WERR_INVALID_PARAMETER(
+              'input',
+              `not be already spent. Input ${i}: ${sourceTxid}.${sourceVout} spent by ${utxo.spentByTxid}`
+            )
           }
 
           // Coinbase maturity check
@@ -125,11 +125,12 @@ export class MockServices implements WalletServices {
           if (!input.sourceTransaction) {
             const sourceTxRow = await this.storage.getTransaction(sourceTxid)
             if (sourceTxRow) {
-              const sourceRaw = sourceTxRow.rawTx instanceof Buffer
-                ? Array.from(sourceTxRow.rawTx)
-                : Array.isArray(sourceTxRow.rawTx)
-                  ? sourceTxRow.rawTx as number[]
-                  : Array.from(sourceTxRow.rawTx as Uint8Array)
+              const sourceRaw =
+                sourceTxRow.rawTx instanceof Buffer
+                  ? Array.from(sourceTxRow.rawTx)
+                  : Array.isArray(sourceTxRow.rawTx)
+                    ? (sourceTxRow.rawTx as number[])
+                    : Array.from(sourceTxRow.rawTx as Uint8Array)
               input.sourceTransaction = BsvTransaction.fromBinary(sourceRaw)
             }
           }
@@ -166,13 +167,7 @@ export class MockServices implements WalletServices {
           const output = tx.outputs[vout]
           const scriptBinary = output.lockingScript.toBinary()
           const scriptHash = asString(sha256Hash(Array.from(scriptBinary)))
-          await this.storage.insertUtxo(
-            txid,
-            vout,
-            Array.from(scriptBinary),
-            output.satoshis ?? 0,
-            scriptHash
-          )
+          await this.storage.insertUtxo(txid, vout, Array.from(scriptBinary), output.satoshis ?? 0, scriptHash)
         }
 
         // Spend inputs
@@ -200,11 +195,7 @@ export class MockServices implements WalletServices {
     return results
   }
 
-  async reorg(
-    startingHeight: number,
-    numBlocks: number,
-    txidMap?: Record<string, number>
-  ): Promise<ReorgResult> {
+  async reorg(startingHeight: number, numBlocks: number, txidMap?: Record<string, number>): Promise<ReorgResult> {
     const oldTip = await this.storage.getChainTip()
     if (!oldTip) throw new WERR_INTERNAL('Cannot reorg empty chain')
     if (startingHeight > oldTip.height) {
@@ -338,11 +329,12 @@ export class MockServices implements WalletServices {
   async getRawTx(txid: string): Promise<GetRawTxResult> {
     const tx = await this.storage.getTransaction(txid)
     if (!tx) return { txid }
-    const rawTx = tx.rawTx instanceof Buffer
-      ? Array.from(tx.rawTx)
-      : Array.isArray(tx.rawTx)
-        ? tx.rawTx as number[]
-        : Array.from(tx.rawTx as Uint8Array)
+    const rawTx =
+      tx.rawTx instanceof Buffer
+        ? Array.from(tx.rawTx)
+        : Array.isArray(tx.rawTx)
+          ? (tx.rawTx as number[])
+          : Array.from(tx.rawTx as Uint8Array)
     return { txid, rawTx, name: 'MockServices' }
   }
 
@@ -516,11 +508,12 @@ export class MockServices implements WalletServices {
       const txRow = await this.storage.getTransaction(tid)
       if (!txRow) return
 
-      const rawTx = txRow.rawTx instanceof Buffer
-        ? Array.from(txRow.rawTx)
-        : Array.isArray(txRow.rawTx)
-          ? txRow.rawTx as number[]
-          : Array.from(txRow.rawTx as Uint8Array)
+      const rawTx =
+        txRow.rawTx instanceof Buffer
+          ? Array.from(txRow.rawTx)
+          : Array.isArray(txRow.rawTx)
+            ? (txRow.rawTx as number[])
+            : Array.from(txRow.rawTx as Uint8Array)
 
       if (txRow.blockHeight !== null) {
         // Mined: add with merkle path

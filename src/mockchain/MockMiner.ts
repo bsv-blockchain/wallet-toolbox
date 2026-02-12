@@ -113,14 +113,13 @@ export class MockMiner {
 
       // Update unmined txs with block height and sequential block index
       for (let i = 0; i < unminedTxs.length; i++) {
-        await trxStorage.knex('mockchain_transactions')
+        await trxStorage
+          .knex('mockchain_transactions')
           .where({ txid: unminedTxs[i].txid })
           .update({ blockHeight: newHeight, blockIndex: i + 1 })
 
         // Update blockHeight on UTXOs belonging to these transactions
-        await trxStorage.knex('mockchain_utxos')
-          .where({ txid: unminedTxs[i].txid })
-          .update({ blockHeight: newHeight })
+        await trxStorage.knex('mockchain_utxos').where({ txid: unminedTxs[i].txid }).update({ blockHeight: newHeight })
       }
 
       // Insert block header
