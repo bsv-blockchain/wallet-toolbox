@@ -4,6 +4,33 @@ This document captures the history of significant changes to the wallet-toolbox 
 The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 2.1.0
+
+### Add `teratest` and `mock` chain types
+
+- Change `Chain` type from `'main' | 'test'` to `'main' | 'test' | 'teratest' | 'mock'`.
+
+**`teratest` chain:**
+- Add ARC URL `https://arc-teratest.taal.com` for the teratest network.
+- Chaintracks URL follows existing `${chain}net-chaintracks.babbage.systems` pattern.
+- WhatsOnChain URL follows existing `https://api.whatsonchain.com/v1/bsv/${network}` pattern.
+- Bitails is not available on teratest (only `main` and `test`).
+
+**`mock` chain — full self-contained mock blockchain:**
+- Add new `src/mockchain/` module with `MockServices`, `MockChainTracker`, `MockMiner`, `MockChainStorage`, and merkle tree utilities.
+- `MockServices` implements the `WalletServices` interface against a local SQLite database (3 tables: `mockchain_block_headers`, `mockchain_transactions`, `mockchain_utxos`).
+- Transactions are validated with full script execution via `@bsv/sdk` `Transaction.verify()`.
+- Coinbase maturity rule enforced (100 block confirmations required before spending).
+- On-demand block mining via `MockServices.mineBlock()`.
+- Chain reorganization simulation via `MockServices.reorg()` with `txidMap` for controlling which transactions land in which new blocks.
+- Add `TaskMineBlock` monitor task for periodic mining (10 minutes) with `mineNow` static flag for on-demand triggering.
+- `Monitor.services` type widened from `Services` to `Services | WalletServices` to support mock chain.
+- `Services` class, `createDefaultWalletServicesOptions`, and external service providers (`WhatsOnChain`, `Bitails`) throw explicit errors if instantiated with `'mock'` chain.
+
+**Explicit chain handling across codebase:**
+- Convert chain-dependent ternaries to explicit switch statements in `toWalletNetwork`, `genesisHeader`, `Bitails` constructor, WoC WebSocket ingestors, and `ChaintracksStorageNoDb`.
+- Each chain value (`main`, `test`, `teratest`, `mock`) is handled explicitly rather than falling through a catch-all else branch.
+
 ## wallet-toolbox 2.0.9
 
 Added support for more currency types.
