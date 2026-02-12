@@ -23,6 +23,7 @@ import { Services, validateScriptHash } from '../Services'
 
 export class WhatsOnChainNoServices extends SdkWhatsOnChain {
   constructor(chain: Chain = 'main', config: WhatsOnChainConfig = {}) {
+    if (chain === 'mock') throw new Error(`WhatsOnChain does not support 'mock' chain. Use MockServices directly.`)
     super(chain, config)
   }
 

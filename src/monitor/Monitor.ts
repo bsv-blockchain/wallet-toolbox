@@ -16,11 +16,12 @@ import { TaskReorg } from './tasks/TaskReorg'
 import { TaskSendWaiting } from './tasks/TaskSendWaiting'
 import { TaskCheckNoSends } from './tasks/TaskCheckNoSends'
 import { TaskUnFail } from './tasks/TaskUnFail'
+import { TaskMineBlock } from './tasks/TaskMineBlock'
 import { Chain, ProvenTransactionStatus } from '../sdk/types'
 import { ReviewActionResult } from '../sdk/WalletStorage.interfaces'
 import { WERR_BAD_REQUEST, WERR_INVALID_PARAMETER } from '../sdk/WERR_errors'
 import { WalletError } from '../sdk/WalletError'
-import { BlockHeader } from '../sdk/WalletServices.interfaces'
+import { BlockHeader, WalletServices } from '../sdk/WalletServices.interfaces'
 import { Services } from '../services/Services'
 import { ChaintracksClientApi, ReorgListener } from '../services/chaintracker/chaintracks/Api/ChaintracksClientApi'
 import { Chaintracks } from '../services/chaintracker/chaintracks/Chaintracks'
@@ -30,7 +31,7 @@ export type MonitorStorage = WalletStorageManager
 export interface MonitorOptions {
   chain: Chain
 
-  services: Services
+  services: Services | WalletServices
 
   storage: MonitorStorage
 
@@ -87,7 +88,7 @@ export class Monitor {
   }
 
   options: MonitorOptions
-  services: Services
+  services: Services | WalletServices
   chain: Chain
   storage: MonitorStorage
   chaintracks: ChaintracksClientApi
@@ -180,6 +181,9 @@ export class Monitor {
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * Monitor.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
     this._tasks.push(new TaskReorg(this))
+    if (this.chain === 'mock') {
+      this._tasks.push(new TaskMineBlock(this))
+    }
   }
 
   /**
@@ -198,6 +202,9 @@ export class Monitor {
     //this._tasks.push(new TaskPurge(this, this.defaultPurgeParams, 6 * Monitor.oneHour))
     this._tasks.push(new TaskReviewStatus(this))
     this._tasks.push(new TaskReorg(this))
+    if (this.chain === 'mock') {
+      this._tasks.push(new TaskMineBlock(this))
+    }
   }
 
   addTask(task: WalletMonitorTask): void {

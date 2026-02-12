@@ -42,12 +42,14 @@ export class ChaintracksStorageNoDb extends ChaintracksStorageBase {
   override async destroy(): Promise<void> {}
 
   async getData(): Promise<ChaintracksNoDbData> {
-    if (this.chain === 'main') {
-      return ChaintracksStorageNoDb.mainData
-    } else if (this.chain === 'test') {
-      return ChaintracksStorageNoDb.testData
-    } else {
-      throw new WERR_INVALID_PARAMETER('chain', `either 'main' or 'test. '${this.chain}' is unsupported.`)
+    switch (this.chain) {
+      case 'main':
+        return ChaintracksStorageNoDb.mainData
+      case 'test':
+      case 'teratest':
+        return ChaintracksStorageNoDb.testData
+      default:
+        throw new WERR_INVALID_PARAMETER('chain', `'main', 'test', or 'teratest'. '${this.chain}' is unsupported.`)
     }
   }
 

@@ -1728,8 +1728,8 @@ export abstract class TestUtilsWalletStorage {
     doubleSpendTx: Transaction
   }> {
     let destroyWallet = false
-    if (wallet === 'main' || wallet === 'test') {
-      const setup = await _tu.createWalletSetupEnv(wallet)
+    if (typeof wallet === 'string') {
+      const setup = await _tu.createWalletSetupEnv(wallet as 'main' | 'test')
       wallet = setup.wallet
       if (!setup.storage.isActiveEnabled) await setup.storage.setActive(setup.storage.getActiveStore())
       destroyWallet = true

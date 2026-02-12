@@ -24,7 +24,11 @@ export class Bitails {
   constructor(chain: Chain = 'main', config: BitailsConfig = {}) {
     const { apiKey, httpClient } = config
     this.chain = chain
-    this.URL = chain === 'main' ? `https://api.bitails.io/` : `https://test-api.bitails.io/`
+    switch (chain) {
+      case 'main': this.URL = `https://api.bitails.io/`; break
+      case 'test': this.URL = `https://test-api.bitails.io/`; break
+      default: throw new Error(`Bitails does not support '${chain}' chain.`)
+    }
     this.httpClient = httpClient ?? defaultHttpClient()
     this.apiKey = apiKey ?? ''
   }

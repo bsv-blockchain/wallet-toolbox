@@ -61,6 +61,10 @@ export class Services implements WalletServices {
   constructor(optionsOrChain: Chain | WalletServicesOptions) {
     this.chain = typeof optionsOrChain === 'string' ? optionsOrChain : optionsOrChain.chain
 
+    if (this.chain === 'mock') {
+      throw new WERR_INVALID_PARAMETER('chain', `'main', 'test', or 'teratest'. Use MockServices for 'mock' chain.`)
+    }
+
     this.options = typeof optionsOrChain === 'string' ? Services.createDefaultOptions(this.chain) : optionsOrChain
 
     this.whatsonchain = new WhatsOnChain(this.chain, { apiKey: this.options.whatsOnChainApiKey }, this)
@@ -72,10 +76,14 @@ export class Services implements WalletServices {
 
     this.bitails = new Bitails(this.chain, { apiKey: this.options.bitailsApiKey })
 
+    const hasBitails = this.chain === 'main' || this.chain === 'test'
+
     //prettier-ignore
     this.getMerklePathServices = new ServiceCollection<GetMerklePathService>('getMerklePath')
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.getMerklePath.bind(this.whatsonchain) })
-      .add({ name: 'Bitails', service: this.bitails.getMerklePath.bind(this.bitails) })
+    if (hasBitails) {
+      this.getMerklePathServices.add({ name: 'Bitails', service: this.bitails.getMerklePath.bind(this.bitails) })
+    }
 
     //prettier-ignore
     this.getRawTxServices = new ServiceCollection<GetRawTxService>('getRawTx')
@@ -89,7 +97,11 @@ export class Services implements WalletServices {
     //prettier-ignore
     this.postBeefServices
       .add({ name: 'TaalArcBeef', service: this.arcTaal.postBeef.bind(this.arcTaal) })
-      .add({ name: 'Bitails', service: this.bitails.postBeef.bind(this.bitails) })
+    if (hasBitails) {
+      this.postBeefServices.add({ name: 'Bitails', service: this.bitails.postBeef.bind(this.bitails) })
+    }
+    //prettier-ignore
+    this.postBeefServices
       .add({ name: 'WhatsOnChain', service: this.whatsonchain.postBeef.bind(this.whatsonchain) })
       ;
 

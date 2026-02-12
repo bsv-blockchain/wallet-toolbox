@@ -14,6 +14,10 @@ export function createDefaultWalletServicesOptions(
   deploymentId?: string,
   chaintracks?: ChaintracksClientApi
 ): WalletServicesOptions {
+  if (chain === 'mock') {
+    throw new Error(`createDefaultWalletServicesOptions does not support 'mock' chain. Use MockServices directly.`)
+  }
+
   deploymentId ||= `wallet-toolbox-${randomBytesHex(16)}`
 
   //const chaintracksUrl = `https://npm-registry.babbage.systems:${chain === 'main' ? 8084 : 8083}`
@@ -72,11 +76,14 @@ export function createDefaultWalletServicesOptions(
 }
 
 export function arcDefaultUrl(chain: Chain): string {
-  const url = chain === 'main' ? 'https://arc.taal.com' : 'https://arc-test.taal.com'
-  return url
+  switch (chain) {
+    case 'main': return 'https://arc.taal.com'
+    case 'test': return 'https://arc-test.taal.com'
+    case 'teratest': return 'https://arc-teratest.taal.com'
+    case 'mock': return ''
+  }
 }
 
 export function arcGorillaPoolUrl(chain: Chain): string | undefined {
-  const url = chain === 'main' ? 'https://arc.gorillapool.io' : undefined
-  return url
+  return chain === 'main' ? 'https://arc.gorillapool.io' : undefined
 }

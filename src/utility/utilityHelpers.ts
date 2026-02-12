@@ -10,7 +10,13 @@ export async function getIdentityKey(wallet: CertOpsWallet): Promise<PubKeyHex> 
 }
 
 export function toWalletNetwork(chain: Chain): WalletNetwork {
-  return chain === 'main' ? 'mainnet' : 'testnet'
+  switch (chain) {
+    case 'main': return 'mainnet'
+    case 'test': return 'testnet'
+    case 'teratest': return 'testnet'
+    case 'mock':
+      throw new Error(`toWalletNetwork does not support 'mock' chain.`)
+  }
 }
 
 export function makeAtomicBeef(tx: Transaction, beef: number[] | Beef): number[] {

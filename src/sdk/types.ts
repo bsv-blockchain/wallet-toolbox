@@ -14,7 +14,7 @@ export interface OutPoint {
   vout: number
 }
 
-export type Chain = 'main' | 'test'
+export type Chain = 'main' | 'test' | 'teratest' | 'mock'
 
 /**
  * Initial status (attempts === 0):

@@ -19,7 +19,7 @@ export default class SdkWhatsOnChain implements ChainTracker {
    * @param {'main' | 'test' | 'stn'} network - The BSV network to use when calling the WhatsOnChain API.
    * @param {WhatsOnChainConfig} config - Configuration options for the WhatsOnChain ChainTracker.
    */
-  constructor(network: 'main' | 'test' | 'stn' = 'main', config: WhatsOnChainConfig = {}) {
+  constructor(network: 'main' | 'test' | 'stn' | 'teratest' = 'main', config: WhatsOnChainConfig = {}) {
     const { apiKey, httpClient } = config
     this.network = network
     this.URL = `https://api.whatsonchain.com/v1/bsv/${network}`

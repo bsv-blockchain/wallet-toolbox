@@ -51,10 +51,18 @@ export async function WocHeadersBulkListener(
 
   stop.stop = stopNow
 
-  const webSocketUrl =
-    chain === 'test'
-      ? `wss://socket-v2-testnet.whatsonchain.com/websocket/blockheaders/history?from=${fromHeight}&to=${toHeight}`
-      : `wss://socket-v2.whatsonchain.com/websocket/blockheaders/history?from=${fromHeight}&to=${toHeight}`
+  let webSocketUrl: string
+  switch (chain) {
+    case 'test':
+    case 'teratest':
+      webSocketUrl = `wss://socket-v2-testnet.whatsonchain.com/websocket/blockheaders/history?from=${fromHeight}&to=${toHeight}`
+      break
+    case 'main':
+      webSocketUrl = `wss://socket-v2.whatsonchain.com/websocket/blockheaders/history?from=${fromHeight}&to=${toHeight}`
+      break
+    case 'mock':
+      throw new Error(`WocHeadersBulkListener does not support 'mock' chain.`)
+  }
 
   function processData(rawData) {
     if (rawData.length === 0) {
@@ -288,10 +296,18 @@ export async function WocHeadersLiveListener(
 
   stop.stop = stopNow
 
-  const webSocketUrl =
-    chain === 'test'
-      ? 'wss://socket-v2-testnet.whatsonchain.com/websocket/blockHeaders'
-      : 'wss://socket-v2.whatsonchain.com/websocket/blockHeaders'
+  let webSocketUrl: string
+  switch (chain) {
+    case 'test':
+    case 'teratest':
+      webSocketUrl = 'wss://socket-v2-testnet.whatsonchain.com/websocket/blockHeaders'
+      break
+    case 'main':
+      webSocketUrl = 'wss://socket-v2.whatsonchain.com/websocket/blockHeaders'
+      break
+    case 'mock':
+      throw new Error(`WocHeadersLiveListener does not support 'mock' chain.`)
+  }
 
   function processData(rawData) {
     if (rawData.length === 0) {
