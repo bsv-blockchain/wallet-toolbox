@@ -81,7 +81,7 @@ import { maxPossibleSatoshis } from './storage/methods/generateChange'
 import { WalletStorageManager } from './storage/WalletStorageManager'
 import { Monitor } from './monitor/Monitor'
 import { WalletSigner } from './signer/WalletSigner'
-import { randomBytesBase64, toWalletNetwork } from './utility/utilityHelpers'
+import { randomBytesBase64, toLookupNetworkPreset, toWalletNetwork } from './utility/utilityHelpers'
 import { ScriptTemplateBRC29 } from './utility/ScriptTemplateBRC29'
 import {
   Chain,
@@ -211,7 +211,7 @@ export class Wallet implements WalletInterface, ProtoWallet {
     this.lookupResolver =
       args.lookupResolver ||
       new LookupResolver({
-        networkPreset: toWalletNetwork(this.chain)
+        networkPreset: toLookupNetworkPreset(this.chain)
       })
     this.keyDeriver = args.keyDeriver
     this.storage = args.storage
