@@ -32,7 +32,7 @@ export async function listActions(
     totalActions: 0,
     actions: []
   }
-  const reference = (vargs as Validation.ValidListActionsArgs & { reference?: string }).reference
+  const reference = vargs.reference
 
   const {
     from: actionTimeFrom,

@@ -37,7 +37,7 @@ export async function listActionsIdb(
 
   const createdAtFrom = actionTimeFrom !== undefined ? new Date(actionTimeFrom) : undefined
   const createdAtTo = actionTimeTo !== undefined ? new Date(actionTimeTo) : undefined
-  const reference = (vargs as Validation.ValidListActionsArgs & { reference?: string }).reference
+  const reference = vargs.reference
 
   let specOp: ListActionsSpecOp | undefined = undefined
   let specOpLabels: string[] = []

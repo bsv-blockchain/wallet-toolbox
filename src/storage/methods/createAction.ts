@@ -473,7 +473,7 @@ async function createNewTxRecord(
   storageBeef: Beef
 ): Promise<TableTransaction> {
   const now = new Date()
-  const reference = (vargs as Validation.ValidCreateActionArgs & { reference?: string }).reference
+  const reference = vargs.reference
   const newTx: TableTransaction = {
     created_at: now,
     updated_at: now,

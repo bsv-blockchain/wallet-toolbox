@@ -299,7 +299,7 @@ class InternalizeActionContext {
     const now = new Date()
     const provenTxId = provenTx?.provenTxId
     const status: TransactionStatus = provenTx ? 'completed' : 'unproven'
-    const reference = (this.vargs as Validation.ValidInternalizeActionArgs & { reference?: string }).reference
+    const reference = this.vargs.reference
     const newTx: TableTransaction = {
       created_at: now,
       updated_at: now,
