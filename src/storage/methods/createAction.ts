@@ -481,7 +481,7 @@ async function createNewTxRecord(
     version: vargs.version,
     lockTime: vargs.lockTime,
     status: 'unsigned',
-    reference: reference ?? randomBytesBase64(12),
+    reference: reference || randomBytesBase64(12),
     satoshis: 0, // updated after fundingTransaction
     userId,
     isOutgoing: true,
