@@ -312,7 +312,7 @@ class InternalizeActionContext {
 
       version: this.tx.version,
       lockTime: this.tx.lockTime,
-      reference: reference ?? randomBytesBase64(7),
+      reference: reference || randomBytesBase64(7),
       userId: this.userId,
       isOutgoing: false,
       description: this.args.description,
