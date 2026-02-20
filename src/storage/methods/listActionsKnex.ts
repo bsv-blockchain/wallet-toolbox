@@ -32,6 +32,7 @@ export async function listActions(
     totalActions: 0,
     actions: []
   }
+  const reference = (vargs as Validation.ValidListActionsArgs & { reference?: string }).reference
 
   const {
     from: actionTimeFrom,
@@ -134,6 +135,7 @@ export async function listActions(
     const q = k.with('tlc', cteq)
     q.from('tlc')
     applyTimestampFilters(q)
+    if (reference) q.where('reference', reference)
     if (isQueryModeAll) q.where('lc', labelIds.length)
     else q.where('lc', '>', 0)
     const qcount = q.clone()
@@ -145,6 +147,7 @@ export async function listActions(
   const makeWithoutLabelsQueries = () => {
     const q = k('transactions').where('userId', auth.userId).whereIn('status', stati)
     applyTimestampFilters(q)
+    if (reference) q.where('reference', reference)
     const qcount = q.clone().count('transactionId as total')
     return { q, qcount }
   }

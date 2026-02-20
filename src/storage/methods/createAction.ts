@@ -473,6 +473,7 @@ async function createNewTxRecord(
   storageBeef: Beef
 ): Promise<TableTransaction> {
   const now = new Date()
+  const reference = (vargs as Validation.ValidCreateActionArgs & { reference?: string }).reference
   const newTx: TableTransaction = {
     created_at: now,
     updated_at: now,
@@ -480,7 +481,7 @@ async function createNewTxRecord(
     version: vargs.version,
     lockTime: vargs.lockTime,
     status: 'unsigned',
-    reference: randomBytesBase64(12),
+    reference: reference ?? randomBytesBase64(12),
     satoshis: 0, // updated after fundingTransaction
     userId,
     isOutgoing: true,

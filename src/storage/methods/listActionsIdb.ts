@@ -37,6 +37,7 @@ export async function listActionsIdb(
 
   const createdAtFrom = actionTimeFrom !== undefined ? new Date(actionTimeFrom) : undefined
   const createdAtTo = actionTimeTo !== undefined ? new Date(actionTimeTo) : undefined
+  const reference = (vargs as Validation.ValidListActionsArgs & { reference?: string }).reference
 
   let specOp: ListActionsSpecOp | undefined = undefined
   let specOpLabels: string[] = []
@@ -90,7 +91,7 @@ export async function listActionsIdb(
 
   const txs = await storage.findTransactions(
     {
-      partial: { userId: auth.userId },
+      partial: { userId: auth.userId, reference },
       status: stati,
       from: createdAtFrom,
       to: createdAtTo,
@@ -102,7 +103,7 @@ export async function listActionsIdb(
   )
   if (txs.length === vargs.limit) {
     r.totalActions = await storage.countTransactions(
-      { partial: { userId: auth.userId }, status: stati, from: createdAtFrom, to: createdAtTo },
+      { partial: { userId: auth.userId, reference }, status: stati, from: createdAtFrom, to: createdAtTo },
       labelIds,
       isQueryModeAll
     )
