@@ -17,7 +17,7 @@ import {
   WalletInterface
 } from '@bsv/sdk'
 import { Chain } from './sdk/types'
-import { verifyTruthy } from './utility/utilityHelpers'
+import { randomBytesHex, verifyTruthy } from './utility/utilityHelpers'
 import { WERR_INVALID_OPERATION } from './sdk/WERR_errors'
 import { WalletStorageManager } from './storage/WalletStorageManager'
 import { Services } from './services/Services'
@@ -573,7 +573,4 @@ export interface SetupWalletClientArgs extends SetupWalletArgs {
    * the active storage provider of the newly created wallet.
    */
   endpointUrl?: string
-}
-function randomBytesHex(arg0: number): string {
-  throw new Error('Function not implemented.')
 }
