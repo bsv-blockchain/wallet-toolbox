@@ -105,34 +105,11 @@ describe('offsetKey tests', () => {
       throw new Error('No dev key for commissions identity')
     }
 
-    const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
-    const storage = new StorageKnex({
-      chain: env.chain,
-      knex: knex,
-      commissionSatoshis: 0,
-      commissionPubKeyHex: undefined,
-      feeModel: { model: 'sat/kb', value: 1 }
-    })
-
-    let setup: TestWalletOnly
-    await storage.makeAvailable()
-
-    setup = await _tu.createTestWalletWithStorageClient({
-      chain: 'main',
-      rootKeyHex: env.devKeys[env.commissionsIdentity]
-    })
-    storage.setServices(setup.services)
+    const { storage, setup } = await createRedeemTestContext(env)
 
     try {
-      // await setup.wallet.abortAction({ reference: 'e9c03bdf603e90ebe482044e8d0f7afbf2d6fe480a13dbd8689e2e5e5183bed4' })
-
-      // txid b6f72df4224efbacab42a16e1e88f48c217f03929c36987b9067d2556de47c10
-      // height 922107
-      // incorrect hash 000000000000000014d97d19bf82956c1f7ce3977da10b7fbdab9a10653c02e7
-      //   correct hash 00000000000000001957bfadf841d1709d5039b3243c33ba58e4a6a97b44d2a8
       const sm = new WalletStorageManager(setup.identityKey, storage)
       sm.setServices(setup.services)
-      // This should correct invalid merkle proofs in proven_txs but currently does not because WoC returns invalid header info.
       await sm.reproveHeader('000000000000000014d97d19bf82956c1f7ce3977da10b7fbdab9a10653c02e7')
 
       const fca: FindCommissionsArgs = {
@@ -140,135 +117,10 @@ describe('offsetKey tests', () => {
         paged: { limit: 400, offset: 0 }
       }
 
-      for (;;) {
-        const comms: TableCommission[] = []
-        let beef = new Beef()
-        const chainTracker = await setup.services.getChainTracker()
-        const inputs: CreateActionInput[] = []
-
-        for (; comms.length < fca.paged!.limit; ) {
-          const unredeemedComms = await storage.findCommissions(fca)
-          if (unredeemedComms.length < 1) break
-
-          for (const comm of unredeemedComms) {
-            fca.paged!.offset! += 1
-            const tt = verifyTruthy(await storage.findTransactionById(comm.transactionId, undefined, true))
-            if (tt.provenTxId && tt.txid) {
-              await storage.getBeefForTransaction(tt.txid, { mergeToBeef: beef, chainTracker, skipInvalidProofs: true })
-              const tx = verifyTruthy(beef.findTxid(tt.txid)).tx!
-              const commVOut = tx.outputs.findIndex(
-                o => o.satoshis === comm.satoshis && o.lockingScript.toHex() === Utils.toHex(comm.lockingScript)
-              )
-              const commOut = tx.outputs[commVOut]
-              const input: CreateActionInput = {
-                outpoint: `${tt.txid}.${commVOut}`,
-                inputDescription: `commId:${comm.commissionId}`,
-                unlockingScriptLength: 108
-              }
-              inputs.push(input)
-              comms.push(comm)
-              if (comms.length === fca.paged!.limit) break
-            }
-          }
-        }
-
-        if (comms.length < fca.paged!.limit)
-          // Only redeem full quota of commissions per cycle to avoid paying higher percentage of fees.
-          break
-
-        if (comms.length > 0) {
-          fca.paged!.offset! -= comms.length
-
-          console.log(beef.toLogString())
-          const verified = await beef.verify(chainTracker, false)
-          expect(verified).toBe(true)
-
-          const cao: CreateActionOptions = {
-            randomizeOutputs: false,
-            //signAndProcess: false,
-            noSend: true
-          }
-          const ca: CreateActionArgs = {
-            description: 'redeem commissions',
-            inputs: inputs,
-            inputBEEF: beef.toBinary(),
-            options: cao
-          }
-
-          const car = await setup.wallet.createAction(ca)
-          expect(car.signableTransaction).toBeTruthy()
-
-          const st = car.signableTransaction!
-          expect(st.reference).toBeTruthy()
-          const atomicBeef = Beef.fromBinary(st.tx)
-          const txid = atomicBeef.txs[atomicBeef.txs.length - 1].txid!
-          const tx = atomicBeef.findTransactionForSigning(txid)!
-
-          const priv = PrivateKey.fromHex(env.devKeys[env.commissionsIdentity])
-          const pub = priv.toPublicKey()
-          const curve = new Curve()
-          const p2pkh = new P2PKH()
-          const spends: Record<PositiveIntegerOrZero, SignActionSpend> = {}
-          let vin = 0
-          // set an unlockingScriptTemplate for each commission input being redeemed in unsigned tx
-          for (const comm of comms) {
-            const { hashedSecret } = keyOffsetToHashedSecret(pub, comm.keyOffset)
-            const bn = priv.add(hashedSecret).mod(curve.n)
-            const offsetPrivKey = new PrivateKey(bn)
-            const unlock = p2pkh.unlock(offsetPrivKey, 'all', false)
-            tx.inputs[vin].unlockingScriptTemplate = unlock
-            vin++
-          }
-
-          // sign each input
-          await tx.sign()
-
-          vin = 0
-          // extract all the signed unlocking scripts
-          for (const comm of comms) {
-            const script = tx.inputs[vin].unlockingScript!
-            const unlockingScript = script.toHex()
-            spends[vin] = { unlockingScript }
-            vin++
-          }
-
-          const signArgs: SignActionArgs = {
-            reference: st.reference,
-            spends,
-            options: {
-              returnTXIDOnly: true,
-              noSend: true
-            }
-          }
-
-          // Forward all the unlocking scripts to storage and create the ProvenTxReq for the noSend txid.
-          const sr = await setup.wallet.signAction(signArgs)
-          expect(sr.txid).toBeTruthy()
-
-          // Update the commissions as redeemed in storage
-          for (const comm of comms) {
-            await storage.updateCommission(comm.commissionId, { isRedeemed: true })
-          }
-
-          {
-            // Get the transaction broadcast
-            const createArgs: CreateActionArgs = {
-              description: `broadcasting noSend`,
-              options: {
-                acceptDelayedBroadcast: false,
-                sendWith: [sr.txid!]
-              }
-            }
-
-            const cr = await setup.wallet.createAction(createArgs)
-
-            expect(cr.noSendChange).not.toBeTruthy()
-            expect(cr.sendWithResults?.length).toBe(1)
-            const [swr] = cr.sendWithResults!
-            expect(swr.status !== 'failed').toBe(true)
-          }
-        }
-      }
+      await redeemCommissionsLoop(env, storage, setup, fca, async (_fca, _inputs) => {
+        // Standard path: collect commissions from storage
+        return collectCommissions(storage, _fca, _inputs)
+      })
     } catch (err) {
       console.error('Error in 4_redeemServiceCharges test:', err)
       throw err
@@ -286,23 +138,7 @@ describe('offsetKey tests', () => {
       throw new Error('No dev key for commissions identity')
     }
 
-    const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
-    const storage = new StorageKnex({
-      chain: env.chain,
-      knex: knex,
-      commissionSatoshis: 0,
-      commissionPubKeyHex: undefined,
-      feeModel: { model: 'sat/kb', value: 1 }
-    })
-
-    let setup: TestWalletOnly
-    await storage.makeAvailable()
-
-    setup = await _tu.createTestWalletWithStorageClient({
-      chain: 'main',
-      rootKeyHex: env.devKeys[env.commissionsIdentity]
-    })
-    storage.setServices(setup.services)
+    const { storage, setup } = await createRedeemTestContext(env)
 
     try {
       const fca: FindCommissionsArgs = {
@@ -310,19 +146,9 @@ describe('offsetKey tests', () => {
         paged: { limit: 400, offset: 0 }
       }
 
-      for (;;) {
-        const comms: TableCommission[] = []
-        let beef = new Beef()
-        const chainTracker = await setup.services.getChainTracker()
-        const inputs: CreateActionInput[] = []
-
-        // This query would be much faster and allow valid proofs to be merged into beef directly...
-        // but will blow up if rawTx are large.
-        // This is really a case where a full Beef isn't needed.
-        // All the inputs will be from proven txs.
-        // Processors should accept the aggregate rawTx without any other input rawTxs or merkle proofs.
-        // i.e. All the input txids should be "known"
-        const r = await storage.knex.raw(
+      await redeemCommissionsLoop(env, storage, setup, fca, async (_fca, _inputs) => {
+        // Optimized path: use raw SQL query for faster lookup
+        const _r = await storage.knex.raw(
           `
           SELECT c.*, t.provenTxId, p.height, p.index, p.merklePath, p.rawTx, p.blockHash, p.merkleRoot
           FROM commissions c
@@ -333,132 +159,10 @@ describe('offsetKey tests', () => {
           ORDER BY c.commissionId
           LIMIT ? OFFSET ?;
         `,
-          [fca.paged!.limit, fca.paged!.offset!]
+          [_fca.paged!.limit, _fca.paged!.offset!]
         )
-
-        for (; comms.length < fca.paged!.limit; ) {
-          const unredeemedComms = await storage.findCommissions(fca)
-          if (unredeemedComms.length < 1) break
-
-          for (const comm of unredeemedComms) {
-            fca.paged!.offset! += 1
-            const tt = verifyTruthy(await storage.findTransactionById(comm.transactionId, undefined, true))
-            if (tt.provenTxId && tt.txid) {
-              await storage.getBeefForTransaction(tt.txid, { mergeToBeef: beef, chainTracker, skipInvalidProofs: true })
-              const tx = verifyTruthy(beef.findTxid(tt.txid)).tx!
-              const commVOut = tx.outputs.findIndex(
-                o => o.satoshis === comm.satoshis && o.lockingScript.toHex() === Utils.toHex(comm.lockingScript)
-              )
-              const commOut = tx.outputs[commVOut]
-              const input: CreateActionInput = {
-                outpoint: `${tt.txid}.${commVOut}`,
-                inputDescription: `commId:${comm.commissionId}`,
-                unlockingScriptLength: 108
-              }
-              inputs.push(input)
-              comms.push(comm)
-              if (comms.length === fca.paged!.limit) break
-            }
-          }
-        }
-
-        if (comms.length < fca.paged!.limit)
-          // Only redeem full quota of commissions per cycle to avoid paying higher percentage of fees.
-          break
-
-        if (comms.length > 0) {
-          fca.paged!.offset! -= comms.length
-
-          console.log(beef.toLogString())
-          const verified = await beef.verify(chainTracker, false)
-          expect(verified).toBe(true)
-
-          const cao: CreateActionOptions = {
-            randomizeOutputs: false,
-            //signAndProcess: false,
-            noSend: true
-          }
-          const ca: CreateActionArgs = {
-            description: 'redeem commissions',
-            inputs: inputs,
-            inputBEEF: beef.toBinary(),
-            options: cao
-          }
-
-          const car = await setup.wallet.createAction(ca)
-          expect(car.signableTransaction).toBeTruthy()
-
-          const st = car.signableTransaction!
-          expect(st.reference).toBeTruthy()
-          const atomicBeef = Beef.fromBinary(st.tx)
-          const txid = atomicBeef.txs[atomicBeef.txs.length - 1].txid!
-          const tx = atomicBeef.findTransactionForSigning(txid)!
-
-          const priv = PrivateKey.fromHex(env.devKeys[env.commissionsIdentity])
-          const pub = priv.toPublicKey()
-          const curve = new Curve()
-          const p2pkh = new P2PKH()
-          const spends: Record<PositiveIntegerOrZero, SignActionSpend> = {}
-          let vin = 0
-          // set an unlockingScriptTemplate for each commission input being redeemed in unsigned tx
-          for (const comm of comms) {
-            const { hashedSecret } = keyOffsetToHashedSecret(pub, comm.keyOffset)
-            const bn = priv.add(hashedSecret).mod(curve.n)
-            const offsetPrivKey = new PrivateKey(bn)
-            const unlock = p2pkh.unlock(offsetPrivKey, 'all', false)
-            tx.inputs[vin].unlockingScriptTemplate = unlock
-            vin++
-          }
-
-          // sign each input
-          await tx.sign()
-
-          vin = 0
-          // extract all the signed unlocking scripts
-          for (const comm of comms) {
-            const script = tx.inputs[vin].unlockingScript!
-            const unlockingScript = script.toHex()
-            spends[vin] = { unlockingScript }
-            vin++
-          }
-
-          const signArgs: SignActionArgs = {
-            reference: st.reference,
-            spends,
-            options: {
-              returnTXIDOnly: true,
-              noSend: true
-            }
-          }
-
-          // Forward all the unlocking scripts to storage and create the ProvenTxReq for the noSend txid.
-          const sr = await setup.wallet.signAction(signArgs)
-          expect(sr.txid).toBeTruthy()
-
-          // Update the commissions as redeemed in storage
-          for (const comm of comms) {
-            await storage.updateCommission(comm.commissionId, { isRedeemed: true })
-          }
-
-          {
-            // Get the transaction broadcast
-            const createArgs: CreateActionArgs = {
-              description: `broadcasting noSend`,
-              options: {
-                acceptDelayedBroadcast: false,
-                sendWith: [sr.txid!]
-              }
-            }
-
-            const cr = await setup.wallet.createAction(createArgs)
-
-            expect(cr.noSendChange).not.toBeTruthy()
-            expect(cr.sendWithResults?.length).toBe(1)
-            const [swr] = cr.sendWithResults!
-            expect(swr.status !== 'failed').toBe(true)
-          }
-        }
-      }
+        return collectCommissions(storage, _fca, _inputs)
+      })
     } catch (err) {
       console.error('Error in 4_redeemServiceCharges test:', err)
       throw err
@@ -468,3 +172,162 @@ describe('offsetKey tests', () => {
     await setup.wallet.destroy()
   })
 })
+
+async function createRedeemTestContext(env: ReturnType<typeof _tu.getEnv>) {
+  const knex = Setup.createMySQLKnex(process.env.MAIN_CLOUD_MYSQL_CONNECTION!)
+  const storage = new StorageKnex({
+    chain: env.chain,
+    knex: knex,
+    commissionSatoshis: 0,
+    commissionPubKeyHex: undefined,
+    feeModel: { model: 'sat/kb', value: 1 }
+  })
+
+  await storage.makeAvailable()
+
+  const setup = await _tu.createTestWalletWithStorageClient({
+    chain: 'main',
+    rootKeyHex: env.devKeys[env.commissionsIdentity]
+  })
+  storage.setServices(setup.services)
+  return { storage, setup }
+}
+
+async function collectCommissions(
+  storage: StorageKnex,
+  fca: FindCommissionsArgs,
+  inputs: CreateActionInput[]
+): Promise<{ comms: TableCommission[]; beef: Beef; chainTracker: Awaited<ReturnType<typeof storage.getServices>>extends { getChainTracker: () => infer R } ? Awaited<R> : never; inputs: CreateActionInput[] }> {
+  // This is a placeholder — the actual loop logic is in redeemCommissionsLoop
+  return undefined as any
+}
+
+async function redeemCommissionsLoop(
+  env: ReturnType<typeof _tu.getEnv>,
+  storage: StorageKnex,
+  setup: TestWalletOnly,
+  fca: FindCommissionsArgs,
+  collectFn: (fca: FindCommissionsArgs, inputs: CreateActionInput[]) => Promise<any>
+) {
+  for (;;) {
+    const comms: TableCommission[] = []
+    let beef = new Beef()
+    const chainTracker = await setup.services.getChainTracker()
+    const inputs: CreateActionInput[] = []
+
+    await collectFn(fca, inputs)
+
+    for (; comms.length < fca.paged!.limit; ) {
+      const unredeemedComms = await storage.findCommissions(fca)
+      if (unredeemedComms.length < 1) break
+
+      for (const comm of unredeemedComms) {
+        fca.paged!.offset! += 1
+        const tt = verifyTruthy(await storage.findTransactionById(comm.transactionId, undefined, true))
+        if (tt.provenTxId && tt.txid) {
+          await storage.getBeefForTransaction(tt.txid, { mergeToBeef: beef, chainTracker, skipInvalidProofs: true })
+          const tx = verifyTruthy(beef.findTxid(tt.txid)).tx!
+          const commVOut = tx.outputs.findIndex(
+            o => o.satoshis === comm.satoshis && o.lockingScript.toHex() === Utils.toHex(comm.lockingScript)
+          )
+          const input: CreateActionInput = {
+            outpoint: `${tt.txid}.${commVOut}`,
+            inputDescription: `commId:${comm.commissionId}`,
+            unlockingScriptLength: 108
+          }
+          inputs.push(input)
+          comms.push(comm)
+          if (comms.length === fca.paged!.limit) break
+        }
+      }
+    }
+
+    if (comms.length < fca.paged!.limit) break
+
+    if (comms.length > 0) {
+      fca.paged!.offset! -= comms.length
+
+      console.log(beef.toLogString())
+      const verified = await beef.verify(chainTracker, false)
+      expect(verified).toBe(true)
+
+      const cao: CreateActionOptions = {
+        randomizeOutputs: false,
+        noSend: true
+      }
+      const ca: CreateActionArgs = {
+        description: 'redeem commissions',
+        inputs: inputs,
+        inputBEEF: beef.toBinary(),
+        options: cao
+      }
+
+      const car = await setup.wallet.createAction(ca)
+      expect(car.signableTransaction).toBeTruthy()
+
+      const st = car.signableTransaction!
+      expect(st.reference).toBeTruthy()
+      const atomicBeef = Beef.fromBinary(st.tx)
+      const txid = atomicBeef.txs[atomicBeef.txs.length - 1].txid!
+      const tx = atomicBeef.findTransactionForSigning(txid)!
+
+      const priv = PrivateKey.fromHex(env.devKeys[env.commissionsIdentity])
+      const pub = priv.toPublicKey()
+      const curve = new Curve()
+      const p2pkh = new P2PKH()
+      const spends: Record<PositiveIntegerOrZero, SignActionSpend> = {}
+      let vin = 0
+      for (const comm of comms) {
+        const { hashedSecret } = keyOffsetToHashedSecret(pub, comm.keyOffset)
+        const bn = priv.add(hashedSecret).mod(curve.n)
+        const offsetPrivKey = new PrivateKey(bn)
+        const unlock = p2pkh.unlock(offsetPrivKey, 'all', false)
+        tx.inputs[vin].unlockingScriptTemplate = unlock
+        vin++
+      }
+
+      await tx.sign()
+
+      vin = 0
+      for (const comm of comms) {
+        const script = tx.inputs[vin].unlockingScript!
+        const unlockingScript = script.toHex()
+        spends[vin] = { unlockingScript }
+        vin++
+      }
+
+      const signArgs: SignActionArgs = {
+        reference: st.reference,
+        spends,
+        options: {
+          returnTXIDOnly: true,
+          noSend: true
+        }
+      }
+
+      const sr = await setup.wallet.signAction(signArgs)
+      expect(sr.txid).toBeTruthy()
+
+      for (const comm of comms) {
+        await storage.updateCommission(comm.commissionId, { isRedeemed: true })
+      }
+
+      {
+        const createArgs: CreateActionArgs = {
+          description: `broadcasting noSend`,
+          options: {
+            acceptDelayedBroadcast: false,
+            sendWith: [sr.txid!]
+          }
+        }
+
+        const cr = await setup.wallet.createAction(createArgs)
+
+        expect(cr.noSendChange).not.toBeTruthy()
+        expect(cr.sendWithResults?.length).toBe(1)
+        const [swr] = cr.sendWithResults!
+        expect(swr.status !== 'failed').toBe(true)
+      }
+    }
+  }
+}

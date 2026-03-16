@@ -20,13 +20,11 @@ describe('createIdbChaintracks tests', () => {
     })
   })
 
-  test('0', async () => {
+  test.skip('0 - manual test, runs over two minutes', async () => {
     const target: Chain = 'main'
     if (_tu.noEnv(target)) return
-    // Test runs over two minutes long...
-    return
 
-    const env = _tu.getEnv(target) // NOSONAR — manual test kept disabled for CI; enable locally to run
+    const env = _tu.getEnv(target)
     const { chain, chaintracks, storage, available } = await createIdbChaintracks(env.chain, env.whatsonchainApiKey)
     await available
     const headerListener: HeaderListener = (header: BlockHeader) => {

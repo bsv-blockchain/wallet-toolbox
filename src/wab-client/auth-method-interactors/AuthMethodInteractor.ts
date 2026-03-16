@@ -22,7 +22,10 @@ export interface CompleteAuthResponse {
 }
 
 /**
- * Abstract client-side interactor for an Auth Method
+ * Abstract client-side interactor for an Auth Method.
+ * Provides default implementations of startAuth and completeAuth that
+ * call the WAB server's /auth/start and /auth/complete endpoints.
+ * Subclasses only need to set `methodType`.
  */
 export abstract class AuthMethodInteractor {
   public abstract methodType: string
@@ -30,18 +33,56 @@ export abstract class AuthMethodInteractor {
   /**
    * Start the flow (e.g. request an OTP or create a session).
    */
-  public abstract startAuth(
+  public async startAuth(
     serverUrl: string,
     presentationKey: string,
     payload: AuthPayload
-  ): Promise<StartAuthResponse>
+  ): Promise<StartAuthResponse> {
+    const res = await fetch(`${serverUrl}/auth/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType: this.methodType,
+        presentationKey,
+        payload
+      })
+    })
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: `HTTP error ${res.status}`
+      }
+    }
+
+    return res.json()
+  }
 
   /**
    * Complete the flow (e.g. confirm OTP).
    */
-  public abstract completeAuth(
+  public async completeAuth(
     serverUrl: string,
     presentationKey: string,
     payload: AuthPayload
-  ): Promise<CompleteAuthResponse>
+  ): Promise<CompleteAuthResponse> {
+    const res = await fetch(`${serverUrl}/auth/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        methodType: this.methodType,
+        presentationKey,
+        payload
+      })
+    })
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: `HTTP error ${res.status}`
+      }
+    }
+
+    return res.json()
+  }
 }

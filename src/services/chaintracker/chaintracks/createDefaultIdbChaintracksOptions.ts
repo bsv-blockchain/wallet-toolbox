@@ -1,15 +1,10 @@
 import { Chain } from '../../../sdk'
 import { ChaintracksOptions } from './Api/ChaintracksApi'
-import { Chaintracks } from './Chaintracks'
-import { BulkIngestorCDNBabbage } from './Ingest/BulkIngestorCDNBabbage'
 import { ChaintracksFetch } from './util/ChaintracksFetch'
-import { LiveIngestorWhatsOnChainOptions, LiveIngestorWhatsOnChainPoll } from './Ingest/LiveIngestorWhatsOnChainPoll'
-import { BulkIngestorWhatsOnChainCdn, BulkIngestorWhatsOnChainOptions } from './Ingest/BulkIngestorWhatsOnChainCdn'
 import { ChaintracksFetchApi } from './Api/ChaintracksFetchApi'
 import { ChaintracksStorageIdb, ChaintracksStorageIdbOptions } from './Storage/ChaintracksStorageIdb'
 import { BulkFileDataManager, BulkFileDataManagerOptions } from './util/BulkFileDataManager'
-import { BulkIngestorCDNOptions } from './Ingest/BulkIngestorCDN'
-import { WhatsOnChainServicesOptions } from './Ingest/WhatsOnChainServices'
+import { configureDefaultIngestors } from './createDefaultChaintracksIngestors'
 
 export function createDefaultIdbChaintracksOptions(
   chain: Chain,
@@ -55,38 +50,7 @@ export function createDefaultIdbChaintracksOptions(
     readonly: false
   }
 
-  const jsonResource = `${chain}NetBlockHeaders.json`
-
-  const bulkCdnOptions: BulkIngestorCDNOptions = {
-    chain,
-    jsonResource,
-    fetch,
-    cdnUrl,
-    maxPerFile
-  }
-  co.bulkIngestors.push(new BulkIngestorCDNBabbage(bulkCdnOptions))
-
-  const wocOptions: WhatsOnChainServicesOptions = {
-    chain,
-    apiKey: whatsonchainApiKey,
-    timeout: 30000,
-    userAgent: 'BabbageWhatsOnChainServices',
-    enableCache: true,
-    chainInfoMsecs: 5000
-  }
-
-  const bulkOptions: BulkIngestorWhatsOnChainOptions = {
-    ...wocOptions,
-    jsonResource,
-    idleWait: 5000
-  }
-  co.bulkIngestors.push(new BulkIngestorWhatsOnChainCdn(bulkOptions))
-
-  const liveOptions: LiveIngestorWhatsOnChainOptions = {
-    ...wocOptions,
-    idleWait: 100000
-  }
-  co.liveIngestors.push(new LiveIngestorWhatsOnChainPoll(liveOptions))
+  configureDefaultIngestors(co, chain, fetch, whatsonchainApiKey, cdnUrl, maxPerFile)
 
   return co
 }

@@ -3,7 +3,7 @@ import { AuthMethodInteractor, AuthPayload, StartAuthResponse, CompleteAuthRespo
 export class PersonaIDInteractor extends AuthMethodInteractor {
   public methodType = 'PersonaID'
 
-  public async startAuth(serverUrl: string, presentationKey: string, payload: AuthPayload): Promise<StartAuthResponse> {
+  public override async startAuth(serverUrl: string, presentationKey: string, payload: AuthPayload): Promise<StartAuthResponse> {
     const res = await fetch(`${serverUrl}/auth/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -16,7 +16,7 @@ export class PersonaIDInteractor extends AuthMethodInteractor {
     return res.json()
   }
 
-  public async completeAuth(
+  public override async completeAuth(
     serverUrl: string,
     presentationKey: string,
     payload: AuthPayload
