@@ -1222,7 +1222,7 @@ describe('generateChange tests', () => {
     // Wrap the mock allocator with the minSatoshis floor, mirroring what
     // createAction.ts now does when calling storage.allocateChangeInput.
     const inputSize = 41 + params.changeUnlockingScriptLength // 148 bytes
-    const inputFee = Math.ceil((inputSize * params.feeModel.value) / 1000) // 15 sats at 100 sat/kb
+    const inputFee = Math.ceil((inputSize * (params.feeModel.value || 0)) / 1000) // 15 sats at 100 sat/kb
 
     const allocateChangeInput = async (
       targetSatoshis: number,
@@ -1248,13 +1248,15 @@ describe('generateChange tests', () => {
   })
 
   /**
-   * Confirms that the same wallet state WITHOUT the minSatoshis fix would
-   * fail with WERR_INSUFFICIENT_FUNDS — proving the fix is necessary.
+   * Confirms that dust-only UTXOs with a realistic payment output fail
+   * with WERR_INSUFFICIENT_FUNDS — the scenario the fix prevents by
+   * skipping dust and reaching the large outputs instead.
    */
-  test('9a dust spiral WITHOUT fix throws WERR_INSUFFICIENT_FUNDS', async () => {
+  test('9a dust-only wallet with payment output throws WERR_INSUFFICIENT_FUNDS', async () => {
     const params: GenerateChangeSdkParams = {
       fixedInputs: [],
-      fixedOutputs: [],
+      // A real BRC-29 payment: 10 sats to NanoStore
+      fixedOutputs: [{ satoshis: 10, lockingScriptLength: 25 }],
       feeModel: { model: 'sat/kb', value: 100 },
       changeInitialSatoshis: 32,
       changeFirstSatoshis: 8,
@@ -1263,11 +1265,13 @@ describe('generateChange tests', () => {
       randomVals: [...randomValsUsed1]
     }
 
-    // Same UTXO set, but only dust outputs — simulates what the old allocator
-    // sees when it grabs dust first and never reaches the big ones.
+    // Only dust outputs — simulates what the old allocator effectively sees
+    // when it grabs dust first and never reaches the viable outputs.
+    // Each input costs ~15 sats in fees at 100 sat/kb, so outputs of 1-14 sats
+    // are net-negative: they increase the deficit with every allocation.
     const dustOnly: GenerateChangeSdkChangeInput[] = []
-    for (let i = 0; i < 315; i++) {
-      dustOnly.push({ satoshis: 1 + (i % 16), outputId: 80000 + i })
+    for (let i = 0; i < 200; i++) {
+      dustOnly.push({ satoshis: 1 + (i % 14), outputId: 80000 + i })
     }
 
     const { allocateChangeInput, releaseChangeInput } = generateChangeSdkMakeStorage(dustOnly)

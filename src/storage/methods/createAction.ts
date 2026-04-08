@@ -878,7 +878,7 @@ async function fundNewTransactionSdk(
     // Skip dust outputs whose value is less than the fee to include them as an input.
     // Input overhead: 32 (txid) + 4 (vout) + 1 (scriptLen varint) + unlockingScript + 4 (sequence)
     const inputSize = 41 + params.changeUnlockingScriptLength
-    const inputFee = Math.ceil((inputSize * ctx.feeModel.value) / 1000)
+    const inputFee = Math.ceil((inputSize * (ctx.feeModel.value || 0)) / 1000)
     const o = await storage.allocateChangeInput(
       userId,
       basketId,
