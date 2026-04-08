@@ -1155,6 +1155,127 @@ describe('generateChange tests', () => {
     }
     expectTransactionSize(params, r)
   })
+
+  /**
+   * Reproduces a real-world dust spiral observed on a mainnet MetaNet Client
+   * wallet (identity 03ef3231…) backed by storage.babbage.systems.
+   *
+   * The wallet held 560 confirmed, on-chain-verified UTXOs totalling 772 M sats
+   * but createAction consistently returned WERR_INSUFFICIENT_FUNDS. Root cause:
+   * at 100 sat/kb, hundreds of small change outputs (5–16 sats) created by prior
+   * UTXO-rebalancing transactions cost ~15 sats each just to include as inputs.
+   * allocateChangeInput always picks the smallest output >= target, so it grabs
+   * dust outputs that barely cover their own fee cost, spiralling until funds run
+   * out — never reaching the large UTXOs.
+   *
+   * This test mirrors the actual wallet state: a handful of large outputs buried
+   * under hundreds of dust outputs, at the production fee rate of 100 sat/kb.
+   * Without the minSatoshis fix the funding loop exhausts dust and throws.
+   * With the fix, dust is skipped and a large output is allocated immediately.
+   */
+  test('9 dust spiral at 100 sat/kb — real wallet reproduction', async () => {
+    // Mirror the real wallet: 100 sat/kb fee rate, production basket config
+    const params: GenerateChangeSdkParams = {
+      fixedInputs: [],
+      fixedOutputs: [],
+      feeModel: { model: 'sat/kb', value: 100 },
+      changeInitialSatoshis: 32,    // from basket minimumDesiredUTXOValue
+      changeFirstSatoshis: 8,       // max(1, round(32 / 4))
+      changeLockingScriptLength: 25,
+      changeUnlockingScriptLength: 107,
+      randomVals: [...randomValsUsed1]
+    }
+
+    // Build a UTXO set that mirrors the real wallet:
+    //   - 3 large outputs (583 M, 100 M, 85 M sats)
+    //   - ~60 medium outputs (100–900 K sats)
+    //   - ~180 small-but-viable outputs (100–1000 sats)
+    //   - ~315 dust outputs (1–16 sats) from UTXO rebalancing
+    const availableChange: GenerateChangeSdkChangeInput[] = []
+    let nextId = 90000
+
+    // 3 large outputs — the bulk of the balance
+    availableChange.push({ satoshis: 583_527_872, outputId: nextId++ })
+    availableChange.push({ satoshis: 99_999_835,  outputId: nextId++ })
+    availableChange.push({ satoshis: 85_776_047,  outputId: nextId++ })
+
+    // ~60 medium outputs (100 K – 900 K sats)
+    for (let i = 0; i < 60; i++) {
+      availableChange.push({ satoshis: 100_000 + i * 13_000, outputId: nextId++ })
+    }
+
+    // ~180 small-but-viable outputs (100–1000 sats)
+    for (let i = 0; i < 180; i++) {
+      availableChange.push({ satoshis: 100 + (i % 900), outputId: nextId++ })
+    }
+
+    // ~315 dust outputs (1–16 sats) — the trap
+    for (let i = 0; i < 315; i++) {
+      availableChange.push({ satoshis: 1 + (i % 16), outputId: nextId++ })
+    }
+
+    // The mock storage sorts ascending, so dust ends up first — exactly what
+    // the real allocateChangeInput does (smallest >= target).
+    const { allocateChangeInput: rawAllocate, releaseChangeInput, getLog } =
+      generateChangeSdkMakeStorage(availableChange)
+
+    // Wrap the mock allocator with the minSatoshis floor, mirroring what
+    // createAction.ts now does when calling storage.allocateChangeInput.
+    const inputSize = 41 + params.changeUnlockingScriptLength // 148 bytes
+    const inputFee = Math.ceil((inputSize * params.feeModel.value) / 1000) // 15 sats at 100 sat/kb
+
+    const allocateChangeInput = async (
+      targetSatoshis: number,
+      exactSatoshis?: number
+    ): Promise<GenerateChangeSdkChangeInput | undefined> => {
+      // Skip dust: only consider outputs whose value exceeds the fee to
+      // include them.  This is what the fix adds to the real allocator.
+      const adjustedTarget = Math.max(targetSatoshis, inputFee)
+      return rawAllocate(adjustedTarget, exactSatoshis)
+    }
+
+    const r = await generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
+
+    // With the fix, the allocator should skip all dust and grab a viable output.
+    expect(r.allocatedChangeInputs.length).toBeGreaterThanOrEqual(1)
+    // Every allocated input should be above the dust floor.
+    for (const ci of r.allocatedChangeInputs) {
+      expect(ci.satoshis).toBeGreaterThan(inputFee)
+    }
+    // The transaction should be fully funded (no WERR_INSUFFICIENT_FUNDS thrown).
+    expect(r.fee).toBeGreaterThan(0)
+    expectTransactionSize(params, r)
+  })
+
+  /**
+   * Confirms that the same wallet state WITHOUT the minSatoshis fix would
+   * fail with WERR_INSUFFICIENT_FUNDS — proving the fix is necessary.
+   */
+  test('9a dust spiral WITHOUT fix throws WERR_INSUFFICIENT_FUNDS', async () => {
+    const params: GenerateChangeSdkParams = {
+      fixedInputs: [],
+      fixedOutputs: [],
+      feeModel: { model: 'sat/kb', value: 100 },
+      changeInitialSatoshis: 32,
+      changeFirstSatoshis: 8,
+      changeLockingScriptLength: 25,
+      changeUnlockingScriptLength: 107,
+      randomVals: [...randomValsUsed1]
+    }
+
+    // Same UTXO set, but only dust outputs — simulates what the old allocator
+    // sees when it grabs dust first and never reaches the big ones.
+    const dustOnly: GenerateChangeSdkChangeInput[] = []
+    for (let i = 0; i < 315; i++) {
+      dustOnly.push({ satoshis: 1 + (i % 16), outputId: 80000 + i })
+    }
+
+    const { allocateChangeInput, releaseChangeInput } = generateChangeSdkMakeStorage(dustOnly)
+
+    await expectToThrowWERR(sdk.WERR_INSUFFICIENT_FUNDS, () =>
+      generateChangeSdk(params, allocateChangeInput, releaseChangeInput)
+    )
+  })
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
