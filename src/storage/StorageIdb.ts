@@ -355,7 +355,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     targetSatoshis: number,
     exactSatoshis: number | undefined,
     excludeSending: boolean,
-    transactionId: number
+    transactionId: number,
+    minSatoshis?: number
   ): Promise<TableOutput | undefined> {
     const dbTrx = this.toDbTrx(['outputs', 'transactions', 'proven_txs', 'proven_tx_reqs'], 'readwrite')
     try {
@@ -366,7 +367,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
         txStatus,
         trx: dbTrx
       }
-      const outputs = await this.findOutputs(args)
+      const allOutputs = await this.findOutputs(args)
+      // Skip dust outputs that cost more in fees to spend than they contribute.
+      const floor = minSatoshis ?? 0
+      const outputs = floor > 0 ? allOutputs.filter(o => o.satoshis >= floor) : allOutputs
       let output: TableOutput | undefined
       let scores: { output: TableOutput; score: number }[] = []
       for (const o of outputs) {

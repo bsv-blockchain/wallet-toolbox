@@ -111,7 +111,8 @@ export abstract class StorageProvider extends StorageReaderWriter implements Wal
     targetSatoshis: number,
     exactSatoshis: number | undefined,
     excludeSending: boolean,
-    transactionId: number
+    transactionId: number,
+    minSatoshis?: number
   ): Promise<TableOutput | undefined>
 
   abstract getProvenOrRawTx(txid: string, trx?: TrxToken): Promise<ProvenOrRawTx>

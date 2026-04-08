@@ -1216,20 +1216,27 @@ export class StorageKnex extends StorageProvider implements WalletStorageProvide
     targetSatoshis: number,
     exactSatoshis: number | undefined,
     excludeSending: boolean,
-    transactionId: number
+    transactionId: number,
+    minSatoshis?: number
   ): Promise<TableOutput | undefined> {
     const status: TransactionStatus[] = ['completed', 'unproven']
     if (!excludeSending) status.push('sending')
 
+    // Skip outputs that cost more in fees to spend than they contribute.
+    const floor = minSatoshis ?? 0
+
     const r: TableOutput | undefined = await this.knex.transaction(async trx => {
-      const baseQuery = () =>
-        trx<TableOutput>('outputs as o')
+      const baseQuery = () => {
+        const q = trx<TableOutput>('outputs as o')
           .join('transactions as t', 'o.transactionId', 't.transactionId')
           .where('o.userId', userId)
           .where('o.spendable', true)
           .where('o.basketId', basketId)
           .whereIn('t.status', status)
           .select('o.*')
+        if (floor > 0) q.where('o.satoshis', '>=', floor)
+        return q
+      }
 
       let output: TableOutput | undefined
 
