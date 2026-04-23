@@ -3,7 +3,6 @@ import { getListOutputsSpecOp } from './ListOutputsSpecOp'
 import { StorageIdb } from '../StorageIdb'
 import { AuthId, FindOutputsArgs } from '../../sdk/WalletStorage.interfaces'
 import { verifyId } from '../../utility/utilityHelpers'
-import { WERR_NOT_IMPLEMENTED } from '../../sdk/WERR_errors'
 import { TableOutputBasket } from '../schema/tables/TableOutputBasket'
 import { TransactionStatus } from '../../sdk/types'
 import { asString } from '../../utility/utilityHelpers.noBuffer'
@@ -16,8 +15,13 @@ export async function listOutputsIdb(
 ): Promise<ListOutputsResult> {
   const userId = verifyId(auth.userId)
   const limit = vargs.limit
-  const offset = vargs.offset
-  if (offset < 0) throw new WERR_NOT_IMPLEMENTED('Negative offset not supported in IndexedDB')
+  // Negative offset means "page from the tail": reverse the order and reindex. Matches Knex/Bun.
+  let offset = vargs.offset
+  let orderDescending = false
+  if (offset < 0) {
+    offset = -offset - 1
+    orderDescending = true
+  }
 
   const r: ListOutputsResult = {
     totalOutputs: 0,
@@ -98,7 +102,7 @@ export async function listOutputsIdb(
   const noTags = tagIds.length === 0
   const includeSpent = false
 
-  const stati: TransactionStatus[] = ['completed', 'unproven', 'nosend']
+  const stati: TransactionStatus[] = ['completed', 'unproven', 'nosend', 'sending']
 
   const args: FindOutputsArgs = {
     partial: {
@@ -107,7 +111,8 @@ export async function listOutputsIdb(
       spendable: !includeSpent ? true : undefined
     },
     txStatus: stati,
-    noScript: true
+    noScript: true,
+    orderDescending
   }
   if (!specOp || !specOp.ignoreLimit) args.paged = { limit, offset }
 
