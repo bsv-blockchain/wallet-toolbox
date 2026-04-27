@@ -19,7 +19,7 @@ import {
   TableTxLabelMap,
   TableUser
 } from './schema/tables'
-import { verifyOne, verifyOneOrNone } from '../utility/utilityHelpers'
+import { verifyOneOrNone } from '../utility/utilityHelpers'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
@@ -460,7 +460,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       else rawTx = r.rawTx
     }
     if (rawTx && sliceRequested) {
-      rawTx = rawTx.slice(offset, offset! + length!)
+      rawTx = rawTx.slice(offset, offset + length)
     }
     return rawTx
   }
