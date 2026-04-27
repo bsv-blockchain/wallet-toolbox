@@ -15184,7 +15184,7 @@ Links: [API](#api), [Interfaces](#interfaces), [Classes](#classes), [Functions](
 ##### Class: WERR_REVIEW_ACTIONS
 
 When a `createAction` or `signAction` is completed in undelayed mode (`acceptDelayedBroadcast`: false),
-any unsucccessful result will return the results by way of this exception to ensure attention is
+any unsuccessful result will return the results by way of this exception to ensure attention is
 paid to processing errors.
 
 ```ts
@@ -15198,7 +15198,7 @@ See also: [ReviewActionResult](./client.md#interface-reviewactionresult), [Walle
 
 ###### Constructor
 
-All parameters correspond to their comparable `createAction` or `signSction` results
+All parameters correspond to their comparable `createAction` or `signAction` results
 with the exception of `reviewActionResults`;
 which contains more details, particularly for double spend results.
 
@@ -19607,7 +19607,7 @@ Indicates status of a new Action following a `createAction` or `signAction` in i
 When `acceptDelayedBroadcast` is falses.
 
 'success': The action has been broadcast and accepted by the bitcoin processing network.
-'doulbeSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the loosing transaction.
+'doubleSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the losing transaction.
 'invalidTx': The action was rejected by the processing network as an invalid bitcoin transaction.
 'serviceError': The broadcast services are currently unable to reach the bitcoin network. The action is now queued for delayed retries.
 
@@ -19705,7 +19705,7 @@ Indicates status of a new Action following a `createAction` or `signAction` in i
 When `acceptDelayedBroadcast` is falses.
 
 'success': The action has been broadcast and accepted by the bitcoin processing network.
-'doulbeSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the loosing transaction.
+'doubleSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the losing transaction.
 'invalidTx': The action was rejected by the processing network as an invalid bitcoin transaction.
 'serviceError': The broadcast services are currently unable to reach the bitcoin network. The action is now queued for delayed retries.
 

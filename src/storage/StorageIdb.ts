@@ -19,7 +19,7 @@ import {
   TableTxLabelMap,
   TableUser
 } from './schema/tables'
-import { verifyOne, verifyOneOrNone } from '../utility/utilityHelpers'
+import { verifyOneOrNone } from '../utility/utilityHelpers'
 import { StorageAdminStats, StorageProvider, StorageProviderOptions } from './StorageProvider'
 import { StorageIdbSchema } from './schema/StorageIdbSchema'
 import { DBType } from './StorageReader'
@@ -364,6 +364,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const args: FindOutputsArgs = {
         partial: { userId, basketId, spendable: true },
         txStatus,
+        // Skip per-output script hydration during the candidate scan — we only need
+        // the locking script for the one we actually pick below. Matches Knex's
+        // pattern: SELECT candidates cheaply, hydrate the chosen output explicitly.
+        noScript: true,
         trx: dbTrx
       }
       const outputs = await this.findOutputs(args)
@@ -396,6 +400,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (output) {
         // mark output as spent by transactionId
         await this.updateOutput(output.outputId, { spendable: false, spentBy: transactionId }, dbTrx)
+        // Hydrate the locking script for the chosen output. Identical to Knex canon at
+        // StorageKnex.allocateChangeInput: required when the script was offloaded into
+        // rawTx storage due to exceeding maxOutputScript.
+        await this.validateOutputScript(output, dbTrx)
       }
       return output
     } finally {
@@ -432,10 +440,26 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     if (!this.isAvailable()) await this.makeAvailable()
 
     let rawTx: number[] | undefined = undefined
-    const r = await this.getProvenOrRawTx(txid, trx)
-    if (r.proven) rawTx = r.proven.rawTx
-    else rawTx = r.rawTx
-    if (rawTx && offset !== undefined && length !== undefined && Number.isInteger(offset) && Number.isInteger(length)) {
+    const sliceRequested = offset !== undefined && length !== undefined && Number.isInteger(offset) && Number.isInteger(length)
+    // Slice path uses an extended status set that includes 'unfail' — matches Knex
+    // canon at StorageKnex.ts:131. The non-slice path continues to delegate to
+    // getProvenOrRawTx which uses the narrower set.
+    if (sliceRequested) {
+      const proven = verifyOneOrNone(await this.findProvenTxs({ partial: { txid }, trx }))
+      if (proven) {
+        rawTx = proven.rawTx
+      } else {
+        const req = verifyOneOrNone(await this.findProvenTxReqs({ partial: { txid }, trx }))
+        if (req && ['unsent', 'nosend', 'sending', 'unmined', 'completed', 'unfail'].includes(req.status)) {
+          rawTx = req.rawTx
+        }
+      }
+    } else {
+      const r = await this.getProvenOrRawTx(txid, trx)
+      if (r.proven) rawTx = r.proven.rawTx
+      else rawTx = r.rawTx
+    }
+    if (rawTx && sliceRequested) {
       rawTx = rawTx.slice(offset, offset + length)
     }
     return rawTx
@@ -446,8 +470,12 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const labelIds = maps.map(m => m.txLabelId)
     const labels: TableTxLabel[] = []
     for (const txLabelId of labelIds) {
-      const label = verifyOne(await this.findTxLabels({ partial: { txLabelId, isDeleted: false }, trx }))
-      labels.push(label)
+      // verifyOneOrNone: a map row may reference a label that was later soft-deleted.
+      // Knex/Bun drop it via JOIN; we must do the same silently or we'd break the whole
+      // listActions response. Skip + log so persistent orphans still produce a signal.
+      const label = verifyOneOrNone(await this.findTxLabels({ partial: { txLabelId, isDeleted: false }, trx }))
+      if (label) labels.push(label)
+      else console.debug(`[StorageIdb] orphan tx_labels_map row skipped: transactionId=${transactionId} txLabelId=${txLabelId}`)
     }
     return labels
   }
@@ -457,8 +485,9 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const tagIds = maps.map(m => m.outputTagId)
     const tags: TableOutputTag[] = []
     for (const outputTagId of tagIds) {
-      const tag = verifyOne(await this.findOutputTags({ partial: { outputTagId, isDeleted: false }, trx }))
-      tags.push(tag)
+      const tag = verifyOneOrNone(await this.findOutputTags({ partial: { outputTagId, isDeleted: false }, trx }))
+      if (tag) tags.push(tag)
+      else console.debug(`[StorageIdb] orphan output_tags_map row skipped: outputId=${outputId} outputTagId=${outputTagId}`)
     }
     return tags
   }
@@ -514,11 +543,31 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     await deleteDB(this.dbName)
   }
 
+  /**
+   * Reject undefined values in a `partial` filter argument. Matches
+   * Knex behavior (which throws `Undefined binding(s) detected`) so that
+   * callers can't pass an unmapped idMap lookup through as a silent
+   * match-anything. Omit the key to skip filtering on it; pass null if
+   * you need IS NULL semantics (only meaningful for nullable columns).
+   */
+  private assertNoUndefinedInPartial(partial: Record<string, unknown> | undefined): void {
+    if (!partial) return
+    for (const k of Object.keys(partial)) {
+      if (partial[k] === undefined) {
+        throw new WERR_INVALID_PARAMETER(
+          `args.partial.${k}`,
+          `not undefined. Passing undefined as a filter value is not supported — omit the key to skip filtering. Matches Knex semantics.`
+        )
+      }
+    }
+  }
+
   async filterOutputTagMaps(
     args: FindOutputTagMapsArgs,
     filtered: (v: TableOutputTagMap) => void,
     userId?: number
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -544,15 +593,15 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (args.since && args.since > r.updated_at) continue
       if (args.tagIds && !args.tagIds.includes(r.outputTagId)) continue
       if (args.partial) {
-        if (args.partial.outputTagId && r.outputTagId !== args.partial.outputTagId) continue
-        if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.outputTagId !== undefined && r.outputTagId !== args.partial.outputTagId) continue
+        if (args.partial.outputId !== undefined && r.outputId !== args.partial.outputId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
-      if (userId !== undefined && r.txid) {
-        const count = await this.countOutputTags({ partial: { userId, outputTagId: r.outputTagId }, trx: dbTrx })
-        if (count === 0) continue
+      if (userId !== undefined) {
+        const tagsForUser = await this.countOutputTags({ partial: { userId, outputTagId: r.outputTagId }, trx: dbTrx })
+        if (tagsForUser === 0) continue
       }
       if (skipped < offset) {
         skipped++
@@ -578,6 +627,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     filtered: (v: TableProvenTxReq) => void,
     userId?: number
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     if (args.partial.rawTx)
       throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxReqs may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
@@ -621,23 +671,23 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.provenTxReqId && r.provenTxReqId !== args.partial.provenTxReqId) continue
-        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.status && r.status !== args.partial.status) continue
+        if (args.partial.provenTxReqId !== undefined && r.provenTxReqId !== args.partial.provenTxReqId) continue
+        if (args.partial.provenTxId !== undefined && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.status !== undefined && r.status !== args.partial.status) continue
         if (args.partial.attempts !== undefined && r.attempts !== args.partial.attempts) continue
         if (args.partial.notified !== undefined && r.notified !== args.partial.notified) continue
-        if (args.partial.txid && r.txid !== args.partial.txid) continue
-        if (args.partial.batch && r.batch !== args.partial.batch) continue
-        if (args.partial.history && r.history !== args.partial.history) continue
-        if (args.partial.notify && r.notify !== args.partial.notify) continue
+        if (args.partial.txid !== undefined && r.txid !== args.partial.txid) continue
+        if (args.partial.batch !== undefined && r.batch !== args.partial.batch) continue
+        if (args.partial.history !== undefined && r.history !== args.partial.history) continue
+        if (args.partial.notify !== undefined && r.notify !== args.partial.notify) continue
       }
       if (args.status && args.status.length > 0 && !args.status.includes(r.status)) continue
       if (args.txids && args.txids.length > 0 && !args.txids.includes(r.txid)) continue
-      if (userId !== undefined && r.txid) {
-        const count = await this.countTransactions({ partial: { userId, txid: r.txid }, trx: dbTrx })
-        if (count === 0) continue
+      if (userId !== undefined) {
+        const txsForUser = await this.countTransactions({ partial: { userId, txid: r.txid }, trx: dbTrx })
+        if (txsForUser === 0) continue
       }
       if (skipped < offset) {
         skipped++
@@ -659,6 +709,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterProvenTxs(args: FindProvenTxsArgs, filtered: (v: TableProvenTx) => void, userId?: number): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     if (args.partial.rawTx)
       throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. ProvenTxs may not be found by rawTx value.`)
     if (args.partial.merklePath)
@@ -690,14 +741,14 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.txid && r.txid !== args.partial.txid) continue
+        if (args.partial.provenTxId !== undefined && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.txid !== undefined && r.txid !== args.partial.txid) continue
         if (args.partial.height !== undefined && r.height !== args.partial.height) continue
         if (args.partial.index !== undefined && r.index !== args.partial.index) continue
-        if (args.partial.blockHash && r.blockHash !== args.partial.blockHash) continue
-        if (args.partial.merkleRoot && r.merkleRoot !== args.partial.merkleRoot) continue
+        if (args.partial.blockHash !== undefined && r.blockHash !== args.partial.blockHash) continue
+        if (args.partial.merkleRoot !== undefined && r.merkleRoot !== args.partial.merkleRoot) continue
       }
       if (userId !== undefined) {
         const count = await this.countTransactions({ partial: { userId, provenTxId: r.provenTxId }, trx: dbTrx })
@@ -727,6 +778,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     filtered: (v: TableTxLabelMap) => void,
     userId?: number
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -751,10 +803,10 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.txLabelId && r.txLabelId !== args.partial.txLabelId) continue
-        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.txLabelId !== undefined && r.txLabelId !== args.partial.txLabelId) continue
+        if (args.partial.transactionId !== undefined && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (userId !== undefined) {
@@ -811,6 +863,8 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
 
   async insertCertificate(certificate: TableCertificateX, trx?: TrxToken): Promise<number> {
     const e = await this.validateEntityForInsert(certificate, trx, undefined, ['isDeleted'])
+    // Strip non-schema runtime fields before insert. Matches Knex canon.
+    if (e.logger) delete e.logger
     const fields = e.fields
     if (e.fields) delete e.fields
     if (e.certificateId === 0) delete e.certificateId
@@ -1023,21 +1077,25 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     const dbTrx = this.toDbTrx([storeName], 'readwrite', trx)
     const store = dbTrx.objectStore(storeName)
     const ids = Array.isArray(id) ? id : [id]
+    let updated = 0
     try {
       for (const i of ids) {
         const e = await store.get(i)
-        if (!e) throw new WERR_INVALID_PARAMETER('id', `an existing record to update ${keyProp} ${i} not found`)
+        // Match Knex/Bun semantics: missing rows produce a 0-row result, not an error.
+        // Caller receives the true updated count and can decide how to react.
+        if (!e) continue
         const v: T = {
           ...e,
           ...u
         }
         const uid = await store.put!(v)
         if (uid !== i) throw new WERR_INTERNAL(`updated id ${uid} does not match original ${id}`)
+        updated++
       }
     } finally {
       if (!trx) await dbTrx.done
     }
-    return 1
+    return updated
   }
 
   async updateIdbKey<T>(
@@ -1206,6 +1264,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     args: FindCertificateFieldsArgs,
     filtered: (v: TableCertificateField) => void
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1233,13 +1292,13 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.certificateId && r.certificateId !== args.partial.certificateId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.fieldName && r.fieldName !== args.partial.fieldName) continue
-        if (args.partial.fieldValue && r.fieldValue !== args.partial.fieldValue) continue
-        if (args.partial.masterKey && r.masterKey !== args.partial.masterKey) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.certificateId !== undefined && r.certificateId !== args.partial.certificateId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.fieldName !== undefined && r.fieldName !== args.partial.fieldName) continue
+        if (args.partial.fieldValue !== undefined && r.fieldValue !== args.partial.fieldValue) continue
+        if (args.partial.masterKey !== undefined && r.masterKey !== args.partial.masterKey) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1261,6 +1320,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterCertificates(args: FindCertificatesArgs, filtered: (v: TableCertificateX) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1300,18 +1360,18 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (args.certifiers && !args.certifiers.includes(r.certifier)) continue
       if (args.types && !args.types.includes(r.type)) continue
       if (args.partial) {
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.certificateId && r.certificateId !== args.partial.certificateId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.type && r.type !== args.partial.type) continue
-        if (args.partial.serialNumber && r.serialNumber !== args.partial.serialNumber) continue
-        if (args.partial.certifier && r.certifier !== args.partial.certifier) continue
-        if (args.partial.subject && r.subject !== args.partial.subject) continue
-        if (args.partial.verifier && r.verifier !== args.partial.verifier) continue
-        if (args.partial.revocationOutpoint && r.revocationOutpoint !== args.partial.revocationOutpoint) continue
-        if (args.partial.signature && r.signature !== args.partial.signature) continue
-        if (args.partial.isDeleted && r.isDeleted !== args.partial.isDeleted) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.certificateId !== undefined && r.certificateId !== args.partial.certificateId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.type !== undefined && r.type !== args.partial.type) continue
+        if (args.partial.serialNumber !== undefined && r.serialNumber !== args.partial.serialNumber) continue
+        if (args.partial.certifier !== undefined && r.certifier !== args.partial.certifier) continue
+        if (args.partial.subject !== undefined && r.subject !== args.partial.subject) continue
+        if (args.partial.verifier !== undefined && r.verifier !== args.partial.verifier) continue
+        if (args.partial.revocationOutpoint !== undefined && r.revocationOutpoint !== args.partial.revocationOutpoint) continue
+        if (args.partial.signature !== undefined && r.signature !== args.partial.signature) continue
+        if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1339,6 +1399,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterCommissions(args: FindCommissionsArgs, filtered: (v: TableCommission) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     if (args.partial.lockingScript)
       throw new WERR_INVALID_PARAMETER(
         'partial.lockingScript',
@@ -1370,13 +1431,13 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.commissionId && r.commissionId !== args.partial.commissionId) continue
-        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.commissionId !== undefined && r.commissionId !== args.partial.commissionId) continue
+        if (args.partial.transactionId !== undefined && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
-        if (args.partial.keyOffset && r.keyOffset !== args.partial.keyOffset) continue
+        if (args.partial.keyOffset !== undefined && r.keyOffset !== args.partial.keyOffset) continue
         if (args.partial.isRedeemed !== undefined && r.isRedeemed !== args.partial.isRedeemed) continue
       }
       if (skipped < offset) {
@@ -1399,6 +1460,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterMonitorEvents(args: FindMonitorEventsArgs, filtered: (v: TableMonitorEvent) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1423,11 +1485,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.id && r.id !== args.partial.id) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.event && r.event !== args.partial.event) continue
-        if (args.partial.details && r.details !== args.partial.details) continue
+        if (args.partial.id !== undefined && r.id !== args.partial.id) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.event !== undefined && r.event !== args.partial.event) continue
+        if (args.partial.details !== undefined && r.details !== args.partial.details) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1449,6 +1511,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterOutputBaskets(args: FindOutputBasketsArgs, filtered: (v: TableOutputBasket) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1480,11 +1543,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.basketId && r.basketId !== args.partial.basketId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.name && r.name !== args.partial.name) continue
+        if (args.partial.basketId !== undefined && r.basketId !== args.partial.basketId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.name !== undefined && r.name !== args.partial.name) continue
         if (
           args.partial.numberOfDesiredUTXOs !== undefined &&
           r.numberOfDesiredUTXOs !== args.partial.numberOfDesiredUTXOs
@@ -1522,6 +1585,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     tagIds?: number[],
     isQueryModeAll?: boolean
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     // args.txStatus
     // args.noScript
     if (args.partial.lockingScript)
@@ -1540,6 +1604,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       stores.push('transactions')
     }
     const dbTrx = this.toDbTrx(stores, 'readonly', args.trx)
+    const direction: IDBCursorDirection = args.orderDescending ? 'prev' : 'next'
     let cursor:
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'outputs', unknown, 'readwrite' | 'readonly'>
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'outputs', 'userId', 'readwrite' | 'readonly'>
@@ -1555,24 +1620,24 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       | IDBPCursorWithValue<StorageIdbSchema, string[], 'outputs', 'spentBy', 'readwrite' | 'readonly'>
       | null
     if (args.partial?.outputId) {
-      cursor = await dbTrx.objectStore('outputs').openCursor(args.partial.outputId)
+      cursor = await dbTrx.objectStore('outputs').openCursor(args.partial.outputId, direction)
     } else if (args.partial?.userId !== undefined) {
       if (args.partial?.transactionId && args.partial?.vout !== undefined) {
         cursor = await dbTrx
           .objectStore('outputs')
           .index('transactionId_vout_userId')
-          .openCursor([args.partial.transactionId, args.partial.vout, args.partial.userId])
+          .openCursor([args.partial.transactionId, args.partial.vout, args.partial.userId], direction)
       } else {
-        cursor = await dbTrx.objectStore('outputs').index('userId').openCursor(args.partial.userId)
+        cursor = await dbTrx.objectStore('outputs').index('userId').openCursor(args.partial.userId, direction)
       }
     } else if (args.partial?.transactionId !== undefined) {
-      cursor = await dbTrx.objectStore('outputs').index('transactionId').openCursor(args.partial.transactionId)
+      cursor = await dbTrx.objectStore('outputs').index('transactionId').openCursor(args.partial.transactionId, direction)
     } else if (args.partial?.basketId !== undefined) {
-      cursor = await dbTrx.objectStore('outputs').index('basketId').openCursor(args.partial.basketId)
+      cursor = await dbTrx.objectStore('outputs').index('basketId').openCursor(args.partial.basketId, direction)
     } else if (args.partial?.spentBy !== undefined) {
-      cursor = await dbTrx.objectStore('outputs').index('spentBy').openCursor(args.partial.spentBy)
+      cursor = await dbTrx.objectStore('outputs').index('spentBy').openCursor(args.partial.spentBy, direction)
     } else {
-      cursor = await dbTrx.objectStore('outputs').openCursor()
+      cursor = await dbTrx.objectStore('outputs').openCursor(null, direction)
     }
     let firstTime = true
     while (cursor) {
@@ -1582,31 +1647,31 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.outputId && r.outputId !== args.partial.outputId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
-        if (args.partial.basketId && r.basketId !== args.partial.basketId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.outputId !== undefined && r.outputId !== args.partial.outputId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.transactionId !== undefined && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.basketId !== undefined && r.basketId !== args.partial.basketId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
         if (args.partial.spendable !== undefined && r.spendable !== args.partial.spendable) continue
         if (args.partial.change !== undefined && r.change !== args.partial.change) continue
-        if (args.partial.outputDescription && r.outputDescription !== args.partial.outputDescription) continue
+        if (args.partial.outputDescription !== undefined && r.outputDescription !== args.partial.outputDescription) continue
         if (args.partial.vout !== undefined && r.vout !== args.partial.vout) continue
         if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
-        if (args.partial.providedBy && r.providedBy !== args.partial.providedBy) continue
-        if (args.partial.purpose && r.purpose !== args.partial.purpose) continue
-        if (args.partial.type && r.type !== args.partial.type) continue
-        if (args.partial.txid && r.txid !== args.partial.txid) continue
-        if (args.partial.senderIdentityKey && r.senderIdentityKey !== args.partial.senderIdentityKey) continue
-        if (args.partial.derivationPrefix && r.derivationPrefix !== args.partial.derivationPrefix) continue
-        if (args.partial.derivationSuffix && r.derivationSuffix !== args.partial.derivationSuffix) continue
-        if (args.partial.customInstructions && r.customInstructions !== args.partial.customInstructions) continue
-        if (args.partial.spentBy && r.spentBy !== args.partial.spentBy) continue
+        if (args.partial.providedBy !== undefined && r.providedBy !== args.partial.providedBy) continue
+        if (args.partial.purpose !== undefined && r.purpose !== args.partial.purpose) continue
+        if (args.partial.type !== undefined && r.type !== args.partial.type) continue
+        if (args.partial.txid !== undefined && r.txid !== args.partial.txid) continue
+        if (args.partial.senderIdentityKey !== undefined && r.senderIdentityKey !== args.partial.senderIdentityKey) continue
+        if (args.partial.derivationPrefix !== undefined && r.derivationPrefix !== args.partial.derivationPrefix) continue
+        if (args.partial.derivationSuffix !== undefined && r.derivationSuffix !== args.partial.derivationSuffix) continue
+        if (args.partial.customInstructions !== undefined && r.customInstructions !== args.partial.customInstructions) continue
+        if (args.partial.spentBy !== undefined && r.spentBy !== args.partial.spentBy) continue
         if (args.partial.sequenceNumber !== undefined && r.sequenceNumber !== args.partial.sequenceNumber) continue
         if (args.partial.scriptLength !== undefined && r.scriptLength !== args.partial.scriptLength) continue
         if (args.partial.scriptOffset !== undefined && r.scriptOffset !== args.partial.scriptOffset) continue
       }
-      if (args.txStatus !== undefined) {
+      if (args.txStatus !== undefined && args.txStatus.length > 0) {
         const count = await this.countTransactions({
           partial: { transactionId: r.transactionId },
           status: args.txStatus,
@@ -1655,16 +1720,15 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       isQueryModeAll
     )
     for (const o of results) {
-      if (!args.noScript) {
-        await this.validateOutputScript(o, args.trx)
-      } else {
-        o.lockingScript = undefined
-      }
+      // noScript skips the rawTx-slice re-hydration but does not wipe script already
+      // on the row — parity with Knex/Bun, which simply don't SELECT the column.
+      if (!args.noScript) await this.validateOutputScript(o, args.trx)
     }
     return results
   }
 
   async filterOutputTags(args: FindOutputTagsArgs, filtered: (v: TableOutputTag) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1696,11 +1760,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.outputTagId && r.outputTagId !== args.partial.outputTagId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.tag && r.tag !== args.partial.tag) continue
+        if (args.partial.outputTagId !== undefined && r.outputTagId !== args.partial.outputTagId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.tag !== undefined && r.tag !== args.partial.tag) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (skipped < offset) {
@@ -1723,6 +1787,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterSyncStates(args: FindSyncStatesArgs, filtered: (v: TableSyncState) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     if (args.partial.syncMap)
       throw new WERR_INVALID_PARAMETER(
         'args.partial.syncMap',
@@ -1757,19 +1822,19 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.syncStateId && r.syncStateId !== args.partial.syncStateId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.storageIdentityKey && r.storageIdentityKey !== args.partial.storageIdentityKey) continue
-        if (args.partial.storageName && r.storageName !== args.partial.storageName) continue
-        if (args.partial.status && r.status !== args.partial.status) continue
+        if (args.partial.syncStateId !== undefined && r.syncStateId !== args.partial.syncStateId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.storageIdentityKey !== undefined && r.storageIdentityKey !== args.partial.storageIdentityKey) continue
+        if (args.partial.storageName !== undefined && r.storageName !== args.partial.storageName) continue
+        if (args.partial.status !== undefined && r.status !== args.partial.status) continue
         if (args.partial.init !== undefined && r.init !== args.partial.init) continue
         if (args.partial.refNum !== undefined && r.refNum !== args.partial.refNum) continue
-        if (args.partial.when && r.when?.getTime() !== args.partial.when.getTime()) continue
+        if (args.partial.when !== undefined && r.when?.getTime() !== args.partial.when.getTime()) continue
         if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
-        if (args.partial.errorLocal && r.errorLocale !== args.partial.errorLocal) continue
-        if (args.partial.errorOther && r.errorOther !== args.partial.errorOther) continue
+        if (args.partial.errorLocal !== undefined && r.errorLocale !== args.partial.errorLocal) continue
+        if (args.partial.errorOther !== undefined && r.errorOther !== args.partial.errorOther) continue
       }
       if (skipped < offset) {
         skipped++
@@ -1796,6 +1861,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
     labelIds?: number[],
     isQueryModeAll?: boolean
   ): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     if (args.partial.rawTx)
       throw new WERR_INVALID_PARAMETER('args.partial.rawTx', `undefined. Transactions may not be found by rawTx value.`)
     if (args.partial.inputBEEF)
@@ -1852,21 +1918,21 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       if (args.since && args.since > r.updated_at) continue
       if (args.from && r.created_at.getTime() < args.from.getTime()) continue
       if (args.to && r.created_at.getTime() >= args.to.getTime()) continue
-      if (args.status && !args.status.includes(r.status)) continue
+      if (args.status && args.status.length > 0 && !args.status.includes(r.status)) continue
       if (args.partial) {
-        if (args.partial.transactionId && r.transactionId !== args.partial.transactionId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.provenTxId && r.provenTxId !== args.partial.provenTxId) continue
-        if (args.partial.status && r.status !== args.partial.status) continue
-        if (args.partial.reference && r.reference !== args.partial.reference) continue
+        if (args.partial.transactionId !== undefined && r.transactionId !== args.partial.transactionId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.provenTxId !== undefined && r.provenTxId !== args.partial.provenTxId) continue
+        if (args.partial.status !== undefined && r.status !== args.partial.status) continue
+        if (args.partial.reference !== undefined && r.reference !== args.partial.reference) continue
         if (args.partial.isOutgoing !== undefined && r.isOutgoing !== args.partial.isOutgoing) continue
         if (args.partial.satoshis !== undefined && r.satoshis !== args.partial.satoshis) continue
-        if (args.partial.description && r.description !== args.partial.description) continue
+        if (args.partial.description !== undefined && r.description !== args.partial.description) continue
         if (args.partial.version !== undefined && r.version !== args.partial.version) continue
         if (args.partial.lockTime !== undefined && r.lockTime !== args.partial.lockTime) continue
-        if (args.partial.txid && r.txid !== args.partial.txid) continue
+        if (args.partial.txid !== undefined && r.txid !== args.partial.txid) continue
       }
       if (labelIds && labelIds.length > 0) {
         let ids = [...labelIds]
@@ -1910,17 +1976,17 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       isQueryModeAll
     )
     for (const t of results) {
-      if (!args.noRawTx) {
-        await this.validateRawTransaction(t, args.trx)
-      } else {
-        t.rawTx = undefined
-        t.inputBEEF = undefined
-      }
+      // noRawTx skips rawTx re-hydration but does not wipe inputBEEF — Knex's
+      // transactionColumnsWithoutRawTx only strips rawTx, and callers such as
+      // getReqsAndBeefToShareWithWorld legitimately need inputBEEF when noRawTx is set.
+      if (!args.noRawTx) await this.validateRawTransaction(t, args.trx)
+      else t.rawTx = undefined
     }
     return results
   }
 
   async filterTxLabels(args: FindTxLabelsArgs, filtered: (v: TableTxLabel) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1952,11 +2018,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.txLabelId && r.txLabelId !== args.partial.txLabelId) continue
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.label && r.label !== args.partial.label) continue
+        if (args.partial.txLabelId !== undefined && r.txLabelId !== args.partial.txLabelId) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.label !== undefined && r.label !== args.partial.label) continue
         if (args.partial.isDeleted !== undefined && r.isDeleted !== args.partial.isDeleted) continue
       }
       if (skipped < offset) {
@@ -1979,6 +2045,7 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
   }
 
   async filterUsers(args: FindUsersArgs, filtered: (v: TableUser) => void): Promise<void> {
+    this.assertNoUndefinedInPartial(args.partial)
     const offset = args.paged?.offset || 0
     let skipped = 0
     let count = 0
@@ -1992,11 +2059,11 @@ export class StorageIdb extends StorageProvider implements WalletStorageProvider
       const r = cursor.value
       if (args.since && args.since > r.updated_at) continue
       if (args.partial) {
-        if (args.partial.userId && r.userId !== args.partial.userId) continue
-        if (args.partial.created_at && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
-        if (args.partial.updated_at && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
-        if (args.partial.identityKey && r.identityKey !== args.partial.identityKey) continue
-        if (args.partial.activeStorage && r.activeStorage !== args.partial.activeStorage) continue
+        if (args.partial.userId !== undefined && r.userId !== args.partial.userId) continue
+        if (args.partial.created_at !== undefined && r.created_at.getTime() !== args.partial.created_at.getTime()) continue
+        if (args.partial.updated_at !== undefined && r.updated_at.getTime() !== args.partial.updated_at.getTime()) continue
+        if (args.partial.identityKey !== undefined && r.identityKey !== args.partial.identityKey) continue
+        if (args.partial.activeStorage !== undefined && r.activeStorage !== args.partial.activeStorage) continue
       }
       if (skipped < offset) {
         skipped++

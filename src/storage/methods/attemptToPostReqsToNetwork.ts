@@ -360,7 +360,7 @@ interface AggregatePostBeefTxResult {
  * When `acceptDelayedBroadcast` is falses.
  *
  * 'success': The action has been broadcast and accepted by the bitcoin processing network.
- * 'doulbeSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the loosing transaction.
+ * 'doubleSpend': The action has been confirmed to double spend one or more inputs, and by the "first-seen-rule" is the losing transaction.
  * 'invalidTx': The action was rejected by the processing network as an invalid bitcoin transaction.
  * 'serviceError': The broadcast services are currently unable to reach the bitcoin network. The action is now queued for delayed retries.
  *

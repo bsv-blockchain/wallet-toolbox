@@ -240,12 +240,25 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     syncMap: SyncMap,
     trx?: TrxToken
   ): Promise<{ found: boolean; eo: EntityTransaction; eiId: number }> {
-    const ef = verifyOneOrNone(
-      await storage.findTransactions({
-        partial: { reference: ei.reference, userId },
-        trx
-      })
-    )
+    // Prefer (userId, txid) when txid is known — txid is a globally stable
+    // identifier, whereas `reference` is locally-assigned by whichever
+    // storage first ingested the row. Two storages that independently
+    // internalized the same txid will hold different references, and
+    // matching by reference would insert a duplicate row instead of
+    // merging. Fall through to reference when the txid lookup misses so
+    // post-broadcast syncs land on an existing pre-broadcast row that
+    // hasn't learned its txid yet.
+    let ef: TableTransaction | undefined
+    if (ei.txid) {
+      ef = verifyOneOrNone(
+        await storage.findTransactions({ partial: { txid: ei.txid, userId }, trx })
+      )
+    }
+    if (!ef && ei.reference) {
+      ef = verifyOneOrNone(
+        await storage.findTransactions({ partial: { reference: ei.reference, userId }, trx })
+      )
+    }
     return {
       found: !!ef,
       eo: new EntityTransaction(ef || { ...ei }),
