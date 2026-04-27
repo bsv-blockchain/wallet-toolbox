@@ -4,6 +4,15 @@ This document captures the history of significant changes to the wallet-toolbox 
 The git commit history contains the details but is unable to draw
 attention to changes that materially alter behavior or extend functionality.
 
+## wallet-toolbox 2.1.23
+
+- Exclude non-completed transactions from adminStats satoshi sums.
+
+## wallet-toolbox 2.1.22
+
+- StorageIdb: drop unused import and dead non-null assertions
+- StorageIdb: align filter/update semantics with Knex canon
+
 ## wallet-toolbox 2.1.21
 
 - Fix spending authorization bypass in querySpentSince, PR#150
