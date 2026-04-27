@@ -250,14 +250,10 @@ export class EntityTransaction extends EntityBase<TableTransaction> {
     // hasn't learned its txid yet.
     let ef: TableTransaction | undefined
     if (ei.txid) {
-      ef = verifyOneOrNone(
-        await storage.findTransactions({ partial: { txid: ei.txid, userId }, trx })
-      )
+      ef = verifyOneOrNone(await storage.findTransactions({ partial: { txid: ei.txid, userId }, trx }))
     }
     if (!ef && ei.reference) {
-      ef = verifyOneOrNone(
-        await storage.findTransactions({ partial: { reference: ei.reference, userId }, trx })
-      )
+      ef = verifyOneOrNone(await storage.findTransactions({ partial: { reference: ei.reference, userId }, trx }))
     }
     return {
       found: !!ef,
