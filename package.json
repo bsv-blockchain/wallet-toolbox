@@ -40,7 +40,7 @@
   "dependencies": {
     "@bsv/auth-express-middleware": "^2.0.5",
     "@bsv/payment-express-middleware": "^2.0.2",
-    "@bsv/sdk": "^2.0.13",
+    "@bsv/sdk": "^2.0.14",
     "better-sqlite3": "^12.6.2",
     "express": "^4.21.2",
     "hash-wasm": "^4.12.0",
