@@ -1,5 +1,9 @@
 # BSV Wallet Toolbox
 
+> **⚠️ This repository is being archived.**
+>
+> Development has moved to the [ts-stack monorepo](https://github.com/bsv-blockchain/ts-stack/tree/main/packages/wallet/wallet-toolbox). Open issues will be migrated there. This repository will be archived in the coming days — please open new issues and PRs in the monorepo going forward.
+
 [![Build Status](https://img.shields.io/github/actions/workflow/status/bsv-blockchain/wallet-toolbox/push.yaml?branch=master&label=build)](https://github.com/bsv-blockchain/wallet-toolbox/actions)
 [![npm version](https://img.shields.io/npm/v/@bsv/wallet-toolbox)](https://www.npmjs.com/package/@bsv/wallet-toolbox)
 [![npm downloads](https://img.shields.io/npm/dm/@bsv/wallet-toolbox)](https://www.npmjs.com/package/@bsv/wallet-toolbox)
